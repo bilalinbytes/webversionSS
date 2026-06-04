@@ -101,6 +101,16 @@ function respiratorySupportSummary(plan: RespiratorySupportPlan | null) {
     : "Respiratory support prescribed · डॉक्टर द्वारा सेट";
 }
 
+function parseOptionalNumber(value: string) {
+  return value === "" ? null : Number(value);
+}
+
+function inRange(value: string, min: number, max: number) {
+  if (value === "") return true;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max;
+}
+
 export function CommonDailyLogView({
   dashboard,
   patientId,
@@ -162,7 +172,20 @@ export function CommonDailyLogView({
     };
   }, [patientId]);
 
-  const canSubmit = spo2 !== "" && mmrc !== null;
+  const spo2RestValid = inRange(spo2, 0, 100);
+  const spo2ExertionValid = inRange(spo2Exertion, 0, 100);
+  const heartRateValid = inRange(heartRate, 20, 250);
+  const oxygenLitresValid = inRange(breathlessness.additionalLitres, 0, 15);
+  const validationMessage = !spo2RestValid
+    ? "SpO2 at rest must be between 0 and 100. · आराम का SpO2 0 से 100 के बीच होना चाहिए."
+    : !spo2ExertionValid
+      ? "SpO2 after walking must be between 0 and 100. · चलने के बाद SpO2 0 से 100 के बीच होना चाहिए."
+      : !heartRateValid
+        ? "Heart rate must be between 20 and 250. · नाड़ी 20 से 250 के बीच होनी चाहिए."
+        : !oxygenLitresValid
+          ? "Oxygen flow must be between 0 and 15 L/min. · ऑक्सीजन फ्लो 0 से 15 L/min के बीच होना चाहिए."
+          : null;
+  const canSubmit = spo2 !== "" && mmrc !== null && validationMessage === null;
   const isSubmitting = submitState === "submitting";
   const previousMmrcLabel = prevDay.loading ? "..." : prevDay.mmrc !== null ? String(prevDay.mmrc) : "-";
 
@@ -206,8 +229,8 @@ export function CommonDailyLogView({
       patient_id: patientId,
       log_date: today,
       spo2_rest: Number(spo2),
-      spo2_exertion: spo2Exertion !== "" ? Number(spo2Exertion) : null,
-      heart_rate: heartRate !== "" ? Number(heartRate) : null,
+      spo2_exertion: parseOptionalNumber(spo2Exertion),
+      heart_rate: parseOptionalNumber(heartRate),
       mmrc_today: mmrc,
       aqi_value: aqi,
       medication_compliance: medsTaken,
@@ -336,6 +359,8 @@ export function CommonDailyLogView({
               </label>
               <input
                 type="number"
+                min={0}
+                max={100}
                 className={dStyles.numInput}
                 placeholder="e.g. 82"
                 value={spo2Exertion}
@@ -348,6 +373,8 @@ export function CommonDailyLogView({
                 </label>
                 <input
                   type="number"
+                  min={20}
+                  max={250}
                   className={dStyles.numInput}
                   placeholder="e.g. 88"
                   value={heartRate}
@@ -409,6 +436,13 @@ export function CommonDailyLogView({
           <div className={dStyles.submitError}>
             <AlertCircle size={14} />
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {validationMessage && (
+          <div className={dStyles.submitError}>
+            <AlertCircle size={14} />
+            <span>{validationMessage}</span>
           </div>
         )}
 
