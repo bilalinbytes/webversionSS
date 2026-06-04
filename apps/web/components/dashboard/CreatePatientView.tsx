@@ -609,9 +609,6 @@ function flag(val: number | null, threshold: number) {
 
 function StepPFT({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
   const [adding, setAdding] = useState(false);
-  const legacyBaseline = data.pft_records.find((record) => record.baseline_spo2 || record.baseline_heart_rate);
-  const baselineSpo2 = data.baseline_spo2 || legacyBaseline?.baseline_spo2 || "";
-  const baselineHeartRate = data.baseline_heart_rate || legacyBaseline?.baseline_heart_rate || "";
   const [draft, setDraft] = useState({
     date: "", fvc: "", fev1: "", ratio: "", dlco: "",
     fev1_pct_pred: "", fvc_pct_pred: "", six_mwd: "", min_spo2: "", max_spo2: "",
@@ -730,18 +727,6 @@ function StepPFT({ data, update }: { data: FormData; update: (d: Partial<FormDat
               })}
             </tbody>
           </table>
-        </div>
-      </div>
-      <div className={styles.card}>
-        <p className={styles.cardTitle}>Patient Baseline Vitals</p>
-        <p className={styles.cardSub}>Resting baseline readings recorded separately from PFT results</p>
-        <div className={styles.baselineVitalsGrid}>
-          <Field label="Baseline SpO2">
-            <input type="number" step="0.1" className={styles.input} placeholder="—" value={baselineSpo2} onChange={(e) => update({ baseline_spo2: e.target.value })} />
-          </Field>
-          <Field label="Baseline Heart Rate">
-            <input type="number" step="1" className={styles.input} placeholder="—" value={baselineHeartRate} onChange={(e) => update({ baseline_heart_rate: e.target.value })} />
-          </Field>
         </div>
       </div>
     </div>

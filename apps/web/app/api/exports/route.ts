@@ -39,6 +39,7 @@ const exportRequestSchema = z
     start_date: z.string().optional(),
     end_date: z.string().optional(),
     patient_ids: z.array(z.string().uuid()).optional(),
+    format: z.enum(["pdf", "csv", "excel"]).optional().default("pdf"),
   })
   .superRefine((value, context) => {
     if (value.export_type === "single_patient" && !value.patient_id) {
@@ -160,6 +161,74 @@ function displayValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "n/a";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function csvCell(value: unknown): string {
+  const text = displayValue(value);
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function rowsToCsv(rows: string[][]): string {
+  return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+}
+
+function htmlEscape(value: unknown): string {
+  return displayValue(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function rowsToExcelHtml(rows: string[][]): string {
+  const tableRows = rows
+    .map((row) => `<tr>${row.map((cell) => `<td>${htmlEscape(cell)}</td>`).join("")}</tr>`)
+    .join("");
+  return `<!doctype html><html><head><meta charset="utf-8"></head><body><table>${tableRows}</table></body></html>`;
+}
+
+function buildSpreadsheetRows(
+  summaryRows: Array<{ patientName: string; diagnosis: string; riskLevel: string; score: string; alert: string }>,
+  medicationRows: Array<{ patientName: string; taken: number; total: number; rateLabel: string }>,
+  patientDetails: PatientDetailSection[],
+  notes: string[],
+): string[][] {
+  const rows: string[][] = [];
+  rows.push(["Section", "Patient", "Field 1", "Field 2", "Field 3", "Field 4", "Field 5", "Field 6"]);
+  rows.push(["Summary", "Patient", "Diagnosis", "Risk level", "Score", "Alert"]);
+  summaryRows.forEach((row) => rows.push(["Summary", row.patientName, row.diagnosis, row.riskLevel, row.score, row.alert]));
+  rows.push([]);
+  rows.push(["Medication Compliance", "Patient", "Taken", "Total", "Rate"]);
+  medicationRows.forEach((row) => rows.push(["Medication Compliance", row.patientName, String(row.taken), String(row.total), row.rateLabel]));
+
+  patientDetails.forEach((patient) => {
+    rows.push([]);
+    rows.push(["Patient Detail", patient.patientName]);
+    [
+      ["Demographics", patient.demographics],
+      ["Diagnosis", patient.diagnosis],
+      ["Respiratory Support", patient.respiratorySupport],
+    ].forEach(([section, entries]) => {
+      rows.push([section as string, patient.patientName, "Field", "Value"]);
+      (entries as Array<[string, string]>).forEach(([field, value]) => rows.push([section as string, patient.patientName, field, value]));
+    });
+
+    [
+      ["PFT History", ["Date", "FEV1/FVC", "FEV1", "FVC", "DLCO", "Other"], patient.pftRows],
+      ["Medication History", ["Drug", "Route", "Dose", "Frequency", "Start", "End"], patient.medicationRows],
+      ["Daily Logs", ["Date", "SpO2 Rest", "SpO2 Walk", "mMRC", "AQI", "Symptoms"], patient.logRows],
+      ["Alerts", ["Date", "Type", "Status", "Reason"], patient.alertRows],
+      ["Instructions", ["Date", "Instruction", "Read At"], patient.instructionRows],
+    ].forEach(([section, headers, entries]) => {
+      rows.push([section as string, patient.patientName, ...(headers as string[])]);
+      (entries as string[][]).forEach((entry) => rows.push([section as string, patient.patientName, ...entry]));
+    });
+  });
+
+  rows.push([]);
+  rows.push(["Notes"]);
+  notes.forEach((note) => rows.push(["Notes", note]));
+  return rows;
 }
 
 function formatExportDate(value: string | null | undefined): string {
@@ -866,6 +935,31 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const spreadsheetRows = buildSpreadsheetRows(summaryRows, medicationRows, patientDetails, notes);
+
+    if (payload.format === "csv") {
+      const filename = `saans-export-${payload.export_type}-${timestamp}.csv`;
+      return new NextResponse(rowsToCsv(spreadsheetRows), {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    if (payload.format === "excel") {
+      const filename = `saans-export-${payload.export_type}-${timestamp}.xls`;
+      return new NextResponse(rowsToExcelHtml(spreadsheetRows), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/vnd.ms-excel; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
     const pdfBuffer = await renderPdfBuffer({
       exportType: payload.export_type,
       doctorName: doctor?.name ?? "Unknown Doctor",
@@ -878,7 +972,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       notes,
     });
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `saans-export-${payload.export_type}-${timestamp}.pdf`;
 
     // Audit trail — fire-and-forget, never block the response

@@ -1080,7 +1080,21 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        setSaveMsg("Prescription saved successfully.");
+        const pdfResponse = await fetch(`/api/patients/${patientId}/prescriptions?format=pdf&date=${encodeURIComponent(prescriptionDate)}`, {
+          credentials: "include",
+        });
+        if (pdfResponse.ok) {
+          const blob = await pdfResponse.blob();
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = pdfResponse.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? `saans-prescription-${prescriptionDate}.pdf`;
+          anchor.click();
+          URL.revokeObjectURL(url);
+          setSaveMsg("Prescription saved and PDF downloaded.");
+        } else {
+          setSaveMsg("Prescription saved successfully. PDF download failed.");
+        }
         setShowEditor(false);
         setPatientInstruction("");
         await fetchPrescriptions();

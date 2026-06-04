@@ -83,6 +83,7 @@ interface AnalyticsPoint {
   kbildQ15: number | null;
   hemoptysis: number | null;
   sputumClearance: number | null;
+  symptoms: Record<string, number>;
 }
 
 interface PatientAnalyticsViewProps {
@@ -119,8 +120,6 @@ const PFT_METRICS = [
   { key: "sixMwd", label: "6MWD (m)", color: COLORS.green },
   { key: "minSpo2", label: "Min SpO2", color: COLORS.red },
   { key: "maxSpo2", label: "Max SpO2", color: COLORS.blue },
-  { key: "baselineSpo2", label: "Baseline SpO2", color: COLORS.gold },
-  { key: "baselineHeartRate", label: "Baseline Heart Rate", color: COLORS.purple },
 ] as const;
 
 type PftMetricKey = typeof PFT_METRICS[number]["key"];
@@ -186,6 +185,20 @@ function extractSymptom(vas: Record<string, unknown> | null, mmrc: number | null
     if (values.length > 0) return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
   }
   return mmrc;
+}
+
+function extractSymptoms(vas: Record<string, unknown> | null): Record<string, number> {
+  if (!vas) return {};
+  return Object.fromEntries(
+    Object.entries(vas)
+      .filter(([key]) => !key.toLowerCase().includes("side"))
+      .map(([key, value]) => [key, numberFrom(value)] as const)
+      .filter((entry): entry is [string, number] => entry[1] !== null),
+  );
+}
+
+function formatMetricName(value: string): string {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function adherencePercent(compliance: Record<string, unknown> | null): number | null {
@@ -306,6 +319,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   const [diagnosis, setDiagnosis] = useState<DiagnosisRow | null>(null);
   const [selectedPftMetric, setSelectedPftMetric] = useState<PftMetricKey>("ratio");
   const [selectedKbildMetric, setSelectedKbildMetric] = useState<keyof AnalyticsPoint>("kbild");
+  const [selectedSymptom, setSelectedSymptom] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"single" | "all" | null>(null);
@@ -386,6 +400,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       .map((log) => {
         const disease = log.disease_specific_data;
         const kbildResponses = (disease?.kbild_responses ?? {}) as Record<string, unknown>;
+        const symptoms = extractSymptoms(log.vas_symptoms);
         return {
           date: fmtDate(log.logged_at),
           sortDate: log.logged_at,
@@ -417,6 +432,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           kbildQ15: numberFrom(kbildResponses["15"]),
           hemoptysis: numberFromAny(log.vas_symptoms, ["hemoptysis"]) ?? numberFromAny(disease, ["hemoptysis", "hemoptysis_ml"]),
           sputumClearance: categoricalNumber(disease, ["ease_of_sputum_clearance", "sputum_clearance", "sputum_clearance_ease", "sputum_volume"]),
+          symptoms,
         };
       })
       .reverse();
@@ -438,14 +454,34 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           sixMwd: numberFrom(other.six_mwd),
           minSpo2: numberFrom(other.min_spo2),
           maxSpo2: numberFrom(other.max_spo2),
-          baselineSpo2: numberFrom(other.baseline_spo2),
-          baselineHeartRate: numberFrom(other.baseline_heart_rate),
         };
       })
       .reverse();
   }, [pft]);
 
   const selectedPftMetricConfig = PFT_METRICS.find((metric) => metric.key === selectedPftMetric) ?? PFT_METRICS[0];
+  const symptomKeys = useMemo(
+    () => Array.from(new Set(dailySeries.flatMap((row) => Object.keys(row.symptoms)))).sort(),
+    [dailySeries],
+  );
+  const selectedSymptomSeries = useMemo(
+    () => dailySeries.map((row) => ({
+      date: row.date,
+      sortDate: row.sortDate,
+      value: selectedSymptom ? row.symptoms[selectedSymptom] ?? null : null,
+    })),
+    [dailySeries, selectedSymptom],
+  );
+
+  useEffect(() => {
+    if (symptomKeys.length === 0) {
+      setSelectedSymptom("");
+      return;
+    }
+    if (!selectedSymptom || !symptomKeys.includes(selectedSymptom)) {
+      setSelectedSymptom(symptomKeys[0] ?? "");
+    }
+  }, [selectedSymptom, symptomKeys]);
 
   async function handleExport(type: "single" | "all") {
     setExporting(type);
@@ -481,6 +517,17 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   if (error && logs.length === 0 && pft.length === 0) {
     return <div style={{ padding: 24, color: "#c94d49" }}>{error}</div>;
   }
+
+  const postIcuDiseaseCharts = (
+    <>
+      <ChartBlock title="Hemoptysis" subtitle="Blood in sputum or hemoptysis score">
+        <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "hemoptysis", name: "Hemoptysis", color: COLORS.red }]} />
+      </ChartBlock>
+      <ChartBlock title="Ease of Sputum Clearance" subtitle="Higher score means easier clearance">
+        <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "sputumClearance", name: "Sputum Clearance", color: COLORS.blue }]} />
+      </ChartBlock>
+    </>
+  );
 
   const diseaseCharts = {
     asthma: (
@@ -531,7 +578,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         </ChartBlock>
       </>
     ),
-    post_icu: null,
+    post_icu: postIcuDiseaseCharts,
     unknown: null,
   } satisfies Record<DiagnosisKind, React.ReactNode>;
 
@@ -625,7 +672,31 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           </ChartBlock>
 
           <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="VAS and mMRC symptom score only, side effects excluded · केवल लक्षण स्कोर, साइड इफेक्ट नहीं">
-            <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "symptom", name: "Symptoms", color: COLORS.orange }]} />
+            {symptomKeys.length === 0 ? (
+              <EmptyChart label="No symptom scores recorded yet." />
+            ) : (
+              <>
+                <select
+                  value={selectedSymptom}
+                  onChange={(event) => setSelectedSymptom(event.target.value)}
+                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
+                >
+                  {symptomKeys.map((symptom) => (
+                    <option key={symptom} value={symptom}>{formatMetricName(symptom)}</option>
+                  ))}
+                </select>
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={selectedSymptomSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
+                    <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
+                    <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
+                    <Line type="monotone" dataKey="value" stroke={COLORS.orange} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={formatMetricName(selectedSymptom)} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            )}
           </ChartBlock>
 
           <ChartBlock title="Medication Adherence Trends · दवा पालन ट्रेंड" subtitle="Daily percentage of marked medicines taken · रोज ली गई दवाओं का प्रतिशत">

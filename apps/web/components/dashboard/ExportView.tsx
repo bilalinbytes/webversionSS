@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import styles from "./ExportView.module.css";
 
 type ExportType = "Disease-Specific" | "Combined" | "Date-Wise" | "Weekly Snapshot" | "Monthly Summary" | "Single Patient";
+type ExportFormat = "pdf" | "excel" | "csv";
 
 const EXPORT_TYPES: { id: ExportType; apiKey: string; sub: string }[] = [
   { id: "Disease-Specific", apiKey: "disease_specific", sub: "Filter by diagnosis type" },
@@ -124,6 +125,7 @@ function scoreToRisk(score: number | null): LivePatient["risk"] {
 
 export function ExportView({ onBack }: ExportViewProps) {
   const [exportType, setExportType] = useState<ExportType>("Combined");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("pdf");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [diseaseFilter, setDiseaseFilter] = useState("");
@@ -202,6 +204,7 @@ export function ExportView({ onBack }: ExportViewProps) {
       const typeConfig = EXPORT_TYPES.find((t) => t.id === exportType);
       const body: Record<string, unknown> = {
         export_type: typeConfig?.apiKey ?? "combined",
+        format: exportFormat,
         patient_ids: Array.from(selected),
       };
       if (exportType === "Disease-Specific") {
@@ -231,7 +234,7 @@ export function ExportView({ onBack }: ExportViewProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? "saans-export.pdf";
+      a.download = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? `saans-export.${exportFormat === "excel" ? "xls" : exportFormat}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -284,7 +287,7 @@ export function ExportView({ onBack }: ExportViewProps) {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Export Patient Data</h1>
-          <p className={styles.sub}>6 export types · PDF only · Downloads directly to your device</p>
+          <p className={styles.sub}>6 export types · PDF, Excel, CSV · Downloads directly to your device</p>
         </div>
         <button type="button" className={styles.btnGhost} onClick={onBack}>← Dashboard</button>
       </div>
@@ -357,9 +360,20 @@ export function ExportView({ onBack }: ExportViewProps) {
             </p>
             <p className={styles.formatLabel}>File Format</p>
             <div className={styles.formatPills}>
-              <button type="button" className={`${styles.formatPill} ${styles.formatPillActive}`} disabled>
-                PDF Report
-              </button>
+              {[
+                { id: "pdf", label: "PDF Report" },
+                { id: "excel", label: "Excel" },
+                { id: "csv", label: "CSV" },
+              ].map((format) => (
+                <button
+                  key={format.id}
+                  type="button"
+                  className={`${styles.formatPill} ${exportFormat === format.id ? styles.formatPillActive : ""}`}
+                  onClick={() => setExportFormat(format.id as ExportFormat)}
+                >
+                  {format.label}
+                </button>
+              ))}
             </div>
             {exportType === "Disease-Specific" && (
               <div className={styles.dateField}>
@@ -397,11 +411,11 @@ export function ExportView({ onBack }: ExportViewProps) {
             onClick={handleExport}
             disabled={exporting || !canExport}
           >
-            {exporting ? "Generating PDF…" : `Export ${Array.from(selected).length} Patients · PDF →`}
+            {exporting ? `Generating ${exportFormat.toUpperCase()}...` : `Export ${Array.from(selected).length} Patients - ${exportFormat.toUpperCase()} ->`}
           </button>
           {exportType === "Single Patient" && selected.size !== 1 && (
             <p style={{ fontSize: 12, color: "#b54708", marginTop: 8 }}>
-              Select exactly one patient for a single-patient PDF.
+              Select exactly one patient for a single-patient export.
             </p>
           )}
           {exportError && (

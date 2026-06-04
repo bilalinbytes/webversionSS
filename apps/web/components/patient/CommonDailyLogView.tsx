@@ -9,8 +9,12 @@ import {
   SideEffectsPicker,
   SpO2Input,
   SymptomsTracker,
+  BreathlessnessTracker,
   buildVasSymptomsPayload,
+  oxygenLitresFromBreathlessness,
+  respiratorySupportFromBreathlessness,
   sideEffectsPayload,
+  type BreathlessnessData,
   type SymptomsData,
 } from "@/components/patient/shared";
 import { useAqi } from "@/hooks/useAqi";
@@ -111,6 +115,13 @@ export function CommonDailyLogView({
   const [spo2, setSpo2] = useState("");
   const [spo2Exertion, setSpo2Exertion] = useState("");
   const [heartRate, setHeartRate] = useState("");
+  const [breathlessness, setBreathlessness] = useState<BreathlessnessData>({
+    status: null,
+    spo2Rest: "",
+    spo2Exertion: "",
+    increasedOxygenReq: null,
+    additionalLitres: "",
+  });
   const [supportEnabled, setSupportEnabled] = useState(false);
   const [supportType, setSupportType] = useState("");
   const [supportSummary, setSupportSummary] = useState("Loading doctor plan · डॉक्टर का प्लान लोड हो रहा है");
@@ -207,8 +218,8 @@ export function CommonDailyLogView({
       temperature_f: typeof diseaseTemperatureF === "number" ? diseaseTemperatureF : temperatureF,
       haemoptysis: diseaseHaemoptysis === true ? true : commonHaemoptysis,
       pedal_edema: (pedalEdemaEntry?.vas ?? 0) > 0 ? true : null,
-      oxygen_requirement_litres: null,
-      respiratory_support_status: supportEnabled === true ? "static" : null,
+      oxygen_requirement_litres: oxygenLitresFromBreathlessness(breathlessness),
+      respiratory_support_status: respiratorySupportFromBreathlessness(breathlessness.status) ?? (supportEnabled === true ? "static" : null),
       respiratory_support_type: supportEnabled === true ? supportType || null : null,
       side_effects: sideEffectsPayload(sideEffects, sideEffectsOther),
       ...diseaseFields,
@@ -218,6 +229,7 @@ export function CommonDailyLogView({
     if (ok) onSuccess?.();
   }, [
     aqi,
+    breathlessness,
     canSubmit,
     dashboard,
     diseaseSpecificData,
@@ -343,6 +355,13 @@ export function CommonDailyLogView({
                 />
               </div>
             </div>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <BreathlessnessTracker
+              data={breathlessness}
+              onChange={(updates) => setBreathlessness((current) => ({ ...current, ...updates }))}
+              prevMmrc={prevDay.mmrc}
+            />
           </div>
         </div>
 

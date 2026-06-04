@@ -1,14 +1,9 @@
 "use client";
 
-import { Activity, HeartPulse } from "lucide-react";
 import { DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import dStyles from "@/components/patient/disease.module.css";
 import styles from "./PostICU.module.css";
-
-const SPO2_TREND  = [88, 89, 90, 91, 90, 92, 91, 92, 93, 92, 93, 93, 93, 93];
-const ENERGY_TREND = [2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7];
-const DAYS = ["27M","28T","29W","30T","31F","1S","2S","3M","4T","5W","6T","7F","8S","9S"];
 
 interface Props {
   patient: {
@@ -60,41 +55,6 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
           diseaseLabel="Post-ICU Recovery Dashboard"
         />
 
-        <div className={styles.baselineGrid}>
-          {[
-            {
-              label: "Baseline Saturation",
-              value: patient.baselineSpo2 !== null && patient.baselineSpo2 !== undefined ? `${patient.baselineSpo2}%` : "Not recorded",
-              sub: patient.baselineSpo2 !== null && patient.baselineSpo2 !== undefined
-                ? patient.baselineSpo2 >= 94 ? "Recovery oxygen target" : "Monitor against daily SpO2"
-                : "Doctor baseline pending",
-              icon: Activity,
-              color: patient.baselineSpo2 !== null && patient.baselineSpo2 !== undefined && patient.baselineSpo2 < 92 ? "#c94d49" : "#1565c0",
-            },
-            {
-              label: "Baseline Heart Rate",
-              value: patient.baselineHeartRate !== null && patient.baselineHeartRate !== undefined ? `${patient.baselineHeartRate} bpm` : "Not recorded",
-              sub: "Doctor baseline pending",
-              icon: HeartPulse,
-              color: "#d85a30",
-            },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.label} className={styles.baselineCard}>
-                <div className={styles.baselineIcon} style={{ background: `${item.color}18`, color: item.color }}>
-                  <Icon size={18} strokeWidth={1.8} />
-                </div>
-                <div>
-                  <p className={styles.baselineLabel}>{item.label}</p>
-                  <p className={styles.baselineValue} style={{ color: item.color }}>{item.value}</p>
-                  <p className={styles.baselineSub}>{item.sub}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="post_icu" />}
 
         {/* Recovery milestone banner */}
@@ -123,6 +83,34 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
         </div>
 
         <div className={styles.grid}>
+          <div className={dStyles.card}>
+            <p className={dStyles.cardTitle}>Today&apos;s Sputum Status</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, color: "#d85a30", fontSize: 15, fontWeight: 800 }}>Dark Green - Potential Infection</p>
+                <p className={dStyles.cardSub} style={{ marginTop: 4 }}>3rd consecutive day - Doctor notified</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={dStyles.card}>
+            <p className={dStyles.cardTitle}>Infection Screen</p>
+            <p className={dStyles.cardSub}>Daily check for early infection signs</p>
+            <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+              {[
+                { label: "Fever / Temp > 38°C", val: "Yes - 38.4°C" },
+                { label: "Flu-like / Malaise", val: "Yes - feeling exhausted" },
+                { label: "Sputum change", val: "Dark green x 3 days" },
+                { label: "Chest clearance", val: "Very difficult (4/5)" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "8px 10px", borderRadius: 8, background: "#fff7ed", border: "1px solid rgba(216,90,48,0.18)" }}>
+                  <span style={{ fontSize: 12, color: "#6d8794", fontWeight: 700 }}>{item.label}</span>
+                  <span style={{ fontSize: 12, color: "#d85a30", fontWeight: 800 }}>{item.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Recovery checklist */}
           <div className={dStyles.card}>
             <p className={dStyles.cardTitle}>Recovery Milestones</p>
