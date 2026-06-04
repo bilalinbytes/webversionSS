@@ -386,9 +386,9 @@ export function BreathlessnessTracker({
   prevMmrc?: number | null;
 }) {
   const STATUS_OPTIONS: { id: BreathlessnessStatus; label: string; labelHi: string; color: string }[] = [
-    { id: "no_change",    label: "No Change",    labelHi: "कोई बदलाव नहीं", color: "#0f6e56" },
-    { id: "improvement",  label: "Improvement",  labelHi: "सुधार",          color: "#2e9e5b" },
-    { id: "deterioration",label: "Deterioration",labelHi: "बिगड़ना",         color: "#e24b4a" },
+    { id: "improvement",  label: "Improved", labelHi: "सुधार", color: "#2e9e5b" },
+    { id: "deterioration",label: "Worsened", labelHi: "बिगड़ा", color: "#e24b4a" },
+    { id: "no_change",    label: "Static",   labelHi: "स्थिर", color: "#0f6e56" },
   ];
 
   return (
@@ -416,7 +416,13 @@ export function BreathlessnessTracker({
               fontWeight: 600,
               cursor: "pointer",
             }}
-            onClick={() => onChange({ status: opt.id })}
+            onClick={() => onChange({
+              status: opt.id,
+              increasedOxygenReq: opt.id === "deterioration" ? true : null,
+              additionalLitres: opt.id === "deterioration" ? data.additionalLitres : "",
+              spo2Rest: opt.id === "deterioration" ? data.spo2Rest : "",
+              spo2Exertion: opt.id === "deterioration" ? data.spo2Exertion : "",
+            })}
           >
             {opt.label} · {opt.labelHi}
           </button>
@@ -425,83 +431,18 @@ export function BreathlessnessTracker({
 
       {data.status === "deterioration" && (
         <div style={{ marginTop: 16, padding: 14, background: "#fff5f5", borderRadius: 8, border: "1px solid #fca5a5" }}>
-          <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 600, color: "#e24b4a" }}>
-            Deterioration Details · बिगड़ने का विवरण
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", display: "block", marginBottom: 4 }}>
-                SpO₂ at Rest · आराम में ऑक्सीजन
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input
-                  type="number" min="70" max="100"
-                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 14 }}
-                  placeholder="e.g. 88"
-                  value={data.spo2Rest}
-                  onChange={e => onChange({ spo2Rest: e.target.value })}
-                />
-                <span style={{ fontSize: 12, color: "#888680" }}>%</span>
-              </div>
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", display: "block", marginBottom: 4 }}>
-                SpO₂ After Exertion · परिश्रम के बाद
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input
-                  type="number" min="70" max="100"
-                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 14 }}
-                  placeholder="e.g. 82"
-                  value={data.spo2Exertion}
-                  onChange={e => onChange({ spo2Exertion: e.target.value })}
-                />
-                <span style={{ fontSize: 12, color: "#888680" }}>%</span>
-              </div>
-            </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", marginBottom: 8 }}>
-              Increased Oxygen Requirement? · ऑक्सीजन की ज़रूरत बढ़ी?
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[true, false].map(val => (
-                <button
-                  key={String(val)}
-                  type="button"
-                  style={{
-                    padding: "7px 16px",
-                    borderRadius: 6,
-                    border: `1.5px solid ${data.increasedOxygenReq === val ? (val ? "#e24b4a" : "#0f6e56") : "#d4cfc7"}`,
-                    background: data.increasedOxygenReq === val ? (val ? "#e24b4a" : "#0f6e56") : "white",
-                    color: data.increasedOxygenReq === val ? "white" : "#3d3a35",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                  onClick={() => onChange({ increasedOxygenReq: val })}
-                >
-                  {val ? "Yes · हाँ" : "No · नहीं"}
-                </button>
-              ))}
-            </div>
-            {data.increasedOxygenReq === true && (
-              <div style={{ marginTop: 10 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", display: "block", marginBottom: 4 }}>
-                  Additional Litres Required · कितने अतिरिक्त लीटर?
-                </label>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <input
-                    type="number" min="0" max="15" step="0.5"
-                    style={{ width: 100, padding: "8px 10px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 14 }}
-                    placeholder="e.g. 2"
-                    value={data.additionalLitres}
-                    onChange={e => onChange({ additionalLitres: e.target.value })}
-                  />
-                  <span style={{ fontSize: 12, color: "#888680" }}>L/min</span>
-                </div>
-              </div>
-            )}
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", display: "block", marginBottom: 4 }}>
+            How many litres of oxygen? · ऑक्सीजन कितने लीटर?
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="number" min="0" max="15" step="0.5"
+              style={{ width: 120, padding: "8px 10px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 14 }}
+              placeholder="e.g. 2"
+              value={data.additionalLitres}
+              onChange={e => onChange({ increasedOxygenReq: true, additionalLitres: e.target.value })}
+            />
+            <span style={{ fontSize: 12, color: "#888680" }}>L/min</span>
           </div>
         </div>
       )}
