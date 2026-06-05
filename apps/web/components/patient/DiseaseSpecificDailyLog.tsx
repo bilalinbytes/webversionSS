@@ -601,7 +601,6 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
   const [sleep, setSleep] = useState<YesNoValue>(null);
   const [energy, setEnergy] = useState(5);
   const [chest, setChest] = useState(0);
-  const [steps, setSteps] = useState("");
   const [haemoptysisVolume, setHaemoptysisVolume] =
     useState<(typeof COPD_HEMOPTYSIS_VOLUME_OPTIONS)[number]["value"] | null>(null);
 
@@ -619,12 +618,11 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
       sleep_disturbed: sleep,
       energy_level: energy,
       chest_heaviness: chest,
-      step_count_today: steps !== "" ? Number(steps) : null,
       haemoptysis: colour === "blood_streaked" ? true : null,
       haemoptysis_volume: colour === "blood_streaked" ? haemoptysisVolume : null,
       vas_symptoms: { chest_heaviness: chest },
     } as DiseaseLogPatch);
-  }, [chest, colour, cough, energy, exercise, haemoptysisVolume, onChange, sleep, steps, volume]);
+  }, [chest, colour, cough, energy, exercise, haemoptysisVolume, onChange, sleep, volume]);
 
   return (
     <div className={dStyles.card}>
@@ -670,9 +668,6 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
       <div className={dStyles.grid2}>
         <RangeSlider label="Energy Levels" labelHi="ऊर्जा स्तर" value={energy} onChange={setEnergy} />
         <RangeSlider label="Chest Heaviness" labelHi="छाती में भारीपन" value={chest} onChange={setChest} />
-      </div>
-      <div style={{ marginTop: 14 }}>
-        <NumberField label="Daily Step Count" labelHi="दैनिक कदम" value={steps} onChange={setSteps} />
       </div>
     </div>
   );

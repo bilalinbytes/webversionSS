@@ -73,12 +73,6 @@ interface DailyLogInfo {
   logged_at: string;
 }
 
-interface RedFlagInfo {
-  global_score: number;
-  risk_level: string | null;
-  score_breakdown: Array<{ component: string; points: number; detail: string }> | null;
-}
-
 interface InstructionInfo {
   id: string;
   instruction_text: string;
@@ -199,7 +193,6 @@ export function PatientDetail({
   const [diagnosis, setDiagnosis] = useState<DiagnosisInfo | null>(null);
   const [respSupport, setRespSupport] = useState<RespSupportInfo | null>(null);
   const [latestLog, setLatestLog] = useState<DailyLogInfo | null>(null);
-  const [redFlag, setRedFlag] = useState<RedFlagInfo | null>(null);
   const [instructions, setInstructions] = useState<InstructionInfo[]>([]);
   const [trendData, setTrendData] = useState<TrendPoint[]>([]);
   const [historyEvents, setHistoryEvents] = useState<HistoryEvent[]>([]);
@@ -218,7 +211,6 @@ export function PatientDetail({
       diagRes,
       rsRes,
       logRes,
-      rfRes,
       instrRes,
       historyMedRes,
       trendRes,
@@ -228,7 +220,6 @@ export function PatientDetail({
       supabase.from("patient_diagnoses").select("primary_diagnosis,diagnosed_at,comorbidities,comorbidities_other_text,effective_dashboard").eq("patient_id", resolvedId).order("created_at", { ascending: false }).limit(1).single(),
       supabase.from("respiratory_support").select("ltot_enabled,ltot_litres,bipap_enabled,bipap_ipap,bipap_epap").eq("patient_id", resolvedId).single(),
       supabase.from("daily_logs").select("spo2_rest,mmrc_today,aqi_value,medication_compliance,logged_at").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(1).single(),
-      supabase.from("red_flag_scores").select("global_score,risk_level,score_breakdown").eq("patient_id", resolvedId).order("computed_at", { ascending: false }).limit(1).single(),
       supabase.from("doctor_instructions").select("id,instruction_text,created_at").eq("patient_id", resolvedId).order("created_at", { ascending: false }),
       supabase.from("medications").select("id,drug_name,route,dose,dose_unit,frequency,start_date,end_date,serial_number").eq("patient_id", resolvedId).order("start_date", { ascending: false }).order("serial_number", { ascending: true }),
       supabase.from("daily_logs").select("logged_at,spo2_rest,mmrc_today,vas_symptoms").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
@@ -298,16 +289,6 @@ export function PatientDetail({
         aqi_value: l.aqi_value,
         medication_compliance: l.medication_compliance as Record<string, boolean> | null,
         logged_at: l.logged_at,
-      });
-    }
-    if (rfRes.data) {
-      const rf = rfRes.data;
-      setRedFlag({
-        global_score: rf.global_score,
-        risk_level: rf.risk_level,
-        score_breakdown: Array.isArray(rf.score_breakdown)
-          ? (rf.score_breakdown as Array<{ component: string; points: number; detail: string }>)
-          : null,
       });
     }
     if (instrRes.data) setInstructions(instrRes.data as InstructionInfo[]);
@@ -409,7 +390,6 @@ export function PatientDetail({
     diagnosis?.comorbidities,
     diagnosis?.comorbidities_other_text,
   );
-  const displayScore = redFlag?.global_score ?? legacyPatient?.score ?? "—";
   const displaySpo2 = latestLog?.spo2_rest ?? legacyPatient?.spo2 ?? null;
   const displayMmrc = latestLog?.mmrc_today ?? legacyPatient?.mmrc ?? null;
   const displayAqi = latestLog?.aqi_value ?? legacyPatient?.aqi ?? null;
@@ -440,10 +420,6 @@ export function PatientDetail({
               {bipapTag && <span className={styles.tag}>{bipapTag}</span>}
             </div>
           </div>
-          <div className={styles.scoreBlock}>
-            <span className={styles.scoreVal}>{displayScore}</span>
-            <span className={styles.scoreLbl}>Red Flag Score</span>
-          </div>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
             <X size={14} />
           </button>
@@ -472,7 +448,6 @@ export function PatientDetail({
 
           {!loading && activeTab === "Overview" && (
             <OverviewTab
-              redFlag={redFlag}
               displaySpo2={displaySpo2}
               displayMmrc={displayMmrc}
               displayAqi={displayAqi}
@@ -507,7 +482,6 @@ export function PatientDetail({
 
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 function OverviewTab({
-  redFlag,
   displaySpo2,
   displayMmrc,
   displayAqi,
@@ -521,7 +495,6 @@ function OverviewTab({
   onEdit,
   onExport,
 }: {
-  redFlag: RedFlagInfo | null;
   displaySpo2: number | null;
   displayMmrc: number | null;
   displayAqi: number | string | null;
@@ -535,7 +508,6 @@ function OverviewTab({
   onEdit?: () => void;
   onExport?: () => void;
 }) {
-  const breakdown = redFlag?.score_breakdown ?? [];
   const compliance = latestLog?.medication_compliance ?? null;
   const complianceEntries = compliance ? Object.entries(compliance) : [];
   const [instructionsOpen, setInstructionsOpen] = useState(false);
@@ -543,25 +515,6 @@ function OverviewTab({
 
   return (
     <>
-      {/* Score breakdown */}
-      {breakdown.length > 0 && (
-        <div className={styles.breakdown}>
-          <p className={styles.breakdownTitle}>
-            Score Breakdown (§4.6 — shown for all scores ≥ 7)
-          </p>
-          {breakdown.filter((b) => b.points > 0).map((row, index) => (
-            <div key={`${row.component}-${row.detail}-${index}`} className={styles.breakdownRow}>
-              <span>{row.detail}</span>
-              <span className={styles.breakdownPts}>+{row.points}</span>
-            </div>
-          ))}
-          <div className={styles.breakdownTotal}>
-            <span>Total score</span>
-            <span>= {redFlag?.global_score ?? "—"}</span>
-          </div>
-        </div>
-      )}
-
       {/* Trend boxes */}
       <div className={styles.trendRow}>
         {[
@@ -848,15 +801,14 @@ export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationIn
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-                    {["#", "Route", "Drug Name", "Dose", "Frequency", "End Date"].map((h) => (
+                    {["Route", "Drug Name", "Dose", "Frequency", "End Date"].map((h) => (
                       <th key={h} style={{ padding: "6px 12px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#888680", textTransform: "uppercase", letterSpacing: "0.04em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {meds.map((med, idx) => (
+                  {meds.map((med) => (
                     <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-                      <td style={{ padding: "8px 12px", color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>#{med.serial_number ?? idx + 1}</td>
                       <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.route}</td>
                       <td style={{ padding: "8px 12px", fontWeight: 600, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.drug_name}</td>
                       <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "—"}</td>
@@ -892,6 +844,12 @@ interface PrescriptionGroup {
   medications: PrescriptionMed[];
 }
 
+interface PrescriptionInstruction {
+  id: string;
+  instruction_text: string;
+  created_at: string | null;
+}
+
 interface DraftMed {
   _key: number;
   drug_name: string;
@@ -921,6 +879,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const [showEditor, setShowEditor] = useState(false);
   const [draftMeds, setDraftMeds] = useState<DraftMed[]>([]);
   const [patientInstruction, setPatientInstruction] = useState("");
+  const [latestPrescriptionInstruction, setLatestPrescriptionInstruction] = useState<PrescriptionInstruction | null>(null);
   const [prescriptionDate, setPrescriptionDate] = useState(new Date().toISOString().split("T")[0]!);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -928,10 +887,11 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const fetchPrescriptions = useCallback(async () => {
     setLoading(true);
     const response = await fetch(`/api/patients/${patientId}/prescriptions`, { credentials: "include" });
-    const body = await response.json().catch(() => null) as { prescriptions?: PrescriptionGroup[] } | null;
+    const body = await response.json().catch(() => null) as { prescriptions?: PrescriptionGroup[]; instruction?: PrescriptionInstruction | null } | null;
 
     if (response.ok && body?.prescriptions) {
       setPrescriptions(body.prescriptions);
+      setLatestPrescriptionInstruction(body.instruction ?? null);
       if (body.prescriptions.length > 0) setExpandedDate(body.prescriptions[0]!.date);
     } else {
       const supabase = createClient();
@@ -998,7 +958,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       }]);
     }
     setShowEditor(true);
-    setPatientInstruction("");
+    setPatientInstruction(latestPrescriptionInstruction?.instruction_text ?? "");
     setSaveMsg(null);
   };
 
@@ -1341,10 +1301,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           <p>No prescriptions yet. Click &quot;+ New Prescription&quot; to add the first one.</p>
         </div>
       ) : (
-        <div style={{ position: "relative" }}>
-          {/* Vertical timeline line */}
-          <div style={{ position: "absolute", left: 15, top: 0, bottom: 0, width: 2, background: "rgba(18,105,105,0.15)", borderRadius: 1 }} />
-
+        <div style={{ display: "grid", gap: 12 }}>
           {prescriptions.map((group, idx) => {
             const isExpanded = expandedDate === group.date;
             const isLatest = idx === 0;
@@ -1353,21 +1310,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             const stoppedMeds = group.medications.filter(m => m.end_date && m.end_date < today);
 
             return (
-              <div key={group.date} style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative" }}>
-                {/* Timeline dot */}
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                  background: isLatest ? "#126969" : "#e8f5f1",
-                  border: `2px solid ${isLatest ? "#126969" : "#a7d7c5"}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, color: isLatest ? "white" : "#126969", fontWeight: 700,
-                  zIndex: 1,
-                }}>
-                  {isLatest ? "Latest" : String(prescriptions.length - idx)}
-                </div>
-
-                {/* Card */}
-                <div style={{ flex: 1, border: `1px solid ${isLatest ? "#a7d7c5" : "rgba(0,0,0,0.08)"}`, borderRadius: 10, overflow: "hidden", background: "white" }}>
+              <div key={group.date} style={{ border: `1px solid ${isLatest ? "#a7d7c5" : "rgba(0,0,0,0.08)"}`, borderRadius: 10, overflow: "hidden", background: "white" }}>
                   {/* Card header — clickable */}
                   <button
                     type="button"
@@ -1399,16 +1342,13 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                           <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#0f6e56", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                             Active Medications
                           </p>
-                          {activeMeds.map((med, i) => (
+                          {activeMeds.map((med) => (
                             <div key={med.id} style={{
                               display: "flex", alignItems: "center", gap: 10,
                               padding: "7px 10px", marginBottom: 4,
                               background: "#f0faf5", borderRadius: 7,
                               border: "1px solid rgba(18,105,105,0.12)",
                             }}>
-                              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#126969", color: "white", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                {i + 1}
-                              </span>
                               <div style={{ flex: 1 }}>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: "#132d36", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                                   {med.drug_name}
@@ -1461,7 +1401,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                       )}
                     </div>
                   )}
-                </div>
               </div>
             );
           })}

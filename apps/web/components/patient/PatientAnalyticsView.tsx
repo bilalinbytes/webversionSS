@@ -58,6 +58,7 @@ interface AnalyticsPoint {
   spo2Rest: number | null;
   spo2Walk: number | null;
   heartRate: number | null;
+  mmrc: number | null;
   symptom: number | null;
   aqi: number | null;
   adherence: number | null;
@@ -84,7 +85,10 @@ interface AnalyticsPoint {
   hemoptysis: number | null;
   sputumClearance: number | null;
   symptoms: Record<string, number>;
+  medications: Record<string, number>;
 }
+
+const MMRC_SYMPTOM_KEY = "__mmrc_today";
 
 interface PatientAnalyticsViewProps {
   patientId: string;
@@ -198,7 +202,12 @@ function extractSymptoms(vas: Record<string, unknown> | null): Record<string, nu
 }
 
 function formatMetricName(value: string): string {
+  if (value === MMRC_SYMPTOM_KEY) return "mMRC Grade";
   return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeMedicationKey(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function adherencePercent(compliance: Record<string, unknown> | null): number | null {
@@ -320,6 +329,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   const [selectedPftMetric, setSelectedPftMetric] = useState<PftMetricKey>("ratio");
   const [selectedKbildMetric, setSelectedKbildMetric] = useState<keyof AnalyticsPoint>("kbild");
   const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [selectedMedication, setSelectedMedication] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"single" | "all" | null>(null);
@@ -401,12 +411,17 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         const disease = log.disease_specific_data;
         const kbildResponses = (disease?.kbild_responses ?? {}) as Record<string, unknown>;
         const symptoms = extractSymptoms(log.vas_symptoms);
+        const medications: Record<string, number> = {};
+        for (const [name, taken] of Object.entries(log.medication_compliance ?? {})) {
+          if (taken === true || taken === false) medications[normalizeMedicationKey(name)] = taken ? 100 : 0;
+        }
         return {
           date: fmtDate(log.logged_at),
           sortDate: log.logged_at,
           spo2Rest: log.spo2_rest,
           spo2Walk: log.spo2_exertion,
           heartRate: numberFromAny(disease, ["heart_rate", "heartRate", "pulse_rate", "pulse"]),
+          mmrc: log.mmrc_today,
           symptom: extractSymptom(log.vas_symptoms, log.mmrc_today),
           aqi: log.aqi_value,
           adherence: adherencePercent(log.medication_compliance),
@@ -433,6 +448,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           hemoptysis: numberFromAny(log.vas_symptoms, ["hemoptysis"]) ?? numberFromAny(disease, ["hemoptysis", "hemoptysis_ml"]),
           sputumClearance: categoricalNumber(disease, ["ease_of_sputum_clearance", "sputum_clearance", "sputum_clearance_ease", "sputum_volume"]),
           symptoms,
+          medications,
         };
       })
       .reverse();
@@ -461,16 +477,38 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
 
   const selectedPftMetricConfig = PFT_METRICS.find((metric) => metric.key === selectedPftMetric) ?? PFT_METRICS[0];
   const symptomKeys = useMemo(
-    () => Array.from(new Set(dailySeries.flatMap((row) => Object.keys(row.symptoms)))).sort(),
+    () => {
+      const vasKeys = Array.from(new Set(dailySeries.flatMap((row) => Object.keys(row.symptoms)))).sort();
+      const hasMmrc = dailySeries.some((row) => row.mmrc !== null);
+      return hasMmrc ? [MMRC_SYMPTOM_KEY, ...vasKeys] : vasKeys;
+    },
     [dailySeries],
   );
+  const selectedSymptomIsMmrc = selectedSymptom === MMRC_SYMPTOM_KEY;
   const selectedSymptomSeries = useMemo(
     () => dailySeries.map((row) => ({
       date: row.date,
       sortDate: row.sortDate,
-      value: selectedSymptom ? row.symptoms[selectedSymptom] ?? null : null,
+      value: selectedSymptomIsMmrc ? row.mmrc : selectedSymptom ? row.symptoms[selectedSymptom] ?? null : null,
     })),
-    [dailySeries, selectedSymptom],
+    [dailySeries, selectedSymptom, selectedSymptomIsMmrc],
+  );
+  const selectedSymptomDomain: [number, number] = selectedSymptomIsMmrc ? [0, 4] : [0, 10];
+  const medicationOptions = useMemo(() => {
+    const displayByKey = new Map<string, string>();
+    for (const name of [...meds.map((med) => med.drug_name), ...dailySeries.flatMap((row) => Object.keys(row.medications))]) {
+      const key = normalizeMedicationKey(name);
+      if (key && !displayByKey.has(key)) displayByKey.set(key, name);
+    }
+    return Array.from(displayByKey.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [dailySeries, meds]);
+  const selectedMedicationSeries = useMemo(
+    () => dailySeries.map((row) => ({
+      date: row.date,
+      sortDate: row.sortDate,
+      value: selectedMedication ? row.medications[selectedMedication] ?? null : null,
+    })),
+    [dailySeries, selectedMedication],
   );
 
   useEffect(() => {
@@ -482,6 +520,16 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       setSelectedSymptom(symptomKeys[0] ?? "");
     }
   }, [selectedSymptom, symptomKeys]);
+
+  useEffect(() => {
+    if (medicationOptions.length === 0) {
+      setSelectedMedication("");
+      return;
+    }
+    if (!selectedMedication || !medicationOptions.some(([key]) => key === selectedMedication)) {
+      setSelectedMedication(medicationOptions[0]?.[0] ?? "");
+    }
+  }, [medicationOptions, selectedMedication]);
 
   async function handleExport(type: "single" | "all") {
     setExporting(type);
@@ -689,7 +737,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                   <LineChart data={selectedSymptomSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
                     <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                    <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
+                    <YAxis domain={selectedSymptomDomain} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
                     <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
                     <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
                     <Line type="monotone" dataKey="value" stroke={COLORS.orange} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={formatMetricName(selectedSymptom)} connectNulls />
@@ -705,6 +753,45 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
 
           <ChartBlock title="AQI Trends · वायु गुणवत्ता ट्रेंड" subtitle="Air quality exposure on logged days · लॉग वाले दिनों की वायु गुणवत्ता">
             <MetricLineChart data={dailySeries} lines={[{ key: "aqi", name: "AQI", color: COLORS.gold }]} />
+          </ChartBlock>
+        </div>
+      </section>
+
+
+
+      <section>
+        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>Drug Analytics</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
+          <ChartBlock title="Drug Adherence Trends" subtitle="Choose any drug prescribed by the doctor; 100 = taken, 0 = missed.">
+            {medicationOptions.length === 0 ? (
+              <EmptyChart label="No medicines prescribed yet." />
+            ) : (
+              <>
+                <select
+                  value={selectedMedication}
+                  onChange={(event) => setSelectedMedication(event.target.value)}
+                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
+                >
+                  {medicationOptions.map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+                {!selectedMedicationSeries.some((row) => row.value !== null) ? (
+                  <EmptyChart label="No adherence logs recorded for this drug yet." />
+                ) : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={selectedMedicationSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
+                      <YAxis domain={[0, 100]} ticks={[0, 100]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} formatter={(value) => [Number(value) >= 100 ? "Taken" : "Missed", "Status"]} />
+                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
+                      <Line type="monotone" dataKey="value" stroke={COLORS.teal} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={medicationOptions.find(([key]) => key === selectedMedication)?.[1] ?? "Drug"} connectNulls />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </>
+            )}
           </ChartBlock>
         </div>
       </section>
@@ -728,7 +815,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ background: "#fafafa" }}>
-                {["Date", "SpO2 Rest", "SpO2 Walk", "Heart Rate", "Symptoms", "AQI", "Adherence"].map((header) => (
+                {["Date", "SpO2 Rest", "SpO2 Walk", "Heart Rate", "mMRC", "Symptoms", "AQI", "Adherence"].map((header) => (
                   <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "#77736b" }}>{header}</th>
                 ))}
               </tr>
@@ -740,6 +827,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                   <td style={{ padding: "8px 10px" }}>{row.spo2Rest ?? "--"}</td>
                   <td style={{ padding: "8px 10px" }}>{row.spo2Walk ?? "--"}</td>
                   <td style={{ padding: "8px 10px" }}>{row.heartRate ?? "--"}</td>
+                  <td style={{ padding: "8px 10px" }}>{row.mmrc ?? "--"}</td>
                   <td style={{ padding: "8px 10px" }}>{row.symptom ?? "--"}</td>
                   <td style={{ padding: "8px 10px" }}>{row.aqi ?? "--"}</td>
                   <td style={{ padding: "8px 10px" }}>{row.adherence !== null ? `${row.adherence}%` : "--"}</td>
@@ -747,7 +835,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
               ))}
               {dailySeries.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: 16, color: "#888680", textAlign: "center" }}>No logged analytics history yet.</td>
+                  <td colSpan={8} style={{ padding: 16, color: "#888680", textAlign: "center" }}>No logged analytics history yet.</td>
                 </tr>
               )}
             </tbody>

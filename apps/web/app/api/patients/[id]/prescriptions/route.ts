@@ -59,7 +59,7 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.header },
-        React.createElement(Text, { style: pdfStyles.title }, "Prescription"),
+        React.createElement(Text, { style: pdfStyles.title }, "Emergency Prescription"),
         React.createElement(Text, { style: pdfStyles.meta }, `Patient: ${patientName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Doctor: ${doctorName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Prescription date: ${prescriptionDate}`),
@@ -207,20 +207,30 @@ export async function GET(
     });
   }
 
-  const { data: meds, error } = await admin
-    .from("medications")
-    .select("id, drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
-    .eq("patient_id", patientId)
-    .order("start_date", { ascending: false })
-    .order("serial_number", { ascending: true });
+  const [medsRes, instructionRes] = await Promise.all([
+    admin
+      .from("medications")
+      .select("id, drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
+      .eq("patient_id", patientId)
+      .order("start_date", { ascending: false })
+      .order("serial_number", { ascending: true }),
+    admin
+      .from("doctor_instructions")
+      .select("id, instruction_text, created_at")
+      .eq("patient_id", patientId)
+      .eq("doctor_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (medsRes.error || instructionRes.error) {
+    return NextResponse.json({ error: medsRes.error?.message ?? instructionRes.error?.message }, { status: 500 });
   }
 
   // Group by start_date (prescription date)
-  const grouped: Record<string, typeof meds> = {};
-  for (const med of meds ?? []) {
+  const grouped: Record<string, typeof medsRes.data> = {};
+  for (const med of medsRes.data ?? []) {
     const key = med.start_date;
     if (!grouped[key]) grouped[key] = [];
     grouped[key]!.push(med);
@@ -231,7 +241,7 @@ export async function GET(
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([date, medications]) => ({ date, medications }));
 
-  return NextResponse.json({ prescriptions });
+  return NextResponse.json({ prescriptions, instruction: instructionRes.data ?? null });
 }
 
 // ── POST /api/patients/[id]/prescriptions ─────────────────────────────────────
@@ -301,7 +311,18 @@ export async function POST(
       .eq("patient_id", patientId);
   }
 
-  // Insert new/modified medications with today's prescription date
+  // Saving the same consultation date replaces that prescription batch instead of stacking duplicates.
+  const { error: deleteExistingError } = await admin
+    .from("medications")
+    .delete()
+    .eq("patient_id", patientId)
+    .eq("start_date", prescription_date);
+
+  if (deleteExistingError) {
+    return NextResponse.json({ error: deleteExistingError.message }, { status: 500 });
+  }
+
+  // Insert new/modified medications with the selected prescription date
   const inserts = medications
     .filter(m => m.status !== "stopped")
     .map((m, idx) => ({

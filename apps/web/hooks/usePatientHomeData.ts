@@ -16,7 +16,9 @@ export interface PatientHomeData {
   vasTrend: number[];
   diseaseSpecificTrend: number[];
   lastLogDate: string | null;
+  hasTodayLog: boolean;
   diagnosis: string | null;
+  effectiveDashboard: "asthma" | "copd" | "bronchiectasis" | "ild" | "post_icu" | null;
   baselineSpo2: number | null;
   baselineHeartRate: number | null;
   latestPft: {
@@ -37,6 +39,25 @@ const FALLBACKS = {
   doctorHospital: "",
 };
 
+function normalizeDashboard(
+  primaryDiagnosis: string | null | undefined,
+  storedDashboard: string | null | undefined,
+): PatientHomeData["effectiveDashboard"] {
+  const primary = (primaryDiagnosis ?? "").toLowerCase();
+  const stored = (storedDashboard ?? "").toLowerCase();
+
+  if (primary.includes("asthma") && !primary.includes("copd")) return "asthma";
+  if (primary.includes("copd")) return "copd";
+  if (primary.includes("bronch")) return "bronchiectasis";
+  if (primary.includes("ild") || primary.includes("interstitial")) return "ild";
+  if (primary.includes("post_icu") || primary.includes("post icu")) return "post_icu";
+
+  if (["asthma", "copd", "bronchiectasis", "ild", "post_icu"].includes(stored)) {
+    return stored as PatientHomeData["effectiveDashboard"];
+  }
+  return null;
+}
+
 export function usePatientHomeData(
   patientId: string | null,
   doctorId: string | null,
@@ -51,7 +72,9 @@ export function usePatientHomeData(
     vasTrend: [],
     diseaseSpecificTrend: [],
     lastLogDate: null,
+    hasTodayLog: false,
     diagnosis: null,
+    effectiveDashboard: null,
     baselineSpo2: null,
     baselineHeartRate: null,
     latestPft: null,
@@ -108,10 +131,31 @@ export function usePatientHomeData(
         | { name?: string | null; hospital?: string | null }
         | null
         | undefined;
+      const activeDashboard = normalizeDashboard(
+        diagnosisRes.data?.primary_diagnosis,
+        diagnosisRes.data?.effective_dashboard ?? effectiveDashboard,
+      );
 
       // reverse so index 0 = oldest, index 13 = most recent (sparkline order)
-      const logs = (logsRes.data ?? []).slice().reverse();
+      const logs = (logsRes.data ?? [])
+        .filter((log) => {
+          if (!activeDashboard) return true;
+          const diseaseData = log.disease_specific_data as Record<string, unknown> | null;
+          return diseaseData?.effective_dashboard === activeDashboard;
+        })
+        .slice()
+        .reverse();
       const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(todayStart);
+      todayEnd.setDate(todayEnd.getDate() + 1);
+      const todayLog = logs
+        .filter((log) => {
+          const loggedAt = log.logged_at ? new Date(log.logged_at) : null;
+          return loggedAt !== null && loggedAt >= todayStart && loggedAt < todayEnd;
+        })
+        .at(-1) ?? null;
 
       const spo2Trend = logs.map(l => l.spo2_rest ?? FALLBACKS.spo2Today);
       const mmrcTrend = logs.map(l => l.mmrc_today ?? 0);
@@ -124,13 +168,13 @@ export function usePatientHomeData(
 
       const diseaseSpecificTrend = logs.map(l => {
         const d = l.disease_specific_data as Record<string, unknown>;
-        if (effectiveDashboard === "asthma") {
+        if (activeDashboard === "asthma") {
           return typeof d?.rescue_inhaler_puffs === "number" ? d.rescue_inhaler_puffs : 0;
         }
-        if (effectiveDashboard === "copd" || effectiveDashboard === "post_icu") {
+        if (activeDashboard === "copd" || activeDashboard === "post_icu") {
           return typeof d?.energy_level === "number" ? d.energy_level : 5;
         }
-        if (effectiveDashboard === "ild") {
+        if (activeDashboard === "ild") {
           return typeof d?.kbild_score === "number" ? d.kbild_score : 0;
         }
         return 0;
@@ -138,9 +182,9 @@ export function usePatientHomeData(
 
       setData({
         loading: false,
-        spo2Today: latestLog?.spo2_rest ?? FALLBACKS.spo2Today,
-        mmrcToday: latestLog?.mmrc_today ?? FALLBACKS.mmrcToday,
-        aqiToday: latestLog?.aqi_value ?? FALLBACKS.aqiToday,
+        spo2Today: todayLog?.spo2_rest ?? FALLBACKS.spo2Today,
+        mmrcToday: todayLog?.mmrc_today ?? FALLBACKS.mmrcToday,
+        aqiToday: todayLog?.aqi_value ?? FALLBACKS.aqiToday,
         riskScore: scoreRes.data?.global_score ?? FALLBACKS.riskScore,
         doctor: doctor?.name ?? FALLBACKS.doctor,
         doctorHospital: doctor?.hospital ?? FALLBACKS.doctorHospital,
@@ -149,7 +193,9 @@ export function usePatientHomeData(
         vasTrend: vasTrend.length > 0 ? vasTrend : [],
         diseaseSpecificTrend: diseaseSpecificTrend.length > 0 ? diseaseSpecificTrend : [],
         lastLogDate: latestLog?.logged_at ?? null,
+        hasTodayLog: todayLog !== null,
         diagnosis: diagnosisRes.data?.primary_diagnosis ?? null,
+        effectiveDashboard: activeDashboard,
         baselineSpo2: baselineRes.data?.baseline_spo2 ?? null,
         baselineHeartRate: null,
         latestPft: pftRes.data

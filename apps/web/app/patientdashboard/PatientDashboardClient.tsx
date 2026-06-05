@@ -107,11 +107,8 @@ function PrescriptionCard() {
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
-        {displayedMeds.slice(0, 5).map((med, index) => (
+        {displayedMeds.slice(0, 5).map((med) => (
           <div key={med.id} style={{ display: "flex", gap: 10, alignItems: "center", padding: "9px 10px", borderRadius: 8, background: "#f8f7f5", border: "1px solid rgba(19,45,54,0.06)" }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#126969", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
-              {index + 1}
-            </span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                 {med.drug_name}
@@ -132,13 +129,13 @@ function PrescriptionCard() {
       )}
 
       {instruction?.instruction_text && (
-        <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "rgba(216,90,48,0.07)", border: "1px solid rgba(216,90,48,0.16)" }}>
-          <p style={{ margin: 0, fontSize: 11, color: "#d85a30", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-            Patient Instructions
+        <div style={{ marginTop: 12 }}>
+          <p style={{ margin: "0 0 6px", fontSize: 11, color: "#d85a30", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+            Doctor Instructions
           </p>
-          <p style={{ margin: "5px 0 0", fontSize: 13, color: "#132d36", lineHeight: 1.5, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+          <div style={{ width: "100%", minHeight: 76, padding: "10px 12px", borderRadius: 8, background: "#fffdf9", border: "1px solid rgba(216,90,48,0.22)", fontSize: 13, color: "#132d36", lineHeight: 1.5, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "pre-wrap" }}>
             {instruction.instruction_text}
-          </p>
+          </div>
         </div>
       )}
     </section>
@@ -150,13 +147,18 @@ function NewPatientHome({
   doctorName,
   doctorHospital,
   onLogToday,
+  hasPreviousLogs = false,
 }: {
   patientName: string;
   doctorName: string;
   doctorHospital: string;
   onLogToday: () => void;
+  hasPreviousLogs?: boolean;
 }) {
   const firstName = patientName.split(" ")[0] || "Patient";
+  const introText = hasPreviousLogs
+    ? "No health log has been submitted for today yet. Your previous logs are available in Analytics. · आज का स्वास्थ्य लॉग अभी जमा नहीं हुआ है। पुराने लॉग Analytics में उपलब्ध हैं।"
+    : "Your dashboard will populate after your first health log. · पहला स्वास्थ्य लॉग भरने के बाद डैशबोर्ड दिखेगा।";
 
   return (
     <div style={{ padding: 24 }}>
@@ -164,7 +166,7 @@ function NewPatientHome({
         <div>
           <h1 style={{ margin: 0, fontSize: 24, color: "#1a1a18" }}>Welcome, {firstName} · स्वागत है</h1>
           <p style={{ margin: "6px 0 0", color: "#77736b", fontSize: 14 }}>
-            Your dashboard will populate after your first health log. · पहला स्वास्थ्य लॉग भरने के बाद डैशबोर्ड दिखेगा।
+            {introText}
           </p>
         </div>
         <button
@@ -260,6 +262,7 @@ function PatientDashboardPageInner() {
 
   if (loading || !patient) return null;
   const currentPatient = patient;
+  const activeDashboard = homeData.effectiveDashboard ?? currentPatient.effective_dashboard;
 
   const patientProps = {
     name: currentPatient.name,
@@ -274,6 +277,7 @@ function PatientDashboardPageInner() {
     mmrcToday: homeData.loading ? PATIENT_PROFILE.mmrcToday : homeData.mmrcToday,
     aqiToday: homeData.loading ? PATIENT_PROFILE.aqiToday : homeData.aqiToday,
     lastLogDate: homeData.loading ? null : homeData.lastLogDate,
+    hasTodayLog: !homeData.loading && homeData.hasTodayLog,
     diagnosis: homeData.diagnosis,
     baselineSpo2: homeData.baselineSpo2,
     baselineHeartRate: homeData.baselineHeartRate,
@@ -311,11 +315,24 @@ function PatientDashboardPageInner() {
           doctorName={patientProps.doctor}
           doctorHospital={patientProps.doctorHospital}
           onLogToday={goLog}
+          hasPreviousLogs={Boolean(homeData.lastLogDate)}
         />
       );
     }
 
-    switch (currentPatient.effective_dashboard) {
+    if (!homeData.hasTodayLog) {
+      return (
+        <NewPatientHome
+          patientName={currentPatient.name}
+          doctorName={patientProps.doctor}
+          doctorHospital={patientProps.doctorHospital}
+          onLogToday={goLog}
+          hasPreviousLogs
+        />
+      );
+    }
+
+    switch (activeDashboard) {
       case "asthma":
         return (
           <AsthmaHomeView
@@ -389,7 +406,7 @@ function PatientDashboardPageInner() {
         <main className={styles.content}>
           {view === "home" && (
             <>
-              <PrescriptionCard />
+              {!homeData.loading && homeData.hasTodayLog && <PrescriptionCard />}
               {renderHome()}
             </>
           )}

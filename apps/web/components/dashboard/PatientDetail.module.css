@@ -98,32 +98,6 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.scoreBlock {
-  text-align: center;
-  margin-left: auto;
-}
-
-.scoreVal {
-  display: block;
-  font-size: 38px;
-  font-weight: 700;
-  color: #f07070;
-  font-family: var(--font-lora), Georgia, serif;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.scoreLbl {
-  display: block;
-  font-size: 9px;
-  color: #89d3d3;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  margin-top: 2px;
-}
-
 .closeBtn {
   width: 28px;
   height: 28px;
