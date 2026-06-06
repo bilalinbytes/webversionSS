@@ -992,6 +992,25 @@
   background: rgba(18, 105, 105, 0.14);
 }
 
+.cardFolderBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(18, 105, 105, 0.22);
+  color: #126969;
+  background: rgba(18, 105, 105, 0.06);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  transition: background 160ms ease;
+}
+
+.cardFolderBtn:hover {
+  background: rgba(18, 105, 105, 0.14);
+}
+
 /* ── Empty / Error states ──────────────────────────────────────────────────── */
 .emptyState {
   flex: 1;

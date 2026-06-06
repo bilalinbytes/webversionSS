@@ -914,6 +914,7 @@ const ROUTE_OPTS = ["Tablet", "Capsule", "Injection", "Inhaler", "Nebulisation",
 const UNIT_OPTS = ["mg", "mcg", "ml", "puffs", "units", "g", "other"];
 const FREQUENCY_OPTS = ["OD", "BD", "TDS", "Once a week", "Once in 15 days", "Once a month", "Every 6 months"];
 const PATIENT_INSTRUCTION_WORD_LIMIT = 50;
+const PRESCRIPTION_EDITOR_COLUMNS = "76px 150px minmax(220px, 2fr) 100px 88px 170px 138px 150px 176px";
 
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
@@ -922,7 +923,6 @@ function countWords(value: string): number {
 function TreatmentTab({ patientId }: { patientId: string }) {
   const [prescriptions, setPrescriptions] = useState<PrescriptionGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [draftMeds, setDraftMeds] = useState<DraftMed[]>([]);
   const [patientInstruction, setPatientInstruction] = useState("");
@@ -939,7 +939,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
     if (response.ok && body?.prescriptions) {
       setPrescriptions(body.prescriptions);
       setLatestPrescriptionInstruction(body.instruction ?? null);
-      if (body.prescriptions.length > 0) setExpandedDate(body.prescriptions[0]!.date);
     } else {
       const supabase = createClient();
       const res = await supabase
@@ -962,7 +961,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         .sort(([a], [b]) => b.localeCompare(a))
         .map(([date, medications]) => ({ date, medications }));
       setPrescriptions(sorted);
-      if (sorted.length > 0) setExpandedDate(sorted[0]!.date);
     }
     setLoading(false);
   }, [patientId]);
@@ -1202,10 +1200,10 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
           {/* Drug list */}
           <div style={{ overflowX: "auto", marginBottom: 12 }}>
-          <div style={{ minWidth: 1120, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "76px 120px minmax(180px, 2fr) 80px 70px 135px 110px 120px 145px 36px", gap: 6, padding: "0 4px" }}>
-              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue", ""].map(h => (
+            <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
+              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue"].map(h => (
                 <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
               ))}
             </div>
@@ -1219,8 +1217,8 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                 <div
                   key={med._key}
                   style={{
-                    display: "grid", gridTemplateColumns: "76px 120px minmax(180px, 2fr) 80px 70px 135px 110px 120px 145px 36px",
-                    gap: 6, alignItems: "center", padding: "8px",
+                    display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS,
+                    gap: 8, alignItems: "center", padding: "8px",
                     background: isStopped ? "#fdecea" : "white",
                     borderRadius: 8, border: `1px solid ${isStopped ? "#fca5a5" : "rgba(0,0,0,0.07)"}`,
                     opacity: isStopped ? 0.7 : 1,
@@ -1287,20 +1285,22 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     onChange={e => updateDraft(med._key, { end_date: e.target.value, ongoing: e.target.value === "" })}
                     style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
                   />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: statusColor, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                    {statusLabel}
-                  </span>
-                  {isStopped ? (
-                    <button type="button" onClick={() => restoreDraft(med._key)}
-                      style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #d4cfc7", background: "white", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
-                      title="Restore"
-                    >↩</button>
-                  ) : (
-                    <button type="button" onClick={() => removeDraft(med._key)}
-                      style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #fca5a5", background: "#fdecea", color: "#c94d49", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
-                      title="Stop this medication"
-                    >×</button>
-                  )}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minWidth: 0 }}>
+                    <span style={{ minWidth: 0, fontSize: 10, fontWeight: 700, color: statusColor, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {statusLabel}
+                    </span>
+                    {isStopped ? (
+                      <button type="button" onClick={() => restoreDraft(med._key)}
+                        style={{ flexShrink: 0, minWidth: 78, height: 28, padding: "0 10px", borderRadius: 6, border: "1px solid #126969", background: "#e8f5f1", color: "#126969", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+                        title="Continue this medication"
+                      >Continue</button>
+                    ) : (
+                      <button type="button" onClick={() => removeDraft(med._key)}
+                        style={{ flexShrink: 0, minWidth: med.source_id ? 88 : 70, height: 28, padding: "0 10px", borderRadius: 6, border: "1px solid #fca5a5", background: "#fdecea", color: "#c94d49", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+                        title={med.source_id ? "Discontinue this medication" : "Remove this medication"}
+                      >{med.source_id ? "Discontinue" : "Remove"}</button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1385,19 +1385,19 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           <p>No prescriptions yet. Click &quot;+ New Prescription&quot; to add the first one.</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 12 }}>
+        <div className={styles.prescriptionGroups}>
           {prescriptions.map((group, idx) => {
-            const isExpanded = expandedDate === group.date;
+            const isExpanded = true;
             const isLatest = idx === 0;
             const today = new Date().toISOString().split("T")[0]!;
             const activeMeds = group.medications.filter(m => !m.end_date || m.end_date >= today);
 
             return (
-              <div key={group.date} style={{ border: `1px solid ${isLatest ? "#a7d7c5" : "rgba(0,0,0,0.08)"}`, borderRadius: 10, overflow: "hidden", background: "white" }}>
+              <div key={group.date} className={styles.prescriptionGroup}>
                   {/* Card header — clickable */}
                   <button
                     type="button"
-                    onClick={() => setExpandedDate(isExpanded ? null : group.date)}
+                    onClick={() => undefined}
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 14px", background: isLatest ? "#e8f5f1" : "#fafafa",
@@ -1424,7 +1424,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                         <table style={{ minWidth: 960, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                           <thead>
                             <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-                              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue"].map((header) => (
+                              {["S. No.", "Route", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
                                 <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
                               ))}
                             </tr>
@@ -1437,12 +1437,10 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                                   <td style={{ padding: "8px 10px" }}>{med.serial_number ?? medIndex + 1}</td>
                                   <td style={{ padding: "8px 10px" }}>{med.route}</td>
                                   <td style={{ padding: "8px 10px", fontWeight: 700, color: isActive ? "#132d36" : "#c94d49", textDecoration: isActive ? "none" : "line-through" }}>{med.drug_name}</td>
-                                  <td style={{ padding: "8px 10px" }}>{med.dose ?? "--"}</td>
-                                  <td style={{ padding: "8px 10px" }}>{med.dose_unit ?? "--"}</td>
+                                  <td style={{ padding: "8px 10px" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
                                   <td style={{ padding: "8px 10px" }}>{med.frequency ?? "--"}</td>
-                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{fmtDate(med.start_date)}</td>
-                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.end_date ? fmtDate(med.end_date) : "--"}</td>
-                                  <td style={{ padding: "8px 10px", color: isActive ? "#0f6e56" : "#c94d49", fontWeight: 700 }}>{isActive ? "Continue" : "Discontinue"}</td>
+                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
+                                  <td style={{ padding: "8px 10px", color: isActive ? "#0f6e56" : "#c94d49", fontWeight: 700 }}>{isActive ? "Continue" : "Discontinued"}</td>
                                 </tr>
                               );
                             })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Activity, Search, Bell, Download, Users, Trash2 } from "lucide-react";
+import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "lucide-react";
 import { PatientDetail } from "./PatientDetail";
 import { ImportPatientModal } from "./ImportPatientModal";
 import { createClient } from "@/lib/supabase/client";
@@ -279,12 +279,14 @@ function PatientCard({
   patient,
   onClick,
   onAnalyticsClick,
+  onFolderClick,
   animIndex,
   onDeleteClick,
 }: {
   patient: SupabasePatient;
   onClick: () => void;
   onAnalyticsClick: (e: React.MouseEvent) => void;
+  onFolderClick: (e: React.MouseEvent) => void;
   animIndex: number;
   onDeleteClick: (e: React.MouseEvent) => void;
 }) {
@@ -405,6 +407,15 @@ function PatientCard({
           >
             <Activity size={12} strokeWidth={2} />
             Analytics
+          </button>
+          <button
+            type="button"
+            className={styles.cardFolderBtn}
+            aria-label={`Open treatment folder for ${patient.name}`}
+            title="Treatment folder"
+            onClick={onFolderClick}
+          >
+            <FolderOpen size={13} strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -914,6 +925,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                           animIndex={i}
                           onClick={() => openPatient(p)}
                           onAnalyticsClick={(e) => { e.stopPropagation(); openPatient(p, "Analytics"); }}
+                          onFolderClick={(e) => { e.stopPropagation(); openPatient(p, "Treatment Folder"); }}
                           onDeleteClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
                         />
               ))}
