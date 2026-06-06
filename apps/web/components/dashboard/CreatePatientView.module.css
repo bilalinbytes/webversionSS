@@ -572,6 +572,12 @@
   max-width: 480px;
 }
 
+.baselineVitalsSection {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+
 .abnormal {
   color: #e24b4a;
   font-weight: 600;

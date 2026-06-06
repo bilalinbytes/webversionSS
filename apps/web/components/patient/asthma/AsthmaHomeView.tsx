@@ -14,7 +14,7 @@ interface Props {
   patient: {
     name: string; doctor: string; doctorHospital: string;
     nextAppointment: string; riskScore: number;
-    spo2Today: number; mmrcToday: number; aqiToday: number;
+    spo2Today: number; mmrcToday: number; aqiToday: number; hasTodayLog?: boolean;
     diagnosis?: string | null;
     latestPft?: { fev1_fvc_ratio: number | null; fev1: number | null; fvc: number | null; dlco: number | null; test_date: string | null } | null;
     patientId?: string;
@@ -57,6 +57,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
+          hasTodayLog={patient.hasTodayLog}
           doctor={patient.doctor}
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}

@@ -21,6 +21,7 @@ interface Props {
     spo2Today: number;
     mmrcToday: number;
     aqiToday: number;
+    hasTodayLog?: boolean;
     diagnosis?: string | null;
     latestPft?: {
       fev1_fvc_ratio: number | null;
@@ -86,6 +87,7 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
+          hasTodayLog={patient.hasTodayLog}
           doctor={patient.doctor}
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}

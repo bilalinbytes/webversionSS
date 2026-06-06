@@ -63,6 +63,7 @@ interface AnalyticsPoint {
   aqi: number | null;
   adherence: number | null;
   asthmaControl: number | null;
+  asthmaControlLabel: string | null;
   rescuePuffs: number | null;
   energy: number | null;
   chestHeaviness: number | null;
@@ -113,6 +114,16 @@ const COLORS = {
   purple: "#6f4eb2",
   gold: "#8a6f2a",
 };
+
+const ASTHMA_CONTROL_LEVELS: Record<string, { value: number; label: string }> = {
+  poorly_controlled: { value: 1, label: "Poorly controlled" },
+  partly_controlled: { value: 2, label: "Partly controlled" },
+  well_controlled: { value: 3, label: "Well controlled" },
+};
+
+const POORLY_CONTROLLED = ASTHMA_CONTROL_LEVELS.poorly_controlled!;
+const PARTLY_CONTROLLED = ASTHMA_CONTROL_LEVELS.partly_controlled!;
+const WELL_CONTROLLED = ASTHMA_CONTROL_LEVELS.well_controlled!;
 
 const PFT_METRICS = [
   { key: "ratio", label: "FEV1/FVC (%)", color: COLORS.blue },
@@ -218,13 +229,27 @@ function adherencePercent(compliance: Record<string, unknown> | null): number | 
   return Math.round((taken / values.length) * 100);
 }
 
-function asthmaControlScore(data: Record<string, unknown> | null): number | null {
-  const direct = numberFromAny(data, ["asthma_control", "asthma_control_score", "act_score"]);
-  if (direct !== null) return direct;
+function asthmaControlLevel(data: Record<string, unknown> | null): { value: number; label: string } | null {
+  const status = typeof data?.asthma_control_status === "string"
+    ? ASTHMA_CONTROL_LEVELS[data.asthma_control_status.toLowerCase()]
+    : null;
+  if (status) return status;
+
   const responses = data?.asthma_control_responses;
   if (Array.isArray(responses)) {
-    return responses.filter(Boolean).length;
+    const yesCount = responses.filter(Boolean).length;
+    if (yesCount === 0) return WELL_CONTROLLED;
+    if (yesCount <= 2) return PARTLY_CONTROLLED;
+    return POORLY_CONTROLLED;
   }
+
+  const yesCount = numberFromAny(data, ["asthma_control_yes_count"]);
+  if (yesCount !== null) {
+    if (yesCount === 0) return WELL_CONTROLLED;
+    if (yesCount <= 2) return PARTLY_CONTROLLED;
+    return POORLY_CONTROLLED;
+  }
+
   return null;
 }
 
@@ -282,14 +307,46 @@ function EmptyChart({ label }: { label: string }) {
   );
 }
 
+function MedicationList({ meds }: { meds: MedicationRow[] }) {
+  if (meds.length === 0) {
+    return (
+      <div style={{ minHeight: 230, display: "grid", placeItems: "center", color: "#888680", fontSize: 13, background: "#fbfaf7", borderRadius: 8 }}>
+        No medications on record.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {meds.map((med) => (
+        <div key={med.id} style={{ border: "1px solid rgba(0,0,0,0.07)", borderRadius: 8, padding: 10, background: "#fbfaf7" }}>
+          <p style={{ margin: 0, fontWeight: 800, color: "#132d36" }}>{med.drug_name}</p>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6d8794" }}>
+            {med.route} {med.dose !== null ? `- ${med.dose} ${med.dose_unit ?? ""}` : ""}
+          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 11, color: med.end_date ? "#c94d49" : "#0f6e56" }}>
+            {med.end_date ? `Ended ${fmtDate(med.end_date)}` : `Active since ${fmtDate(med.start_date)}`}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MetricLineChart({
   data,
   lines,
   yDomain,
+  yTicks,
+  yTickFormatter,
+  tooltipFormatter,
 }: {
   data: AnalyticsPoint[];
   lines: Array<{ key: keyof AnalyticsPoint; name: string; color: string }>;
   yDomain?: [number, number];
+  yTicks?: number[];
+  yTickFormatter?: (value: number) => string;
+  tooltipFormatter?: (value: unknown, name: unknown) => [string, string];
 }) {
   if (!hasData(data, lines.map((line) => line.key))) {
     return <EmptyChart label="No historical readings yet." />;
@@ -300,8 +357,8 @@ function MetricLineChart({
       <LineChart data={data} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
         <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-        <YAxis domain={yDomain} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-        <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
+        <YAxis domain={yDomain} ticks={yTicks} tickFormatter={yTickFormatter} tick={{ fontSize: 11, fill: "#6f6a62" }} width={yTickFormatter ? 112 : 38} allowDecimals={false} />
+        <Tooltip formatter={tooltipFormatter} contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
         {lines.map((line) => (
           <Line
@@ -329,7 +386,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   const [selectedPftMetric, setSelectedPftMetric] = useState<PftMetricKey>("ratio");
   const [selectedKbildMetric, setSelectedKbildMetric] = useState<keyof AnalyticsPoint>("kbild");
   const [selectedSymptom, setSelectedSymptom] = useState("");
-  const [selectedMedication, setSelectedMedication] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"single" | "all" | null>(null);
@@ -409,6 +465,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
     return logs
       .map((log) => {
         const disease = log.disease_specific_data;
+        const asthmaControl = asthmaControlLevel(disease);
         const kbildResponses = (disease?.kbild_responses ?? {}) as Record<string, unknown>;
         const symptoms = extractSymptoms(log.vas_symptoms);
         const medications: Record<string, number> = {};
@@ -425,7 +482,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           symptom: extractSymptom(log.vas_symptoms, log.mmrc_today),
           aqi: log.aqi_value,
           adherence: adherencePercent(log.medication_compliance),
-          asthmaControl: asthmaControlScore(disease),
+          asthmaControl: asthmaControl?.value ?? null,
+          asthmaControlLabel: asthmaControl?.label ?? null,
           rescuePuffs: numberFromAny(disease, ["rescue_inhaler_puffs", "rescue_puff_usage", "rescue_puffs"]),
           energy: numberFromAny(disease, ["energy_level", "energy"]),
           chestHeaviness: numberFromAny(log.vas_symptoms, ["chest_heaviness", "chestHeaviness"]) ?? numberFromAny(disease, ["chest_heaviness", "chestHeaviness"]),
@@ -494,22 +552,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
     [dailySeries, selectedSymptom, selectedSymptomIsMmrc],
   );
   const selectedSymptomDomain: [number, number] = selectedSymptomIsMmrc ? [0, 4] : [0, 10];
-  const medicationOptions = useMemo(() => {
-    const displayByKey = new Map<string, string>();
-    for (const name of [...meds.map((med) => med.drug_name), ...dailySeries.flatMap((row) => Object.keys(row.medications))]) {
-      const key = normalizeMedicationKey(name);
-      if (key && !displayByKey.has(key)) displayByKey.set(key, name);
-    }
-    return Array.from(displayByKey.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [dailySeries, meds]);
-  const selectedMedicationSeries = useMemo(
-    () => dailySeries.map((row) => ({
-      date: row.date,
-      sortDate: row.sortDate,
-      value: selectedMedication ? row.medications[selectedMedication] ?? null : null,
-    })),
-    [dailySeries, selectedMedication],
-  );
 
   useEffect(() => {
     if (symptomKeys.length === 0) {
@@ -520,16 +562,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       setSelectedSymptom(symptomKeys[0] ?? "");
     }
   }, [selectedSymptom, symptomKeys]);
-
-  useEffect(() => {
-    if (medicationOptions.length === 0) {
-      setSelectedMedication("");
-      return;
-    }
-    if (!selectedMedication || !medicationOptions.some(([key]) => key === selectedMedication)) {
-      setSelectedMedication(medicationOptions[0]?.[0] ?? "");
-    }
-  }, [medicationOptions, selectedMedication]);
 
   async function handleExport(type: "single" | "all") {
     setExporting(type);
@@ -580,8 +612,21 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   const diseaseCharts = {
     asthma: (
       <>
-        <ChartBlock title="Asthma Control · अस्थमा नियंत्रण" subtitle="Daily asthma control response score · दैनिक अस्थमा नियंत्रण स्कोर">
-          <MetricLineChart data={dailySeries} yDomain={[0, 4]} lines={[{ key: "asthmaControl", name: "Asthma Control", color: COLORS.green }]} />
+        <ChartBlock title="Asthma Control · अस्थमा नियंत्रण" subtitle="Daily asthma control category · दैनिक अस्थमा नियंत्रण श्रेणी">
+          <MetricLineChart
+            data={dailySeries}
+            yDomain={[1, 3]}
+            yTicks={[1, 2, 3]}
+            yTickFormatter={(value) => (
+              value === 1 ? "Poorly controlled" : value === 2 ? "Partly controlled" : value === 3 ? "Well controlled" : ""
+            )}
+            tooltipFormatter={(value) => {
+              const numericValue = typeof value === "number" ? value : Number(value);
+              const label = numericValue === 1 ? "Poorly controlled" : numericValue === 2 ? "Partly controlled" : numericValue === 3 ? "Well controlled" : "--";
+              return [label, "Asthma Control"];
+            }}
+            lines={[{ key: "asthmaControl", name: "Asthma Control", color: COLORS.green }]}
+          />
         </ChartBlock>
         <ChartBlock title="Rescue Puff Usage · रेस्क्यू पफ उपयोग" subtitle="Reliever or rescue inhaler puffs per day · प्रतिदिन रेस्क्यू इनहेलर पफ">
           <MetricLineChart data={dailySeries} lines={[{ key: "rescuePuffs", name: "Rescue Puffs", color: COLORS.orange }]} />
@@ -747,8 +792,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             )}
           </ChartBlock>
 
-          <ChartBlock title="Medication Adherence Trends · दवा पालन ट्रेंड" subtitle="Daily percentage of marked medicines taken · रोज ली गई दवाओं का प्रतिशत">
-            <MetricLineChart data={dailySeries} yDomain={[0, 100]} lines={[{ key: "adherence", name: "Adherence %", color: COLORS.green }]} />
+          <ChartBlock title="Medication List · दवा सूची" subtitle="Current and previous medicines prescribed by the doctor · डॉक्टर द्वारा लिखी दवाएं">
+            <MedicationList meds={meds} />
           </ChartBlock>
 
           <ChartBlock title="AQI Trends · वायु गुणवत्ता ट्रेंड" subtitle="Air quality exposure on logged days · लॉग वाले दिनों की वायु गुणवत्ता">
@@ -758,43 +803,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       </section>
 
 
-
-      <section>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>Drug Analytics</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
-          <ChartBlock title="Drug Adherence Trends" subtitle="Choose any drug prescribed by the doctor; 100 = taken, 0 = missed.">
-            {medicationOptions.length === 0 ? (
-              <EmptyChart label="No medicines prescribed yet." />
-            ) : (
-              <>
-                <select
-                  value={selectedMedication}
-                  onChange={(event) => setSelectedMedication(event.target.value)}
-                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
-                >
-                  {medicationOptions.map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-                {!selectedMedicationSeries.some((row) => row.value !== null) ? (
-                  <EmptyChart label="No adherence logs recorded for this drug yet." />
-                ) : (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={selectedMedicationSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                      <YAxis domain={[0, 100]} ticks={[0, 100]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} formatter={(value) => [Number(value) >= 100 ? "Taken" : "Missed", "Status"]} />
-                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
-                      <Line type="monotone" dataKey="value" stroke={COLORS.teal} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={medicationOptions.find(([key]) => key === selectedMedication)?.[1] ?? "Drug"} connectNulls />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </>
-            )}
-          </ChartBlock>
-        </div>
-      </section>
 
       <section>
         <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>
@@ -843,26 +851,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         </div>
       </section>
 
-      <section style={{ border: "1px solid #e7e1d8", borderRadius: 8, background: "#fff", padding: 14 }}>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>Medication Tracking</p>
-        {meds.length === 0 ? (
-          <p style={{ color: "#888680", fontSize: 13 }}>No medications on record.</p>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-            {meds.map((med) => (
-              <div key={med.id} style={{ border: "1px solid rgba(0,0,0,0.07)", borderRadius: 8, padding: 10 }}>
-                <p style={{ margin: 0, fontWeight: 700, color: "#132d36" }}>{med.drug_name}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6d8794" }}>
-                  {med.route} {med.dose !== null ? `- ${med.dose} ${med.dose_unit ?? ""}` : ""}
-                </p>
-                <p style={{ margin: "6px 0 0", fontSize: 11, color: med.end_date ? "#c94d49" : "#0f6e56" }}>
-                  {med.end_date ? `Ended ${fmtDate(med.end_date)}` : `Active since ${fmtDate(med.start_date)}`}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

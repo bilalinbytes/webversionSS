@@ -728,6 +728,36 @@ function StepPFT({ data, update }: { data: FormData; update: (d: Partial<FormDat
             </tbody>
           </table>
         </div>
+
+        <div className={styles.baselineVitalsSection}>
+          <p className={styles.addRowTitle}>Baseline Vitals</p>
+          <div className={styles.baselineVitalsGrid}>
+            <Field label="Baseline SpO2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                className={styles.input}
+                placeholder="—"
+                value={data.baseline_spo2}
+                onChange={(e) => update({ baseline_spo2: e.target.value })}
+              />
+            </Field>
+            <Field label="Baseline Heart Rate">
+              <input
+                type="number"
+                min="20"
+                max="250"
+                step="1"
+                className={styles.input}
+                placeholder="—"
+                value={data.baseline_heart_rate}
+                onChange={(e) => update({ baseline_heart_rate: e.target.value })}
+              />
+            </Field>
+          </div>
+        </div>
       </div>
     </div>
   );

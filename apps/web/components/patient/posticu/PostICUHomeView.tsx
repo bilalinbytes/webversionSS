@@ -9,7 +9,7 @@ interface Props {
   patient: {
     name: string; doctor: string; doctorHospital: string;
     nextAppointment: string; riskScore: number;
-    spo2Today: number; mmrcToday: number; aqiToday: number;
+    spo2Today: number; mmrcToday: number; aqiToday: number; hasTodayLog?: boolean;
     icuDischarge?: string; icuReason?: string;
     diagnosis?: string | null;
     baselineSpo2?: number | null;
@@ -43,6 +43,7 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
+          hasTodayLog={patient.hasTodayLog}
           doctor={patient.doctor}
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}

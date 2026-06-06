@@ -194,6 +194,7 @@ export function PatientDetail({
   const [respSupport, setRespSupport] = useState<RespSupportInfo | null>(null);
   const [latestLog, setLatestLog] = useState<DailyLogInfo | null>(null);
   const [instructions, setInstructions] = useState<InstructionInfo[]>([]);
+  const [overviewPrescriptions, setOverviewPrescriptions] = useState<PrescriptionGroup[]>([]);
   const [trendData, setTrendData] = useState<TrendPoint[]>([]);
   const [historyEvents, setHistoryEvents] = useState<HistoryEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -335,6 +336,12 @@ export function PatientDetail({
       meta: `${meds.length} medication${meds.length !== 1 ? "s" : ""}`,
     }));
 
+    setOverviewPrescriptions(
+      Array.from(medsByDate.entries())
+        .sort(([leftDate], [rightDate]) => rightDate.localeCompare(leftDate))
+        .map(([date, medications]) => ({ date, medications })),
+    );
+
     const patientLogEvents: HistoryEvent[] = (historyLogRes.data ?? []).map((log) => ({
       id: `log-${log.id}`,
       date: log.logged_at,
@@ -451,7 +458,7 @@ export function PatientDetail({
               displaySpo2={displaySpo2}
               displayMmrc={displayMmrc}
               displayAqi={displayAqi}
-              latestLog={latestLog}
+              prescriptions={overviewPrescriptions}
               instructions={instructions}
               newInstruction={newInstruction}
               savingInstruction={savingInstruction}
@@ -485,7 +492,7 @@ function OverviewTab({
   displaySpo2,
   displayMmrc,
   displayAqi,
-  latestLog,
+  prescriptions,
   instructions,
   newInstruction,
   savingInstruction,
@@ -498,7 +505,7 @@ function OverviewTab({
   displaySpo2: number | null;
   displayMmrc: number | null;
   displayAqi: number | string | null;
-  latestLog: DailyLogInfo | null;
+  prescriptions: PrescriptionGroup[];
   instructions: InstructionInfo[];
   newInstruction: string;
   savingInstruction: boolean;
@@ -508,10 +515,9 @@ function OverviewTab({
   onEdit?: () => void;
   onExport?: () => void;
 }) {
-  const compliance = latestLog?.medication_compliance ?? null;
-  const complianceEntries = compliance ? Object.entries(compliance) : [];
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const latestInstruction = instructions[0];
+  const today = new Date().toISOString().split("T")[0]!;
 
   return (
     <>
@@ -545,25 +551,66 @@ function OverviewTab({
         ))}
       </div>
 
-      {/* Medication compliance */}
-      {complianceEntries.length > 0 && (
-        <>
-          <p className={styles.medTitle}>Today&apos;s Medication Compliance</p>
-          <div className={styles.medList}>
-            {complianceEntries.map(([name, taken]) => (
-              <div key={name} className={`${styles.medItem} ${taken ? styles.medTaken : styles.medMissed}`}>
-                <div className={taken ? styles.medCheckDone : styles.medCheckEmpty}>
-                  {taken ? "Taken" : ""}
+      {/* Previous prescriptions */}
+      <section className={styles.prescriptionPanel}>
+        <div className={styles.prescriptionHeader}>
+          <div>
+            <p className={styles.instructionTitle}>Previous Prescriptions</p>
+            <p className={styles.instructionSub}>
+              {prescriptions.length > 0
+                ? `${prescriptions.length} consultation${prescriptions.length !== 1 ? "s" : ""} on record`
+                : "No prescription recorded yet"}
+            </p>
+          </div>
+        </div>
+
+        {prescriptions.length === 0 ? (
+          <div className={styles.prescriptionEmpty}>
+            <p>No previous prescription available.</p>
+          </div>
+        ) : (
+          <div className={styles.prescriptionGroups}>
+            {prescriptions.map((group, index) => (
+              <article key={group.date} className={styles.prescriptionGroup}>
+                <div className={styles.prescriptionDateRow}>
+                  <div>
+                    <span className={styles.prescriptionBadge}>{index === 0 ? "Latest" : "Previous"}</span>
+                    <strong>{fmtDate(group.date)}</strong>
+                  </div>
+                  <span>{group.medications.length} medication{group.medications.length !== 1 ? "s" : ""}</span>
                 </div>
-                <span className={taken ? styles.medNameTaken : styles.medName}>{name}</span>
-                <span className={taken ? styles.medStatusTaken : styles.medStatus}>
-                  {taken ? "TAKEN" : "NOT TAKEN → +1 to score"}
-                </span>
-              </div>
+                <div className={styles.prescriptionTableWrap}>
+                  <table className={styles.prescriptionTable}>
+                    <thead>
+                      <tr>
+                        {["S. No.", "Route", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
+                          <th key={header}>{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.medications.map((med, medIndex) => {
+                        const isActive = !med.end_date || med.end_date >= today;
+                        return (
+                          <tr key={med.id} className={isActive ? undefined : styles.prescriptionStopped}>
+                            <td>{med.serial_number ?? medIndex + 1}</td>
+                            <td>{med.route}</td>
+                            <td>{med.drug_name}</td>
+                            <td>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
+                            <td>{med.frequency ?? "--"}</td>
+                            <td>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
+                            <td>{isActive ? "Continue" : "Discontinued"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
             ))}
           </div>
-        </>
-      )}
+        )}
+      </section>
 
       {/* Doctor Instructions */}
       <section className={styles.instructionPanel}>
@@ -924,14 +971,27 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
   // Auto-load latest prescription into editor
   const openNewPrescription = () => {
-    const latest = prescriptions[0];
     const today = new Date().toISOString().split("T")[0]!;
     setPrescriptionDate(today);
 
-    if (latest) {
-      // Copy all active meds from latest prescription as "continue" by default
-      const todayStr = today;
-      const activeMeds = latest.medications.filter(m => !m.end_date || m.end_date >= todayStr);
+    const activeByMedication = new Map<string, PrescriptionMed>();
+    for (const prescription of prescriptions) {
+      for (const medication of prescription.medications) {
+        const medicationKey = [
+          medication.drug_name.trim().toLowerCase(),
+          medication.route.trim().toLowerCase(),
+          medication.dose ?? "",
+          medication.dose_unit ?? "",
+          medication.frequency ?? "",
+        ].join("|");
+        if ((!medication.end_date || medication.end_date >= today) && !activeByMedication.has(medicationKey)) {
+          activeByMedication.set(medicationKey, medication);
+        }
+      }
+    }
+
+    const activeMeds = Array.from(activeByMedication.values());
+    if (activeMeds.length > 0) {
       setDraftMeds(activeMeds.map((m, i) => ({
         _key: Date.now() + i,
         drug_name: m.drug_name,
@@ -1031,6 +1091,9 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           status: m.status,
         })),
       stopped_medication_ids: stoppedIds,
+      replaced_medication_ids: draftMeds
+        .filter(m => m.status !== "stopped" && m.source_id)
+        .map(m => m.source_id!),
     };
 
     try {
@@ -1120,9 +1183,9 @@ function TreatmentTab({ patientId }: { patientId: string }) {
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#126969", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                 New Prescription
               </p>
-              {prescriptions.length > 0 && (
+              {draftMeds.some((medication) => medication.source_id) && (
                 <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                  Auto-loaded from {fmtDate(prescriptions[0]!.date)} — modify as needed
+                  Existing medicines are loaded below. Edit, stop, or add medicines before saving this date folder.
                 </p>
               )}
             </div>
@@ -1138,15 +1201,16 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           </div>
 
           {/* Drug list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+          <div style={{ overflowX: "auto", marginBottom: 12 }}>
+          <div style={{ minWidth: 1120, display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 60px 140px 90px 32px", gap: 6, padding: "0 4px" }}>
-              {["Drug Name", "Route", "Dose", "Unit", "Frequency", "Status", ""].map(h => (
+            <div style={{ display: "grid", gridTemplateColumns: "76px 120px minmax(180px, 2fr) 80px 70px 135px 110px 120px 145px 36px", gap: 6, padding: "0 4px" }}>
+              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue", ""].map(h => (
                 <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
               ))}
             </div>
 
-            {draftMeds.map(med => {
+            {draftMeds.map((med, index) => {
               const isStopped = med.status === "stopped";
               const statusColor = med.status === "new" ? "#126969" : med.status === "modified" ? "#d85a30" : med.status === "stopped" ? "#c94d49" : "#6d8794";
               const statusLabel = med.status === "new" ? "New" : med.status === "modified" ? "Modified" : med.status === "stopped" ? "Stopped" : "Continue";
@@ -1155,13 +1219,24 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                 <div
                   key={med._key}
                   style={{
-                    display: "grid", gridTemplateColumns: "2fr 1fr 80px 60px 140px 90px 32px",
+                    display: "grid", gridTemplateColumns: "76px 120px minmax(180px, 2fr) 80px 70px 135px 110px 120px 145px 36px",
                     gap: 6, alignItems: "center", padding: "8px",
                     background: isStopped ? "#fdecea" : "white",
                     borderRadius: 8, border: `1px solid ${isStopped ? "#fca5a5" : "rgba(0,0,0,0.07)"}`,
                     opacity: isStopped ? 0.7 : 1,
                   }}
                 >
+                  <span style={{ width: 26, height: 26, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e8f5f1", color: isStopped ? "#c94d49" : "#126969", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                    {index + 1}
+                  </span>
+                  <select
+                    value={med.route}
+                    disabled={isStopped}
+                    onChange={e => updateDraft(med._key, { route: e.target.value })}
+                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                  >
+                    {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
+                  </select>
                   <input
                     type="text"
                     value={med.drug_name}
@@ -1175,14 +1250,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                       textDecoration: isStopped ? "line-through" : "none",
                     }}
                   />
-                  <select
-                    value={med.route}
-                    disabled={isStopped}
-                    onChange={e => updateDraft(med._key, { route: e.target.value })}
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  >
-                    {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
-                  </select>
                   <input
                     type="number"
                     value={med.dose}
@@ -1207,6 +1274,19 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                   >
                     {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
                   </select>
+                  <input
+                    type="date"
+                    value={prescriptionDate}
+                    disabled
+                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, color: "#496977", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: "#f5f3ee" }}
+                  />
+                  <input
+                    type="date"
+                    value={med.end_date}
+                    disabled={isStopped}
+                    onChange={e => updateDraft(med._key, { end_date: e.target.value, ongoing: e.target.value === "" })}
+                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                  />
                   <span style={{ fontSize: 10, fontWeight: 700, color: statusColor, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     {statusLabel}
                   </span>
@@ -1224,6 +1304,15 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                 </div>
               );
             })}
+          </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+            <button type="button" onClick={addDrug}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px dashed #126969", background: "none", color: "#126969", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+            >
+              + Add Medication
+            </button>
           </div>
 
           <div style={{
@@ -1269,11 +1358,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button type="button" onClick={addDrug}
-              style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px dashed #126969", background: "none", color: "#126969", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
-            >
-              + Add Drug
-            </button>
             <div style={{ flex: 1 }} />
             <button type="button" onClick={() => { setShowEditor(false); setPatientInstruction(""); setSaveMsg(null); }}
               style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid #d4cfc7", background: "white", color: "#496977", fontSize: 12, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
@@ -1307,7 +1391,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             const isLatest = idx === 0;
             const today = new Date().toISOString().split("T")[0]!;
             const activeMeds = group.medications.filter(m => !m.end_date || m.end_date >= today);
-            const stoppedMeds = group.medications.filter(m => m.end_date && m.end_date < today);
 
             return (
               <div key={group.date} style={{ border: `1px solid ${isLatest ? "#a7d7c5" : "rgba(0,0,0,0.08)"}`, borderRadius: 10, overflow: "hidden", background: "white" }}>
@@ -1337,68 +1420,35 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                   {/* Expanded content */}
                   {isExpanded && (
                     <div style={{ padding: "12px 14px" }}>
-                      {activeMeds.length > 0 && (
-                        <>
-                          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#0f6e56", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                            Active Medications
-                          </p>
-                          {activeMeds.map((med) => (
-                            <div key={med.id} style={{
-                              display: "flex", alignItems: "center", gap: 10,
-                              padding: "7px 10px", marginBottom: 4,
-                              background: "#f0faf5", borderRadius: 7,
-                              border: "1px solid rgba(18,105,105,0.12)",
-                            }}>
-                              <div style={{ flex: 1 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: "#132d36", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                  {med.drug_name}
-                                </span>
-                                {med.dose !== null && (
-                                  <span style={{ fontSize: 12, color: "#6d8794", marginLeft: 6, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                    {med.dose} {med.dose_unit ?? ""}
-                                  </span>
-                                )}
-                              </div>
-                              <span style={{ fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                {med.route}
-                              </span>
-                              <span style={{ fontSize: 11, color: "#0f6e56", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                {med.frequency ?? "OD"}
-                              </span>
-                              <span style={{ fontSize: 10, color: "#0f6e56", background: "#e8f5f1", padding: "2px 7px", borderRadius: 8, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                {med.end_date ? `Until ${fmtDate(med.end_date)}` : "Ongoing"}
-                              </span>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {stoppedMeds.length > 0 && (
-                        <>
-                          <p style={{ margin: "12px 0 8px", fontSize: 11, fontWeight: 700, color: "#c94d49", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                            Stopped
-                          </p>
-                          {stoppedMeds.map(med => (
-                            <div key={med.id} style={{
-                              display: "flex", alignItems: "center", gap: 10,
-                              padding: "6px 10px", marginBottom: 4,
-                              background: "#fdecea", borderRadius: 7, opacity: 0.75,
-                            }}>
-                              <span style={{ fontSize: 12, fontWeight: 500, color: "#c94d49", textDecoration: "line-through", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                {med.drug_name}
-                              </span>
-                              {med.dose !== null && (
-                                <span style={{ fontSize: 11, color: "#c94d49", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                  {med.dose} {med.dose_unit ?? ""}
-                                </span>
-                              )}
-                              <span style={{ marginLeft: "auto", fontSize: 10, color: "#c94d49", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                                Stopped {fmtDate(med.end_date)}
-                              </span>
-                            </div>
-                          ))}
-                        </>
-                      )}
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ minWidth: 960, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                          <thead>
+                            <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+                              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue"].map((header) => (
+                                <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.medications.map((med, medIndex) => {
+                              const isActive = !med.end_date || med.end_date >= today;
+                              return (
+                                <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", background: isActive ? "#ffffff" : "#fff7f7" }}>
+                                  <td style={{ padding: "8px 10px" }}>{med.serial_number ?? medIndex + 1}</td>
+                                  <td style={{ padding: "8px 10px" }}>{med.route}</td>
+                                  <td style={{ padding: "8px 10px", fontWeight: 700, color: isActive ? "#132d36" : "#c94d49", textDecoration: isActive ? "none" : "line-through" }}>{med.drug_name}</td>
+                                  <td style={{ padding: "8px 10px" }}>{med.dose ?? "--"}</td>
+                                  <td style={{ padding: "8px 10px" }}>{med.dose_unit ?? "--"}</td>
+                                  <td style={{ padding: "8px 10px" }}>{med.frequency ?? "--"}</td>
+                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{fmtDate(med.start_date)}</td>
+                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.end_date ? fmtDate(med.end_date) : "--"}</td>
+                                  <td style={{ padding: "8px 10px", color: isActive ? "#0f6e56" : "#c94d49", fontWeight: 700 }}>{isActive ? "Continue" : "Discontinue"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
               </div>

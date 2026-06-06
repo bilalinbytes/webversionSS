@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Calendar } from "lucide-react";
+import { Bell, Calendar, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { usePatient } from "@/contexts/PatientContext";
@@ -38,7 +38,10 @@ interface PrescriptionNotification {
 }
 
 interface PatientInstruction {
+  id: string;
   instruction_text: string;
+  created_at: string | null;
+  read_by_patient_at: string | null;
 }
 
 interface AppointmentNotification {
@@ -91,6 +94,42 @@ function isWithinOneDay(value: string | null | undefined, fallbackDate?: string)
   return Date.now() - timestamp < 24 * 60 * 60 * 1000;
 }
 
+function normalizeNotificationPart(value: unknown) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function getPrescriptionNotificationKey(
+  prescription: PrescriptionNotification | null,
+  instruction: PatientInstruction | null,
+) {
+  if (!prescription) return null;
+  const medicationParts = prescription.medications
+    .map((medication) => [
+      medication.drug_name,
+      medication.route,
+      medication.dose,
+      medication.dose_unit,
+      medication.frequency,
+    ].map(normalizeNotificationPart).join("|"))
+    .sort()
+    .join(",");
+  const instructionPart = normalizeNotificationPart(instruction?.instruction_text);
+
+  return `${prescription.date}:${medicationParts}:${instructionPart}`;
+}
+
+function getLegacyPrescriptionNotificationKey(prescription: PrescriptionNotification | null) {
+  if (!prescription) return null;
+  const medicationIds = prescription.medications.map((medication) => medication.id).sort().join(",");
+  return `${prescription.date}:${prescription.created_at ?? ""}:${medicationIds}`;
+}
+
+function getAppointmentNotificationKey(appointment: AppointmentNotification | null) {
+  if (!appointment) return null;
+  const status = appointment.meta?.workflow_status ?? appointment.status;
+  return `${appointment.id}:${status}:${appointment.updated_at ?? appointment.created_at ?? appointment.scheduled_at}`;
+}
+
 export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) {
   const router = useRouter();
   const { patient } = usePatient();
@@ -98,7 +137,10 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [profileOpen, setProfileOpen] = useState(false);
   const [latestPrescription, setLatestPrescription] = useState<PrescriptionNotification | null>(null);
   const [latestInstruction, setLatestInstruction] = useState<PatientInstruction | null>(null);
+  const [seenPrescriptionKey, setSeenPrescriptionKey] = useState<string | null>(null);
+  const [openedUnreadPrescriptionKey, setOpenedUnreadPrescriptionKey] = useState<string | null>(null);
   const [appointmentNotification, setAppointmentNotification] = useState<AppointmentNotification | null>(null);
+  const [seenAppointmentKey, setSeenAppointmentKey] = useState<string | null>(null);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
     doctorName: "Assigned doctor",
     doctorHospital: "",
@@ -125,6 +167,35 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
     return () => { cancelled = true; };
   }, [patient?.id]);
+
+  useEffect(() => {
+    if (!patient?.id || typeof window === "undefined") {
+      setSeenPrescriptionKey(null);
+      return;
+    }
+
+    setSeenPrescriptionKey(window.localStorage.getItem(`saans:patient:${patient.id}:seen-prescription-notification`));
+    setSeenAppointmentKey(window.localStorage.getItem(`saans:patient:${patient.id}:seen-appointment-notification`));
+  }, [patient?.id]);
+
+  useEffect(() => {
+    const key = getPrescriptionNotificationKey(latestPrescription, latestInstruction);
+    if (!patient?.id || !key || !latestInstruction?.read_by_patient_at || typeof window === "undefined") return;
+
+    const prescriptionTime = new Date(latestPrescription?.created_at ?? latestPrescription?.date ?? "").getTime();
+    const instructionTime = new Date(latestInstruction.created_at ?? "").getTime();
+    if (
+      !Number.isNaN(prescriptionTime) &&
+      !Number.isNaN(instructionTime) &&
+      instructionTime < prescriptionTime
+    ) {
+      return;
+    }
+
+    window.localStorage.setItem(`saans:patient:${patient.id}:seen-prescription-notification`, key);
+    setSeenPrescriptionKey(key);
+    setOpenedUnreadPrescriptionKey(null);
+  }, [latestInstruction, latestPrescription, patient?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,13 +274,44 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
     });
 
     return () => { cancelled = true; };
-  }, [patient?.id, patient?.doctor_id, patient?.effective_dashboard]);
+  }, [patient]);
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
   }
+
+  const markPrescriptionSeen = useCallback(() => {
+    const prescriptionKey = getPrescriptionNotificationKey(latestPrescription, latestInstruction);
+    if (!patient?.id || !prescriptionKey || typeof window === "undefined") return;
+
+    window.localStorage.setItem(`saans:patient:${patient.id}:seen-prescription-notification`, prescriptionKey);
+    setSeenPrescriptionKey(prescriptionKey);
+    setOpenedUnreadPrescriptionKey(null);
+
+    if (latestInstruction?.id && !latestInstruction.read_by_patient_at) {
+      setLatestInstruction((instruction) =>
+        instruction?.id === latestInstruction.id
+          ? { ...instruction, read_by_patient_at: new Date().toISOString() }
+          : instruction,
+      );
+      fetch("/api/patient/prescriptions", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction_id: latestInstruction.id }),
+      }).catch(() => undefined);
+    }
+  }, [latestInstruction, latestPrescription, patient?.id]);
+
+  const markAppointmentSeen = useCallback(() => {
+    const appointmentKey = getAppointmentNotificationKey(appointmentNotification);
+    if (!patient?.id || !appointmentKey || typeof window === "undefined") return;
+
+    window.localStorage.setItem(`saans:patient:${patient.id}:seen-appointment-notification`, appointmentKey);
+    setSeenAppointmentKey(appointmentKey);
+  }, [appointmentNotification, patient?.id]);
 
   const patientName = patient?.name || "Patient";
   const initials = patientName.split(" ").map((n: string) => n[0] ?? "").join("").toUpperCase();
@@ -222,14 +324,42 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
         })
         .join(", ") + (latestPrescription.medications.length > 3 ? ` +${latestPrescription.medications.length - 3} more` : "")
     : "No prescription yet";
+  const prescriptionNotificationKey = getPrescriptionNotificationKey(latestPrescription, latestInstruction);
+  const legacyPrescriptionNotificationKey = getLegacyPrescriptionNotificationKey(latestPrescription);
+  const prescriptionSeen =
+    prescriptionNotificationKey !== null &&
+    (prescriptionNotificationKey === seenPrescriptionKey || legacyPrescriptionNotificationKey === seenPrescriptionKey);
   const showPrescriptionBadge = latestPrescription
-    ? isWithinOneDay(latestPrescription.created_at, latestPrescription.date)
+    ? isWithinOneDay(latestPrescription.created_at, latestPrescription.date) &&
+      !prescriptionSeen
     : false;
+  const showPrescriptionNotification =
+    latestPrescription !== null &&
+    (!prescriptionSeen || openedUnreadPrescriptionKey === prescriptionNotificationKey);
+  const appointmentNotificationKey = getAppointmentNotificationKey(appointmentNotification);
   const showAppointmentBadge = appointmentNotification
     ? isWithinOneDay(appointmentNotification.updated_at, appointmentNotification.created_at ?? undefined)
+      && appointmentNotificationKey !== seenAppointmentKey
     : false;
   const notificationCount = (showPrescriptionBadge ? 1 : 0) + (showAppointmentBadge ? 1 : 0);
   const appointmentStatus = appointmentNotification?.meta?.workflow_status ?? appointmentNotification?.status;
+
+  const handleNotificationToggle = () => {
+    const nextOpen = !notificationsOpen;
+
+    if (nextOpen) {
+      if (latestPrescription && showPrescriptionBadge) {
+        markPrescriptionSeen();
+        setOpenedUnreadPrescriptionKey(prescriptionNotificationKey);
+      }
+      if (appointmentNotification) markAppointmentSeen();
+    } else {
+      setOpenedUnreadPrescriptionKey(null);
+    }
+
+    setNotificationsOpen(nextOpen);
+    setProfileOpen(false);
+  };
 
   return (
     <nav className={styles.nav}>
@@ -262,10 +392,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             className={styles.notifBtn}
             aria-label="Notifications"
             aria-expanded={notificationsOpen}
-            onClick={() => {
-              setNotificationsOpen((open) => !open);
-              setProfileOpen(false);
-            }}
+            onClick={handleNotificationToggle}
           >
             <Bell size={15} strokeWidth={1.7} />
             {notificationCount > 0 && <span className={styles.notifBadge}>{notificationCount}</span>}
@@ -287,24 +414,31 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                   )}
                 </div>
               )}
-              {latestPrescription ? (
+              {showPrescriptionNotification ? (
                 <>
                   <p className={styles.notifTitle}>Emergency Prescription</p>
                   <p className={styles.notifTime}>
                     {formatDateTime(latestPrescription.created_at, latestPrescription.date)}
                   </p>
-                  <div className={styles.notifMedList}>
-                    {latestPrescription.medications.slice(0, 4).map((medication) => (
-                      <p key={medication.id} className={styles.notifMed}>
-                        {medication.drug_name}
-                        {medication.dose !== null ? ` ${medication.dose} ${medication.dose_unit ?? ""}` : ""}
-                        {medication.frequency ? ` - ${medication.frequency}` : ""}
+                  <div className={styles.notifPdfCard}>
+                    <Download size={18} strokeWidth={1.8} />
+                    <div>
+                      <p className={styles.notifPdfTitle}>Prescription PDF ready</p>
+                      <p className={styles.notifPdfMeta}>
+                        {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""} included
                       </p>
-                    ))}
+                    </div>
                   </div>
-                  {latestInstruction?.instruction_text && (
-                    <p className={styles.notifInstruction}>{latestInstruction.instruction_text}</p>
-                  )}
+                  <a
+                    className={styles.notifPdfLink}
+                    href={`/api/patient/prescriptions?format=pdf&date=${encodeURIComponent(latestPrescription.date)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={markPrescriptionSeen}
+                  >
+                    <Download size={14} strokeWidth={1.8} />
+                    <span>Open PDF</span>
+                  </a>
                 </>
               ) : !appointmentNotification ? (
                 <p className={styles.notifEmpty}>No prescription notifications yet.</p>

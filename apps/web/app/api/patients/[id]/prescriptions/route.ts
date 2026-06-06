@@ -20,9 +20,12 @@ const pdfStyles = StyleSheet.create({
   section: { marginTop: 14 },
   sectionTitle: { fontSize: 12, fontWeight: 700, marginBottom: 8 },
   row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e5e7eb", paddingVertical: 7 },
-  cellNo: { width: "8%" },
-  cellDrug: { width: "36%" },
-  cell: { width: "14%" },
+  cellNo: { width: "9%" },
+  cellRoute: { width: "12%" },
+  cellDrug: { width: "20%" },
+  cell: { width: "10%" },
+  cellDate: { width: "12%" },
+  cellStatus: { width: "15%" },
   instruction: { borderWidth: 1, borderColor: "#d1d5db", padding: 10, minHeight: 54, lineHeight: 1.5 },
   footer: { position: "absolute", left: 44, right: 44, bottom: 36, flexDirection: "row", justifyContent: "space-between", color: "#6b7280", fontSize: 9 },
 });
@@ -39,7 +42,7 @@ function PrescriptionPdfDocument({
   doctorName: string;
   generatedAt: string;
   prescriptionDate: string;
-  medications: Array<{ drug_name: string; route: string; dose: number | null; dose_unit: string | null; frequency: string | null; end_date: string | null; serial_number: number | null }>;
+  medications: Array<{ drug_name: string; route: string; dose: number | null; dose_unit: string | null; frequency: string | null; start_date?: string | null; end_date: string | null; serial_number: number | null }>;
   instruction: string | null;
 }) {
   const generatedLabel = new Date(generatedAt).toLocaleString("en-IN", {
@@ -68,27 +71,33 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.section },
-        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Medicines"),
+        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Prescription List"),
         React.createElement(
           View,
           { style: [pdfStyles.row, { fontWeight: 700 }] },
-          React.createElement(Text, { style: pdfStyles.cellNo }, "#"),
-          React.createElement(Text, { style: pdfStyles.cellDrug }, "Drug"),
-          React.createElement(Text, { style: pdfStyles.cell }, "Route"),
+          React.createElement(Text, { style: pdfStyles.cellNo }, "Serial number"),
+          React.createElement(Text, { style: pdfStyles.cellRoute }, "Route"),
+          React.createElement(Text, { style: pdfStyles.cellDrug }, "Drug Name"),
           React.createElement(Text, { style: pdfStyles.cell }, "Dose"),
+          React.createElement(Text, { style: pdfStyles.cell }, "Unit"),
           React.createElement(Text, { style: pdfStyles.cell }, "Frequency"),
-          React.createElement(Text, { style: pdfStyles.cell }, "End"),
+          React.createElement(Text, { style: pdfStyles.cellDate }, "Start date"),
+          React.createElement(Text, { style: pdfStyles.cellDate }, "End date"),
+          React.createElement(Text, { style: pdfStyles.cellStatus }, "Continue/discontinue"),
         ),
         ...medications.map((medication, index) =>
           React.createElement(
             View,
             { key: `${medication.drug_name}-${index}`, style: pdfStyles.row },
             React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
+            React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
             React.createElement(Text, { style: pdfStyles.cellDrug }, medication.drug_name),
-            React.createElement(Text, { style: pdfStyles.cell }, medication.route),
-            React.createElement(Text, { style: pdfStyles.cell }, medication.dose !== null ? `${medication.dose} ${medication.dose_unit ?? ""}` : "-"),
+            React.createElement(Text, { style: pdfStyles.cell }, medication.dose !== null ? String(medication.dose) : "-"),
+            React.createElement(Text, { style: pdfStyles.cell }, medication.dose_unit ?? "-"),
             React.createElement(Text, { style: pdfStyles.cell }, medication.frequency ?? "-"),
-            React.createElement(Text, { style: pdfStyles.cell }, medication.end_date ?? "Ongoing"),
+            React.createElement(Text, { style: pdfStyles.cellDate }, medication.start_date ?? prescriptionDate),
+            React.createElement(Text, { style: pdfStyles.cellDate }, medication.end_date ?? "-"),
+            React.createElement(Text, { style: pdfStyles.cellStatus }, medication.end_date ? "Discontinue" : "Continue"),
           ),
         ),
       ),
@@ -169,7 +178,7 @@ export async function GET(
       admin.from("doctors").select("name").eq("id", user.id).maybeSingle(),
       admin
         .from("medications")
-        .select("drug_name, dose, dose_unit, route, frequency, end_date, serial_number")
+        .select("drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
         .eq("patient_id", patientId)
         .eq("start_date", prescriptionDate)
         .order("serial_number", { ascending: true }),
@@ -279,6 +288,7 @@ export async function POST(
       status: "continue" | "modified" | "new" | "stopped";
     }>;
     stopped_medication_ids?: string[];
+    replaced_medication_ids?: string[];
   };
 
   try {
@@ -287,7 +297,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { prescription_date, medications, stopped_medication_ids } = body;
+  const { prescription_date, medications, stopped_medication_ids, replaced_medication_ids } = body;
   const patientInstruction = body.patient_instruction?.trim() ?? "";
 
   if (!prescription_date || !medications?.length) {
@@ -298,8 +308,13 @@ export async function POST(
     return NextResponse.json({ error: "Patient instructions must be 50 words or fewer" }, { status: 400 });
   }
 
-  // Mark stopped medications as ended
-  if (stopped_medication_ids?.length) {
+  const previousMedicationIds = Array.from(new Set([
+    ...(stopped_medication_ids ?? []),
+    ...(replaced_medication_ids ?? []),
+  ]));
+
+  // End previous rows so the newly saved date folder becomes the active prescription.
+  if (previousMedicationIds.length) {
     const yesterday = new Date(prescription_date);
     yesterday.setDate(yesterday.getDate() - 1);
     const endDate = yesterday.toISOString().split("T")[0]!;
@@ -307,7 +322,7 @@ export async function POST(
     await admin
       .from("medications")
       .update({ end_date: endDate })
-      .in("id", stopped_medication_ids)
+      .in("id", previousMedicationIds)
       .eq("patient_id", patientId);
   }
 

@@ -40,6 +40,20 @@ function booleanFromRecord(record: Record<string, unknown>, key: string): boolea
   return typeof value === "boolean" ? value : null;
 }
 
+function validationMessage(details: ReturnType<typeof dailyLogSchema.safeParse>) {
+  if (details.success) return "Validation failed";
+  const flattened = details.error.flatten();
+  const firstFieldError = Object.entries(flattened.fieldErrors)
+    .find(([, messages]) => messages && messages.length > 0);
+
+  if (firstFieldError) {
+    const [field, messages] = firstFieldError;
+    return `${field}: ${messages![0]}`;
+  }
+
+  return flattened.formErrors[0] ?? "Validation failed";
+}
+
 function classifyAsthmaControlStatus(
   responses: boolean[] | null | undefined,
 ): "well_controlled" | "partly_controlled" | "poorly_controlled" | null {
@@ -134,7 +148,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const validation = dailyLogSchema.safeParse(body);
   if (!validation.success) {
     return NextResponse.json(
-      { error: "Validation failed", details: validation.error.flatten() },
+      { error: validationMessage(validation), details: validation.error.flatten() },
       { status: 400 }
     );
   }

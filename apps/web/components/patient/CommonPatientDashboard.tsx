@@ -8,7 +8,6 @@
  *   • Patient name + diagnosis header
  *   • PFT, SpO2, Symptoms (VAS), Quality-of-life trend sparklines
  *   • AQI card
- *   • mMRC today with yesterday's score in brackets
  *   • Latest medications list
  *   • Doctor info + next appointment
  *
@@ -35,6 +34,7 @@ export interface CommonDashboardProps {
   mmrcToday: number;
   aqiToday: number;
   riskScore: number;
+  hasTodayLog?: boolean;
   /** Doctor info */
   doctor: string;
   doctorHospital: string;
@@ -82,10 +82,12 @@ function fmtDate(iso: string | null) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function formatSymptomName(key: string): string {
-  return key
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+function yesterdayBounds() {
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 1);
+  return { start: start.toISOString(), end: end.toISOString() };
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -97,6 +99,7 @@ export function CommonPatientDashboard({
   mmrcToday,
   aqiToday,
   riskScore,
+  hasTodayLog,
   doctor,
   doctorHospital,
   nextAppointment,
@@ -111,13 +114,15 @@ export function CommonPatientDashboard({
   const [medications, setMedications] = useState<MedRow[]>([]);
   const [medicationsOpen, setMedicationsOpen] = useState(false);
   const [prevMmrc, setPrevMmrc] = useState<number | null>(null);
-  const [latestSymptoms, setLatestSymptoms] = useState<Record<string, number>>({});
   const [prevSymptoms, setPrevSymptoms] = useState<Record<string, number>>({});
 
   // Fetch medications + previous day log
   useEffect(() => {
     if (!patientId) return;
     const supabase = createClient();
+
+    setPrevMmrc(null);
+    setPrevSymptoms({});
 
     // Medications
     supabase
@@ -129,31 +134,19 @@ export function CommonPatientDashboard({
         if (data) setMedications(data as MedRow[]);
       });
 
-    supabase
-      .from("daily_logs")
-      .select("vas_symptoms, disease_specific_data")
-      .eq("patient_id", patientId)
-      .order("logged_at", { ascending: false })
-      .limit(1)
-      .single()
-      .then(({ data }) => {
-        const vas = data?.vas_symptoms as Record<string, number> | null;
-        setLatestSymptoms(vas ?? {});
-      });
+    if (hasTodayLog === false) return;
 
     // Previous day log for comparison
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = yesterday.toISOString().split("T")[0];
+    const { start: yesterdayStart, end: yesterdayEnd } = yesterdayBounds();
     supabase
       .from("daily_logs")
       .select("mmrc_today, vas_symptoms")
       .eq("patient_id", patientId)
-      .gte("logged_at", `${yStr}T00:00:00`)
-      .lte("logged_at", `${yStr}T23:59:59`)
+      .gte("logged_at", yesterdayStart)
+      .lt("logged_at", yesterdayEnd)
       .order("logged_at", { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setPrevMmrc(data.mmrc_today);
@@ -161,7 +154,7 @@ export function CommonPatientDashboard({
           setPrevSymptoms(vas ?? {});
         }
       });
-  }, [patientId]);
+  }, [hasTodayLog, patientId]);
 
   const today = new Date().toLocaleDateString("en-IN", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -177,8 +170,10 @@ export function CommonPatientDashboard({
 
   const latestVas = vasTrend.length > 0 ? vasTrend[vasTrend.length - 1] ?? 0 : 0;
   const vasColor = latestVas >= 8 ? "#c94d49" : latestVas >= 5 ? "#ef9f27" : "#2d7a38";
-  const symptomEntries = Object.entries(latestSymptoms).filter(([, value]) => typeof value === "number");
-  const prevVas = Object.values(prevSymptoms).filter((value) => typeof value === "number").at(0) ?? null;
+  const showTodayData = hasTodayLog !== false;
+  const prevVas = showTodayData
+    ? Object.values(prevSymptoms).filter((value) => typeof value === "number").at(0) ?? null
+    : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -208,38 +203,6 @@ export function CommonPatientDashboard({
         </button>
       </div>
 
-      <div className={dStyles.card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <p className={dStyles.cardTitle} style={{ margin: 0 }}>mMRC Score · सांस फूलने का स्कोर</p>
-            <p className={dStyles.cardSub} style={{ margin: "4px 0 0" }}>
-              Current value with previous day in brackets · वर्तमान स्कोर, कल का स्कोर ब्रैकेट में
-            </p>
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: mmrcColor, background: `${mmrcColor}18`, padding: "7px 12px", borderRadius: 8, whiteSpace: "nowrap" }}>
-            {mmrcToday}{prevMmrc !== null ? ` (${prevMmrc})` : ""}
-          </span>
-        </div>
-      </div>
-
-      <div className={dStyles.card}>
-        <p className={dStyles.cardTitle} style={{ marginBottom: 8 }}>Symptoms / लक्षण</p>
-        {symptomEntries.length === 0 ? (
-          <p className={dStyles.cardSub}>No symptoms logged today. · आज कोई लक्षण दर्ज नहीं है।</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {symptomEntries.map(([key, value]) => {
-              const prev = prevSymptoms[key];
-              return (
-                <div key={key} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "7px 10px", borderRadius: 6, background: "#f8f7f5", fontSize: 12 }}>
-                  <span style={{ color: "#3d3a35", fontWeight: 600 }}>{formatSymptomName(key)}</span>
-                  <span style={{ color: vasColor, fontWeight: 700 }}>{value}/10{typeof prev === "number" ? ` (${prev})` : ""}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       {/* ── Trend graphs ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
@@ -271,7 +234,7 @@ export function CommonPatientDashboard({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <p className={dStyles.cardTitle} style={{ margin: 0 }}>Breathlessness (mMRC) · सांस फूलना</p>
               <span style={{ fontSize: 11, fontWeight: 700, color: mmrcColor, background: `${mmrcColor}18`, padding: "2px 8px", borderRadius: 8 }}>
-                Grade {mmrcToday}{prevMmrc !== null ? ` (${prevMmrc})` : ""} · ग्रेड
+                Grade {mmrcToday}{showTodayData && prevMmrc !== null ? ` (${prevMmrc})` : ""} · ग्रेड
               </span>
             </div>
             <div style={{ height: 52, background: "#f8f7f5", borderRadius: 8, overflow: "hidden", padding: "4px 8px" }}>

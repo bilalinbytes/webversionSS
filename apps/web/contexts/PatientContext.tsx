@@ -52,7 +52,9 @@ export function PatientProvider({ children }: { children: ReactNode }) {
           .from("patient_diagnoses")
           .select("effective_dashboard")
           .eq("patient_id", session.user.id)
-          .single(),
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
 
       if (!patientsRes.data) {
