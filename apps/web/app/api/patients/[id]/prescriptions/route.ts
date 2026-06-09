@@ -62,7 +62,7 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.header },
-        React.createElement(Text, { style: pdfStyles.title }, "Emergency Prescription"),
+        React.createElement(Text, { style: pdfStyles.title }, "Prescription"),
         React.createElement(Text, { style: pdfStyles.meta }, `Patient: ${patientName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Doctor: ${doctorName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Prescription date: ${prescriptionDate}`),

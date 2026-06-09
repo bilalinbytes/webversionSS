@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { PatientProvider, usePatient } from "@/contexts/PatientContext";
 import { createClient } from "@/lib/supabase/client";
 import { PatientTopNav } from "@/components/patient/PatientTopNav";
@@ -105,9 +105,32 @@ function PrescriptionCard() {
           )}
         </div>
         {latestPrescription && (
-          <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#126969", background: "rgba(18,105,105,0.08)", borderRadius: 999, padding: "4px 9px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-            {activeMeds.length} active
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#126969", background: "rgba(18,105,105,0.08)", borderRadius: 999, padding: "4px 9px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              {activeMeds.length} active
+            </span>
+            <a
+              href={`/api/patient/prescriptions?format=pdf&date=${encodeURIComponent(latestPrescription.date)}`}
+              download
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                minHeight: 30,
+                padding: "6px 10px",
+                borderRadius: 7,
+                background: "#126969",
+                color: "#ffffff",
+                fontSize: 11,
+                fontWeight: 800,
+                textDecoration: "none",
+                fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+              }}
+            >
+              <Download size={13} strokeWidth={1.8} />
+              PDF
+            </a>
+          </div>
         )}
       </div>
 

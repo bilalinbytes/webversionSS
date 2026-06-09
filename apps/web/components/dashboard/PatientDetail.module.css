@@ -100,6 +100,33 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .closeBtn {
   min-width: 44px;
   min-height: 44px;
@@ -581,6 +608,16 @@
 
   .header {
     padding: 16px 18px;
+    gap: 10px;
+  }
+
+  .headerActions {
+    align-self: flex-start;
+    gap: 6px;
+  }
+
+  .backBtn {
+    padding: 0 10px;
   }
 
   .body {
@@ -782,6 +819,41 @@
   align-self: stretch !important;
 }
 
+.sentToast {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid rgba(18, 105, 105, 0.18);
+  border-radius: 8px;
+  background: #f3fbf8;
+  box-shadow: 0 16px 40px rgba(19, 45, 54, 0.16);
+  color: #126969;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.sentToast strong,
+.sentToast span {
+  display: block;
+}
+
+.sentToast strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.sentToast span {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #42636c;
+}
+
 /* Placeholder */
 .tabPlaceholder {
   display: flex;
@@ -838,5 +910,12 @@
 
   .prescriptionTable {
     min-width: 640px;
+  }
+
+  .sentToast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
   }
 }

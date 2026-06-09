@@ -56,7 +56,7 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.header },
-        React.createElement(Text, { style: pdfStyles.title }, "Emergency Prescription"),
+        React.createElement(Text, { style: pdfStyles.title }, "Prescription"),
         React.createElement(Text, { style: pdfStyles.meta }, `Patient: ${patientName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Doctor: ${doctorName}`),
         React.createElement(Text, { style: pdfStyles.meta }, `Prescription date: ${prescriptionDate}`),
@@ -178,7 +178,7 @@ export async function GET(request: Request) {
       medications: medsRes.data ?? [],
       instruction: instructionRes.data?.instruction_text ?? null,
     });
-    const filename = `saans-emergency-prescription-${prescriptionDate}-${generatedAt.replace(/[:.]/g, "-")}.pdf`;
+    const filename = `saans-prescription-${prescriptionDate}-${generatedAt.replace(/[:.]/g, "-")}.pdf`;
 
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,

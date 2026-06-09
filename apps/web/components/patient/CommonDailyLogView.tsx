@@ -144,6 +144,7 @@ export function CommonDailyLogView({
   const [emergencyMessage, setEmergencyMessage] = useState("");
   const [emergencyStatus, setEmergencyStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [emergencyError, setEmergencyError] = useState<string | null>(null);
+  const [messageToastVisible, setMessageToastVisible] = useState(false);
 
   useEffect(() => {
     setMedsTaken((current) => Object.fromEntries(meds.map((m) => [m.id, current[m.id] ?? false])));
@@ -171,6 +172,13 @@ export function CommonDailyLogView({
       cancelled = true;
     };
   }, [patientId]);
+
+  useEffect(() => {
+    if (emergencyStatus !== "sent") return;
+    setMessageToastVisible(true);
+    const timeout = window.setTimeout(() => setMessageToastVisible(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [emergencyStatus]);
 
   const spo2RestValid = inRange(spo2, 0, 100);
   const spo2ExertionValid = inRange(spo2Exertion, 0, 100);
@@ -326,6 +334,16 @@ export function CommonDailyLogView({
 
   return (
     <div className={dStyles.view}>
+      {messageToastVisible && (
+        <div className={dStyles.sentToast} role="status" aria-live="polite">
+          <CheckCircle size={18} />
+          <div>
+            <strong>Message sent</strong>
+            <span>Your doctor has been notified.</span>
+          </div>
+        </div>
+      )}
+
       <div className={dStyles.pageHeader}>
         <div>
           <h1 className={dStyles.pageTitle}>

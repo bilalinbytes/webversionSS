@@ -349,6 +349,41 @@
 .limitSuccess { color: #0f6e56; }
 .limitError { color: #c94d49; }
 
+.sentToast {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid rgba(18, 105, 105, 0.18);
+  border-radius: 8px;
+  background: #f3fbf8;
+  box-shadow: 0 16px 40px rgba(19, 45, 54, 0.16);
+  color: #126969;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.sentToast strong,
+.sentToast span {
+  display: block;
+}
+
+.sentToast strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.sentToast span {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #42636c;
+}
+
 /* Success screen */
 .successWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 360px; padding: 40px 24px; }
 .successIcon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #e8f8ef, #c9f0dc); display: flex; align-items: center; justify-content: center; color: #126969; }
@@ -474,5 +509,12 @@
   .historyHeader {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .sentToast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
   }
 }

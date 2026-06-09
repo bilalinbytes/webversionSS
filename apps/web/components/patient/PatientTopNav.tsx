@@ -119,7 +119,7 @@ function getPrescriptionNotificationKey(
     .join(",");
   const instructionPart = normalizeNotificationPart(instruction?.instruction_text);
 
-  return `${prescription.date}:${medicationParts}:${instructionPart}`;
+  return `${prescription.date}:${prescription.created_at ?? ""}:${medicationParts}:${instructionPart}`;
 }
 
 function getLegacyPrescriptionNotificationKey(prescription: PrescriptionNotification | null) {
@@ -339,8 +339,11 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const prescriptionSeen =
     prescriptionNotificationKey !== null &&
     (prescriptionNotificationKey === seenPrescriptionKey || legacyPrescriptionNotificationKey === seenPrescriptionKey);
+  const prescriptionInstructionUnread = Boolean(latestInstruction?.instruction_text && !latestInstruction.read_by_patient_at);
+  const prescriptionUnread = Boolean(prescriptionNotificationKey && !prescriptionSeen);
   const showPrescriptionBadge = prescriptionNotificationKey
-    ? isWithinOneDay(latestEmergencyAt) &&
+    ? (prescriptionUnread || prescriptionInstructionUnread) &&
+      isWithinOneDay(latestEmergencyAt) &&
       !prescriptionSeen
     : false;
   const showPrescriptionNotification =
@@ -427,7 +430,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
               {showPrescriptionNotification ? (
                 <>
                   <p className={styles.notifTitle}>
-                    {latestPrescription ? "Emergency Prescription" : "Emergency Instructions"}
+                    {latestPrescription ? "Prescription" : "Doctor Instructions"}
                   </p>
                   <p className={styles.notifTime}>
                     {formatDateTime(latestEmergencyAt)}

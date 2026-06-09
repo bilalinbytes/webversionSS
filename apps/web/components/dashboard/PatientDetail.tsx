@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X } from "lucide-react";
+import { ArrowLeft, CheckCircle, X } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -200,6 +200,7 @@ export function PatientDetail({
   const [loading, setLoading] = useState(true);
   const [newInstruction, setNewInstruction] = useState("");
   const [savingInstruction, setSavingInstruction] = useState(false);
+  const [sentInstructionId, setSentInstructionId] = useState<string | null>(null);
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -383,6 +384,7 @@ export function PatientDetail({
     if (!error && data) {
       setInstructions((prev) => [data as InstructionInfo, ...prev]);
       setNewInstruction("");
+      setSentInstructionId((data as InstructionInfo).id);
     }
     setSavingInstruction(false);
   };
@@ -427,9 +429,15 @@ export function PatientDetail({
               {bipapTag && <span className={styles.tag}>{bipapTag}</span>}
             </div>
           </div>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            <X size={14} />
-          </button>
+          <div className={styles.headerActions}>
+            <button type="button" className={styles.backBtn} onClick={onClose}>
+              <ArrowLeft size={14} />
+              <span>Back</span>
+            </button>
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+              <X size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -462,6 +470,7 @@ export function PatientDetail({
               instructions={instructions}
               newInstruction={newInstruction}
               savingInstruction={savingInstruction}
+              sentInstructionId={sentInstructionId}
               onInstructionChange={setNewInstruction}
               onInstructionSubmit={submitInstruction}
               onClose={onClose}
@@ -496,6 +505,7 @@ function OverviewTab({
   instructions,
   newInstruction,
   savingInstruction,
+  sentInstructionId,
   onInstructionChange,
   onInstructionSubmit,
   onClose,
@@ -509,6 +519,7 @@ function OverviewTab({
   instructions: InstructionInfo[];
   newInstruction: string;
   savingInstruction: boolean;
+  sentInstructionId: string | null;
   onInstructionChange: (v: string) => void;
   onInstructionSubmit: () => void;
   onClose: () => void;
@@ -516,11 +527,34 @@ function OverviewTab({
   onExport?: () => void;
 }) {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [sentVisible, setSentVisible] = useState(false);
+  const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(() => new Set(prescriptions[0]?.date ? [prescriptions[0].date] : []));
   const latestInstruction = instructions[0];
   const today = new Date().toISOString().split("T")[0]!;
 
+  useEffect(() => {
+    setOpenPrescriptionDates(new Set(prescriptions[0]?.date ? [prescriptions[0].date] : []));
+  }, [prescriptions]);
+
+  useEffect(() => {
+    if (!sentInstructionId) return;
+    setSentVisible(true);
+    const timeout = window.setTimeout(() => setSentVisible(false), 8000);
+    return () => window.clearTimeout(timeout);
+  }, [sentInstructionId]);
+
   return (
     <>
+      {sentVisible && (
+        <div className={styles.sentToast} role="status" aria-live="polite">
+          <CheckCircle size={18} />
+          <div>
+            <strong>Message sent</strong>
+            <span>Instruction sent to patient.</span>
+          </div>
+        </div>
+      )}
+
       {/* Trend boxes */}
       <div className={styles.trendRow}>
         {[
@@ -570,16 +604,32 @@ function OverviewTab({
           </div>
         ) : (
           <div className={styles.prescriptionGroups}>
-            {prescriptions.map((group, index) => (
+            {prescriptions.map((group, index) => {
+              const isOpen = openPrescriptionDates.has(group.date);
+              return (
               <article key={group.date} className={styles.prescriptionGroup}>
                 <div className={styles.prescriptionDateRow}>
                   <div>
                     <span className={styles.prescriptionBadge}>{index === 0 ? "Latest" : "Previous"}</span>
                     <strong>{fmtDate(group.date)}</strong>
                   </div>
-                  <span>{group.medications.length} medication{group.medications.length !== 1 ? "s" : ""}</span>
+                  <button
+                    type="button"
+                    className={styles.prescriptionToggle}
+                    onClick={() => {
+                      setOpenPrescriptionDates((current) => {
+                        const next = new Set(current);
+                        if (next.has(group.date)) next.delete(group.date);
+                        else next.add(group.date);
+                        return next;
+                      });
+                    }}
+                    aria-expanded={isOpen}
+                  >
+                    {group.medications.length} medication{group.medications.length !== 1 ? "s" : ""} {isOpen ? "Hide" : "Open"}
+                  </button>
                 </div>
-                <div className={styles.prescriptionTableWrap}>
+                {isOpen && <div className={styles.prescriptionTableWrap}>
                   <table className={styles.prescriptionTable}>
                     <thead>
                       <tr>
@@ -605,9 +655,10 @@ function OverviewTab({
                       })}
                     </tbody>
                   </table>
-                </div>
+                </div>}
               </article>
-            ))}
+            );
+            })}
           </div>
         )}
       </section>
@@ -647,13 +698,14 @@ function OverviewTab({
             onClick={onInstructionSubmit}
             disabled={savingInstruction || !newInstruction.trim() || countWords(newInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT}
           >
-            {savingInstruction ? "Saving..." : "Send instruction"}
+            {savingInstruction ? "Saving..." : sentVisible ? "Sent" : "Send instruction"}
           </button>
         </div>
 
         {latestInstruction && !instructionsOpen && (
           <div className={styles.latestInstruction}>
             <span className={styles.latestInstructionLabel}>Latest</span>
+            {sentInstructionId === latestInstruction.id && <span className={styles.latestInstructionLabel}>Sent</span>}
             <p>{latestInstruction.instruction_text}</p>
             <time>{fmtDateTime(latestInstruction.created_at)}</time>
           </div>
@@ -663,6 +715,7 @@ function OverviewTab({
           <div className={styles.instructionHistory}>
             {instructions.map((instr) => (
               <article key={instr.id} className={styles.instructionItem}>
+                {sentInstructionId === instr.id && <span className={styles.latestInstructionLabel}>Sent</span>}
                 <p>{instr.instruction_text}</p>
                 <time>{fmtDateTime(instr.created_at)}</time>
               </article>
@@ -930,6 +983,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const [prescriptionDate, setPrescriptionDate] = useState(new Date().toISOString().split("T")[0]!);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(new Set());
 
   const fetchPrescriptions = useCallback(async () => {
     setLoading(true);
@@ -966,6 +1020,10 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   }, [patientId]);
 
   useEffect(() => { void fetchPrescriptions(); }, [fetchPrescriptions]);
+
+  useEffect(() => {
+    setOpenPrescriptionDates(new Set(prescriptions[0]?.date ? [prescriptions[0].date] : []));
+  }, [prescriptions]);
 
   // Auto-load latest prescription into editor
   const openNewPrescription = () => {
@@ -1106,26 +1164,21 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       });
       if (res.ok) {
         if (activeDrafts.length > 0) {
-          const pdfResponse = await fetch(`/api/patients/${patientId}/prescriptions?format=pdf&date=${encodeURIComponent(prescriptionDate)}`, {
-            credentials: "include",
-          });
-          if (pdfResponse.ok) {
-            const blob = await pdfResponse.blob();
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = pdfResponse.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? `saans-prescription-${prescriptionDate}.pdf`;
-            anchor.click();
-            URL.revokeObjectURL(url);
-            setSaveMsg("Prescription saved and PDF downloaded.");
-          } else {
-            setSaveMsg("Prescription saved successfully. PDF download failed.");
-          }
+          const pdfUrl = `/api/patients/${patientId}/prescriptions?format=pdf&date=${encodeURIComponent(prescriptionDate)}`;
+          const anchor = document.createElement("a");
+          anchor.href = pdfUrl;
+          anchor.download = `saans-prescription-${prescriptionDate}.pdf`;
+          anchor.rel = "noopener";
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          setSaveMsg("Prescription saved. PDF download started.");
         } else {
           setSaveMsg("Instruction sent to patient.");
         }
         setShowEditor(false);
         setPatientInstruction("");
+        setOpenPrescriptionDates((current) => new Set(current).add(prescriptionDate));
         await fetchPrescriptions();
       } else {
         const body = await res.json() as { error?: string };
@@ -1395,7 +1448,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       ) : (
         <div className={styles.prescriptionGroups}>
           {prescriptions.map((group, idx) => {
-            const isExpanded = true;
+            const isExpanded = openPrescriptionDates.has(group.date);
             const isLatest = idx === 0;
             const today = new Date().toISOString().split("T")[0]!;
             const activeMeds = group.medications.filter(m => !m.end_date || m.end_date >= today);
@@ -1405,7 +1458,14 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                   {/* Card header — clickable */}
                   <button
                     type="button"
-                    onClick={() => undefined}
+                    onClick={() => {
+                      setOpenPrescriptionDates((current) => {
+                        const next = new Set(current);
+                        if (next.has(group.date)) next.delete(group.date);
+                        else next.add(group.date);
+                        return next;
+                      });
+                    }}
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 14px", background: isLatest ? "#e8f5f1" : "#fafafa",

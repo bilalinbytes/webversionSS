@@ -97,6 +97,7 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
 
   useEffect(() => {
     const supabase = createClient();
+    let alertPoll: ReturnType<typeof setInterval> | null = null;
     const handleAcknowledged = (event: Event) => {
       const count =
         event instanceof CustomEvent && typeof event.detail?.count === "number"
@@ -123,30 +124,40 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
         setInitials(ini.toUpperCase());
       }
 
-      const response = await fetch("/api/doctor/patients", { credentials: "include" });
-      const body = await response.json().catch(() => null) as {
-        patients?: Array<{
-          disease_alerts?: Array<{
-            alert_type: string;
-            acknowledged_by_doctor: boolean | null;
-            is_suppressed: boolean | null;
-          }> | null;
-        }>;
-      } | null;
-      const count = (body?.patients ?? []).reduce((total, patient) => {
-        const open = (patient.disease_alerts ?? []).filter(
-          (alert) =>
-            !alert.is_suppressed &&
-            !alert.acknowledged_by_doctor &&
-            (alert.alert_type === "RED" || alert.alert_type === "YELLOW"),
-        ).length;
-        return total + open;
-      }, 0);
-      setAlertCount(count);
+      const refreshAlerts = async () => {
+        const response = await fetch("/api/doctor/patients", { credentials: "include" });
+        const body = await response.json().catch(() => null) as {
+          patients?: Array<{
+            disease_alerts?: Array<{
+              alert_type: string;
+              acknowledged_by_doctor: boolean | null;
+              is_suppressed: boolean | null;
+            }> | null;
+          }>;
+        } | null;
+        const count = (body?.patients ?? []).reduce((total, patient) => {
+          const open = (patient.disease_alerts ?? []).filter(
+            (alert) =>
+              !alert.is_suppressed &&
+              !alert.acknowledged_by_doctor &&
+              (alert.alert_type === "RED" || alert.alert_type === "YELLOW"),
+          ).length;
+          return total + open;
+        }, 0);
+        setAlertCount(count);
+      };
+
+      await refreshAlerts();
+      alertPoll = setInterval(() => {
+        void refreshAlerts();
+      }, 30000);
       await loadAppointments();
     });
 
-    return () => window.removeEventListener("saans:alerts-acknowledged", handleAcknowledged);
+    return () => {
+      window.removeEventListener("saans:alerts-acknowledged", handleAcknowledged);
+      if (alertPoll) clearInterval(alertPoll);
+    };
   }, []);
 
   async function handleLogout() {

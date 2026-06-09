@@ -221,6 +221,19 @@ function normalizeMedicationKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function medicationDisplayName(med: MedicationRow): string {
+  const dose = med.dose !== null ? ` ${med.dose} ${med.dose_unit ?? ""}`.trimEnd() : "";
+  return `${med.drug_name}${dose}`.trim();
+}
+
+function compactMedicationKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function isUuidLike(value: string): boolean {
+  return /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(value.trim());
+}
+
 function adherencePercent(compliance: Record<string, unknown> | null): number | null {
   if (!compliance) return null;
   const values = Object.values(compliance).filter((value) => typeof value === "boolean");
@@ -307,28 +320,102 @@ function EmptyChart({ label }: { label: string }) {
   );
 }
 
-function MedicationList({ meds }: { meds: MedicationRow[] }) {
-  if (meds.length === 0) {
+function MedicationAdherenceTable({ logs, meds }: { logs: DailyLogRow[]; meds: MedicationRow[] }) {
+  const rows = [...logs]
+    .filter((log) => log.medication_compliance && Object.keys(log.medication_compliance).length > 0)
+    .sort((left, right) => left.logged_at.localeCompare(right.logged_at));
+  const dates = rows.map((log) => ({
+    key: log.logged_at,
+    label: fmtDate(log.logged_at),
+  }));
+  const medicationKeys = Array.from(new Set(
+    rows.flatMap((log) => Object.keys(log.medication_compliance ?? {})),
+  )).sort((left, right) => left.localeCompare(right));
+  const medicationLabels = new Map<string, string>();
+  meds.forEach((med) => {
+    const label = medicationDisplayName(med);
+    const aliases = [
+      med.id,
+      normalizeMedicationKey(med.id),
+      compactMedicationKey(med.id),
+      med.drug_name,
+      normalizeMedicationKey(med.drug_name),
+      compactMedicationKey(med.drug_name),
+      label,
+      normalizeMedicationKey(label),
+      compactMedicationKey(label),
+    ];
+
+    aliases.forEach((alias) => medicationLabels.set(alias, label));
+  });
+
+  let archivedIndex = 0;
+  const medicationRows = Array.from(
+    medicationKeys.reduce((acc, key) => {
+      const normalizedKey = normalizeMedicationKey(key);
+      const compactKey = compactMedicationKey(key);
+      const label =
+        medicationLabels.get(key) ??
+        medicationLabels.get(normalizedKey) ??
+        medicationLabels.get(compactKey) ??
+        (isUuidLike(key) ? `Archived medication ${++archivedIndex}` : key.replace(/[_-]/g, " "));
+      const row = acc.get(label) ?? { label, keys: new Set<string>() };
+      row.keys.add(key);
+      acc.set(label, row);
+      return acc;
+    }, new Map<string, { label: string; keys: Set<string> }>()),
+  ).map(([, row]) => ({ label: row.label, keys: Array.from(row.keys) }));
+
+  if (rows.length === 0 || medicationRows.length === 0) {
     return (
       <div style={{ minHeight: 230, display: "grid", placeItems: "center", color: "#888680", fontSize: 13, background: "#fbfaf7", borderRadius: 8 }}>
-        No medications on record.
+        No medication adherence entries yet.
       </div>
     );
   }
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {meds.map((med) => (
-        <div key={med.id} style={{ border: "1px solid rgba(0,0,0,0.07)", borderRadius: 8, padding: 10, background: "#fbfaf7" }}>
-          <p style={{ margin: 0, fontWeight: 800, color: "#132d36" }}>{med.drug_name}</p>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6d8794" }}>
-            {med.route} {med.dose !== null ? `- ${med.dose} ${med.dose_unit ?? ""}` : ""}
-          </p>
-          <p style={{ margin: "6px 0 0", fontSize: 11, color: med.end_date ? "#c94d49" : "#0f6e56" }}>
-            {med.end_date ? `Ended ${fmtDate(med.end_date)}` : `Active since ${fmtDate(med.start_date)}`}
-          </p>
-        </div>
-      ))}
+    <div style={{ overflowX: "auto", border: "1px solid rgba(19,45,54,0.08)", borderRadius: 8, maxWidth: "100%" }}>
+      <table style={{ width: "100%", minWidth: Math.max(520, 190 + dates.length * 86), borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed" }}>
+        <thead>
+          <tr style={{ background: "#f5f3ee" }}>
+            <th style={{ position: "sticky", left: 0, zIndex: 1, width: 190, background: "#f5f3ee", textAlign: "left", padding: "10px 12px", color: "#132d36", fontWeight: 800 }}>
+              Medication
+            </th>
+            {dates.map((date) => (
+              <th key={date.key} style={{ width: 86, textAlign: "center", padding: "10px 8px", color: "#6d8794", fontWeight: 800, whiteSpace: "nowrap" }}>
+                {date.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {medicationRows.map((medication) => (
+            <tr key={medication.label} style={{ borderTop: "1px solid rgba(19,45,54,0.07)" }}>
+              <td style={{ position: "sticky", left: 0, background: "#fff", padding: "10px 12px", color: "#132d36", fontWeight: 800, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.35 }}>
+                {medication.label}
+              </td>
+              {rows.map((log) => {
+                const values = medication.keys
+                  .map((key) => log.medication_compliance?.[key])
+                  .filter((value): value is boolean => value === true || value === false);
+                const value = values.includes(true) ? true : values.includes(false) ? false : null;
+                return (
+                  <td key={`${medication.label}-${log.logged_at}`} style={{ textAlign: "center", padding: "9px 8px", color: value === true ? "#0f6e56" : value === false ? "#c94d49" : "#888680", fontWeight: 800 }}>
+                    <span
+                      aria-label={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
+                      title={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
+                      style={{ display: "inline-flex", minWidth: 42, justifyContent: "center", borderRadius: 999, padding: "4px 8px", background: value === true ? "rgba(15,110,86,0.1)" : value === false ? "rgba(201,77,73,0.1)" : "#f2f0eb", fontSize: 14, lineHeight: 1 }}
+                    >
+                      {value === true ? "✓" : value === false ? "✕" : "--"}
+                    </span>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -792,8 +879,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             )}
           </ChartBlock>
 
-          <ChartBlock title="Medication List · दवा सूची" subtitle="Current and previous medicines prescribed by the doctor · डॉक्टर द्वारा लिखी दवाएं">
-            <MedicationList meds={meds} />
+          <ChartBlock title="Medication Adherence" subtitle="Dates across the top, medications on the left, with taken/not taken status from patient logs.">
+            <MedicationAdherenceTable logs={logs} meds={meds} />
           </ChartBlock>
 
           <ChartBlock title="AQI Trends · वायु गुणवत्ता ट्रेंड" subtitle="Air quality exposure on logged days · लॉग वाले दिनों की वायु गुणवत्ता">

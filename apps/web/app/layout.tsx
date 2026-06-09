@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Lora, DM_Sans } from "next/font/google";
 import { Providers } from "./providers";
@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   title: "Saans Sync — Clinical Dashboard",
   description:
     "Respiratory monitoring system for pulmonology clinicians. Secure, HIPAA-compliant clinical dashboard.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

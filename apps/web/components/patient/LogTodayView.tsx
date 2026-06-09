@@ -36,6 +36,7 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
   const [emergencyMessage, setEmergencyMessage] = useState("");
   const [emergencyStatus, setEmergencyStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [emergencyError, setEmergencyError] = useState<string | null>(null);
+  const [messageToastVisible, setMessageToastVisible] = useState(false);
 
   useEffect(() => {
     if (!patient?.id) return;
@@ -71,6 +72,13 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
       }
     })();
   }, [patient?.id]);
+
+  useEffect(() => {
+    if (emergencyStatus !== "sent") return;
+    setMessageToastVisible(true);
+    const timeout = window.setTimeout(() => setMessageToastVisible(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [emergencyStatus]);
 
   const toggleMed = (id: string) => setMeds(p => ({ ...p, [id]: !p[id] }));
   const toggleSymptom = (s: string) => setSymptoms(p => {
@@ -177,6 +185,16 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
 
   return (
     <div className={styles.view}>
+      {messageToastVisible && (
+        <div className={styles.sentToast} role="status" aria-live="polite">
+          <CheckCircle size={18} />
+          <div>
+            <strong>Message sent</strong>
+            <span>Your doctor has been notified.</span>
+          </div>
+        </div>
+      )}
+
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Log Today&apos;s Health</h1>

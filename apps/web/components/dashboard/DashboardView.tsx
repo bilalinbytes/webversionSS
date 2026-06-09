@@ -136,6 +136,21 @@ function countOpenAlertsForPatients(patients: SupabasePatient[]): number {
   return patients.reduce((total, patient) => total + countOpenAlerts(patient), 0);
 }
 
+function openAlerts(patient: SupabasePatient) {
+  return (patient.disease_alerts ?? [])
+    .filter(
+      (alert) =>
+        !alert.is_suppressed &&
+        !alert.acknowledged_by_doctor &&
+        (alert.alert_type === "RED" || alert.alert_type === "YELLOW"),
+    )
+    .sort((left, right) => new Date(right.created_at ?? "").getTime() - new Date(left.created_at ?? "").getTime());
+}
+
+function latestOpenAlert(patient: SupabasePatient) {
+  return openAlerts(patient)[0] ?? null;
+}
+
 // Animated counter
 function AnimatedNumber({ value, className }: { value: number; className?: string }) {
   const [display, setDisplay] = useState(value);
@@ -297,7 +312,7 @@ function PatientCard({
   const risk: RiskLevel = score !== null ? scoreToRisk(score) : "none";
   const diagnosisLine = formatDiagnosisLine(patient);
   const comorbidityLine = formatComorbidityLine(patient);
-  const latestAlert = (patient.disease_alerts ?? [])
+  const latestAlert = latestOpenAlert(patient) ?? (patient.disease_alerts ?? [])
     .filter((alert) => !alert.is_suppressed)
     .sort((left, right) => new Date(right.created_at ?? "").getTime() - new Date(left.created_at ?? "").getTime())[0];
   const initials = patient.name
@@ -546,35 +561,52 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     }
   }, []);
 
-  // Fetch real patients from Supabase
-  useEffect(() => {
+  const loadPatients = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { setLoading(false); return; }
-      setDoctorId(user.id);
-
-      const response = await fetch("/api/doctor/patients", { credentials: "include" });
-      const body = await response.json() as { patients?: SupabasePatient[]; error?: string };
-
-      if (!response.ok) {
-        setFetchError(body.error ?? "Unable to load patients");
-      } else {
-        // Sort red_flag_scores descending per patient (take most recent)
-        const sorted = (body.patients ?? []).map((p) => ({
-          ...p,
-          red_flag_scores: p.red_flag_scores
-            ? [...p.red_flag_scores].sort(
-                (a, b) => new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime()
-              )
-            : null,
-        }));
-        setPatients(sorted);
-        setUnacknowledgedAlerts(countOpenAlertsForPatients(sorted));
-      }
-
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       setLoading(false);
-    });
+      return;
+    }
+    setDoctorId(user.id);
+
+    const response = await fetch("/api/doctor/patients", { credentials: "include" });
+    const body = await response.json() as { patients?: SupabasePatient[]; error?: string };
+
+    if (!response.ok) {
+      setFetchError(body.error ?? "Unable to load patients");
+    } else {
+      setFetchError(null);
+      // Sort red_flag_scores descending per patient (take most recent)
+      const sorted = (body.patients ?? []).map((p) => ({
+        ...p,
+        red_flag_scores: p.red_flag_scores
+          ? [...p.red_flag_scores].sort(
+              (a, b) => new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime()
+            )
+          : null,
+        disease_alerts: p.disease_alerts
+          ? [...p.disease_alerts].sort(
+              (a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()
+            )
+          : null,
+      }));
+      setPatients(sorted);
+      setUnacknowledgedAlerts(countOpenAlertsForPatients(sorted));
+    }
+
+    setLoading(false);
   }, []);
+
+  // Fetch real patients from Supabase and keep alerts fresh while the doctor is on the page.
+  useEffect(() => {
+    void loadPatients(true);
+    const patientPoll = setInterval(() => {
+      void loadPatients(false);
+    }, 30000);
+    return () => clearInterval(patientPoll);
+  }, [loadPatients]);
 
   // Stats computed from real data
   const total = patients.length;
@@ -596,13 +628,16 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
   }).length;
 
   const criticalPatients = patients.filter((p) => {
+    const alert = latestOpenAlert(p);
     const s = p.red_flag_scores?.[0]?.global_score ?? 0;
-    return s >= 9;
+    return alert?.alert_type === "RED" || s >= 9;
   });
 
   const highPatients = patients.filter((p) => {
+    if (criticalPatients.some((criticalPatient) => criticalPatient.id === p.id)) return false;
+    const alert = latestOpenAlert(p);
     const s = p.red_flag_scores?.[0]?.global_score ?? 0;
-    return s >= 7 && s < 9;
+    return alert?.alert_type === "YELLOW" || (s >= 7 && s < 9);
   });
 
   const filteredPatients = patients.filter((p) => {
@@ -797,7 +832,8 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
               <div className={styles.criticalList}>
                 {criticalPatients.map((p) => {
                   const initials = p.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-                  const diag = p.patient_diagnoses?.[0]?.primary_diagnosis ?? "Unknown";
+                  const alert = latestOpenAlert(p);
+                  const alertText = alert?.reason_text ?? p.patient_diagnoses?.[0]?.primary_diagnosis ?? "Needs review";
                   const score = p.red_flag_scores?.[0]?.global_score ?? "—";
                   return (
                     <div key={p.id} className={styles.criticalBlock}>
@@ -806,9 +842,9 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                         <div className={styles.criticalInfo}>
                           <p className={styles.criticalName}>
                             {p.name.split(" ")[0]}
-                            <span className={styles.criticalBadge}>CRITICAL</span>
+                            <span className={styles.criticalBadge}>{alert?.alert_type ?? "CRITICAL"}</span>
                           </p>
-                          <p className={styles.criticalAlert}>{diag}</p>
+                          <p className={styles.criticalAlert}>{alertText}</p>
                         </div>
                         <div className={styles.criticalScore}>{score}</div>
                       </div>
@@ -834,8 +870,9 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
               <div className={styles.watchList}>
                 {highPatients.map((p) => {
                   const initials = p.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+                  const alert = latestOpenAlert(p);
                   const score = p.red_flag_scores?.[0]?.global_score ?? "—";
-                  const diag = p.patient_diagnoses?.[0]?.primary_diagnosis ?? "";
+                  const alertText = alert?.reason_text ?? p.patient_diagnoses?.[0]?.primary_diagnosis ?? "";
                   return (
                     <button
                       key={p.id}
@@ -846,7 +883,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                       <div className={styles.watchAvatar}>{initials}</div>
                       <div className={styles.watchInfo}>
                         <p className={styles.watchName}>{p.name.split(" ")[0]}</p>
-                        <p className={styles.watchAlert}>{diag}</p>
+                        <p className={styles.watchAlert}>{alert?.alert_type ? `${alert.alert_type}: ${alertText}` : alertText}</p>
                       </div>
                       <span className={styles.watchScore}>{score}</span>
                     </button>
