@@ -65,12 +65,131 @@
 .warnMsg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #e24b4a; font-family: var(--font-dm-sans), system-ui, sans-serif; }
 
 /* AQI */
-.aqiBox { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 10px; border: 1.5px solid; }
-.aqiLeft { display: flex; align-items: baseline; gap: 3px; }
-.aqiVal  { font-size: 28px; font-weight: 700; font-family: var(--font-lora), Georgia, serif; }
-.aqiUnit { font-size: 12px; font-weight: 600; color: #888680; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.aqiLabel { font-size: 13px; font-weight: 600; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.aqiSub   { font-size: 11px; color: #888680; margin-top: 2px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.aqiBox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1.5px solid #cfe5df;
+  background: #f7fbfa;
+  box-shadow: 0 14px 34px rgba(19, 45, 54, 0.08);
+}
+
+.aqiIconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #126969;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(19, 45, 54, 0.08);
+}
+
+.aqiContent {
+  min-width: 0;
+}
+
+.aqiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.aqiEyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5c7978;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.aqiStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #cfe5df;
+  border-radius: 999px;
+  color: #126969;
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.aqiDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #126969;
+}
+
+.aqiTitle {
+  margin: 0;
+  color: #132d36;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.aqiInlineValue {
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.aqiRecommendation {
+  margin: 6px 0 0;
+  color: #334e52;
+  font-size: 13px;
+  line-height: 1.45;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.aqiSub {
+  margin: 7px 0 0;
+  color: #6d8794;
+  font-size: 11px;
+  line-height: 1.3;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.aqiReading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 64px;
+  color: #126969;
+}
+
+.aqiVal {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 0.95;
+  font-family: var(--font-lora), Georgia, serif;
+}
+
+.aqiUnit {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #6d8794;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
 
 /* Medications */
 .medWrap { display: flex; flex-direction: column; gap: 10px; }
@@ -206,6 +325,32 @@
   .yellowTip {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .aqiBox {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .aqiIconWrap {
+    width: 40px;
+    height: 40px;
+  }
+
+  .aqiHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .aqiReading {
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .aqiVal {
+    font-size: 32px;
   }
 
   .seGrid {

@@ -143,6 +143,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const requestedFormat = url.searchParams.get("format");
   const requestedDate = url.searchParams.get("date");
+  const requestedDisposition = url.searchParams.get("disposition");
 
   if (requestedFormat === "pdf") {
     const prescriptionDate = requestedDate ?? new Date().toISOString().split("T")[0]!;
@@ -184,7 +185,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `${requestedDisposition === "inline" ? "inline" : "attachment"}; filename="${filename}"`,
       },
     });
   }

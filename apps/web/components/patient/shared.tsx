@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, CloudSun, ShieldAlert } from "lucide-react";
 import styles from "./shared.module.css";
 
 // ── Animated number ───────────────────────────────────────────────────────────
@@ -128,33 +128,103 @@ export function SpO2Input({ value, onChange, label = "SpO₂ at Rest", isCOPD = 
 }
 
 // ── AQI Display ───────────────────────────────────────────────────────────────
+function getAqiMeta(aqi: number) {
+  if (aqi > 200) {
+    return {
+      label: "Unhealthy",
+      tone: "#b42318",
+      bg: "#fff4f2",
+      border: "#f3b8ae",
+      title: "Unhealthy Air Quality Detected",
+      recommendation: "Stay indoors if possible, use a mask outdoors, and keep rescue medication nearby.",
+    };
+  }
+
+  if (aqi > 150) {
+    return {
+      label: "Poor",
+      tone: "#b54708",
+      bg: "#fff7ed",
+      border: "#fed7aa",
+      title: "Poor Air Quality Detected",
+      recommendation: "Wear a mask outdoors and avoid prolonged exposure.",
+    };
+  }
+
+  if (aqi > 100) {
+    return {
+      label: "Moderate",
+      tone: "#8a6100",
+      bg: "#fffbea",
+      border: "#f6d66f",
+      title: "Moderate Air Quality",
+      recommendation: "Limit intense outdoor activity if breathing feels uncomfortable.",
+    };
+  }
+
+  return {
+    label: "Good",
+    tone: "#0f6e56",
+    bg: "#f0faf5",
+    border: "#a8dec9",
+    title: "Good Air Quality",
+    recommendation: "Air quality is suitable for routine outdoor activity.",
+  };
+}
+
 export function AQIDisplay({ aqi }: { aqi: number | null }) {
   if (aqi === null) {
     return (
-      <div className={styles.aqiBox} style={{ borderColor: `#ccc30`, background: `#ccc08` }}>
-        <div className={styles.aqiLeft}>
-          <span className={styles.aqiVal} style={{ color: "#aaa" }}>—</span>
-          <span className={styles.aqiUnit}>AQI</span>
+      <div className={styles.aqiBox} role="status" aria-live="polite">
+        <div className={styles.aqiIconWrap} aria-hidden="true">
+          <CloudSun size={20} strokeWidth={1.8} />
         </div>
-        <div>
-          <p className={styles.aqiLabel} style={{ color: "#aaa" }}>Fetching Air Quality</p>
-          <p className={styles.aqiSub}>Auto-fetched · Your location</p>
+        <div className={styles.aqiContent}>
+          <div className={styles.aqiHeader}>
+            <p className={styles.aqiEyebrow}>Air quality alert</p>
+            <span className={styles.aqiStatus}>Fetching</span>
+          </div>
+          <p className={styles.aqiTitle}>Checking local air quality</p>
+          <p className={styles.aqiRecommendation}>We will show AQI guidance for your current location.</p>
+        </div>
+        <div className={styles.aqiReading}>
+          <span className={styles.aqiVal}>--</span>
+          <span className={styles.aqiUnit}>AQI</span>
         </div>
       </div>
     );
   }
 
-  const color = aqi > 200 ? "#e24b4a" : aqi > 150 ? "#d85a30" : aqi > 100 ? "#ef9f27" : "#639922";
-  const label = aqi > 200 ? "Very Poor" : aqi > 150 ? "Unhealthy" : aqi > 100 ? "Moderate" : "Good";
+  const meta = getAqiMeta(aqi);
+  const isElevated = aqi > 100;
+
   return (
-    <div className={styles.aqiBox} style={{ borderColor: `${color}30`, background: `${color}08` }}>
-      <div className={styles.aqiLeft}>
-        <span className={styles.aqiVal} style={{ color }}>{aqi}</span>
-        <span className={styles.aqiUnit}>AQI</span>
+    <div
+      className={styles.aqiBox}
+      role={isElevated ? "alert" : "status"}
+      aria-label={`${meta.label} air quality. AQI ${aqi}. ${meta.recommendation}`}
+      style={{ borderColor: meta.border, background: meta.bg }}
+    >
+      <div className={styles.aqiIconWrap} aria-hidden="true" style={{ color: meta.tone, background: "#ffffff" }}>
+        {isElevated ? <ShieldAlert size={20} strokeWidth={1.9} /> : <CloudSun size={20} strokeWidth={1.8} />}
       </div>
-      <div>
-        <p className={styles.aqiLabel} style={{ color }}>{label} Air Quality</p>
-        <p className={styles.aqiSub}>Auto-fetched · Your location</p>
+      <div className={styles.aqiContent}>
+        <div className={styles.aqiHeader}>
+          <p className={styles.aqiEyebrow}>Air quality alert</p>
+          <span className={styles.aqiStatus} style={{ color: meta.tone, background: "#ffffff", borderColor: meta.border }}>
+            <span className={styles.aqiDot} style={{ background: meta.tone }} />
+            {meta.label}
+          </span>
+        </div>
+        <p className={styles.aqiTitle}>
+          {meta.title} <span className={styles.aqiInlineValue} style={{ color: meta.tone }}>(AQI: {aqi})</span>
+        </p>
+        <p className={styles.aqiRecommendation}>{meta.recommendation}</p>
+        <p className={styles.aqiSub}>Auto-fetched from your location</p>
+      </div>
+      <div className={styles.aqiReading} style={{ color: meta.tone }}>
+        <span className={styles.aqiVal}>{aqi}</span>
+        <span className={styles.aqiUnit}>AQI</span>
       </div>
     </div>
   );

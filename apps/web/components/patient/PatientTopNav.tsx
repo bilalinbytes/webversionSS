@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Calendar, Download } from "lucide-react";
+import { Bell, Calendar, Download, Eye, FileText, Pill } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { usePatient } from "@/contexts/PatientContext";
@@ -142,7 +142,6 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [latestPrescription, setLatestPrescription] = useState<PrescriptionNotification | null>(null);
   const [latestInstruction, setLatestInstruction] = useState<PatientInstruction | null>(null);
   const [seenPrescriptionKey, setSeenPrescriptionKey] = useState<string | null>(null);
-  const [openedUnreadPrescriptionKey, setOpenedUnreadPrescriptionKey] = useState<string | null>(null);
   const [appointmentNotification, setAppointmentNotification] = useState<AppointmentNotification | null>(null);
   const [seenAppointmentKey, setSeenAppointmentKey] = useState<string | null>(null);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
@@ -198,7 +197,6 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
     window.localStorage.setItem(`saans:patient:${patient.id}:seen-prescription-notification`, key);
     setSeenPrescriptionKey(key);
-    setOpenedUnreadPrescriptionKey(null);
   }, [latestInstruction, latestPrescription, patient?.id]);
 
   useEffect(() => {
@@ -292,7 +290,6 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
     window.localStorage.setItem(`saans:patient:${patient.id}:seen-prescription-notification`, prescriptionKey);
     setSeenPrescriptionKey(prescriptionKey);
-    setOpenedUnreadPrescriptionKey(null);
 
     if (latestInstruction?.id && !latestInstruction.read_by_patient_at) {
       setLatestInstruction((instruction) =>
@@ -346,9 +343,13 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
       isWithinOneDay(latestEmergencyAt) &&
       !prescriptionSeen
     : false;
-  const showPrescriptionNotification =
-    prescriptionNotificationKey !== null &&
-    (!prescriptionSeen || openedUnreadPrescriptionKey === prescriptionNotificationKey);
+  const showPrescriptionNotification = prescriptionNotificationKey !== null;
+  const latestPrescriptionPdfUrl = latestPrescription
+    ? `/api/patient/prescriptions?format=pdf&date=${encodeURIComponent(latestPrescription.date)}`
+    : "";
+  const latestPrescriptionFilename = latestPrescription
+    ? `saans-prescription-${latestPrescription.date}.pdf`
+    : "";
   const appointmentNotificationKey = getAppointmentNotificationKey(appointmentNotification);
   const showAppointmentBadge = appointmentNotification
     ? isWithinOneDay(appointmentNotification.updated_at, appointmentNotification.created_at ?? undefined)
@@ -363,11 +364,8 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
     if (nextOpen) {
       if (prescriptionNotificationKey && showPrescriptionBadge) {
         markPrescriptionSeen();
-        setOpenedUnreadPrescriptionKey(prescriptionNotificationKey);
       }
       if (appointmentNotification) markAppointmentSeen();
-    } else {
-      setOpenedUnreadPrescriptionKey(null);
     }
 
     setNotificationsOpen(nextOpen);
@@ -411,59 +409,137 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             {notificationCount > 0 && <span className={styles.notifBadge}>{notificationCount}</span>}
           </button>
           {notificationsOpen && (
-            <div className={styles.notifPanel}>
-              {appointmentNotification && (
-                <div className={styles.notifSection}>
-                  <p className={styles.notifTitle}>
-                    {appointmentStatus === "approved"
-                      ? "Appointment Approved"
-                      : appointmentStatus === "rejected"
-                        ? "Appointment Rejected"
-                        : "Appointment Rescheduled"}
-                  </p>
-                  <p className={styles.notifTime}>{formatDateTime(appointmentNotification.scheduled_at)}</p>
-                  {appointmentNotification.meta?.doctor_remarks && (
-                    <p className={styles.notifInstruction}>{appointmentNotification.meta.doctor_remarks}</p>
-                  )}
+            <div className={styles.notifPanel} role="region" aria-label="Patient notifications">
+              <div className={styles.notifPanelHeader}>
+                <div>
+                  <p className={styles.notifEyebrow}>Patient updates</p>
+                  <h2 className={styles.notifHeading}>Notifications</h2>
                 </div>
-              )}
-              {showPrescriptionNotification ? (
-                <>
-                  <p className={styles.notifTitle}>
-                    {latestPrescription ? "Prescription" : "Doctor Instructions"}
-                  </p>
-                  <p className={styles.notifTime}>
-                    {formatDateTime(latestEmergencyAt)}
-                  </p>
-                  {latestInstruction?.instruction_text && (
-                    <p className={styles.notifInstruction}>{latestInstruction.instruction_text}</p>
-                  )}
-                  {latestPrescription && (
-                    <>
-                      <div className={styles.notifPdfCard}>
-                        <Download size={18} strokeWidth={1.8} />
+                {notificationCount > 0 && (
+                  <span className={styles.notifUnreadPill}>{notificationCount} new</span>
+                )}
+              </div>
+
+              <div className={styles.notifFeed}>
+                {showPrescriptionNotification && (
+                  <article className={`${styles.notifItem} ${styles.notifItemPrimary}`}>
+                    <div className={styles.notifMarker} aria-hidden="true">
+                      <FileText size={16} strokeWidth={1.9} />
+                    </div>
+                    <div className={styles.notifContent}>
+                      <div className={styles.notifItemHeader}>
                         <div>
-                          <p className={styles.notifPdfTitle}>Prescription PDF ready</p>
-                          <p className={styles.notifPdfMeta}>
-                            {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""} included
+                          <p className={styles.notifStatus}>
+                            {latestPrescription ? "Prescription ready" : "Doctor instruction"}
                           </p>
+                          <h3 className={styles.notifTitle}>
+                            {latestPrescription ? "Prescription PDF is ready" : "New doctor instruction"}
+                          </h3>
+                        </div>
+                        {latestPrescription && (
+                          <span className={styles.notifPrimaryBadge}>Primary</span>
+                        )}
+                      </div>
+                      <time className={styles.notifTime} dateTime={latestEmergencyAt ?? undefined}>
+                        {formatDateTime(latestEmergencyAt)}
+                      </time>
+                      {latestInstruction?.instruction_text && (
+                        <p className={styles.notifMessage}>{latestInstruction.instruction_text}</p>
+                      )}
+                      {latestPrescription && (
+                        <>
+                          <div className={styles.notifMetaRow}>
+                            <span>
+                              <Pill size={14} strokeWidth={1.9} />
+                              {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          <a
+                            className={styles.notifAttachment}
+                            href={`${latestPrescriptionPdfUrl}&disposition=inline`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={markPrescriptionSeen}
+                            aria-label={`View ${latestPrescriptionFilename}`}
+                          >
+                            <FileText size={18} strokeWidth={1.9} />
+                            <div>
+                              <p className={styles.notifAttachmentTitle}>{latestPrescriptionFilename}</p>
+                              <p className={styles.notifAttachmentMeta}>
+                                PDF attachment | {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""} | Ready to view
+                              </p>
+                            </div>
+                          </a>
+                          <div className={styles.notifActions}>
+                            <a
+                              className={styles.notifPdfLink}
+                              href={latestPrescriptionPdfUrl}
+                              download
+                              onClick={markPrescriptionSeen}
+                              aria-label={`Download ${latestPrescriptionFilename}`}
+                            >
+                              <Download size={14} strokeWidth={1.8} />
+                              <span>Download PDF</span>
+                            </a>
+                            <a
+                              className={styles.notifViewLink}
+                              href={`${latestPrescriptionPdfUrl}&disposition=inline`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={markPrescriptionSeen}
+                              aria-label={`View ${latestPrescriptionFilename}`}
+                            >
+                              <Eye size={14} strokeWidth={1.8} />
+                              <span>View PDF</span>
+                            </a>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                )}
+
+                {appointmentNotification && (
+                  <article className={styles.notifItem}>
+                    <div className={styles.notifMarker} aria-hidden="true">
+                      <Calendar size={16} strokeWidth={1.9} />
+                    </div>
+                    <div className={styles.notifContent}>
+                      <div className={styles.notifItemHeader}>
+                        <div>
+                          <p className={styles.notifStatus}>
+                            {appointmentStatus === "approved"
+                              ? "Appointment approved"
+                              : appointmentStatus === "rejected"
+                                ? "Appointment update"
+                                : "Reschedule suggested"}
+                          </p>
+                          <h3 className={styles.notifTitle}>
+                            {appointmentStatus === "approved"
+                              ? "Appointment confirmed"
+                              : appointmentStatus === "rejected"
+                                ? "Appointment request declined"
+                                : "Appointment rescheduled"}
+                          </h3>
                         </div>
                       </div>
-                      <a
-                        className={styles.notifPdfLink}
-                        href={`/api/patient/prescriptions?format=pdf&date=${encodeURIComponent(latestPrescription.date)}`}
-                        download
-                        onClick={markPrescriptionSeen}
-                      >
-                        <Download size={14} strokeWidth={1.8} />
-                        <span>Download PDF</span>
-                      </a>
-                    </>
-                  )}
-                </>
-              ) : !appointmentNotification ? (
-                <p className={styles.notifEmpty}>No prescription notifications yet.</p>
-              ) : null}
+                      <time className={styles.notifTime} dateTime={appointmentNotification.scheduled_at}>
+                        {formatDateTime(appointmentNotification.scheduled_at)}
+                      </time>
+                      {appointmentNotification.meta?.doctor_remarks && (
+                        <p className={styles.notifMessage}>{appointmentNotification.meta.doctor_remarks}</p>
+                      )}
+                    </div>
+                  </article>
+                )}
+
+                {!appointmentNotification && !showPrescriptionNotification && (
+                  <div className={styles.notifEmpty}>
+                    <Bell size={18} strokeWidth={1.8} />
+                    <p>No patient notifications yet.</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
