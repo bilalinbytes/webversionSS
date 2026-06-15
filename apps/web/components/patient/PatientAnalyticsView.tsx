@@ -932,38 +932,44 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             <MetricLineChart data={dailySeries} lines={[{ key: "heartRate", name: "Heart Rate", color: COLORS.purple }]} />
           </ChartBlock>
 
-          <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="All symptoms tracked over time · सभी लक्षणों का समयक्रम">
+          <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="Select a symptom to view its trend over time · लक्षण चुनें">
             {symptomKeys.length === 0 ? (
               <EmptyChart label="No symptom scores recorded yet." />
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={dailySeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
-                  <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                  {symptomKeys.map((symptomKey, idx) => {
-                    const PALETTE = ["#3867b7","#d85a30","#0f6e56","#6f4eb2","#c94d49","#8a6f2a","#1e8c93","#a84e8a","#5a7f3c","#c47b20"];
-                    const color = PALETTE[idx % PALETTE.length]!;
-                    return (
+              <>
+                <select
+                  value={selectedSymptom}
+                  onChange={(e) => setSelectedSymptom(e.target.value)}
+                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
+                >
+                  {symptomKeys.map((key) => (
+                    <option key={key} value={key}>{formatMetricName(key)}</option>
+                  ))}
+                </select>
+                {selectedSymptomSeries.every((row) => row.value === null) ? (
+                  <EmptyChart label="No values recorded for this symptom yet." />
+                ) : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={selectedSymptomSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
+                      <YAxis domain={selectedSymptomDomain} ticks={selectedSymptomIsMmrc ? [0,1,2,3,4] : [0,2,4,6,8,10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
+                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
                       <Line
-                        key={symptomKey}
                         type="monotone"
-                        dataKey={(row: typeof dailySeries[number]) =>
-                          symptomKey === MMRC_SYMPTOM_KEY ? row.mmrc : (row.symptoms[symptomKey] ?? null)
-                        }
-                        name={formatMetricName(symptomKey)}
-                        stroke={color}
-                        strokeWidth={2}
-                        dot={{ r: 2.5, strokeWidth: 1.5 }}
-                        activeDot={{ r: 4 }}
+                        dataKey="value"
+                        name={formatMetricName(selectedSymptom)}
+                        stroke="#3867b7"
+                        strokeWidth={2.6}
+                        dot={{ r: 3, strokeWidth: 1.5 }}
+                        activeDot={{ r: 5 }}
                         connectNulls
                       />
-                    );
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </>
             )}
           </ChartBlock>
 

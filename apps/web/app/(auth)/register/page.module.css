@@ -288,6 +288,17 @@
   margin-top: 0;
 }
 
+/* On mobile stack fieldRow vertically */
+@media (max-width: 560px) {
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldRow .field + .field {
+    margin-top: 0.75rem;
+  }
+}
+
 /* Read-only display element (Fix 5) */
 .readonlyField {
   width: 100%;

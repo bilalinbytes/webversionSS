@@ -607,7 +607,7 @@
   }
 
   .header {
-    padding: 16px 18px;
+    padding: 14px 14px;
     gap: 10px;
   }
 
@@ -618,20 +618,30 @@
 
   .backBtn {
     padding: 0 10px;
+    font-size: 11px;
   }
 
   .body {
-    padding: 16px;
+    padding: 12px 14px;
   }
 
   .tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 1px;
+    /* hide scrollbar visually */
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .tab {
     flex: 0 0 auto;
+    font-size: 12px;
+    padding: 7px 10px;
   }
 
   .instructionComposer {
@@ -650,6 +660,8 @@
 
   .prescriptionDateRow {
     align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .actions {
@@ -661,6 +673,18 @@
   .body textarea,
   .body button {
     max-width: 100%;
+  }
+
+  .trendRow {
+    gap: 6px;
+  }
+
+  .trendBox {
+    padding: 8px 10px;
+  }
+
+  .trendVal {
+    font-size: 16px;
   }
 }
 

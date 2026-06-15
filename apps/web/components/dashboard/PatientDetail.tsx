@@ -604,13 +604,13 @@ function OverviewTab({
           </div>
         ) : (
           <div className={styles.prescriptionGroups}>
-            {prescriptions.map((group, index) => {
+            {prescriptions.slice(0, 1).map((group) => {
               const isOpen = openPrescriptionDates.has(group.date);
               return (
               <article key={group.date} className={styles.prescriptionGroup}>
                 <div className={styles.prescriptionDateRow}>
                   <div>
-                    <span className={styles.prescriptionBadge}>{index === 0 ? "Latest" : "Previous"}</span>
+                    <span className={styles.prescriptionBadge}>Latest</span>
                     <strong>{fmtDate(group.date)}</strong>
                   </div>
                   <button
@@ -659,6 +659,11 @@ function OverviewTab({
               </article>
             );
             })}
+            {prescriptions.length > 1 && (
+              <p style={{ margin: 0, fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", textAlign: "center" }}>
+                {prescriptions.length - 1} older prescription{prescriptions.length - 1 !== 1 ? "s" : ""} available in Treatment Folder
+              </p>
+            )}
           </div>
         )}
       </section>
