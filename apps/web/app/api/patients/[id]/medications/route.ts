@@ -38,7 +38,9 @@ export async function GET(
 
   const { data: medications } = await supabase
     .from("medications")
-    .select("id, drug_name, dose, dose_unit, route, frequency, start_date, end_date")
+    .select(
+      "id, drug_name, dose, dose_unit, route, frequency, start_date, end_date",
+    )
     .eq("patient_id", patientId)
     .lte("start_date", today)
     .order("drug_name", { ascending: true });
