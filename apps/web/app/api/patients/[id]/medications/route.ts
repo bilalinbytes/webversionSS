@@ -43,7 +43,9 @@ export async function GET(
     .lte("start_date", today)
     .order("drug_name", { ascending: true });
 
-  const activeMeds = (medications ?? []).filter((med) => !med.end_date || med.end_date >= today);
+  const activeMeds = (medications ?? []).filter(
+    (med) => !med.end_date || med.end_date >= today,
+  );
 
   return NextResponse.json({ medications: activeMeds });
 }
