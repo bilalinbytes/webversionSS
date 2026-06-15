@@ -1002,9 +1002,9 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const saveInlineEdit = async (medId: string, field: "route" | "frequency" | "discontinued", value: string | boolean, today: string) => {
     setInlineSaving(prev => ({ ...prev, [medId]: true }));
     const supabase = createClient();
-    let updatePayload: Record<string, unknown> = {};
-    if (field === "route") updatePayload = { route: value };
-    else if (field === "frequency") updatePayload = { frequency: value };
+    let updatePayload: { route?: string; frequency?: string; end_date?: string | null } = {};
+    if (field === "route") updatePayload = { route: value as string };
+    else if (field === "frequency") updatePayload = { frequency: value as string };
     else if (field === "discontinued") {
       // toggling discontinue sets end_date to today; toggling continue clears it
       updatePayload = { end_date: value ? today : null };
