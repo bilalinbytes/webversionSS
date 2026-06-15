@@ -44,7 +44,7 @@ export function DiseaseLayout({
         <div className={styles.brand}>
           <SaansBrandIcon className={styles.brandIcon} />
           <div>
-            <p className={styles.brandName}>Saans Sync</p>
+          <p className={styles.brandName}>O2Plus</p>
             <p className={styles.brandSub}>Your respiratory health companion</p>
           </div>
         </div>

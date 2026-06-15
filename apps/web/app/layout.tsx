@@ -27,7 +27,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Saans Sync — Clinical Dashboard",
+  title: "O2Plus — Clinical Dashboard",
   description:
     "Respiratory monitoring system for pulmonology clinicians. Secure, HIPAA-compliant clinical dashboard.",
 };

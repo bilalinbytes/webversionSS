@@ -191,7 +191,7 @@ export function ExportPdfDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Saans Clinical Export</Text>
+        <Text style={styles.title}>O2Plus Clinical Export</Text>
         <Text style={styles.subtitle}>Export type: {exportType}</Text>
         <Text style={styles.subtitle}>Doctor: {doctorName}</Text>
         <Text style={styles.subtitle}>Generated at: {generatedAt}</Text>

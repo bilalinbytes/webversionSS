@@ -125,7 +125,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         body: new URLSearchParams({
           To: primary_mobile_number,
           From: fromNumber,
-          Body: `Your Saans Sync verification code is ${rawOtp}. Valid for 30 days.`,
+          Body: `Your O2Plus verification code is ${rawOtp}. Valid for 30 days.`,
         }),
       });
 
@@ -146,7 +146,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.log("\n==================================================");
     console.log(`[SMS PROVIDER MOCK] Sending Onboarding SMS via Gateway...`);
     console.log(`[SMS PROVIDER MOCK] Destination: ${primary_mobile_number}`);
-    console.log(`[SMS PROVIDER MOCK] Message: Your Saans Sync verification code is ${rawOtp}. Valid for 30 days.`);
+    console.log(`[SMS PROVIDER MOCK] Message: Your O2Plus verification code is ${rawOtp}. Valid for 30 days.`);
     console.log("==================================================\n");
   }
 

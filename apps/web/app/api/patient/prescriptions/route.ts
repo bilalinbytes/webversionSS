@@ -104,7 +104,7 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.footer },
-        React.createElement(Text, null, "Saans Sync prescription"),
+        React.createElement(Text, null, "O2Plus prescription"),
         React.createElement(Text, null, "Signature: ____________________"),
       ),
     ),

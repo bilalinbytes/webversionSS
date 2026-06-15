@@ -95,7 +95,7 @@ export function AppointmentPreferenceModal({
               </p>
               <p className={styles.description}>
                 Your doctor will be able to receive and manage appointment requests from you
-                directly through Saans Sync.
+                directly through O2Plus.
               </p>
             </div>
 

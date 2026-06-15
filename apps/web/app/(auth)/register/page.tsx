@@ -289,7 +289,7 @@ export default function RegisterPage() {
         <div className={styles.brand}>
           <SaansBrandIcon className={styles.brandIcon} />
           <div>
-            <p className={styles.brandTitle}>Saans Sync</p>
+            <p className={styles.brandTitle}>O2Plus</p>
             <p className={styles.brandTagline}>
               Connecting missing dots with your doctor....
             </p>

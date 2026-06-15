@@ -370,7 +370,7 @@ function PatientLoginContent() {
     <main className={styles.page}>
       <section className={styles.card}>
         <header className={styles.header}>
-          <p className={styles.eyebrow}>Saans Sync</p>
+          <p className={styles.eyebrow}>O2Plus</p>
           <h1 className={styles.title}>Patient Login</h1>
           <p className={styles.subtitle}>
             Use your registered patient or caretaker mobile number. OTPs are sent

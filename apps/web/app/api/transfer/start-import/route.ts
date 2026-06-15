@@ -41,7 +41,7 @@ async function sendOtp(to: string, otp: string): Promise<void> {
     body: new URLSearchParams({
       To: to,
       From: fromNumber,
-      Body: `Your Saans Sync patient import verification code is ${otp}. Share it only with the doctor you want to consult.`,
+      Body: `Your O2Plus patient import verification code is ${otp}. Share it only with the doctor you want to consult.`,
     }),
   });
 
