@@ -1,4 +1,4 @@
-.view {
+﻿.view {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -6,7 +6,7 @@
   background: #f7fafb;
 }
 
-/* ── Header ── */
+/* â”€â”€ Header â”€â”€ */
 .header {
   background: #ffffff;
   border-bottom: 1px solid rgba(0,0,0,0.07);
@@ -31,7 +31,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Layout ── */
+/* â”€â”€ Layout â”€â”€ */
 .layout {
   display: flex;
   flex: 1;
@@ -39,7 +39,7 @@
   min-width: 0;
 }
 
-/* ── Step Sidebar ── */
+/* â”€â”€ Step Sidebar â”€â”€ */
 .stepSidebar {
   width: 210px;
   background: #ffffff;
@@ -193,7 +193,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Form main ── */
+/* â”€â”€ Form main â”€â”€ */
 .formMain {
   flex: 1;
   min-width: 0;
@@ -227,7 +227,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Card ── */
+/* â”€â”€ Card â”€â”€ */
 .card {
   background: #ffffff;
   border-radius: 14px;
@@ -258,7 +258,7 @@
   margin-bottom: 16px;
 }
 
-/* ── Fields ── */
+/* â”€â”€ Fields â”€â”€ */
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -390,7 +390,7 @@
   font-weight: 500;
 }
 
-/* ── Diagnosis category buttons ── */
+/* â”€â”€ Diagnosis category buttons â”€â”€ */
 .diagCatGrid {
   display: flex;
   flex-wrap: wrap;
@@ -531,7 +531,7 @@
   color: #0d4a4a;
 }
 
-/* ── PFT Table ── */
+/* â”€â”€ PFT Table â”€â”€ */
 .tableWrap {
   overflow-x: auto;
   border-radius: 8px;
@@ -596,7 +596,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Tabs ── */
+/* â”€â”€ Tabs â”€â”€ */
 .tabRow {
   display: flex;
   gap: 2px;
@@ -630,7 +630,7 @@
   padding-top: 4px;
 }
 
-/* ── Medications ── */
+/* â”€â”€ Medications â”€â”€ */
 .medList {
   display: flex;
   flex-direction: column;
@@ -639,24 +639,23 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-
 .medHeader {
   display: grid;
   grid-template-columns: 70px 140px 80px 90px 80px 80px 80px;
   gap: 8px;
   padding: 8px 12px;
-  background: #fafafa;
+  background: linear-gradient(90deg, #1a56b0 0%, #2563eb 100%);
   border-radius: 8px 8px 0 0;
-  border: 1px solid rgba(0,0,0,0.07);
+  border: 1px solid #1d4ed8;
   border-bottom: none;
 }
 
 .medHeaderCell {
   font-size: 10px;
-  font-weight: 600;
-  color: #888680;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
@@ -665,14 +664,14 @@
   grid-template-columns: 70px 140px 80px 90px 80px 80px 80px;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid rgba(0,0,0,0.07);
+  border: 1px solid #c7d9f8;
   border-top: none;
   align-items: center;
   transition: background 0.1s;
 }
 
 .medRow:hover {
-  background: #fafafa;
+  background: #eff6ff;
 }
 
 .medRow:last-child {
@@ -716,7 +715,7 @@
   color: #888680;
 }
 
-/* ── Review ── */
+/* â”€â”€ Review â”€â”€ */
 .reviewGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -765,7 +764,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Buttons ── */
+/* â”€â”€ Buttons â”€â”€ */
 .btnGhost {
   min-height: 44px;
   padding: 8px 16px;
@@ -837,7 +836,7 @@
   box-shadow: 0 6px 18px rgba(15, 110, 86, 0.3);
 }
 
-/* ── Footer ── */
+/* â”€â”€ Footer â”€â”€ */
 .footer {
   background: #ffffff;
   border-top: 1px solid rgba(0,0,0,0.07);
@@ -889,7 +888,7 @@
   align-items: center;
 }
 
-/* ── Inline add forms ── */
+/* â”€â”€ Inline add forms â”€â”€ */
 .addRowForm {
   background: #f8fffe;
   border: 1.5px solid #9fe1cb;

@@ -1,9 +1,9 @@
 "use client";
 
-import { Users } from "lucide-react";
+import { CalendarClock, Users } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
-type View = "dashboard" | "create" | "export";
+type View = "dashboard" | "create" | "export" | "appointments";
 
 interface SidebarProps {
   activeView: View;
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 const NAV_ITEMS: { id: View; icon: React.ElementType; label: string }[] = [
   { id: "dashboard",  icon: Users,     label: "Patients"  },
+  { id: "appointments", icon: CalendarClock, label: "Appts" },
 ];
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {

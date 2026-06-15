@@ -215,8 +215,9 @@
 
 .supportSummary {
   margin: 10px 0 0;
-  color: #5e6f75;
-  font-size: 12px;
+  color: #24424c;
+  font-size: 16px;
+  font-weight: 700;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   line-height: 1.45;
 }

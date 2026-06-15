@@ -1,0 +1,1164 @@
+/* ════════════════════════════════════════════════════════════
+   BookAppointmentView — Premium Healthcare SaaS Design
+   Microsoft Fluent UI × Google Health × Apple Health
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Root page ───────────────────────────────────────────── */
+.page {
+  min-height: 100%;
+  background: #F3F6FB;
+  padding: 0 0 64px;
+  font-family: 'Segoe UI', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Hero / Header ───────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #003F8A 0%, #0078D4 55%, #00A1D6 100%);
+  padding: 32px 28px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: 30%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+}
+
+.heroContent {
+  max-width: 880px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.heroIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.4px;
+}
+
+.heroSub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+}
+
+/* ── Container ───────────────────────────────────────────── */
+.container {
+  max-width: 880px;
+  margin: -36px auto 0;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #E8EAED;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 8px 32px rgba(0,0,0,0.04);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 12px 40px rgba(0,0,0,0.06);
+}
+
+.cardInner {
+  padding: 24px;
+}
+
+/* ── Availability strip ──────────────────────────────────── */
+.availStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #EFF6FF, #F0F9FF);
+  border-bottom: 1px solid #DBEAFE;
+}
+
+.availLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #1E40AF;
+  margin-right: 4px;
+}
+
+.availPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #93C5FD;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1E40AF;
+}
+
+/* ── Step progress ───────────────────────────────────────── */
+.stepBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 20px 24px 0;
+  margin-bottom: 24px;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  position: relative;
+}
+
+.stepItem:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 14px);
+  right: calc(-50% + 14px);
+  height: 2px;
+  background: #E5E7EB;
+  z-index: 0;
+  transition: background 0.3s;
+}
+
+.stepItem.stepDone:not(:last-child)::after {
+  background: #0078D4;
+}
+
+.stepCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #D1D5DB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  background: #fff;
+  position: relative;
+  z-index: 1;
+  transition: all 0.25s ease;
+}
+
+.stepCircleActive {
+  border-color: #0078D4;
+  background: #0078D4;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(0,120,212,0.15);
+}
+
+.stepCircleDone {
+  border-color: #0078D4;
+  background: #0078D4;
+  color: #fff;
+}
+
+.stepLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.stepLabelActive {
+  color: #0078D4;
+  font-weight: 700;
+}
+
+.stepLabelDone {
+  color: #374151;
+}
+
+/* ── Section headers ─────────────────────────────────────── */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sectionNum {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #0078D4;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.sectionSub {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 1px 0 0;
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: #F3F4F6;
+  margin: 20px 0;
+}
+
+/* ── Date picker section ─────────────────────────────────── */
+.dateSectionInner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.dateInputWrap {
+  position: relative;
+}
+
+.dateInput {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px 0 48px;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #111827;
+  background: #FAFAFA;
+  outline: none;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.dateInput:hover {
+  border-color: #93C5FD;
+  background: #fff;
+}
+
+.dateInput:focus {
+  border-color: #0078D4;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(0,120,212,0.12);
+}
+
+.dateInputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0078D4;
+  pointer-events: none;
+}
+
+.dayOfWeekBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E40AF;
+  white-space: nowrap;
+}
+
+.dayUnavailable {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+  color: #C2410C;
+}
+
+/* ── Time slots ──────────────────────────────────────────── */
+.slotsWrap {
+  margin-top: 4px;
+}
+
+.slotsHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.slotsHintInfo {
+  background: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  color: #64748B;
+}
+
+.slotsHintWarn {
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  color: #C2410C;
+}
+
+.slotsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  min-width: 78px;
+  padding: 0 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.01em;
+}
+
+.chip:hover {
+  border-color: #0078D4;
+  color: #0078D4;
+  background: #EFF6FF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,120,212,0.18);
+}
+
+.chipActive {
+  border-color: #0078D4;
+  background: linear-gradient(135deg, #0078D4 0%, #106EBE 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,120,212,0.38);
+}
+
+.chipActive:hover {
+  background: linear-gradient(135deg, #106EBE 0%, #005A9E 100%);
+  color: #fff;
+}
+
+/* ── Mode control ────────────────────────────────────────── */
+.modeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.modeCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+}
+
+.modeCard:hover {
+  border-color: #93C5FD;
+  background: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.modeCardActive {
+  border-color: #0078D4;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  box-shadow: 0 2px 12px rgba(0,120,212,0.15);
+}
+
+.modeIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #F3F4F6;
+  color: #6B7280;
+  transition: all 0.18s;
+}
+
+.modeCardActive .modeIcon {
+  background: #0078D4;
+  color: #fff;
+}
+
+.modeName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 2px;
+}
+
+.modeCardActive .modeName {
+  color: #1E40AF;
+}
+
+.modeDesc {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+/* ── Reason textarea ─────────────────────────────────────── */
+.textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #111827;
+  background: #FAFAFA;
+  resize: vertical;
+  outline: none;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+  min-height: 88px;
+  line-height: 1.5;
+}
+
+.textarea:hover {
+  border-color: #93C5FD;
+  background: #fff;
+}
+
+.textarea:focus {
+  border-color: #0078D4;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(0,120,212,0.12);
+}
+
+.textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* ── Submit ──────────────────────────────────────────────── */
+.submitArea {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid #F3F4F6;
+  margin-top: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.submitHint {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.submitHintStrong {
+  color: #374151;
+  font-weight: 600;
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 32px;
+  background: linear-gradient(135deg, #0078D4 0%, #006CBF 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0,120,212,0.38);
+  letter-spacing: 0.01em;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #006CBF 0%, #00509E 100%);
+  box-shadow: 0 6px 20px rgba(0,120,212,0.48);
+  transform: translateY(-2px);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0,120,212,0.3);
+}
+
+.submitBtn:disabled {
+  background: linear-gradient(135deg, #D1D5DB 0%, #C4C9D2 100%);
+  color: #9CA3AF;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 16px;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toastSuccess {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  color: #166534;
+}
+
+.toastError {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+}
+
+/* ── Disabled state ──────────────────────────────────────── */
+.disabledCard {
+  padding: 20px;
+  background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.disabledTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #92400E;
+  margin: 0 0 4px;
+}
+
+.disabledText {
+  font-size: 13px;
+  color: #B45309;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Status badges ───────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badgePending {
+  background: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badgeConfirmed {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+}
+
+.badgeRejected {
+  background: #FFF1F2;
+  color: #9F1239;
+  border: 1px solid #FECDD3;
+}
+
+.badgeSuggested {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.badgeOther {
+  background: #F9FAFB;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+/* ── History section ─────────────────────────────────────── */
+.historyHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+
+.historyTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.recordBadge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* ── Timeline ────────────────────────────────────────────── */
+.timeline {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tlItem {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+
+.tlItem:not(:last-child) .tlLineWrap::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  bottom: -28px;
+  width: 2px;
+  background: linear-gradient(#E5E7EB, transparent);
+  transform: translateX(-50%);
+}
+
+.tlLineWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.tlDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #E5E7EB;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+  transition: all 0.2s;
+}
+
+.tlDotPending   { border-color: #F59E0B; background: #FFFBEB; color: #B45309; }
+.tlDotConfirmed { border-color: #10B981; background: #ECFDF5; color: #065F46; }
+.tlDotRejected  { border-color: #EF4444; background: #FFF1F2; color: #9F1239; }
+.tlDotSuggested { border-color: #3B82F6; background: #EFF6FF; color: #1E40AF; }
+
+.tlContent {
+  flex: 1;
+  padding-bottom: 28px;
+}
+
+/* ── Appointment card ────────────────────────────────────── */
+.apptCard {
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: all 0.18s ease;
+}
+
+.apptCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+  transform: translateY(-1px);
+}
+
+.apptCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  gap: 12px;
+}
+
+.apptDateRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.apptCalIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0078D4;
+  flex-shrink: 0;
+}
+
+.apptDate {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.apptMeta {
+  margin: 0;
+  font-size: 12px;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.apptMetaDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #D1D5DB;
+}
+
+/* ── Doctor remarks ──────────────────────────────────────── */
+.remarksBox {
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #92400E;
+  line-height: 1.5;
+}
+
+.remarksLabel {
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* ── Reschedule notification card ────────────────────────── */
+.notifCard {
+  margin: 0 16px 16px;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.notifHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, #1E40AF 0%, #0078D4 100%);
+}
+
+.notifHeaderTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.95);
+  margin: 0;
+}
+
+.notifBody {
+  padding: 16px;
+  background: #F8FBFF;
+}
+
+.notifActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.btnAccept {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 20px;
+  background: #107C10;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(16,124,16,0.3);
+}
+
+.btnAccept:hover {
+  background: #0B5B0B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16,124,16,0.4);
+}
+
+.btnRequestSlot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 20px;
+  background: #fff;
+  color: #0078D4;
+  border: 2px solid #0078D4;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  transition: all 0.15s;
+}
+
+.btnRequestSlot:hover {
+  background: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.altSlotGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.altInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.altInput:focus {
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0,120,212,0.12);
+}
+
+.altTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  min-height: 64px;
+  margin-bottom: 10px;
+}
+
+.altTextarea:focus {
+  border-color: #0078D4;
+  box-shadow: 0 0 0 3px rgba(0,120,212,0.12);
+}
+
+/* ── History events ──────────────────────────────────────── */
+.eventsTrail {
+  padding: 10px 16px 14px;
+  border-top: 1px solid #F3F4F6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eventRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #9CA3AF;
+}
+
+.eventDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #D1D5DB;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── Empty + skeleton ────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  border: 1px solid #BFDBFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0078D4;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+}
+
+.emptySub {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #F3F4F6 25%, #EAECEF 50%, #F3F4F6 75%);
+  background-size: 300% 100%;
+  animation: shimmer 1.6s infinite ease-in-out;
+  border-radius: 10px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 300% 0; }
+  100% { background-position: -300% 0; }
+}
+
+/* ── No-appointment page ─────────────────────────────────── */
+.noApptHero {
+  background: linear-gradient(135deg, #003F8A 0%, #0078D4 100%);
+  padding: 32px 28px 60px;
+}
+
+.noApptContainer {
+  max-width: 600px;
+  margin: -36px auto 0;
+  padding: 0 20px 48px;
+}
+
+.noApptCard {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  padding: 48px 36px;
+  text-align: center;
+}
+
+.noApptIconWrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #D13438;
+}
+
+.noApptTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 10px;
+}
+
+.noApptSub {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.6;
+  margin: 0 auto 28px;
+  max-width: 380px;
+}
+
+.emailLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  border: 2px solid #93C5FD;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0078D4;
+  text-decoration: none;
+  transition: all 0.18s;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+}
+
+.emailLink:hover {
+  background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+  border-color: #60A5FA;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,120,212,0.22);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .hero, .noApptHero { padding: 24px 18px 56px; }
+  .heroTitle { font-size: 20px; }
+  .container { padding: 0 14px; }
+  .cardInner { padding: 18px; }
+
+  .dateSectionInner {
+    grid-template-columns: 1fr;
+  }
+
+  .stepBar {
+    padding: 16px 14px 0;
+    overflow-x: auto;
+    gap: 0;
+  }
+
+  .stepLabel { display: none; }
+
+  .modeGrid { grid-template-columns: 1fr; }
+
+  .altSlotGrid { grid-template-columns: 1fr; }
+
+  .submitArea {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submitBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .apptCardTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .notifActions { flex-direction: column; }
+
+  .btnAccept,
+  .btnRequestSlot { width: 100%; justify-content: center; }
+
+  .noApptCard { padding: 32px 20px; }
+
+  .historyHead, .timeline { padding-left: 16px; padding-right: 16px; }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
+import { YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import dStyles from "@/components/patient/disease.module.css";
 import styles from "./COPD.module.css";
@@ -17,16 +17,14 @@ interface Props {
   mmrcTrend?: number[];
   vasTrend?: number[];
   diseaseSpecificTrend?: number[];
-  doctorNote?: string;
 }
 
-export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, diseaseSpecificTrend, doctorNote }: Props) {
+export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, diseaseSpecificTrend }: Props) {
   const isCritical = patient.spo2Today < 85;
 
   return (
     <div className={dStyles.view}>
       <div className={dStyles.body}>
-        {doctorNote && <DoctorNoteCard note={doctorNote} />}
 
         <CommonPatientDashboard
           name={patient.name}
@@ -46,7 +44,7 @@ export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTre
           latestPft={patient.latestPft}
           onLogToday={onLogToday}
           accentColor="#378add"
-          diseaseLabel="COPD Dashboard"
+          diseaseLabel="My Health"
         />
 
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="copd" />}

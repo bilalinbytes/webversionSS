@@ -184,15 +184,32 @@ export function CommonDailyLogView({
   const spo2ExertionValid = inRange(spo2Exertion, 0, 100);
   const heartRateValid = inRange(heartRate, 20, 250);
   const oxygenLitresValid = inRange(breathlessness.additionalLitres, 0, 15);
+  const hasMedicationsTaken = Object.values(medsTaken).some((taken) => taken === true);
+  const diseaseValues = diseaseSpecificData as Record<string, unknown>;
+  const asthmaControlComplete = dashboard !== "asthma"
+    || (Array.isArray(diseaseValues.asthma_control_responses)
+      && diseaseValues.asthma_control_responses.length === 4);
+  const asthmaDailyTrackingComplete = dashboard !== "asthma"
+    || (diseaseValues.rescue_inhaler_puffs !== null
+      && diseaseValues.rescue_inhaler_puffs !== undefined
+      && diseaseValues.pefr_lpm !== null
+      && diseaseValues.pefr_lpm !== undefined);
+  
   const validationMessage = !spo2RestValid
     ? "SpO2 at rest must be between 0 and 100. · आराम का SpO2 0 से 100 के बीच होना चाहिए."
     : !spo2ExertionValid
       ? "SpO2 after walking must be between 0 and 100. · चलने के बाद SpO2 0 से 100 के बीच होना चाहिए."
       : !heartRateValid
         ? "Heart rate must be between 20 and 250. · नाड़ी 20 से 250 के बीच होनी चाहिए."
-        : !oxygenLitresValid
-          ? "Oxygen flow must be between 0 and 15 L/min. · ऑक्सीजन फ्लो 0 से 15 L/min के बीच होना चाहिए."
-          : null;
+        : !hasMedicationsTaken && meds.length > 0
+          ? "Please mark at least one medication taken. · कृपया कम से कम एक दवा को चिह्नित करें।"
+          : !asthmaControlComplete
+            ? "Please answer all asthma control questions. · कृपया अस्थमा नियंत्रण के सभी सवालों का जवाब दें."
+            : !asthmaDailyTrackingComplete
+              ? "Rescue puffs and Peak Flow/PEFR are required. · रेस्क्यू पफ और PEFR आवश्यक हैं."
+              : !oxygenLitresValid
+                ? "Oxygen flow must be between 0 and 15 L/min. · ऑक्सीजन फ्लो 0 से 15 L/min के बीच होना चाहिए."
+                : null;
   const canSubmit = spo2 !== "" && mmrc !== null && validationMessage === null;
   const isSubmitting = submitState === "submitting";
   const previousMmrcLabel = prevDay.loading ? "..." : prevDay.mmrc !== null ? String(prevDay.mmrc) : "-";
@@ -361,19 +378,17 @@ export function CommonDailyLogView({
           <p className={dStyles.cardTitle}>Common Vitals · सामान्य स्वास्थ्य जांच</p>
           <AQIDisplay aqi={aqi} />
           <p className={dStyles.supportSummary}>{supportSummary}</p>
-          <div className={dStyles.grid2} style={{ marginTop: 16 }}>
-            <div>
-              <SpO2Input
-                value={spo2}
-                onChange={setSpo2}
-                isCOPD={dashboard === "copd"}
-                label="SpO₂ at Rest · आराम के समय ऑक्सीजन"
-              />
-            </div>
+          <div style={{ display: "grid", gap: 14, marginTop: 16, maxWidth: 720 }}>
+            <SpO2Input
+              value={spo2}
+              onChange={setSpo2}
+              isCOPD={dashboard === "copd"}
+              label="SpO₂ at Rest · आराम के समय ऑक्सीजन"
+            />
             <div>
               <label className={dStyles.fieldLabel}>
-                SpO₂ After Walking
-                <span className={dStyles.fieldLabelHi}>चलने के बाद ऑक्सीजन</span>
+                SpO₂ After Walking (Optional)
+                <span className={dStyles.fieldLabelHi}>चलने के बाद ऑक्सीजन (वैकल्पिक)</span>
               </label>
               <input
                 type="number"
@@ -384,21 +399,21 @@ export function CommonDailyLogView({
                 value={spo2Exertion}
                 onChange={(event) => setSpo2Exertion(event.target.value)}
               />
-              <div style={{ marginTop: 14 }}>
-                <label className={dStyles.fieldLabel}>
-                  Heart Rate
-                  <span className={dStyles.fieldLabelHi}>नाड़ी / मिनट</span>
-                </label>
-                <input
-                  type="number"
-                  min={20}
-                  max={250}
-                  className={dStyles.numInput}
-                  placeholder="e.g. 88"
-                  value={heartRate}
-                  onChange={(event) => setHeartRate(event.target.value)}
-                />
-              </div>
+            </div>
+            <div>
+              <label className={dStyles.fieldLabel}>
+                Heart Rate (Optional)
+                <span className={dStyles.fieldLabelHi}>नाड़ी / मिनट (वैकल्पिक)</span>
+              </label>
+              <input
+                type="number"
+                min={20}
+                max={250}
+                className={dStyles.numInput}
+                placeholder="e.g. 88"
+                value={heartRate}
+                onChange={(event) => setHeartRate(event.target.value)}
+              />
             </div>
           </div>
           <div style={{ marginTop: 16 }}>
@@ -499,7 +514,7 @@ export function CommonDailyLogView({
         <div className={dStyles.submitRow}>
           {!canSubmit && !isSubmitting && (
             <p className={dStyles.submitHint}>
-              <AlertCircle size={11} /> SpO2 and mMRC grade are required · SpO2 और mMRC grade आवश्यक हैं.
+              <AlertCircle size={11} /> Complete required vitals, mMRC, medicines, and asthma fields where shown.
             </p>
           )}
           <button

@@ -21,6 +21,22 @@ function formatDayLabel(dateString: string) {
   return `${day}${dayOfWeek}`;
 }
 
+// Symptom metadata with display names and colors
+const SYMPTOM_CONFIG: Record<string, { label: string; color: string; unit: string }> = {
+  breathlessness: { label: "Breathlessness (0–10)", color: "#e24b4a", unit: "" },
+  cough: { label: "Cough (0–10)", color: "#ef9f27", unit: "" },
+  expectoration: { label: "Expectoration (0–10)", color: "#f59e0b", unit: "" },
+  chest_pain: { label: "Chest Pain (0–10)", color: "#ec4899", unit: "" },
+  haemoptysis: { label: "Haemoptysis (0–10)", color: "#8b5cf6", unit: "" },
+  fever: { label: "Fever (0–10)", color: "#f97316", unit: "" },
+  cold: { label: "Cold Symptoms (0–10)", color: "#0ea5e9", unit: "" },
+  pedal_edema: { label: "Pedal Edema (0–10)", color: "#6366f1", unit: "" },
+  stridor: { label: "Stridor (0–10)", color: "#a855f7", unit: "" },
+  difficulty_lying: { label: "Difficulty Lying Down (0–10)", color: "#f43f5e", unit: "" },
+  difficulty_swallowing: { label: "Difficulty Swallowing (0–10)", color: "#eab308", unit: "" },
+  excessive_daytime_sleep: { label: "Excessive Daytime Sleep (0–10)", color: "#14b8a6", unit: "" },
+};
+
 function TrendCard({ title, points, color, unit = "", days }: {
   title: string; points: number[]; color: string; unit?: string; days: string[];
 }) {
@@ -67,13 +83,7 @@ function TrendCard({ title, points, color, unit = "", days }: {
 export function ILDTrendsView({ patientId }: { patientId: string }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
-  const [trendData, setTrendData] = useState<{
-    spo2: number[];
-    kbild: number[];
-    breath: number[];
-    cough: number[];
-    labels: string[];
-  }>({ spo2: [], kbild: [], breath: [], cough: [], labels: [] });
+  const [trendData, setTrendData] = useState<Record<string, { points: number[]; labels: string[] }>>({});
 
   useEffect(() => {
     async function fetchTrends() {
@@ -89,13 +99,43 @@ export function ILDTrendsView({ patientId }: { patientId: string }) {
         .order("logged_at", { ascending: true });
 
       if (data && !error) {
-        const spo2 = data.map(d => d.spo2_rest || 0);
-        const kbild = data.map(d => numericField(d.disease_specific_data as JsonRecord | null, "kbild_score") ?? 0);
-        const breath = data.map(d => numericField(d.vas_symptoms as JsonRecord | null, "breathlessness") ?? 0);
-        const cough = data.map(d => numericField(d.vas_symptoms as JsonRecord | null, "cough") ?? 0);
         const labels = data.map(d => formatDayLabel(d.logged_at));
-        
-        setTrendData({ spo2, kbild, breath, cough, labels });
+        const trends: Record<string, { points: number[]; labels: string[] }> = {};
+
+        // Add baseline vitals
+        trends.spo2_rest = {
+          points: data.map(d => d.spo2_rest || 0),
+          labels,
+        };
+
+        // Add K-BILD score
+        trends.kbild_score = {
+          points: data.map(d => numericField(d.disease_specific_data as JsonRecord | null, "kbild_score") ?? 0),
+          labels,
+        };
+
+        // Extract all VAS symptoms dynamically
+        const allSymptomKeys = new Set<string>();
+        data.forEach(d => {
+          const vasSymptoms = d.vas_symptoms as JsonRecord | null;
+          if (vasSymptoms) {
+            Object.keys(vasSymptoms).forEach(key => {
+              if (typeof vasSymptoms[key] === "number") {
+                allSymptomKeys.add(key);
+              }
+            });
+          }
+        });
+
+        // Create trend data for each symptom
+        allSymptomKeys.forEach(symptomKey => {
+          trends[symptomKey] = {
+            points: data.map(d => numericField(d.vas_symptoms as JsonRecord | null, symptomKey) ?? 0),
+            labels,
+          };
+        });
+
+        setTrendData(trends);
       }
       setLoading(false);
     }
@@ -119,10 +159,44 @@ export function ILDTrendsView({ patientId }: { patientId: string }) {
         </div>
       </div>
       <div className={dStyles.body} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, alignContent: "start" }}>
-        <TrendCard title="SpO₂ at Rest" points={trendData.spo2}  color="#7c4dff" unit="%" days={trendData.labels} />
-        <TrendCard title="K-BILD Score" points={trendData.kbild} color="#4527a0" unit=""  days={trendData.labels} />
-        <TrendCard title="Breathlessness (0–10)" points={trendData.breath} color="#e24b4a" unit="" days={trendData.labels} />
-        <TrendCard title="Cough (0–10)" points={trendData.cough} color="#ef9f27" unit="" days={trendData.labels} />
+        {/* SpO2 at Rest */}
+        {trendData.spo2_rest && (
+          <TrendCard
+            title="SpO₂ at Rest (%)"
+            points={trendData.spo2_rest.points}
+            color="#7c4dff"
+            unit="%"
+            days={trendData.spo2_rest.labels}
+          />
+        )}
+
+        {/* K-BILD Score */}
+        {trendData.kbild_score && (
+          <TrendCard
+            title="K-BILD Score"
+            points={trendData.kbild_score.points}
+            color="#4527a0"
+            unit=""
+            days={trendData.kbild_score.labels}
+          />
+        )}
+
+        {/* All VAS Symptoms */}
+        {Object.entries(trendData).map(([key, data]) => {
+          if (key.startsWith("spo2_") || key === "kbild_score") return null;
+          const config = SYMPTOM_CONFIG[key];
+          if (!config) return null;
+          return (
+            <TrendCard
+              key={key}
+              title={config.label}
+              points={data.points}
+              color={config.color}
+              unit={config.unit}
+              days={data.labels}
+            />
+          );
+        })}
       </div>
     </div>
   );

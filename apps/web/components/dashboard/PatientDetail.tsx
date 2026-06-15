@@ -633,7 +633,7 @@ function OverviewTab({
                   <table className={styles.prescriptionTable}>
                     <thead>
                       <tr>
-                        {["S. No.", "Route", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
+                        {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
                           <th key={header}>{header}</th>
                         ))}
                       </tr>
@@ -901,7 +901,7 @@ export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationIn
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-                    {["Route", "Drug Name", "Dose", "Frequency", "End Date"].map((h) => (
+                    {["Medication Type", "Drug Name", "Dose", "Frequency", "End Date"].map((h) => (
                       <th key={h} style={{ padding: "6px 12px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#888680", textTransform: "uppercase", letterSpacing: "0.04em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</th>
                     ))}
                   </tr>
@@ -961,16 +961,26 @@ interface DraftMed {
   ongoing: boolean;
   status: "continue" | "modified" | "new" | "stopped";
   source_id?: string; // original medication id if copied from previous
+  durationDays?: string; // Number of days for automatic end date calculation
 }
 
 const ROUTE_OPTS = ["Tablet", "Capsule", "Injection", "Inhaler", "Nebulisation", "Nasal Spray", "Syrup", "Other"];
 const UNIT_OPTS = ["mg", "mcg", "ml", "puffs", "units", "g", "other"];
 const FREQUENCY_OPTS = ["OD", "BD", "TDS", "Once a week", "Once in 15 days", "Once a month", "Every 6 months"];
 const PATIENT_INSTRUCTION_WORD_LIMIT = 50;
-const PRESCRIPTION_EDITOR_COLUMNS = "76px 150px minmax(220px, 2fr) 100px 88px 170px 138px 150px 176px";
+const PRESCRIPTION_EDITOR_COLUMNS = "76px 130px minmax(180px, 2fr) 90px 80px 140px 110px 120px 120px 176px";
 
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function calculateEndDate(startDateStr: string, durationDaysStr: string): string {
+  if (!startDateStr || !durationDaysStr) return "";
+  const days = parseInt(durationDaysStr, 10);
+  if (isNaN(days) || days <= 0) return "";
+  const d = new Date(startDateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0]!;
 }
 
 function TreatmentTab({ patientId }: { patientId: string }) {
@@ -984,6 +994,50 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(new Set());
+  // Inline edits for the history table: medId → field → value
+  const [inlineEdits, setInlineEdits] = useState<Record<string, { route?: string; frequency?: string; discontinued?: boolean }>>({});
+  const [inlineSaving, setInlineSaving] = useState<Record<string, boolean>>({});
+
+  // Save an inline field change for a medication in the history table
+  const saveInlineEdit = async (medId: string, field: "route" | "frequency" | "discontinued", value: string | boolean, today: string) => {
+    setInlineSaving(prev => ({ ...prev, [medId]: true }));
+    const supabase = createClient();
+    let updatePayload: Record<string, unknown> = {};
+    if (field === "route") updatePayload = { route: value };
+    else if (field === "frequency") updatePayload = { frequency: value };
+    else if (field === "discontinued") {
+      // toggling discontinue sets end_date to today; toggling continue clears it
+      updatePayload = { end_date: value ? today : null };
+    }
+    const { error } = await supabase.from("medications").update(updatePayload).eq("id", medId);
+    if (!error) {
+      // Update local state
+      setPrescriptions(prev => prev.map(group => ({
+        ...group,
+        medications: group.medications.map(m => {
+          if (m.id !== medId) return m;
+          if (field === "route") return { ...m, route: value as string };
+          if (field === "frequency") return { ...m, frequency: value as string };
+          if (field === "discontinued") return { ...m, end_date: value ? today : null };
+          return m;
+        }),
+      })));
+      // Clear pending inline edit for this med/field
+      setInlineEdits(prev => {
+        const next = { ...prev };
+        if (next[medId]) {
+          const copy = { ...next[medId] };
+          if (field === "route") delete copy.route;
+          if (field === "frequency") delete copy.frequency;
+          if (field === "discontinued") delete copy.discontinued;
+          if (Object.keys(copy).length === 0) delete next[medId];
+          else next[medId] = copy;
+        }
+        return next;
+      });
+    }
+    setInlineSaving(prev => ({ ...prev, [medId]: false }));
+  };
 
   const fetchPrescriptions = useCallback(async () => {
     setLoading(true);
@@ -1048,18 +1102,27 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
     const activeMeds = Array.from(activeByMedication.values());
     if (activeMeds.length > 0) {
-      setDraftMeds(activeMeds.map((m, i) => ({
-        _key: Date.now() + i,
-        drug_name: m.drug_name,
-        route: m.route,
-        dose: m.dose !== null ? String(m.dose) : "",
-        dose_unit: m.dose_unit ?? "mg",
-        frequency: m.frequency ?? "OD",
-        end_date: "",
-        ongoing: true,
-        status: "continue" as const,
-        source_id: m.id,
-      })));
+      setDraftMeds(activeMeds.map((m, i) => {
+        let duration = "";
+        if (m.end_date && m.start_date) {
+          const diffTime = new Date(m.end_date).getTime() - new Date(m.start_date).getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays > 0) duration = String(diffDays);
+        }
+        return {
+          _key: Date.now() + i,
+          drug_name: m.drug_name,
+          route: m.route,
+          dose: m.dose !== null ? String(m.dose) : "",
+          dose_unit: m.dose_unit ?? "mg",
+          frequency: m.frequency ?? "OD",
+          end_date: m.end_date ?? "",
+          ongoing: !m.end_date,
+          status: "continue" as const,
+          source_id: m.id,
+          durationDays: duration,
+        };
+      }));
     } else {
       setDraftMeds([{
         _key: Date.now(),
@@ -1071,6 +1134,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         end_date: "",
         ongoing: true,
         status: "new",
+        durationDays: "",
       }]);
     }
     setShowEditor(true);
@@ -1089,8 +1153,50 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       end_date: "",
       ongoing: true,
       status: "new",
+      durationDays: "",
     }]);
   };
+
+  const handleDurationChange = (key: number, val: string) => {
+    setDraftMeds(prev => prev.map(m => {
+      if (m._key !== key) return m;
+      const calculatedEnd = calculateEndDate(prescriptionDate, val);
+      return {
+        ...m,
+        durationDays: val,
+        end_date: calculatedEnd,
+        ongoing: val === "",
+        status: m.status === "continue" ? "modified" : m.status
+      };
+    }));
+  };
+
+  const handleEndDateChange = (key: number, val: string) => {
+    setDraftMeds(prev => prev.map(m => {
+      if (m._key !== key) return m;
+      let duration = "";
+      if (val && prescriptionDate) {
+        const diffTime = new Date(val).getTime() - new Date(prescriptionDate).getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) duration = String(diffDays);
+      }
+      return {
+        ...m,
+        end_date: val,
+        durationDays: duration,
+        ongoing: val === "",
+        status: m.status === "continue" ? "modified" : m.status
+      };
+    }));
+  };
+
+  useEffect(() => {
+    setDraftMeds(prev => prev.map(m => {
+      if (!m.durationDays) return m;
+      const calculatedEnd = calculateEndDate(prescriptionDate, m.durationDays);
+      return { ...m, end_date: calculatedEnd };
+    }));
+  }, [prescriptionDate]);
 
   const updateDraft = (key: number, updates: Partial<DraftMed>) => {
     setDraftMeds(prev => prev.map(m => {
@@ -1264,15 +1370,13 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Header row */}
             <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
-              {["Serial number", "Route", "Drug Name", "Dose", "Unit", "Frequency", "Start date", "End date", "Continue/discontinue"].map(h => (
+              {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date", "Continue/discontinue"].map(h => (
                 <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
               ))}
             </div>
 
             {draftMeds.map((med, index) => {
               const isStopped = med.status === "stopped";
-              const statusColor = med.status === "new" ? "#126969" : med.status === "modified" ? "#d85a30" : med.status === "stopped" ? "#c94d49" : "#6d8794";
-              const statusLabel = med.status === "new" ? "New" : med.status === "modified" ? "Modified" : med.status === "stopped" ? "Stopped" : "Continue";
 
               return (
                 <div
@@ -1292,7 +1396,8 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     value={med.route}
                     disabled={isStopped}
                     onChange={e => updateDraft(med._key, { route: e.target.value })}
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                    title="Medication Type"
+                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white", cursor: isStopped ? "not-allowed" : "pointer" }}
                   >
                     {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
                   </select>
@@ -1334,6 +1439,15 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
                   </select>
                   <input
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 30"
+                    value={med.durationDays ?? ""}
+                    disabled={isStopped}
+                    onChange={e => handleDurationChange(med._key, e.target.value)}
+                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                  />
+                  <input
                     type="date"
                     value={prescriptionDate}
                     disabled
@@ -1343,25 +1457,37 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     type="date"
                     value={med.end_date}
                     disabled={isStopped}
-                    onChange={e => updateDraft(med._key, { end_date: e.target.value, ongoing: e.target.value === "" })}
+                    onChange={e => handleEndDateChange(med._key, e.target.value)}
                     style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
                   />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minWidth: 0 }}>
-                    <span style={{ minWidth: 0, fontSize: 10, fontWeight: 700, color: statusColor, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {statusLabel}
-                    </span>
-                    {isStopped ? (
-                      <button type="button" onClick={() => restoreDraft(med._key)}
-                        style={{ flexShrink: 0, minWidth: 78, height: 28, padding: "0 10px", borderRadius: 6, border: "1px solid #126969", background: "#e8f5f1", color: "#126969", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
-                        title="Continue this medication"
-                      >Continue</button>
-                    ) : (
-                      <button type="button" onClick={() => removeDraft(med._key)}
-                        style={{ flexShrink: 0, minWidth: med.source_id ? 88 : 70, height: 28, padding: "0 10px", borderRadius: 6, border: "1px solid #fca5a5", background: "#fdecea", color: "#c94d49", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
-                        title={med.source_id ? "Discontinue this medication" : "Remove this medication"}
-                      >{med.source_id ? "Discontinue" : "Remove"}</button>
-                    )}
-                  </div>
+                  <select
+                    value={isStopped ? "discontinue" : "continue"}
+                    onChange={e => {
+                      if (e.target.value === "discontinue") {
+                        removeDraft(med._key);
+                      } else {
+                        restoreDraft(med._key);
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "5px 6px",
+                      border: `1.5px solid ${isStopped ? "#fca5a5" : "#126969"}`,
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                      background: isStopped ? "#fdecea" : "#e8f5f1",
+                      color: isStopped ? "#c94d49" : "#126969",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="continue" style={{ color: "#126969", background: "white" }}>Continue</option>
+                    <option value="discontinue" style={{ color: "#c94d49", background: "white" }}>
+                      {med.source_id ? "Discontinue" : "Remove"}
+                    </option>
+                  </select>
                 </div>
               );
             })}
@@ -1446,77 +1572,134 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           <p>No prescriptions yet. Click &quot;+ New Prescription&quot; to add the first one.</p>
         </div>
       ) : (
-        <div className={styles.prescriptionGroups}>
-          {prescriptions.map((group, idx) => {
-            const isExpanded = openPrescriptionDates.has(group.date);
-            const isLatest = idx === 0;
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+          {/* Folders Row */}
+          <div style={{ display: "flex", gap: 24, overflowX: "auto", paddingBottom: 8 }}>
+            {prescriptions.map((group) => {
+              const isSelected = openPrescriptionDates.has(group.date);
+              return (
+                <button
+                  key={group.date}
+                  type="button"
+                  onClick={() => setOpenPrescriptionDates(new Set([group.date]))}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    background: "none", border: "none", cursor: "pointer",
+                    opacity: isSelected ? 1 : 0.5,
+                    transform: isSelected ? "scale(1.05)" : "scale(1)",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <svg width="54" height="46" viewBox="0 0 54 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Tab */}
+                    <path d="M2 10C2 8.9 2.9 8 4 8H20L24 14H4C2.9 14 2 13.1 2 12V10Z" fill={isSelected ? "#3b82f6" : "#93c5fd"} />
+                    {/* Body */}
+                    <rect x="2" y="13" width="50" height="31" rx="3" fill={isSelected ? "#60a5fa" : "#bfdbfe"} />
+                    {/* Shine highlight */}
+                    <rect x="2" y="13" width="50" height="10" rx="3" fill="white" opacity={isSelected ? 0.12 : 0.25} />
+                  </svg>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: isSelected ? "#2563eb" : "#64748b" }}>{fmtDate(group.date)}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected Folder Content */}
+          {prescriptions.map((group) => {
+            if (!openPrescriptionDates.has(group.date)) return null;
             const today = new Date().toISOString().split("T")[0]!;
-            const activeMeds = group.medications.filter(m => !m.end_date || m.end_date >= today);
-
             return (
-              <div key={group.date} className={styles.prescriptionGroup}>
-                  {/* Card header — clickable */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpenPrescriptionDates((current) => {
-                        const next = new Set(current);
-                        if (next.has(group.date)) next.delete(group.date);
-                        else next.add(group.date);
-                        return next;
-                      });
-                    }}
-                    style={{
-                      width: "100%", display: "flex", alignItems: "center", gap: 10,
-                      padding: "10px 14px", background: isLatest ? "#e8f5f1" : "#fafafa",
-                      border: "none", cursor: "pointer", textAlign: "left",
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                        {fmtDate(group.date)}
-                        {isLatest && <span style={{ marginLeft: 8, fontSize: 10, background: "#126969", color: "white", padding: "1px 7px", borderRadius: 10 }}>Latest</span>}
-                      </p>
-                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                        {group.medications.length} drug{group.medications.length !== 1 ? "s" : ""}
-                        {activeMeds.length !== group.medications.length && ` · ${activeMeds.length} active`}
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 16, color: "#6d8794", transform: isExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
-                  </button>
-
-                  {/* Expanded content */}
-                  {isExpanded && (
-                    <div style={{ padding: "12px 14px" }}>
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ minWidth: 960, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                          <thead>
-                            <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-                              {["S. No.", "Route", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
-                                <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group.medications.map((med, medIndex) => {
-                              const isActive = !med.end_date || med.end_date >= today;
-                              return (
-                                <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", background: isActive ? "#ffffff" : "#fff7f7" }}>
-                                  <td style={{ padding: "8px 10px" }}>{med.serial_number ?? medIndex + 1}</td>
-                                  <td style={{ padding: "8px 10px" }}>{med.route}</td>
-                                  <td style={{ padding: "8px 10px", fontWeight: 700, color: isActive ? "#132d36" : "#c94d49", textDecoration: isActive ? "none" : "line-through" }}>{med.drug_name}</td>
-                                  <td style={{ padding: "8px 10px" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
-                                  <td style={{ padding: "8px 10px" }}>{med.frequency ?? "--"}</td>
-                                  <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
-                                  <td style={{ padding: "8px 10px", color: isActive ? "#0f6e56" : "#c94d49", fontWeight: 700 }}>{isActive ? "Continue" : "Discontinued"}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+              <div key={`content-${group.date}`} style={{ background: "#fafafa", borderRadius: 8, overflow: "hidden", border: "1px solid #93c5fd", marginTop: 16 }}>
+                <div style={{ padding: "12px 14px", borderBottom: "1px solid #93c5fd", background: "linear-gradient(90deg, #1a56b0 0%, #2563eb 100%)" }}>
+                  <h3 style={{ margin: 0, fontSize: 14, color: "#fff", fontWeight: 700 }}>Prescription: {fmtDate(group.date)}</h3>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ minWidth: 960, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                    <thead>
+                      <tr style={{ background: "linear-gradient(90deg, #1a56b0 0%, #2563eb 100%)", borderBottom: "1px solid #1d4ed8" }}>
+                        {["S. No.", "Continue/Discontinue", "Medication Type", "Drug Name", "Dose", "Frequency", "Start Date", "End Date"].map((header) => (
+                          <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.9)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.medications.map((med, medIndex) => {
+                        const isActive = !med.end_date || med.end_date >= today;
+                        const isSaving = inlineSaving[med.id] ?? false;
+                        return (
+                          <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", background: isActive ? "#ffffff" : "#fff7f7" }}>
+                            <td style={{ padding: "8px 10px" }}>{med.serial_number ?? medIndex + 1}</td>
+                            <td style={{ padding: "8px 10px" }}>
+                              <select
+                                value={isActive ? "continue" : "discontinue"}
+                                disabled={isSaving}
+                                onChange={e => void saveInlineEdit(med.id, "discontinued", e.target.value === "discontinue", today)}
+                                style={{
+                                  padding: "4px 8px",
+                                  borderRadius: 12,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                                  background: isActive ? "#e8f5f1" : "#fdecea",
+                                  color: isActive ? "#0f6e56" : "#c94d49",
+                                  border: `1px solid ${isActive ? "#a7f3d0" : "#fecaca"}`,
+                                  cursor: isSaving ? "not-allowed" : "pointer",
+                                  outline: "none",
+                                  minWidth: 120,
+                                }}
+                              >
+                                <option value="continue" style={{ color: "#0f6e56", background: "white" }}>Continue</option>
+                                <option value="discontinue" style={{ color: "#c94d49", background: "white" }}>Discontinue</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: "8px 10px" }}>
+                              <select
+                                value={med.route}
+                                disabled={isSaving}
+                                onChange={e => void saveInlineEdit(med.id, "route", e.target.value, today)}
+                                style={{
+                                  padding: "4px 6px",
+                                  border: "1px solid #d4cfc7",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                                  background: isSaving ? "#f5f3ee" : "white",
+                                  cursor: isSaving ? "not-allowed" : "pointer",
+                                  minWidth: 110,
+                                }}
+                              >
+                                {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
+                              </select>
+                            </td>
+                            <td style={{ padding: "8px 10px", fontWeight: 700, color: isActive ? "#132d36" : "#c94d49", textDecoration: isActive ? "none" : "line-through" }}>{med.drug_name}</td>
+                            <td style={{ padding: "8px 10px" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
+                            <td style={{ padding: "8px 10px" }}>
+                              <select
+                                value={med.frequency ?? "OD"}
+                                disabled={isSaving}
+                                onChange={e => void saveInlineEdit(med.id, "frequency", e.target.value, today)}
+                                style={{
+                                  padding: "4px 6px",
+                                  border: "1px solid #d4cfc7",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                                  background: isSaving ? "#f5f3ee" : "white",
+                                  cursor: isSaving ? "not-allowed" : "pointer",
+                                  minWidth: 110,
+                                }}
+                              >
+                                {FREQUENCY_OPTS.map(f => <option key={f}>{f}</option>)}
+                              </select>
+                            </td>
+                            <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.start_date ? fmtDate(med.start_date) : "--"}</td>
+                            <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             );
           })}

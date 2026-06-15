@@ -144,6 +144,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [seenPrescriptionKey, setSeenPrescriptionKey] = useState<string | null>(null);
   const [appointmentNotification, setAppointmentNotification] = useState<AppointmentNotification | null>(null);
   const [seenAppointmentKey, setSeenAppointmentKey] = useState<string | null>(null);
+  const [doctorAcceptsAppointments, setDoctorAcceptsAppointments] = useState<boolean | null>(null);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
     doctorName: "Assigned doctor",
     doctorHospital: "",
@@ -204,13 +205,16 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
     fetch("/api/patient/appointments", { credentials: "include" })
       .then((response) => response.ok ? response.json() : null)
-      .then((body: { appointments?: AppointmentNotification[] } | null) => {
+      .then((body: { appointments?: AppointmentNotification[]; doctor_settings?: { accepts_appointments?: boolean } | null } | null) => {
         if (cancelled) return;
         const latest = (body?.appointments ?? []).find((appointment) => {
           const status = appointment.meta?.workflow_status ?? appointment.status;
           return ["approved", "rejected", "reschedule_suggested"].includes(status);
         }) ?? null;
         setAppointmentNotification(latest);
+        if (body?.doctor_settings !== undefined) {
+          setDoctorAcceptsAppointments(body.doctor_settings?.accepts_appointments ?? false);
+        }
       })
       .catch(() => {
         if (!cancelled) setAppointmentNotification(null);
@@ -383,7 +387,10 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
       </div>
 
       <div className={styles.tabs}>
-        {TABS.map((tab) => (
+        {TABS.filter((tab) => {
+          if (tab.id === "appointments" && doctorAcceptsAppointments === false) return false;
+          return true;
+        }).map((tab) => (
           <button
             key={tab.id}
             type="button"

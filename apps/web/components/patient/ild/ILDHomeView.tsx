@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkline, DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
+import { Sparkline, YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import dStyles from "@/components/patient/disease.module.css";
 import styles from "./ILD.module.css";
@@ -37,10 +37,9 @@ interface Props {
   mmrcTrend?: number[];
   vasTrend?: number[];
   diseaseSpecificTrend?: number[]; // KBILD scores (0–100)
-  doctorNote?: string;
 }
 
-export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, diseaseSpecificTrend, doctorNote }: Props) {
+export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, diseaseSpecificTrend }: Props) {
   const [prevKbild, setPrevKbild] = useState<number | null>(null);
   const [kbildResponses, setKbildResponses] = useState<Record<string, number>>({});
   const [prevKbildResponses, setPrevKbildResponses] = useState<Record<string, number>>({});
@@ -76,7 +75,6 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
   return (
     <div className={dStyles.view}>
       <div className={dStyles.body}>
-        {doctorNote && <DoctorNoteCard note={doctorNote} />}
 
         {/* ── Common dashboard (name, diagnosis, vitals strip, AQI, trends, meds, doctor) ── */}
         <CommonPatientDashboard
@@ -97,7 +95,7 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
           latestPft={patient.latestPft}
           onLogToday={onLogToday}
           accentColor="#4527a0"
-          diseaseLabel="ILD / IPF Dashboard · फेफड़े का रोग"
+          diseaseLabel="My Health"
         />
 
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="ild" />}

@@ -434,14 +434,14 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
 
   useEffect(() => {
     onChange({
-      asthma_control_responses: responses.map((value) => value === true),
-      asthma_control_yes_count: yesCount,
-      asthma_control_status: status,
+      asthma_control_responses: allControlAnswered ? responses.map((value) => value === true) : null,
+      asthma_control_yes_count: allControlAnswered ? yesCount : null,
+      asthma_control_status: allControlAnswered ? status : null,
       rescue_inhaler_puffs: puffs !== "" ? Number(puffs) : null,
       pefr_reading: pefr !== "" ? Number(pefr) : null,
       pefr_lpm: pefr !== "" ? Number(pefr) : null,
     } as DiseaseLogPatch);
-  }, [onChange, pefr, puffs, responses, status, yesCount]);
+  }, [allControlAnswered, onChange, pefr, puffs, responses, status, yesCount]);
 
   useEffect(() => {
     if (!allControlAnswered) return;

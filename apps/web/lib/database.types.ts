@@ -255,6 +255,13 @@ export type Database = {
           id: string
           name: string
           specialisation: string
+          accepts_appointments: boolean
+          appointment_consultation_type: string | null
+          appointment_available_days: Json | null
+          appointment_time_slots: Json | null
+          appointment_slot_duration: number | null
+          appointment_max_patients_per_slot: number | null
+          appointment_preferences_set_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -264,6 +271,13 @@ export type Database = {
           id?: string
           name: string
           specialisation: string
+          accepts_appointments?: boolean
+          appointment_consultation_type?: string | null
+          appointment_available_days?: Json | null
+          appointment_time_slots?: Json | null
+          appointment_slot_duration?: number | null
+          appointment_max_patients_per_slot?: number | null
+          appointment_preferences_set_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -273,6 +287,13 @@ export type Database = {
           id?: string
           name?: string
           specialisation?: string
+          accepts_appointments?: boolean
+          appointment_consultation_type?: string | null
+          appointment_available_days?: Json | null
+          appointment_time_slots?: Json | null
+          appointment_slot_duration?: number | null
+          appointment_max_patients_per_slot?: number | null
+          appointment_preferences_set_at?: string | null
         }
         Relationships: []
       }
@@ -474,6 +495,9 @@ export type Database = {
           mobile_number: string
           name: string
           updated_at: string | null
+          wants_appointments: boolean | null
+          preferred_appointment_time: string | null
+          appointment_preference_set_at: string | null
         }
         Insert: {
           address?: string | null
@@ -489,6 +513,9 @@ export type Database = {
           mobile_number: string
           name: string
           updated_at?: string | null
+          wants_appointments?: boolean | null
+          preferred_appointment_time?: string | null
+          appointment_preference_set_at?: string | null
         }
         Update: {
           address?: string | null
@@ -504,6 +531,9 @@ export type Database = {
           mobile_number?: string
           name?: string
           updated_at?: string | null
+          wants_appointments?: boolean | null
+          preferred_appointment_time?: string | null
+          appointment_preference_set_at?: string | null
         }
         Relationships: [
           {

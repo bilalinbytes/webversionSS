@@ -90,6 +90,50 @@ interface AnalyticsPoint {
 }
 
 const MMRC_SYMPTOM_KEY = "__mmrc_today";
+const KNOWN_SYMPTOM_KEYS = [
+  "cough",
+  "expectoration",
+  "breathlessness",
+  "chest_pain",
+  "chestPain",
+  "haemoptysis",
+  "fever",
+  "cold_symptoms",
+  "pedal_edema",
+  "stridor",
+  "difficulty_lying_down",
+  "difficulty_swallowing",
+  "excessive_daytime_sleep",
+  "covid",
+];
+const SYMPTOM_LABELS: Record<string, string> = {
+  cough: "Cough",
+  cough_frequency: "Cough Frequency",
+  expectoration: "Expectoration",
+  breathlessness: "Breathlessness",
+  chest_pain: "Chest Pain",
+  chestPain: "Chest Pain",
+  chest_heaviness: "Chest Heaviness",
+  haemoptysis: "Haemoptysis",
+  hemoptysis: "Hemoptysis",
+  fever: "Fever",
+  cold_symptoms: "Cold Symptoms",
+  pedal_edema: "Pedal Edema",
+  stridor: "Stridor",
+  difficulty_lying_down: "Difficulty Lying Down",
+  difficulty_swallowing: "Difficulty Swallowing",
+  excessive_daytime_sleep: "Excessive Daytime Sleepiness",
+  covid: "Covid Symptoms",
+  energy_level: "Energy Level",
+  sleep_quality: "Sleep Quality",
+  anxiety: "Anxiety",
+  sputum_clearance: "Sputum Clearance",
+  ease_of_clearance: "Ease of Clearance",
+  ease_of_sputum_clearance: "Ease of Sputum Clearance",
+  rescue_inhaler_puffs: "Rescue Puffs",
+  pefr_lpm: "PEFR",
+  kbild_score: "K-BILD Score",
+};
 
 interface PatientAnalyticsViewProps {
   patientId: string;
@@ -212,8 +256,42 @@ function extractSymptoms(vas: Record<string, unknown> | null): Record<string, nu
   );
 }
 
+function extractDiseaseSymptoms(data: Record<string, unknown> | null): Record<string, number> {
+  if (!data) return {};
+  const keys = [
+    "cough_frequency",
+    "chest_heaviness",
+    "energy_level",
+    "sleep_quality",
+    "anxiety",
+    "ease_of_clearance",
+    "ease_of_sputum_clearance",
+    "rescue_inhaler_puffs",
+    "pefr_lpm",
+    "pefr_reading",
+    "kbild_score",
+  ];
+  const values: Record<string, number> = {};
+  keys.forEach((key) => {
+    const value = numberFrom(data[key]);
+    if (value !== null) values[key] = value;
+  });
+
+  const kbildResponses = data.kbild_responses;
+  if (kbildResponses && typeof kbildResponses === "object" && !Array.isArray(kbildResponses)) {
+    Object.entries(kbildResponses as Record<string, unknown>).forEach(([key, value]) => {
+      const numeric = numberFrom(value);
+      if (numeric !== null) values[`kbild_q${key}`] = numeric;
+    });
+  }
+
+  return values;
+}
+
 function formatMetricName(value: string): string {
   if (value === MMRC_SYMPTOM_KEY) return "mMRC Grade";
+  if (SYMPTOM_LABELS[value]) return SYMPTOM_LABELS[value];
+  if (/^kbild_q\d+$/i.test(value)) return value.replace(/^kbild_q/i, "K-BILD Question ");
   return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
@@ -554,7 +632,10 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         const disease = log.disease_specific_data;
         const asthmaControl = asthmaControlLevel(disease);
         const kbildResponses = (disease?.kbild_responses ?? {}) as Record<string, unknown>;
-        const symptoms = extractSymptoms(log.vas_symptoms);
+        const symptoms = {
+          ...extractSymptoms(log.vas_symptoms),
+          ...extractDiseaseSymptoms(disease),
+        };
         const medications: Record<string, number> = {};
         for (const [name, taken] of Object.entries(log.medication_compliance ?? {})) {
           if (taken === true || taken === false) medications[normalizeMedicationKey(name)] = taken ? 100 : 0;
@@ -851,31 +932,38 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             <MetricLineChart data={dailySeries} lines={[{ key: "heartRate", name: "Heart Rate", color: COLORS.purple }]} />
           </ChartBlock>
 
-          <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="VAS and mMRC symptom score only, side effects excluded · केवल लक्षण स्कोर, साइड इफेक्ट नहीं">
+          <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="All symptoms tracked over time · सभी लक्षणों का समयक्रम">
             {symptomKeys.length === 0 ? (
               <EmptyChart label="No symptom scores recorded yet." />
             ) : (
-              <>
-                <select
-                  value={selectedSymptom}
-                  onChange={(event) => setSelectedSymptom(event.target.value)}
-                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
-                >
-                  {symptomKeys.map((symptom) => (
-                    <option key={symptom} value={symptom}>{formatMetricName(symptom)}</option>
-                  ))}
-                </select>
-                <ResponsiveContainer width="100%" height={240}>
-                  <LineChart data={selectedSymptomSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                    <YAxis domain={selectedSymptomDomain} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-                    <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
-                    <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
-                    <Line type="monotone" dataKey="value" stroke={COLORS.orange} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={formatMetricName(selectedSymptom)} connectNulls />
-                  </LineChart>
-                </ResponsiveContainer>
-              </>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={dailySeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
+                  <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
+                  <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                  {symptomKeys.map((symptomKey, idx) => {
+                    const PALETTE = ["#3867b7","#d85a30","#0f6e56","#6f4eb2","#c94d49","#8a6f2a","#1e8c93","#a84e8a","#5a7f3c","#c47b20"];
+                    const color = PALETTE[idx % PALETTE.length]!;
+                    return (
+                      <Line
+                        key={symptomKey}
+                        type="monotone"
+                        dataKey={(row: typeof dailySeries[number]) =>
+                          symptomKey === MMRC_SYMPTOM_KEY ? row.mmrc : (row.symptoms[symptomKey] ?? null)
+                        }
+                        name={formatMetricName(symptomKey)}
+                        stroke={color}
+                        strokeWidth={2}
+                        dot={{ r: 2.5, strokeWidth: 1.5 }}
+                        activeDot={{ r: 4 }}
+                        connectNulls
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
             )}
           </ChartBlock>
 

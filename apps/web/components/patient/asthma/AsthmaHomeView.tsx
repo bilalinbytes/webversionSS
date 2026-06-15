@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle } from "lucide-react";
-import { DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
+import { YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import styles from "./Asthma.module.css";
 import dStyles from "@/components/patient/disease.module.css";
@@ -24,7 +24,6 @@ interface Props {
   mmrcTrend?: number[];
   vasTrend?: number[];
   diseaseSpecificTrend?: number[];
-  doctorNote?: string;
 }
 
 // ACT score logic
@@ -34,7 +33,7 @@ function getControlStatus(yesCount: number) {
   return { label: "Uncontrolled", color: "#e24b4a", bg: "#fcebeb", icon: "" };
 }
 
-export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecificTrend, mmrcTrend, vasTrend, doctorNote }: Props) {
+export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecificTrend, mmrcTrend, vasTrend }: Props) {
   const spo2Data = spo2Trend && spo2Trend.length > 0 ? spo2Trend : SPO2_TREND;
   const rescueData = diseaseSpecificTrend && diseaseSpecificTrend.length > 0 ? diseaseSpecificTrend : RESCUE_TREND;
   // Mock last week's ACT answers
@@ -46,7 +45,6 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
   return (
     <div className={dStyles.view}>
       <div className={dStyles.body}>
-        {doctorNote && <DoctorNoteCard note={doctorNote} />}
 
         {/* ── Common dashboard (name, diagnosis, trends, AQI, mMRC, meds, doctor) ── */}
         <CommonPatientDashboard
@@ -67,7 +65,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
           latestPft={patient.latestPft}
           onLogToday={onLogToday}
           accentColor="#0f6e56"
-          diseaseLabel="Asthma Dashboard"
+          diseaseLabel="My Health"
         />
 
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="asthma" />}

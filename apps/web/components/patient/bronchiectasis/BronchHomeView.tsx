@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
+import { YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import dStyles from "@/components/patient/disease.module.css";
 import styles from "./Bronch.module.css";
@@ -15,10 +15,9 @@ interface Props {
   spo2Trend?: number[];
   mmrcTrend?: number[];
   vasTrend?: number[];
-  doctorNote?: string;
 }
 
-export function BronchHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, doctorNote }: Props) {
+export function BronchHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend }: Props) {
   const infectionRisk = true;
   const sputumColor = "";
   const sputumLabel = "Dark Green — Potential Infection";
@@ -26,7 +25,6 @@ export function BronchHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasT
   return (
     <div className={dStyles.view}>
       <div className={dStyles.body}>
-        {doctorNote && <DoctorNoteCard note={doctorNote} />}
 
         <CommonPatientDashboard
           name={patient.name}
@@ -46,7 +44,7 @@ export function BronchHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasT
           latestPft={patient.latestPft}
           onLogToday={onLogToday}
           accentColor="#e65100"
-          diseaseLabel="Bronchiectasis Dashboard"
+          diseaseLabel="My Health"
         />
 
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="bronchiectasis" />}

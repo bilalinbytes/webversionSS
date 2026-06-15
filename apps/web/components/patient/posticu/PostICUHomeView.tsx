@@ -1,6 +1,6 @@
 "use client";
 
-import { DoctorNoteCard, YellowTipsCard } from "@/components/patient/shared";
+import { YellowTipsCard } from "@/components/patient/shared";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import dStyles from "@/components/patient/disease.module.css";
 import styles from "./PostICU.module.css";
@@ -22,10 +22,9 @@ interface Props {
   mmrcTrend?: number[];
   vasTrend?: number[];
   diseaseSpecificTrend?: number[];
-  doctorNote?: string;
 }
 
-export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend, doctorNote }: Props) {
+export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTrend }: Props) {
   const daysSinceDischarge = patient.icuDischarge
     ? Math.floor((new Date().getTime() - new Date(patient.icuDischarge).getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -33,7 +32,6 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
   return (
     <div className={dStyles.view}>
       <div className={dStyles.body}>
-        {doctorNote && <DoctorNoteCard note={doctorNote} />}
 
         <CommonPatientDashboard
           name={patient.name}
@@ -53,7 +51,7 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
           latestPft={patient.latestPft}
           onLogToday={onLogToday}
           accentColor="#1565c0"
-          diseaseLabel="Post-ICU Recovery Dashboard"
+          diseaseLabel="My Health"
         />
 
         {patient.riskScore >= 4 && patient.riskScore < 7 && <YellowTipsCard disease="post_icu" />}

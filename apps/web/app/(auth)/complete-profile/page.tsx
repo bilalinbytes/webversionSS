@@ -16,6 +16,7 @@ import styles from "./page.module.css";
 const completeProfileSchema = z.object({
   specialisation: z.string().min(1, "Specialisation is required"),
   hospital: z.string().min(1, "Hospital / Institution is required"),
+  accepts_appointments: z.boolean(),
 });
 
 type ProfileFormData = z.infer<typeof completeProfileSchema>;
@@ -33,6 +34,7 @@ export default function CompleteProfilePage() {
     defaultValues: {
       specialisation: "",
       hospital: "",
+      accepts_appointments: true,
     },
   });
 
@@ -59,7 +61,7 @@ export default function CompleteProfilePage() {
           setGoogleName(pending.name);
           setGoogleEmail(pending.email);
           // Pre-fill the form fields
-          reset({ specialisation: pending.specialisation, hospital: pending.hospital });
+          reset({ specialisation: pending.specialisation, hospital: pending.hospital, accepts_appointments: true });
           return;
         } catch {
           // malformed localStorage entry — ignore, form stays empty
@@ -93,6 +95,7 @@ export default function CompleteProfilePage() {
       email: user.email ?? "",
       specialisation: data.specialisation,
       hospital: data.hospital,
+      accepts_appointments: data.accepts_appointments,
     });
 
     if (insertError) {
@@ -178,6 +181,18 @@ export default function CompleteProfilePage() {
                   {errors.hospital.message}
                 </p>
               )}
+            </div>
+
+            <div className={styles.field} style={{ marginTop: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <input
+                id="accepts_appointments"
+                type="checkbox"
+                {...register("accepts_appointments")}
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              <label htmlFor="accepts_appointments" style={{ cursor: "pointer", margin: 0, fontSize: "0.95rem" }}>
+                Accept appointment requests from patients through this app
+              </label>
             </div>
 
             <button

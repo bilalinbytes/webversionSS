@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import styles from "./TopNav.module.css";
 
-type View = "dashboard" | "create" | "export";
+type View = "dashboard" | "create" | "export" | "appointments";
 
 interface AppointmentMeta {
   reason?: string;
@@ -34,6 +34,7 @@ interface TopNavProps {
 const TABS: { id: View; label: string }[] = [
   { id: "dashboard", label: "Patients" },
   { id: "create",    label: "Add Patient" },
+  { id: "appointments", label: "Appointments" },
   { id: "export",    label: "Export Data" },
 ];
 

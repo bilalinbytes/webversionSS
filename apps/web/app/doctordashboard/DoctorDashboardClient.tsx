@@ -6,10 +6,11 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { CreatePatientView } from "@/components/dashboard/CreatePatientView";
 import { ExportView } from "@/components/dashboard/ExportView";
+import { AppointmentManagementView } from "@/components/dashboard/AppointmentManagementView";
 import styles from "./page.module.css";
 import type { FormData } from "@/components/dashboard/CreatePatientView";
 
-export type View = "dashboard" | "create" | "export";
+export type View = "dashboard" | "create" | "export" | "appointments";
 
 interface DoctorDashboardClientProps {
   initialAlertCount: number;
@@ -70,6 +71,7 @@ export function DoctorDashboardClient({
             />
           )}
           {view === "export" && <ExportView onBack={() => setView("dashboard")} />}
+          {view === "appointments" && <AppointmentManagementView />}
         </main>
       </div>
     </div>

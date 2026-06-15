@@ -607,7 +607,7 @@ function flag(val: number | null, threshold: number) {
   return val !== null && val < threshold;
 }
 
-function StepPFT({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
+function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial<FormData>) => void; errors: Record<string, string> }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({
     date: "", fvc: "", fev1: "", ratio: "", dlco: "",
@@ -730,27 +730,27 @@ function StepPFT({ data, update }: { data: FormData; update: (d: Partial<FormDat
         </div>
 
         <div className={styles.baselineVitalsSection}>
-          <p className={styles.addRowTitle}>Baseline Vitals</p>
+          <p className={styles.addRowTitle}>Baseline Vitals <span style={{ color: "#c94d49", fontSize: 11 }}>* Required</span></p>
           <div className={styles.baselineVitalsGrid}>
-            <Field label="Baseline SpO2">
+            <Field label="Baseline SpO2" required error={errors["baseline_spo2"]}>
               <input
                 type="number"
                 min="0"
                 max="100"
                 step="0.1"
-                className={styles.input}
+                className={`${styles.input} ${errors["baseline_spo2"] ? styles.inputError : data.baseline_spo2 ? styles.inputValid : ""}`}
                 placeholder="—"
                 value={data.baseline_spo2}
                 onChange={(e) => update({ baseline_spo2: e.target.value })}
               />
             </Field>
-            <Field label="Baseline Heart Rate">
+            <Field label="Baseline Heart Rate" required error={errors["baseline_heart_rate"]}>
               <input
                 type="number"
                 min="20"
                 max="250"
                 step="1"
-                className={styles.input}
+                className={`${styles.input} ${errors["baseline_heart_rate"] ? styles.inputError : data.baseline_heart_rate ? styles.inputValid : ""}`}
                 placeholder="—"
                 value={data.baseline_heart_rate}
                 onChange={(e) => update({ baseline_heart_rate: e.target.value })}
@@ -899,7 +899,29 @@ function countWords(value: string): number {
 
 function StepMedications({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" });
+  const [draft, setDraft] = useState({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", durationDays: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" });
+
+  const handleDurationChange = (daysStr: string) => {
+    const days = parseInt(daysStr, 10);
+    if (!isNaN(days) && days > 0 && draft.start) {
+      const d = new Date(draft.start);
+      d.setDate(d.getDate() + days);
+      setDraft({ ...draft, durationDays: daysStr, end: d.toISOString().split('T')[0]!, ongoing: false });
+    } else {
+      setDraft({ ...draft, durationDays: daysStr });
+    }
+  };
+
+  const handleStartChange = (start: string) => {
+    let nextEnd = draft.end;
+    const days = parseInt(draft.durationDays, 10);
+    if (!isNaN(days) && days > 0 && start) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + days);
+      nextEnd = d.toISOString().split('T')[0]!;
+    }
+    setDraft({ ...draft, start, end: nextEnd, ongoing: nextEnd ? false : draft.ongoing });
+  };
 
   const saveMed = () => {
     if (!draft.name || !draft.start) return;
@@ -917,7 +939,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
       patient_instruction: draft.patientInstruction.trim() || null,
     };
     update({ medications: [...data.medications, r] });
-    setDraft({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" });
+    setDraft({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", durationDays: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" });
     setAdding(false);
   };
 
@@ -938,7 +960,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
           <div className={styles.addRowForm}>
             <p className={styles.addRowTitle}>New Medication</p>
             <div className={styles.addMedGrid}>
-              <Field label="Route" required>
+              <Field label="Medication Type" required>
                 <select className={styles.select} value={draft.route} onChange={e => setDraft({...draft, route: e.target.value})}>
                   {RTE_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
@@ -963,7 +985,17 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
                 <input type="date" className={styles.input} value={draft.prescriptionDate} onChange={e => setDraft({...draft, prescriptionDate: e.target.value})} />
               </Field>
               <Field label="Start Date" required>
-                <input type="date" className={styles.input} value={draft.start} onChange={e => setDraft({...draft, start: e.target.value})} />
+                <input type="date" className={styles.input} value={draft.start} onChange={e => handleStartChange(e.target.value)} />
+              </Field>
+              <Field label="Duration (days)">
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 30"
+                  className={styles.input}
+                  value={draft.durationDays}
+                  onChange={e => handleDurationChange(e.target.value)}
+                />
               </Field>
               <div className={styles.field}>
                 <label className={styles.label}>End Date</label>
@@ -992,7 +1024,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
               />
             </div>
             <div className={styles.addRowActions}>
-              <button type="button" className={styles.btnGhost} onClick={() => { setDraft({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" }); setAdding(false); }}>Cancel</button>
+              <button type="button" className={styles.btnGhost} onClick={() => { setDraft({ route: "tablet", name: "", dose: "", unit: "mg", frequency: "OD", start: "", end: "", durationDays: "", ongoing: false, prescriptionDate: new Date().toISOString().split("T")[0] as string, patientInstruction: "" }); setAdding(false); }}>Cancel</button>
               <button type="button" className={styles.btnPrimary} onClick={saveMed} disabled={countWords(draft.patientInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT}>Add Medication</button>
             </div>
           </div>
@@ -1000,7 +1032,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
 
         <div className={styles.medList}>
           <div className={styles.medHeader}>
-            <span className={styles.medHeaderCell}>Route</span>
+            <span className={styles.medHeaderCell}>Medication Type</span>
             <span className={styles.medHeaderCell}>Name</span>
             <span className={styles.medHeaderCell}>Dose</span>
             <span className={styles.medHeaderCell}>Frequency</span>
@@ -1078,9 +1110,11 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
     if (!data.gender) finalErrors["gender"] = "Please select a sex";
     if (!data.age) finalErrors["age"] = "Age is required";
     if (!data.disease_category) finalErrors["primary_diagnosis"] = "Please select a disease category";
+    if (!data.baseline_spo2) finalErrors["baseline_spo2"] = "Baseline SpO2 is required";
+    if (!data.baseline_heart_rate) finalErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
     if (Object.keys(finalErrors).length > 0) {
       setErrors(finalErrors);
-      setStep(1);
+      setStep(Object.keys(finalErrors).some(k => ["baseline_spo2", "baseline_heart_rate"].includes(k)) ? 4 : 1);
       setSubmitError("Please complete all required fields before submitting.");
       return;
     }
@@ -1264,6 +1298,22 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       setErrors({});
     }
 
+    // ── Step 4 validation: Baseline Vitals required ──
+    if (step === 4) {
+      const newErrors: Record<string, string> = {};
+      if (!data.baseline_spo2) {
+        newErrors["baseline_spo2"] = "Baseline SpO2 is required";
+      }
+      if (!data.baseline_heart_rate) {
+        newErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
+      }
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+      setErrors({});
+    }
+
     setStep((s) => Math.min(7, s + 1));
   };
   const goBack = () => {
@@ -1297,7 +1347,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           {step === 1 && <StepBasicInfo data={data} update={update} errors={errors} isEdit={!!editPatientId} />}
           {step === 2 && <StepDiagnosis data={data} update={update} errors={errors} />}
           {step === 3 && <StepComorbidities data={data} update={update} />}
-          {step === 4 && <StepPFT data={data} update={update} />}
+          {step === 4 && <StepPFT data={data} update={update} errors={errors} />}
           {step === 5 && <StepRespSupport data={data} update={update} />}
           {step === 6 && <StepMedications data={data} update={update} />}
           {step === 7 && <StepReview data={data} isEdit={!!editPatientId} />}

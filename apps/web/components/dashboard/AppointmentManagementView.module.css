@@ -1,0 +1,287 @@
+.view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #f7fafb;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  color: #132d36;
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font-lora), Georgia, serif;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #6d8794;
+  font-size: 13px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid rgba(19, 45, 54, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(19, 45, 54, 0.05);
+}
+
+.panelTitle {
+  margin: 0 0 12px;
+  color: #132d36;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  border: 1px solid rgba(216, 90, 48, 0.28);
+  background: #fff7ed;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 700;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  color: #6d8794;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.input,
+.select {
+  min-height: 42px;
+  border: 1px solid rgba(19, 45, 54, 0.14);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #132d36;
+  font-size: 13px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.toggleRow,
+.dayGrid,
+.timeGrid,
+.queueTabs,
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggleBtn,
+.dayBtn,
+.queueTab {
+  min-height: 38px;
+  border: 1px solid rgba(19, 45, 54, 0.14);
+  border-radius: 8px;
+  padding: 8px 11px;
+  background: #ffffff;
+  color: #496977;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.active {
+  border-color: #126969;
+  background: rgba(18, 105, 105, 0.08);
+  color: #126969;
+}
+
+.timeRow {
+  display: grid;
+  grid-template-columns: 92px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dayName {
+  color: #132d36;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.saveBtn,
+.approveBtn,
+.rejectBtn,
+.rescheduleBtn,
+.completeBtn {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.saveBtn,
+.approveBtn {
+  background: #126969;
+  color: #ffffff;
+}
+
+.rejectBtn {
+  background: #fcebeb;
+  color: #c94d49;
+}
+
+.rescheduleBtn {
+  background: #e8f0f2;
+  color: #173d45;
+}
+
+.completeBtn {
+  background: #eaf3de;
+  color: #27500a;
+}
+
+.saveBtn:disabled,
+.approveBtn:disabled,
+.rejectBtn:disabled,
+.rescheduleBtn:disabled,
+.completeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message {
+  margin: 10px 0 0;
+  color: #0f6e56;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.error {
+  color: #c94d49;
+}
+
+.queueTabs {
+  margin-bottom: 12px;
+}
+
+.queueTab {
+  flex: 0 0 auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appointment {
+  border: 1px solid rgba(19, 45, 54, 0.09);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 13px;
+}
+
+.appointmentTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.patient {
+  margin: 0;
+  color: #132d36;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.meta {
+  margin: 3px 0 0;
+  color: #6d8794;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.status {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #f1f4f5;
+  color: #496977;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.rescheduleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: #888680;
+  background: #fbfaf7;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+@media (max-width: 960px) {
+  .view {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeRow,
+  .rescheduleGrid {
+    grid-template-columns: 1fr;
+  }
+}
