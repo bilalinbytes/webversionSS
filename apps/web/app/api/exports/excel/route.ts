@@ -456,7 +456,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   );
 
   // ── Reorder sheets: Summary first ───────────────────────────────────────────
-  wb.views = [{ activeTab: 0 }];
+  wb.views = [{ activeTab: 0, x: 0, y: 0, width: 10000, height: 8000, firstSheet: 0, visibility: "visible" }];
 
   // ── Serialize ────────────────────────────────────────────────────────────────
   const buffer = await wb.xlsx.writeBuffer();

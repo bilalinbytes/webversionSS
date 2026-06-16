@@ -371,7 +371,7 @@ function rowsToExcelHtml(rows: string[][]): string {
       return `<tr><td style="padding:5px;border:none">&nbsp;</td></tr>`;
     }
 
-    const isSectionTitle = row.length === 1 && SECTION_TITLES.has(row[0]);
+    const isSectionTitle = row.length === 1 && SECTION_TITLES.has(row[0] ?? "");
 
     if (isSectionTitle) {
       nextIsHeader = true;
@@ -385,7 +385,7 @@ function rowsToExcelHtml(rows: string[][]): string {
     padding:8px 12px;
     letter-spacing:0.5px;
     border-bottom:2px solid #0d2535;
-  ">${htmlEscape(row[0])}</td>
+  ">${htmlEscape(row[0] ?? "")}</td>
 </tr>`;
     }
 
