@@ -1,20 +1,21 @@
 .shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #f7fafb;
 }
 
 .body {
   display: flex;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
 .content {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -23,9 +24,11 @@
 @media (max-width: 760px) {
   .body {
     flex-direction: column;
+    overflow: visible;
   }
 
   .content {
+    overflow: visible;
     padding-bottom: 64px;
   }
 }

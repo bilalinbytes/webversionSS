@@ -1126,9 +1126,15 @@
     grid-template-columns: 1fr;
   }
 
+  .dateInput {
+    font-size: 16px;
+    min-height: 52px;
+  }
+
   .stepBar {
     padding: 16px 14px 0;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     gap: 0;
   }
 
@@ -1136,7 +1142,29 @@
 
   .modeGrid { grid-template-columns: 1fr; }
 
+  .modeCard {
+    min-height: 56px;
+  }
+
+  .chip {
+    min-height: 44px;
+    flex: 1 1 auto;
+  }
+
+  .slotsGrid {
+    gap: 6px;
+  }
+
   .altSlotGrid { grid-template-columns: 1fr; }
+
+  .altInput,
+  .altTextarea {
+    font-size: 16px;
+  }
+
+  .textarea {
+    font-size: 16px;
+  }
 
   .submitArea {
     flex-direction: column;
@@ -1145,6 +1173,7 @@
 
   .submitBtn {
     width: 100%;
+    min-height: 48px;
     justify-content: center;
   }
 
@@ -1156,7 +1185,11 @@
   .notifActions { flex-direction: column; }
 
   .btnAccept,
-  .btnRequestSlot { width: 100%; justify-content: center; }
+  .btnRequestSlot {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
 
   .noApptCard { padding: 32px 20px; }
 

@@ -136,6 +136,44 @@ export function ExportView({ onBack }: ExportViewProps) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
+  // ── New: Professional Excel export state ──────────────────────────────────
+  const [xlsxExporting, setXlsxExporting] = useState<"all" | "selected" | null>(null);
+  const [xlsxError, setXlsxError] = useState<string | null>(null);
+
+  const handleXlsxExport = async (mode: "all" | "selected") => {
+    setXlsxExporting(mode);
+    setXlsxError(null);
+    try {
+      const body: { patient_ids?: string[] } = {};
+      if (mode === "selected") {
+        body.patient_ids = Array.from(selected);
+      }
+      const res = await fetch("/api/exports/excel", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error ?? `Export failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="(.+)"/);
+      a.download = match?.[1] ?? "o2plus-patients.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setXlsxError(err instanceof Error ? err.message : "Export failed.");
+    } finally {
+      setXlsxExporting(null);
+    }
+  };
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -290,6 +328,34 @@ export function ExportView({ onBack }: ExportViewProps) {
           <p className={styles.sub}>6 export types · PDF, Excel, CSV · Downloads directly to your device</p>
         </div>
         <button type="button" className={styles.btnGhost} onClick={onBack}>← Dashboard</button>
+      </div>
+
+      {/* ── Professional Excel Export ─────────────────────────────────────── */}
+      <div className={styles.xlsxActions} style={{ padding: "12px 24px", display: "flex", gap: 10, flexShrink: 0, borderBottom: "1px solid rgba(19,45,54,0.08)", background: "#fff" }}>
+        <button
+          type="button"
+          className={styles.xlsxBtnOutline}
+          style={{ background: "none", border: "1.5px solid rgba(19,45,54,0.18)", color: "#496977", height: 38, padding: "0 16px", borderRadius: 8, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+          disabled={xlsxExporting !== null || selected.size === 0}
+          onClick={() => handleXlsxExport("selected")}
+        >
+          {xlsxExporting === "selected"
+            ? "Generating…"
+            : `Export Selected (${selected.size})`}
+        </button>
+        <button
+          type="button"
+          className={styles.xlsxBtnPrimary}
+          disabled={xlsxExporting !== null || patients.length === 0}
+          onClick={() => handleXlsxExport("all")}
+        >
+          {xlsxExporting === "all"
+            ? "Generating…"
+            : `Export All My Patients (${patients.length})`}
+        </button>
+        {xlsxError && (
+          <p style={{ fontSize: 12, color: "#c94d49", margin: "auto 0" }}>{xlsxError}</p>
+        )}
       </div>
 
       <div className={styles.layout}>

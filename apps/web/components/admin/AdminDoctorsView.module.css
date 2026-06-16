@@ -1,0 +1,527 @@
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── View shell ──────────────────────────────────────────────────────────────── */
+.view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f7fafb;
+  animation: fadeUp 0.3s ease both;
+  position: relative;
+}
+
+.header { padding: 24px 28px 0; flex-shrink: 0; }
+
+.title {
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #132d36;
+  letter-spacing: -0.01em;
+}
+
+.sub {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: #6d8794;
+  margin-top: 3px;
+}
+
+/* ── Filter bar ──────────────────────────────────────────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 28px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.searchWrap { position: relative; flex: 1; max-width: 380px; }
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6d8794;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 32px;
+  border: 1px solid rgba(19, 45, 54, 0.12);
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  background: #ffffff;
+  color: #132d36;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.searchInput:focus {
+  border-color: #126969;
+  box-shadow: 0 0 0 3px rgba(18, 105, 105, 0.1);
+}
+
+.resultCount {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.78rem;
+  color: #6d8794;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.deleteErrorBanner {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #c94d49;
+  background: rgba(201, 77, 73, 0.06);
+  border: 1px solid rgba(201, 77, 73, 0.2);
+  border-radius: 8px;
+  padding: 9px 16px;
+  margin: 0 28px 4px;
+  flex-shrink: 0;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────────── */
+.tableWrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(19, 45, 54, 0.08);
+}
+
+.thead { background: #f7fafb; }
+
+.th {
+  padding: 11px 16px;
+  text-align: left;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6d8794;
+  border-bottom: 1px solid rgba(19, 45, 54, 0.08);
+  white-space: nowrap;
+}
+
+/* Doctor row */
+.row {
+  border-bottom: 1px solid rgba(19, 45, 54, 0.05);
+  transition: background 150ms ease;
+}
+
+.row:hover { background: #f7fafb; }
+
+.rowExpanded { background: rgba(18, 105, 105, 0.03) !important; }
+
+.td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+/* Name cell */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.expandBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid rgba(19, 45, 54, 0.1);
+  background: #f1f4f5;
+  color: #496977;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.expandBtn:hover {
+  background: rgba(18, 105, 105, 0.1);
+  color: #126969;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(18, 105, 105, 0.1);
+  color: #126969;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.doctorName {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #132d36;
+}
+
+.doctorEmail {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #6d8794;
+  margin-top: 1px;
+}
+
+.cell {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: #132d36;
+}
+
+.specBadge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(18, 105, 105, 0.08);
+  color: #126969;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.patientCountBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #f1f4f5;
+  border: 1px solid rgba(19, 45, 54, 0.1);
+  color: #132d36;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.patientCountBtn:hover {
+  background: rgba(18, 105, 105, 0.1);
+  color: #126969;
+}
+
+.dateCell {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.78rem;
+  color: #6d8794;
+  white-space: nowrap;
+}
+
+/* Delete button */
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: rgba(201, 77, 73, 0.06);
+  border: 1px solid rgba(201, 77, 73, 0.18);
+  color: #c94d49;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.deleteBtn:hover {
+  background: rgba(201, 77, 73, 0.12);
+  box-shadow: 0 2px 8px rgba(201, 77, 73, 0.14);
+}
+
+/* ── Expanded patients section ───────────────────────────────────────────────── */
+.expandedRow { background: #f3f8f8; }
+
+.expandedCell {
+  padding: 0 16px 14px 56px !important;
+  border-bottom: 2px solid rgba(18, 105, 105, 0.1);
+}
+
+.noPatients {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #8ca0a8;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+/* Inner table (patients) */
+.innerTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(18, 105, 105, 0.12);
+  animation: slideDown 0.2s ease both;
+  margin-top: 2px;
+}
+
+.innerTh {
+  padding: 8px 14px;
+  text-align: left;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6d8794;
+  background: #f0f8f8;
+  border-bottom: 1px solid rgba(18, 105, 105, 0.1);
+}
+
+.innerRow {
+  border-bottom: 1px solid rgba(18, 105, 105, 0.06);
+  transition: background 140ms ease;
+}
+
+.innerRow:last-child { border-bottom: none; }
+.innerRow:hover { background: rgba(18, 105, 105, 0.03); }
+
+.innerTd {
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+
+.pNameCell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.pAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(55, 138, 221, 0.1);
+  color: #378add;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.pName {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #132d36;
+}
+
+.pPhone {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.68rem;
+  color: #6d8794;
+  margin-top: 1px;
+}
+
+.diagBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pMeta {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.76rem;
+  color: #6d8794;
+}
+
+.deletePatientBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(201, 77, 73, 0.05);
+  border: 1px solid rgba(201, 77, 73, 0.15);
+  color: #c94d49;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 150ms ease;
+}
+
+.deletePatientBtn:hover {
+  background: rgba(201, 77, 73, 0.12);
+}
+
+/* ── Confirm dialog ──────────────────────────────────────────────────────────── */
+.dialogOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 31, 38, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.dialog {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px 24px 20px;
+  width: min(100%, 400px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(19, 45, 54, 0.08);
+}
+
+.dialogMsg {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #132d36;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.dialogWarn {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.78rem;
+  color: #c94d49;
+  margin-bottom: 20px;
+}
+
+.dialogBtns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dialogCancel {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(19, 45, 54, 0.14);
+  background: #f7fafb;
+  color: #496977;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.dialogCancel:hover { background: #eef3f5; }
+.dialogCancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.dialogConfirm {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #c94d49;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.dialogConfirm:hover { background: #a83633; }
+.dialogConfirm:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* ── Skeleton / Empty / Error ────────────────────────────────────────────────── */
+.loadingRows { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; }
+
+.skeletonRow {
+  height: 60px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f4f5 25%, #e5e9ea 50%, #f1f4f5 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 24px; gap: 10px;
+}
+
+.emptyIcon { opacity: 0.35; color: #126969; }
+
+.emptyTitle {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 1rem; font-weight: 600; color: #132d36;
+}
+
+.emptySub {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.82rem; color: #6d8794;
+}
+
+.error {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.82rem; color: #c94d49;
+  background: rgba(201, 77, 73, 0.06);
+  border: 1px solid rgba(201, 77, 73, 0.2);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+}
+
+/* Tables need horizontal scroll on mobile */
+@media (max-width: 760px) {
+  .view { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .tableWrap { padding: 0 16px 84px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .header { padding: 20px 16px 0; }
+  .filterBar { padding: 12px 16px; }
+  .searchWrap { max-width: none; flex-basis: 100%; }
+  .searchInput { font-size: 16px; min-height: 44px; }
+  .th, .td { padding: 10px 10px; }
+  .expandedCell { padding-left: 12px !important; }
+  .deleteErrorBanner { margin: 0 16px 4px; }
+  .table { min-width: 640px; }
+  .innerTable { min-width: 480px; }
+  .deleteBtn, .deletePatientBtn { min-height: 44px; }
+  .dialogBtns { flex-direction: column; }
+  .dialogCancel, .dialogConfirm { min-height: 44px; width: 100%; }
+}

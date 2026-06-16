@@ -1,5 +1,6 @@
 // Auto-generated from Supabase schema. Do not edit manually.
 // Regenerate with: Supabase MCP -> generate_typescript_types
+// NOTE: platform_admins table added manually — regenerate to sync.
 
 export type Json =
   | string
@@ -15,6 +16,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      platform_admins: {
+        Row: {
+          id: string
+          email: string
+          full_name: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string | null

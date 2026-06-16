@@ -1,4 +1,4 @@
-.shell { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; background: #f0ede8; }
+.shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; background: #f0ede8; }
 
 /* Nav */
 .nav { background: #04342c; display: flex; align-items: center; padding: 0 20px; height: 52px; gap: 16px; flex-shrink: 0; min-width: 0; }
@@ -48,7 +48,7 @@
 .sideSep { width: 40px; height: 1px; background: rgba(255,255,255,0.1); margin: 6px auto; }
 
 /* Content */
-.content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
 
 @media (max-width: 980px) {
   .nav {
@@ -88,10 +88,13 @@
 @media (max-width: 760px) {
   .body {
     flex-direction: column;
+    overflow: visible;
   }
 
   .content {
     padding-bottom: 68px;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .diagTag {

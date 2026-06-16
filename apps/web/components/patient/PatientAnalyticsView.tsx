@@ -65,8 +65,10 @@ interface AnalyticsPoint {
   asthmaControl: number | null;
   asthmaControlLabel: string | null;
   rescuePuffs: number | null;
+  pefr: number | null;
   energy: number | null;
   chestHeaviness: number | null;
+  sputumVolume: number | null;
   kbild: number | null;
   kbildQ1: number | null;
   kbildQ2: number | null;
@@ -115,7 +117,7 @@ const SYMPTOM_LABELS: Record<string, string> = {
   chestPain: "Chest Pain",
   chest_heaviness: "Chest Heaviness",
   haemoptysis: "Haemoptysis",
-  hemoptysis: "Hemoptysis",
+  hemoptysis: "Haemoptysis",
   fever: "Fever",
   cold_symptoms: "Cold Symptoms",
   pedal_edema: "Pedal Edema",
@@ -126,13 +128,25 @@ const SYMPTOM_LABELS: Record<string, string> = {
   covid: "Covid Symptoms",
   energy_level: "Energy Level",
   sleep_quality: "Sleep Quality",
+  sleep_disturbed: "Sleep Disturbed",
   anxiety: "Anxiety",
   sputum_clearance: "Sputum Clearance",
   ease_of_clearance: "Ease of Clearance",
   ease_of_sputum_clearance: "Ease of Sputum Clearance",
+  sputum_volume: "Sputum Volume",
   rescue_inhaler_puffs: "Rescue Puffs",
-  pefr_lpm: "PEFR",
+  pefr_lpm: "PEFR (L/min)",
+  pefr_reading: "PEFR (L/min)",
   kbild_score: "K-BILD Score",
+  asthma_control_yes_count: "Asthma Control Score",
+  asthma_control_level: "Asthma Control Level",
+  exercise_tolerance: "Exercise Tolerance",
+  exercise_tolerance_good: "Exercise Tolerance",
+  feverish_or_temp_gt_102: "Fever > 102°F",
+  malaise: "Malaise",
+  controller_taken: "Controller Inhaler Taken",
+  recorded_temperature_f: "Temperature (°F)",
+  temperature_f: "Temperature (°F)",
 };
 
 interface PatientAnalyticsViewProps {
@@ -149,14 +163,16 @@ interface AnalyticsApiResponse {
   error?: string;
 }
 
+// ─── Healthcare color palette ─────────────────────────────────────────────────
 const COLORS = {
-  teal: "#126969",
-  green: "#0f6e56",
-  blue: "#3867b7",
-  orange: "#d85a30",
-  red: "#c94d49",
-  purple: "#6f4eb2",
-  gold: "#8a6f2a",
+  teal:   "#0d9488",   // SpO2 / general teal
+  green:  "#059669",   // Adherence / emerald
+  blue:   "#2563eb",   // PFT / medical blue
+  orange: "#ea580c",   // Rescue puffs
+  red:    "#dc2626",   // SpO2 Rest danger
+  purple: "#7c3aed",   // Heart rate
+  gold:   "#d97706",   // AQI / amber
+  indigo: "#4f46e5",   // Symptoms
 };
 
 const ASTHMA_CONTROL_LEVELS: Record<string, { value: number; label: string }> = {
@@ -170,15 +186,15 @@ const PARTLY_CONTROLLED = ASTHMA_CONTROL_LEVELS.partly_controlled!;
 const WELL_CONTROLLED = ASTHMA_CONTROL_LEVELS.well_controlled!;
 
 const PFT_METRICS = [
-  { key: "ratio", label: "FEV1/FVC (%)", color: COLORS.blue },
-  { key: "fev1PctPred", label: "FEV1 (% Predicted)", color: COLORS.teal },
-  { key: "fev1", label: "FEV1 (Liters)", color: COLORS.teal },
-  { key: "fvcPctPred", label: "FVC (% Predicted)", color: COLORS.orange },
-  { key: "fvc", label: "FVC (Liters)", color: COLORS.orange },
-  { key: "dlco", label: "DLCO (% Predicted)", color: COLORS.purple },
-  { key: "sixMwd", label: "6MWD (m)", color: COLORS.green },
-  { key: "minSpo2", label: "Min SpO2", color: COLORS.red },
-  { key: "maxSpo2", label: "Max SpO2", color: COLORS.blue },
+  { key: "ratio",       label: "FEV1/FVC (%)",       color: "#2563eb" },
+  { key: "fev1PctPred", label: "FEV1 (% Predicted)", color: "#0d9488" },
+  { key: "fev1",        label: "FEV1 (Liters)",       color: "#0d9488" },
+  { key: "fvcPctPred",  label: "FVC (% Predicted)",   color: "#7c3aed" },
+  { key: "fvc",         label: "FVC (Liters)",         color: "#7c3aed" },
+  { key: "dlco",        label: "DLCO (% Predicted)",   color: "#4f46e5" },
+  { key: "sixMwd",      label: "6MWD (m)",             color: "#059669" },
+  { key: "minSpo2",     label: "Min SpO2",             color: "#dc2626" },
+  { key: "maxSpo2",     label: "Max SpO2",             color: "#2563eb" },
 ] as const;
 
 type PftMetricKey = typeof PFT_METRICS[number]["key"];
@@ -215,12 +231,24 @@ function numberFromAny(data: Record<string, unknown> | null, keys: string[]): nu
 }
 
 function normalizeDiagnosis(primary?: string | null, dashboard?: string | null): DiagnosisKind {
-  const value = `${dashboard ?? ""} ${primary ?? ""}`.toLowerCase();
-  if (value.includes("bronch")) return "bronchiectasis";
-  if (value.includes("asthma") && !value.includes("copd")) return "asthma";
-  if (value.includes("copd")) return "copd";
-  if (value.includes("ild") || value.includes("interstitial")) return "ild";
-  if (value.includes("post_icu") || value.includes("post icu")) return "post_icu";
+  // effective_dashboard is the ground truth — always prefer it
+  const db = (dashboard ?? "").toLowerCase().trim();
+  if (db === "asthma") return "asthma";
+  if (db === "copd") return "copd";
+  if (db === "ild") return "ild";
+  if (db === "bronchiectasis") return "bronchiectasis";
+  if (db === "post_icu") return "post_icu";
+
+  // Fall back to parsing primary_diagnosis text
+  const p = (primary ?? "").toLowerCase();
+  if (p.includes("bronchiolitis")) return "asthma";         // Bronchiolitis Obliterans → asthma
+  if (p.includes("overlap") || p.includes("aco")) return "copd"; // ACO → copd
+  if (p.includes("asthma") && p.includes("copd")) return "copd"; // asthma+copd text → copd
+  if (p.includes("asthma")) return "asthma";
+  if (p.includes("copd") || p.startsWith("oad")) return "copd";
+  if (p.includes("ild") || p.includes("interstitial")) return "ild";
+  if (p.includes("bronchiectasis")) return "bronchiectasis";
+  if (p.includes("post_icu") || p.includes("post icu")) return "post_icu";
   return "unknown";
 }
 
@@ -258,25 +286,58 @@ function extractSymptoms(vas: Record<string, unknown> | null): Record<string, nu
 
 function extractDiseaseSymptoms(data: Record<string, unknown> | null): Record<string, number> {
   if (!data) return {};
-  const keys = [
+  const numericKeys = [
+    // Common
     "cough_frequency",
     "chest_heaviness",
     "energy_level",
     "sleep_quality",
     "anxiety",
+    // Bronchiectasis / sputum
     "ease_of_clearance",
     "ease_of_sputum_clearance",
+    "recorded_temperature_f",
+    "temperature_f",
+    // Asthma
     "rescue_inhaler_puffs",
     "pefr_lpm",
     "pefr_reading",
+    "asthma_control_yes_count",
+    // ILD
     "kbild_score",
   ];
   const values: Record<string, number> = {};
-  keys.forEach((key) => {
+
+  // Numeric fields
+  numericKeys.forEach((key) => {
     const value = numberFrom(data[key]);
     if (value !== null) values[key] = value;
   });
 
+  // Boolean → 0/1 fields
+  const boolKeys: Array<[string, string]> = [
+    ["haemoptysis", "haemoptysis"],
+    ["haemoptysis", "hemoptysis"],
+    ["exercise_tolerance", "exercise_tolerance"],
+    ["exercise_tolerance_good", "exercise_tolerance_good"],
+    ["sleep_disturbed", "sleep_disturbed"],
+    ["feverish_or_temp_gt_102", "feverish_or_temp_gt_102"],
+    ["malaise", "malaise"],
+    ["controller_taken", "controller_taken"],
+  ];
+  for (const [outKey, inKey] of boolKeys) {
+    const v = data[inKey];
+    if (v === true) values[outKey] = 1;
+    else if (v === false) values[outKey] = 0;
+  }
+
+  // Asthma control status → numeric level
+  if (!values["asthma_control_yes_count"]) {
+    const control = asthmaControlLevel(data);
+    if (control !== null) values["asthma_control_level"] = control.value;
+  }
+
+  // K-BILD per-question responses
   const kbildResponses = data.kbild_responses;
   if (kbildResponses && typeof kbildResponses === "object" && !Array.isArray(kbildResponses)) {
     Object.entries(kbildResponses as Record<string, unknown>).forEach(([key, value]) => {
@@ -284,6 +345,19 @@ function extractDiseaseSymptoms(data: Record<string, unknown> | null): Record<st
       if (numeric !== null) values[`kbild_q${key}`] = numeric;
     });
   }
+
+  // Sputum volume categorical → numeric for trending
+  const sputumVolMap: Record<string, number> = {
+    none: 0,
+    less_than_usual: 2,
+    scanty: 2,
+    usual: 5,
+    more_than_usual: 7,
+    large_amount: 10,
+    much_more_than_usual: 10,
+  };
+  const sv = typeof data["sputum_volume"] === "string" ? sputumVolMap[data["sputum_volume"] as string] : undefined;
+  if (sv !== undefined) values["sputum_volume"] = sv;
 
   return values;
 }
@@ -382,9 +456,22 @@ function ChartBlock({
   children: React.ReactNode;
 }) {
   return (
-    <section style={{ border: "1px solid #e2ded6", borderRadius: 8, background: "#fff", padding: 16, minHeight: 310, boxShadow: "0 8px 22px rgba(19, 45, 54, 0.05)" }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#132d36" }}>{title}</p>
-      {subtitle && <p style={{ margin: "4px 0 12px", fontSize: 12, lineHeight: 1.45, color: "#66615a" }}>{subtitle}</p>}
+    <section style={{
+      border: "1px solid rgba(19,45,54,0.09)",
+      borderRadius: 12,
+      background: "#ffffff",
+      padding: "18px 18px 14px",
+      minHeight: 310,
+      boxShadow: "0 1px 3px rgba(19,45,54,0.06), 0 4px 16px rgba(19,45,54,0.04)",
+      transition: "box-shadow 200ms ease",
+      overflow: "hidden",
+    }}
+    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(19,45,54,0.1), 0 12px 32px rgba(19,45,54,0.08)"; }}
+    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(19,45,54,0.06), 0 4px 16px rgba(19,45,54,0.04)"; }}
+    >
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</p>
+      {subtitle && <p style={{ margin: "3px 0 14px", fontSize: 11, lineHeight: 1.5, color: "#64748b" }}>{subtitle}</p>}
+      {!subtitle && <div style={{ marginBottom: 12 }} />}
       {children}
     </section>
   );
@@ -392,7 +479,22 @@ function ChartBlock({
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div style={{ height: 230, display: "grid", placeItems: "center", color: "#888680", fontSize: 13, background: "#fbfaf7", borderRadius: 8 }}>
+    <div style={{
+      height: 230,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      color: "#94a3b8",
+      fontSize: 12,
+      background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+      borderRadius: 8,
+      border: "1px dashed #e2e8f0",
+    }}>
+      <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5l4.5-4.5 4 4 4-5.5 4 4" />
+      </svg>
       {label}
     </div>
   );
@@ -423,7 +525,6 @@ function MedicationAdherenceTable({ logs, meds }: { logs: DailyLogRow[]; meds: M
       normalizeMedicationKey(label),
       compactMedicationKey(label),
     ];
-
     aliases.forEach((alias) => medicationLabels.set(alias, label));
   });
 
@@ -436,7 +537,7 @@ function MedicationAdherenceTable({ logs, meds }: { logs: DailyLogRow[]; meds: M
         medicationLabels.get(key) ??
         medicationLabels.get(normalizedKey) ??
         medicationLabels.get(compactKey) ??
-        (isUuidLike(key) ? `Archived medication ${++archivedIndex}` : key.replace(/[_-]/g, " "));
+        (isUuidLike(key) ? `Medication ${++archivedIndex}` : key.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
       const row = acc.get(label) ?? { label, keys: new Set<string>() };
       row.keys.add(key);
       acc.set(label, row);
@@ -446,54 +547,157 @@ function MedicationAdherenceTable({ logs, meds }: { logs: DailyLogRow[]; meds: M
 
   if (rows.length === 0 || medicationRows.length === 0) {
     return (
-      <div style={{ minHeight: 230, display: "grid", placeItems: "center", color: "#888680", fontSize: 13, background: "#fbfaf7", borderRadius: 8 }}>
-        No medication adherence entries yet.
+      <div style={{ minHeight: 140, display: "grid", placeItems: "center", color: "#888680", fontSize: 13, background: "#fbfaf7", borderRadius: 8, textAlign: "center", padding: "24px 16px" }}>
+        <div>
+          <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#132d36" }}>No medication adherence data yet</p>
+          <p style={{ margin: 0, fontSize: 12 }}>Adherence data is recorded when patients mark medications as taken or not taken during daily logs.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ overflowX: "auto", border: "1px solid rgba(19,45,54,0.08)", borderRadius: 8, maxWidth: "100%" }}>
-      <table style={{ width: "100%", minWidth: Math.max(520, 190 + dates.length * 86), borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed" }}>
-        <thead>
-          <tr style={{ background: "#f5f3ee" }}>
-            <th style={{ position: "sticky", left: 0, zIndex: 1, width: 190, background: "#f5f3ee", textAlign: "left", padding: "10px 12px", color: "#132d36", fontWeight: 800 }}>
-              Medication
-            </th>
-            {dates.map((date) => (
-              <th key={date.key} style={{ width: 86, textAlign: "center", padding: "10px 8px", color: "#6d8794", fontWeight: 800, whiteSpace: "nowrap" }}>
-                {date.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {medicationRows.map((medication) => (
-            <tr key={medication.label} style={{ borderTop: "1px solid rgba(19,45,54,0.07)" }}>
-              <td style={{ position: "sticky", left: 0, background: "#fff", padding: "10px 12px", color: "#132d36", fontWeight: 800, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.35 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+      {/* Summary grid — compact, multi-column */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+        gap: 8,
+      }}>
+        {medicationRows.map((medication) => {
+          const allValues = rows.flatMap((log) =>
+            medication.keys
+              .map((key) => log.medication_compliance?.[key])
+              .filter((v): v is boolean => v === true || v === false)
+          );
+          const taken = allValues.filter(Boolean).length;
+          const total = allValues.length;
+          const pct = total > 0 ? Math.round((taken / total) * 100) : null;
+          const color = pct === null ? "#888680" : pct >= 80 ? "#0f6e56" : pct >= 50 ? "#b7791f" : "#c94d49";
+          const bg   = pct === null ? "#f8f7f5" : pct >= 80 ? "rgba(15,110,86,0.06)" : pct >= 50 ? "rgba(183,121,31,0.06)" : "rgba(201,77,73,0.06)";
+          return (
+            <div key={medication.label} style={{
+              padding: "7px 10px",
+              border: `1px solid ${pct !== null && pct >= 80 ? "rgba(15,110,86,0.2)" : pct !== null && pct >= 50 ? "rgba(183,121,31,0.2)" : "rgba(201,77,73,0.15)"}`,
+              borderRadius: 7,
+              background: bg,
+            }}>
+              <p style={{ margin: 0, fontSize: 9.5, color: "#6d8794", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {medication.label}
-              </td>
-              {rows.map((log) => {
-                const values = medication.keys
-                  .map((key) => log.medication_compliance?.[key])
-                  .filter((value): value is boolean => value === true || value === false);
-                const value = values.includes(true) ? true : values.includes(false) ? false : null;
-                return (
-                  <td key={`${medication.label}-${log.logged_at}`} style={{ textAlign: "center", padding: "9px 8px", color: value === true ? "#0f6e56" : value === false ? "#c94d49" : "#888680", fontWeight: 800 }}>
-                    <span
-                      aria-label={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
-                      title={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
-                      style={{ display: "inline-flex", minWidth: 42, justifyContent: "center", borderRadius: 999, padding: "4px 8px", background: value === true ? "rgba(15,110,86,0.1)" : value === false ? "rgba(201,77,73,0.1)" : "#f2f0eb", fontSize: 14, lineHeight: 1 }}
-                    >
-                      {value === true ? "✓" : value === false ? "✕" : "--"}
-                    </span>
-                  </td>
-                );
-              })}
+              </p>
+              <p style={{ margin: "3px 0 1px", fontSize: 16, fontWeight: 800, color, lineHeight: 1 }}>
+                {pct !== null ? `${pct}%` : "—"}
+              </p>
+              <p style={{ margin: 0, fontSize: 10, color: "#888680" }}>
+                {total > 0 ? `${taken}/${total} days` : "No data"}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Detail table — compact */}
+      <div style={{ overflowX: "auto", border: "1px solid rgba(19,45,54,0.08)", borderRadius: 7, maxWidth: "100%" }}>
+        <table style={{ width: "100%", minWidth: Math.max(380, 150 + dates.length * 54), borderCollapse: "collapse", fontSize: 11, tableLayout: "fixed" }}>
+          <thead>
+            <tr style={{ background: "#f5f3ee" }}>
+              <th style={{ position: "sticky", left: 0, zIndex: 1, width: 150, background: "#f5f3ee", textAlign: "left", padding: "6px 10px", color: "#132d36", fontWeight: 800, fontSize: 11 }}>
+                Medication
+              </th>
+              {dates.map((date) => (
+                <th key={date.key} style={{ width: 54, textAlign: "center", padding: "6px 3px", color: "#6d8794", fontWeight: 700, whiteSpace: "nowrap", fontSize: 9.5 }}>
+                  {date.label}
+                </th>
+              ))}
+              <th style={{ width: 44, textAlign: "center", padding: "6px 6px", color: "#132d36", fontWeight: 800, background: "#f5f3ee", fontSize: 11 }}>
+                %
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {medicationRows.map((medication) => {
+              const allValues = rows.flatMap((log) =>
+                medication.keys
+                  .map((key) => log.medication_compliance?.[key])
+                  .filter((v): v is boolean => v === true || v === false)
+              );
+              const taken = allValues.filter(Boolean).length;
+              const total = allValues.length;
+              const pct = total > 0 ? Math.round((taken / total) * 100) : null;
+              const pctColor = pct === null ? "#888680" : pct >= 80 ? "#0f6e56" : pct >= 50 ? "#b7791f" : "#c94d49";
+
+              return (
+                <tr key={medication.label} style={{ borderTop: "1px solid rgba(19,45,54,0.07)" }}>
+                  <td style={{ position: "sticky", left: 0, background: "#fff", padding: "6px 10px", color: "#132d36", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 150 }}
+                    title={medication.label}>
+                    {medication.label}
+                  </td>
+                  {rows.map((log) => {
+                    const values = medication.keys
+                      .map((key) => log.medication_compliance?.[key])
+                      .filter((v): v is boolean => v === true || v === false);
+                    const value = values.includes(true) ? true : values.includes(false) ? false : null;
+                    return (
+                      <td key={`${medication.label}-${log.logged_at}`} style={{ textAlign: "center", padding: "4px 3px" }}>
+                        <span
+                          aria-label={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
+                          title={value === true ? "Taken" : value === false ? "Not taken" : "No entry"}
+                          style={{
+                            display: "inline-flex",
+                            width: 24,
+                            height: 20,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: 4,
+                            background: value === true ? "rgba(15,110,86,0.12)" : value === false ? "rgba(201,77,73,0.1)" : "#f2f0eb",
+                            color: value === true ? "#0f6e56" : value === false ? "#c94d49" : "#c4c0b8",
+                            fontWeight: 800,
+                            fontSize: 11,
+                          }}
+                        >
+                          {value === true ? "✓" : value === false ? "✕" : "–"}
+                        </span>
+                      </td>
+                    );
+                  })}
+                  <td style={{ textAlign: "center", padding: "6px 6px", fontWeight: 800, color: pctColor, fontSize: 11 }}>
+                    {pct !== null ? `${pct}%` : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CustomTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string; dataKey: string }>;
+  label?: string;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div style={{
+      background: "#ffffff",
+      border: "1px solid rgba(15,23,42,0.1)",
+      borderRadius: 10,
+      padding: "10px 14px",
+      boxShadow: "0 4px 24px rgba(15,23,42,0.12), 0 1px 4px rgba(15,23,42,0.08)",
+      fontSize: 12,
+      minWidth: 140,
+    }}>
+      <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#0f172a", fontSize: 11, letterSpacing: "0.02em" }}>{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.dataKey} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.color, flexShrink: 0, boxShadow: `0 0 6px ${entry.color}60` }} />
+          <span style={{ color: "#64748b", flex: 1 }}>{entry.name}</span>
+          <span style={{ fontWeight: 700, color: "#0f172a" }}>{entry.value}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -518,24 +722,83 @@ function MetricLineChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <LineChart data={data} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-        <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-        <YAxis domain={yDomain} ticks={yTicks} tickFormatter={yTickFormatter} tick={{ fontSize: 11, fill: "#6f6a62" }} width={yTickFormatter ? 112 : 38} allowDecimals={false} />
-        <Tooltip formatter={tooltipFormatter} contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
-        <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+        {/* SVG gradient defs for each line */}
+        <defs>
+          {lines.map((line) => (
+            <linearGradient key={`grad-${String(line.key)}`} id={`grad-${String(line.key)}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor={line.color} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={line.color} stopOpacity={0} />
+            </linearGradient>
+          ))}
+        </defs>
+
+        <CartesianGrid
+          strokeDasharray="4 4"
+          stroke="rgba(148,163,184,0.2)"
+          vertical={false}
+          horizontalCoordinatesGenerator={() => []}
+        />
+        <CartesianGrid
+          strokeDasharray="0"
+          stroke="rgba(148,163,184,0.12)"
+          horizontal={false}
+        />
+
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10.5, fill: "#94a3b8", fontFamily: "system-ui, sans-serif" }}
+          tickMargin={10}
+          minTickGap={20}
+          axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
+          tickLine={false}
+        />
+        <YAxis
+          domain={yDomain}
+          ticks={yTicks}
+          tickFormatter={yTickFormatter}
+          tick={{ fontSize: 10.5, fill: "#94a3b8", fontFamily: "system-ui, sans-serif" }}
+          width={yTickFormatter ? 108 : 34}
+          allowDecimals={false}
+          axisLine={false}
+          tickLine={false}
+        />
+
+        <Tooltip
+          content={<CustomTooltip />}
+          formatter={tooltipFormatter}
+          cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }}
+        />
+
+        <Legend
+          verticalAlign="top"
+          align="right"
+          wrapperStyle={{ fontSize: 11, paddingBottom: 10, fontFamily: "system-ui, sans-serif", color: "#475569" }}
+          iconType="circle"
+          iconSize={8}
+        />
+
         {lines.map((line) => (
           <Line
             key={String(line.key)}
-            type="monotone"
+            type="monotoneX"
             dataKey={line.key as string}
             stroke={line.color}
-            strokeWidth={2.6}
-            dot={{ r: 3, strokeWidth: 1.5 }}
-            activeDot={{ r: 5 }}
+            strokeWidth={3}
+            dot={{ r: 2.5, fill: line.color, strokeWidth: 0 }}
+            activeDot={{
+              r: 6,
+              fill: line.color,
+              stroke: "#ffffff",
+              strokeWidth: 2.5,
+              style: { filter: `drop-shadow(0 0 6px ${line.color}80)` },
+            }}
             name={line.name}
             connectNulls
+            isAnimationActive={true}
+            animationDuration={800}
+            animationEasing="ease-out"
           />
         ))}
       </LineChart>
@@ -653,8 +916,15 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           asthmaControl: asthmaControl?.value ?? null,
           asthmaControlLabel: asthmaControl?.label ?? null,
           rescuePuffs: numberFromAny(disease, ["rescue_inhaler_puffs", "rescue_puff_usage", "rescue_puffs"]),
+          pefr: numberFromAny(disease, ["pefr_lpm", "pefr_reading", "pefr"]),
           energy: numberFromAny(disease, ["energy_level", "energy"]),
           chestHeaviness: numberFromAny(log.vas_symptoms, ["chest_heaviness", "chestHeaviness"]) ?? numberFromAny(disease, ["chest_heaviness", "chestHeaviness"]),
+          sputumVolume: (() => {
+            const sv = typeof disease?.sputum_volume === "string"
+              ? { none: 0, less_than_usual: 2, scanty: 2, usual: 5, more_than_usual: 7, large_amount: 10, much_more_than_usual: 10 }[disease.sputum_volume as string] ?? null
+              : numberFromAny(disease, ["sputum_volume"]);
+            return sv;
+          })(),
           kbild: numberFromAny(disease, ["kbild_score", "kbild"]),
           kbildQ1: numberFrom(kbildResponses["1"]),
           kbildQ2: numberFrom(kbildResponses["2"]),
@@ -796,18 +1066,31 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             lines={[{ key: "asthmaControl", name: "Asthma Control", color: COLORS.green }]}
           />
         </ChartBlock>
-        <ChartBlock title="Rescue Puff Usage · रेस्क्यू पफ उपयोग" subtitle="Reliever or rescue inhaler puffs per day · प्रतिदिन रेस्क्यू इनहेलर पफ">
+        <ChartBlock title="Rescue Puff Usage · रेस्क्यू पफ उपयोग" subtitle="Reliever / rescue inhaler puffs per day · प्रतिदिन रेस्क्यू इनहेलर पफ">
           <MetricLineChart data={dailySeries} lines={[{ key: "rescuePuffs", name: "Rescue Puffs", color: COLORS.orange }]} />
+        </ChartBlock>
+        <ChartBlock title="Peak Flow / PEFR · पीक फ्लो" subtitle="Peak expiratory flow rate in L/min · पीक फ्लो रेट (L/min)">
+          <MetricLineChart
+            data={dailySeries}
+            lines={[{ key: "pefr", name: "PEFR (L/min)", color: COLORS.purple }]}
+          />
         </ChartBlock>
       </>
     ),
     copd: (
       <>
-        <ChartBlock title="Energy Levels · ऊर्जा स्तर" subtitle="Patient-reported energy score · मरीज द्वारा बताया ऊर्जा स्कोर">
+        <ChartBlock title="Energy Levels · ऊर्जा स्तर" subtitle="Patient-reported energy score (0–10) · मरीज द्वारा बताया ऊर्जा स्कोर">
           <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "energy", name: "Energy", color: COLORS.green }]} />
         </ChartBlock>
-        <ChartBlock title="Chest Heaviness · छाती में भारीपन" subtitle="VAS chest heaviness trend · छाती भारीपन का ट्रेंड">
+        <ChartBlock title="Chest Heaviness · छाती में भारीपन" subtitle="VAS chest heaviness trend (0–10) · छाती भारीपन का ट्रेंड">
           <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "chestHeaviness", name: "Chest Heaviness", color: COLORS.red }]} />
+        </ChartBlock>
+        <ChartBlock title="Sputum Volume Trend · बलगम की मात्रा" subtitle="0 = none, 10 = large amount · 0 = नहीं, 10 = बहुत अधिक">
+          <MetricLineChart
+            data={dailySeries}
+            yDomain={[0, 10]}
+            lines={[{ key: "sputumVolume", name: "Sputum Volume", color: COLORS.blue }]}
+          />
         </ChartBlock>
       </>
     ),
@@ -844,7 +1127,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   } satisfies Record<DiagnosisKind, React.ReactNode>;
 
   return (
-    <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ padding: "20px 20px 32px", display: "flex", flexDirection: "column", gap: 20, background: "#f8fafc", minHeight: "100%" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 20, color: "#132d36" }}>
@@ -883,8 +1166,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       )}
 
       <section>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>Common Analytics · सामान्य विश्लेषण</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
+        <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Common Analytics · सामान्य विश्लेषण</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
           <ChartBlock title="PFT Trends · PFT ट्रेंड" subtitle="Choose any PFT field captured during registration · रजिस्ट्रेशन में भरा PFT फील्ड चुनें">
             {pftSeries.length === 0 ? (
               <EmptyChart label="No PFT records yet. · अभी PFT रिकॉर्ड नहीं है।" />
@@ -902,14 +1185,20 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                 {!pftSeries.some((row) => row[selectedPftMetric] !== null) ? (
                   <EmptyChart label="No values recorded for this PFT field yet. · इस PFT फील्ड का रिकॉर्ड नहीं है।" />
                 ) : (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={pftSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                      <YAxis tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
-                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
-                      <Line type="monotone" dataKey={selectedPftMetric} stroke={selectedPftMetricConfig.color} strokeWidth={2.6} dot={{ r: 3, strokeWidth: 1.5 }} activeDot={{ r: 5 }} name={selectedPftMetricConfig.label} connectNulls />
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={pftSeries} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                      <defs>
+                        <linearGradient id="grad-pft" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%"  stopColor={selectedPftMetricConfig.color} stopOpacity={0.15} />
+                          <stop offset="95%" stopColor={selectedPftMetricConfig.color} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.2)" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 10.5, fill: "#94a3b8" }} tickMargin={10} minTickGap={20} axisLine={{ stroke: "rgba(148,163,184,0.25)" }} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }} />
+                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 10, color: "#475569" }} iconType="circle" iconSize={8} />
+                      <Line type="monotoneX" dataKey={selectedPftMetric} stroke={selectedPftMetricConfig.color} strokeWidth={3} dot={{ r: 2.5, fill: selectedPftMetricConfig.color, strokeWidth: 0 }} activeDot={{ r: 6, fill: selectedPftMetricConfig.color, stroke: "#ffffff", strokeWidth: 2.5 }} name={selectedPftMetricConfig.label} connectNulls isAnimationActive animationDuration={800} animationEasing="ease-out" />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -922,8 +1211,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
               data={dailySeries}
               yDomain={[70, 100]}
               lines={[
-                { key: "spo2Rest", name: "Resting SpO2", color: COLORS.red },
-                { key: "spo2Walk", name: "After Walking SpO2", color: COLORS.blue },
+                { key: "spo2Rest", name: "Resting SpO2", color: COLORS.blue },
+                { key: "spo2Walk", name: "After Walking SpO2", color: COLORS.teal },
               ]}
             />
           </ChartBlock>
@@ -949,22 +1238,31 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                 {selectedSymptomSeries.every((row) => row.value === null) ? (
                   <EmptyChart label="No values recorded for this symptom yet." />
                 ) : (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={selectedSymptomSeries} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6f6a62" }} tickMargin={8} minTickGap={14} />
-                      <YAxis domain={selectedSymptomDomain} ticks={selectedSymptomIsMmrc ? [0,1,2,3,4] : [0,2,4,6,8,10]} tick={{ fontSize: 11, fill: "#6f6a62" }} width={38} allowDecimals={false} />
-                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2ded6", fontSize: 12 }} />
-                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 8 }} />
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={selectedSymptomSeries} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                      <defs>
+                        <linearGradient id="grad-symptom" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%"  stopColor={COLORS.indigo} stopOpacity={0.15} />
+                          <stop offset="95%" stopColor={COLORS.indigo} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.2)" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 10.5, fill: "#94a3b8" }} tickMargin={10} minTickGap={20} axisLine={{ stroke: "rgba(148,163,184,0.25)" }} tickLine={false} />
+                      <YAxis domain={selectedSymptomDomain} ticks={selectedSymptomIsMmrc ? [0,1,2,3,4] : [0,2,4,6,8,10]} tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }} />
+                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 10, color: "#475569" }} iconType="circle" iconSize={8} />
                       <Line
-                        type="monotone"
+                        type="monotoneX"
                         dataKey="value"
                         name={formatMetricName(selectedSymptom)}
-                        stroke="#3867b7"
-                        strokeWidth={2.6}
-                        dot={{ r: 3, strokeWidth: 1.5 }}
-                        activeDot={{ r: 5 }}
+                        stroke={COLORS.indigo}
+                        strokeWidth={3}
+                        dot={{ r: 2.5, fill: COLORS.indigo, strokeWidth: 0 }}
+                        activeDot={{ r: 6, fill: COLORS.indigo, stroke: "#ffffff", strokeWidth: 2.5, style: { filter: `drop-shadow(0 0 6px ${COLORS.indigo}80)` } }}
                         connectNulls
+                        isAnimationActive
+                        animationDuration={800}
+                        animationEasing="ease-out"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -973,8 +1271,18 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             )}
           </ChartBlock>
 
-          <ChartBlock title="Medication Adherence" subtitle="Dates across the top, medications on the left, with taken/not taken status from patient logs.">
-            <MedicationAdherenceTable logs={logs} meds={meds} />
+          <ChartBlock title="Medication Adherence · दवा अनुपालन" subtitle="Overall adherence % per day, and per-medication taken/not taken detail below. · प्रतिदिन दवा लेने का प्रतिशत">
+            <MetricLineChart
+              data={dailySeries}
+              yDomain={[0, 100]}
+              yTicks={[0, 25, 50, 75, 100]}
+              yTickFormatter={(v) => `${v}%`}
+              tooltipFormatter={(v) => [`${typeof v === "number" ? v : Number(v)}%`, "Adherence"]}
+              lines={[{ key: "adherence", name: "Adherence %", color: COLORS.green }]}
+            />
+            <div style={{ marginTop: 14 }}>
+              <MedicationAdherenceTable logs={logs} meds={meds} />
+            </div>
           </ChartBlock>
 
           <ChartBlock title="AQI Trends · वायु गुणवत्ता ट्रेंड" subtitle="Air quality exposure on logged days · लॉग वाले दिनों की वायु गुणवत्ता">
@@ -986,10 +1294,10 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
 
 
       <section>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>
+        <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           Disease-Specific Analytics · रोग-विशिष्ट विश्लेषण: {diagnosisLabel(diseaseKind)}
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
           {diseaseCharts[diseaseKind] ?? (
             <ChartBlock title="Disease-Specific Analytics · रोग-विशिष्ट विश्लेषण" subtitle="Diagnosis-specific graphs appear after disease-specific logs are available. · रोग-विशिष्ट लॉग के बाद चार्ट दिखेंगे।">
               <EmptyChart label="No disease-specific chart for this diagnosis yet. · अभी इस निदान का चार्ट नहीं है।" />

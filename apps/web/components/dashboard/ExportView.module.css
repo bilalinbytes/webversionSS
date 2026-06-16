@@ -58,6 +58,7 @@
 .left {
   padding: 20px 24px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -305,6 +306,7 @@
   border-left: 1px solid rgba(0, 0, 0, 0.09);
   padding: 20px 24px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -527,6 +529,10 @@
     padding: 14px;
   }
 
+  .left {
+    padding-bottom: 84px;
+  }
+
   .summaryGrid,
   .typeGrid,
   .dateGrid {
@@ -551,4 +557,118 @@
   .exportBtn {
     min-height: 48px;
   }
+
+  .dateInput,
+  .dateSelect {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .btnGhost {
+    min-height: 44px;
+  }
+}
+
+/* ── Professional Excel Export Panel ─────────────────────────────────────── */
+.xlsxPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: #132d36;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 24px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.xlsxPanelLeft { flex: 1; min-width: 0; }
+
+.xlsxTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 3px;
+}
+
+.xlsxSub {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+.xlsxError {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #f87171;
+  margin-top: 6px;
+}
+
+.xlsxActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.xlsxBtnOutline {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.xlsxBtnOutline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.xlsxBtnOutline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.xlsxBtnPrimary {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: none;
+  background: #126969;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 2px 8px rgba(18, 105, 105, 0.4);
+}
+
+.xlsxBtnPrimary:hover:not(:disabled) {
+  background: #0d4a4a;
+  box-shadow: 0 4px 14px rgba(18, 105, 105, 0.5);
+}
+
+.xlsxBtnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .xlsxPanel { padding: 14px 16px; }
+  .xlsxActions { width: 100%; }
+  .xlsxBtnOutline, .xlsxBtnPrimary { flex: 1; }
 }

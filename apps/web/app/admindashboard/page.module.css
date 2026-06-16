@@ -1,0 +1,39 @@
+/* ── Admin Dashboard Shell ─────────────────────────────────────────────────── */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #f7fafb;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    min-height: 100svh;
+  }
+
+  .body {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .main {
+    overflow: visible;
+    padding-bottom: 66px;
+  }
+}

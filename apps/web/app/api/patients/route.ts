@@ -20,8 +20,17 @@ function computeEffectiveDashboard(
     return "post_icu";
   }
   if (lower === "ild" || lower.startsWith("ild /") || lower.startsWith("ild/")) return "ild";
-  if (lower === "asthma" || lower.includes("asthma") && !lower.includes("copd")) return "asthma";
-  if (lower === "copd" || lower.startsWith("oad /") || lower.startsWith("oad/")) return "copd";
+
+  // OAD sub-type mapping (strict order matters)
+  // Bronchiolitis Obliterans → asthma dashboard
+  if (lower.includes("bronchiolitis")) return "asthma";
+  // Asthma-COPD Overlap (ACO) → copd dashboard
+  if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) return "copd";
+  // Pure asthma
+  if (lower === "asthma" || (lower.includes("asthma") && !lower.includes("copd"))) return "asthma";
+  // COPD and any other OAD sub-type
+  if (lower === "copd" || lower.startsWith("oad /") || lower.startsWith("oad/") || lower.includes("copd")) return "copd";
+
   if (lower === "bronchiectasis" || lower.startsWith("bronchiectasis /")) return "bronchiectasis";
   // Legacy mapping
   if (lower === "Post-ICU Discharge".toLowerCase()) return "post_icu";

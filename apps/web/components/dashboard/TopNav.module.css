@@ -311,7 +311,7 @@
   border: 1px solid rgba(19,45,54,0.14);
   border-radius: 6px;
   padding: 7px 8px;
-  font-size: 12px;
+  font-size: 16px;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
@@ -348,6 +348,7 @@
 
   .tab {
     height: 34px;
+    min-height: 44px;
     padding: 0 12px;
     flex: 0 0 auto;
   }
@@ -358,12 +359,14 @@
   }
 
   .signOutBtn {
+    min-height: 44px;
     padding: 6px 9px;
     font-size: 0.72rem;
   }
 
   .doctorPill {
     padding: 3px;
+    min-height: 44px;
   }
 
   .doctorName {
@@ -371,8 +374,8 @@
   }
 
   .notifBtn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 
   .appointmentPanel {
@@ -387,5 +390,15 @@
   .appointmentActions,
   .rescheduleGrid {
     grid-template-columns: 1fr;
+  }
+
+  .appointmentTextarea {
+    font-size: 16px;
+  }
+
+  .approveBtn,
+  .rejectBtn,
+  .rescheduleBtn {
+    min-height: 44px;
   }
 }

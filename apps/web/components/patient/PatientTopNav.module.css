@@ -616,9 +616,12 @@
   .notifBtn {
     width: 44px;
     height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .logoutBtn {
+    min-height: 44px;
     padding: 5px 8px;
   }
 
@@ -628,6 +631,7 @@
 
   .patientPill {
     padding: 3px;
+    min-height: 44px;
   }
 
   .patientName {
@@ -643,6 +647,7 @@
     width: auto;
     max-height: calc(100dvh - 84px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .notifPanel {
@@ -671,6 +676,11 @@
 
   .notifActions {
     grid-template-columns: 1fr;
+  }
+
+  .notifViewLink,
+  .notifPdfLink {
+    min-height: 44px;
   }
 
   .profileGrid {

@@ -652,11 +652,14 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
       (searchDigits.length > 0 && patientPhone.includes(searchDigits));
     const diagnosisRow = p.patient_diagnoses?.[0];
     const diagLabel = diagnosisRow?.primary_diagnosis ?? "";
-    const effectiveDashboard = diagnosisRow?.effective_dashboard ?? "";
+    const effectiveDashboard = (diagnosisRow?.effective_dashboard ?? "").toLowerCase();
     const matchFilter =
       filter === "All" ||
-      (filter === "Post ICU" && (diagLabel.toLowerCase().includes("post icu") || effectiveDashboard === "post_icu")) ||
-      diagLabel.toLowerCase().includes(filter.toLowerCase());
+      (filter === "Post ICU"       && (effectiveDashboard === "post_icu"      || diagLabel.toLowerCase().includes("post icu"))) ||
+      (filter === "Asthma"         && effectiveDashboard === "asthma") ||
+      (filter === "COPD"           && effectiveDashboard === "copd") ||
+      (filter === "ILD"            && effectiveDashboard === "ild") ||
+      (filter === "Bronchiectasis" && effectiveDashboard === "bronchiectasis");
     return matchSearch && matchFilter;
   }).sort((left, right) => {
     if (sortBy === "name_asc") return left.name.localeCompare(right.name);

@@ -387,11 +387,17 @@ function getEffectiveDashboard(data: FormData): string {
     case "ILD": return "ild";
     case "OAD": {
       const d = data.oad_diagnosis.toLowerCase();
+      // Bronchiolitis Obliterans → asthma dashboard
+      if (d.includes("bronchiolitis")) return "asthma";
+      // Asthma-COPD Overlap (ACO) → copd dashboard
+      if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
+      // Pure asthma
       if (d.includes("asthma") && !d.includes("copd")) return "asthma";
+      // COPD and everything else
       return "copd";
     }
     case "Bronchiectasis": return "bronchiectasis";
-    case "Post ICU Recovery": return "posticu";
+    case "Post ICU Recovery": return "post_icu";
     default: return "ild";
   }
 }
@@ -416,7 +422,13 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
       bronchiectasis_cause: "", bronchiectasis_other_text: "",
       posticu_cause: "", posticu_other_text: "",
       // Also sync legacy field
-      primary_diagnosis: cat === "ILD" ? "ild" : cat === "OAD" ? "copd" : cat === "Bronchiectasis" ? "bronchiectasis" : cat === "Post ICU Recovery" ? "post_icu" : "",
+      primary_diagnosis: cat === "ILD" ? "ild" : cat === "OAD" ? (() => {
+              const d = (data.oad_diagnosis ?? "").toLowerCase();
+              if (d.includes("bronchiolitis")) return "asthma";
+              if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
+              if (d.includes("asthma") && !d.includes("copd")) return "asthma";
+              return "copd";
+            })() : cat === "Bronchiectasis" ? "bronchiectasis" : cat === "Post ICU Recovery" ? "post_icu" : "",
     });
   }
 
@@ -1138,7 +1150,13 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
         diagnosis: {
           primary_diagnosis: data.primary_diagnosis || (
             data.disease_category === "ILD" ? "ild" :
-            data.disease_category === "OAD" ? (data.oad_diagnosis?.toLowerCase().includes("asthma") && !data.oad_diagnosis?.toLowerCase().includes("copd") ? "asthma" : "copd") :
+            data.disease_category === "OAD" ? (() => {
+              const d = (data.oad_diagnosis ?? "").toLowerCase();
+              if (d.includes("bronchiolitis")) return "asthma";
+              if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
+              if (d.includes("asthma") && !d.includes("copd")) return "asthma";
+              return "copd";
+            })() :
             data.disease_category === "Bronchiectasis" ? "bronchiectasis" :
             data.disease_category === "Post ICU Recovery" ? "post_icu" : ""
           ),

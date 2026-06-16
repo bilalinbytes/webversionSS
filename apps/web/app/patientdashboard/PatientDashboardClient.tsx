@@ -53,13 +53,19 @@ function PatientDashboardPageInner() {
               name={patient.name}
               diagnosis={diagnosis}
               patientId={patient.id}
-              spo2Today={0}
-              mmrcToday={0}
-              aqiToday={0}
-              riskScore={0}
-              doctor=""
-              doctorHospital=""
-              nextAppointment=""
+              spo2Today={homeData.spo2Today}
+              mmrcToday={homeData.mmrcToday}
+              aqiToday={homeData.aqiToday}
+              riskScore={homeData.riskScore}
+              hasTodayLog={homeData.hasTodayLog}
+              doctor={homeData.doctor}
+              doctorHospital={homeData.doctorHospital}
+              nextAppointment={""}
+              spo2Trend={homeData.spo2Trend}
+              mmrcTrend={homeData.mmrcTrend}
+              vasTrend={homeData.vasTrend}
+              latestPft={homeData.latestPft}
+              todayMedications={homeData.todayMedications}
               onLogToday={() => setView("log")}
             />
           )}

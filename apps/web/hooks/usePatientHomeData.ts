@@ -28,6 +28,12 @@ export interface PatientHomeData {
     dlco: number | null;
     test_date: string | null;
   } | null;
+  todayMedications: Array<{
+    id: string;
+    name: string;
+    dose?: string;
+    taken: boolean | null;
+  }>;
 }
 
 const FALLBACKS = {
@@ -43,18 +49,22 @@ function normalizeDashboard(
   primaryDiagnosis: string | null | undefined,
   storedDashboard: string | null | undefined,
 ): PatientHomeData["effectiveDashboard"] {
-  const primary = (primaryDiagnosis ?? "").toLowerCase();
-  const stored = (storedDashboard ?? "").toLowerCase();
-
-  if (primary.includes("asthma") && !primary.includes("copd")) return "asthma";
-  if (primary.includes("copd")) return "copd";
-  if (primary.includes("bronch")) return "bronchiectasis";
-  if (primary.includes("ild") || primary.includes("interstitial")) return "ild";
-  if (primary.includes("post_icu") || primary.includes("post icu")) return "post_icu";
-
+  // stored effective_dashboard is ground truth
+  const stored = (storedDashboard ?? "").toLowerCase().trim();
   if (["asthma", "copd", "bronchiectasis", "ild", "post_icu"].includes(stored)) {
     return stored as PatientHomeData["effectiveDashboard"];
   }
+
+  // fall back to parsing primary_diagnosis text
+  const primary = (primaryDiagnosis ?? "").toLowerCase();
+  if (primary.includes("bronchiolitis")) return "asthma";  // Bronchiolitis Obliterans → asthma
+  if (primary.includes("overlap") || primary.includes("aco") ||
+      (primary.includes("asthma") && primary.includes("copd"))) return "copd"; // ACO → copd
+  if (primary.includes("asthma") && !primary.includes("copd")) return "asthma";
+  if (primary.includes("copd") || primary.startsWith("oad")) return "copd";
+  if (primary.includes("bronchiectasis")) return "bronchiectasis";
+  if (primary.includes("ild") || primary.includes("interstitial")) return "ild";
+  if (primary.includes("post_icu") || primary.includes("post icu")) return "post_icu";
   return null;
 }
 
@@ -78,6 +88,7 @@ export function usePatientHomeData(
     baselineSpo2: null,
     baselineHeartRate: null,
     latestPft: null,
+    todayMedications: [],
   });
 
   useEffect(() => {
@@ -91,10 +102,10 @@ export function usePatientHomeData(
             .catch(() => null)
         : Promise.resolve(null);
 
-      const [logsRes, scoreRes, doctorPayload, diagnosisRes, baselineRes, pftRes] = await Promise.all([
+      const [logsRes, scoreRes, doctorPayload, diagnosisRes, baselineRes, pftRes, medRes] = await Promise.all([
         supabase
           .from("daily_logs")
-          .select("logged_at, spo2_rest, mmrc_today, aqi_value, vas_symptoms, disease_specific_data")
+          .select("logged_at, spo2_rest, mmrc_today, aqi_value, vas_symptoms, disease_specific_data, medication_compliance")
           .eq("patient_id", patientId)
           .order("logged_at", { ascending: false })
           .limit(14),
@@ -125,6 +136,11 @@ export function usePatientHomeData(
           .order("test_date", { ascending: false })
           .limit(1)
           .single(),
+        supabase
+          .from("medications")
+          .select("id, drug_name, dose, dose_unit, end_date")
+          .eq("patient_id", patientId)
+          .order("start_date", { ascending: false }),
       ]);
 
       const doctor = doctorPayload?.doctor as
@@ -207,6 +223,35 @@ export function usePatientHomeData(
               test_date: pftRes.data.test_date,
             }
           : null,
+        todayMedications: (() => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const compliance = (todayLog?.medication_compliance ?? {}) as Record<string, unknown>;
+          return (medRes.data ?? [])
+            .filter((med) => {
+              if (!med.end_date) return true;
+              return new Date(med.end_date) >= today;
+            })
+            .map((med) => {
+              // compliance keys can be med id, drug_name, or normalized versions
+              const keys = [
+                med.id,
+                med.drug_name,
+                med.drug_name.toLowerCase(),
+                med.drug_name.toLowerCase().replace(/[^a-z0-9]/g, ""),
+              ];
+              let taken: boolean | null = null;
+              for (const k of keys) {
+                const v = compliance[k];
+                if (v === true) { taken = true; break; }
+                if (v === false) { taken = false; break; }
+              }
+              const dose = med.dose !== null
+                ? `${med.dose}${med.dose_unit ? ` ${med.dose_unit}` : ""}`
+                : undefined;
+              return { id: med.id, name: med.drug_name, dose, taken };
+            });
+        })(),
       });
     })();
   }, [patientId, doctorId, effectiveDashboard, refreshKey]);

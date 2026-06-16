@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
+import { verifyAdminToken, ADMIN_COOKIE } from "@/lib/admin-auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -34,7 +35,9 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPatientLoginRoute = path === "/patient/login";
+  const isAdminLoginRoute = path === "/admin/login";
   const isDoctorProtectedRoute = path.startsWith("/doctordashboard");
+  const isAdminProtectedRoute = path.startsWith("/admindashboard");
   const isPatientProtectedRoute =
     path.startsWith("/patientdashboard") ||
     (path.startsWith("/patient/") && !isPatientLoginRoute);
@@ -45,6 +48,8 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute =
     path.startsWith("/login") ||
     isPatientLoginRoute ||
+    isAdminLoginRoute ||
+    path.startsWith("/admin/login") ||
     path.startsWith("/register") ||
     path.startsWith("/complete-profile") ||
     path.startsWith("/forgot-password") ||
@@ -91,6 +96,17 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/patientdashboard";
       return NextResponse.redirect(url);
     }
+  }
+
+  if (isAdminProtectedRoute) {
+    const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
+    if (!verifyAdminToken(adminToken)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+    // Admin is authenticated via cookie — no Supabase check needed
+    return NextResponse.next({ request });
   }
 
   // Unauthenticated user hitting a protected route → send to login

@@ -616,13 +616,14 @@
 
 @media (max-width: 520px) {
   .overlay {
-    align-items: stretch;
-    padding: 10px;
+    align-items: flex-end;
+    padding: 0;
   }
 
   .modal {
-    border-radius: 12px;
-    max-width: none;
+    border-radius: 16px 16px 0 0;
+    max-width: 100%;
+    max-height: 95dvh;
   }
 
   .modalHeader,
@@ -646,5 +647,6 @@
   .btnGhost,
   .btnPrimary {
     width: 100%;
+    min-height: 44px;
   }
 }

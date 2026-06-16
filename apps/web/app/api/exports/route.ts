@@ -163,6 +163,15 @@ function displayValue(value: unknown): string {
   return String(value);
 }
 
+/** Prefix phone numbers with a tab so Excel treats them as text, not numbers */
+function safePhone(value: unknown): string {
+  const s = displayValue(value);
+  if (s === "n/a") return s;
+  // Strip to digits only then re-format — prevents scientific notation
+  const digits = s.replace(/\D/g, "");
+  return digits.length > 0 ? `'${digits}` : s;
+}
+
 function csvCell(value: unknown): string {
   const text = displayValue(value);
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
@@ -172,63 +181,261 @@ function rowsToCsv(rows: string[][]): string {
   return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
 }
 
-function htmlEscape(value: unknown): string {
-  return displayValue(value)
+function htmlEscape(s: string): string {
+  return s
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 }
 
-function rowsToExcelHtml(rows: string[][]): string {
-  const tableRows = rows
-    .map((row) => `<tr>${row.map((cell) => `<td>${htmlEscape(cell)}</td>`).join("")}</tr>`)
-    .join("");
-  return `<!doctype html><html><head><meta charset="utf-8"></head><body><table>${tableRows}</table></body></html>`;
-}
-
+/**
+ * Professional hospital-grade spreadsheet export.
+ *
+ * Structure:
+ *   Sheet 1 — Patient Registry (one row per patient, all key fields)
+ *   Sheet 2 — Medication Compliance
+ *   Sheet 3 — Daily Logs
+ *   Sheet 4 — Alerts
+ *
+ * Since .xls HTML format is a single sheet, we separate sections with a
+ * clear header row and two blank rows between each table.
+ */
 function buildSpreadsheetRows(
-  summaryRows: Array<{ patientName: string; diagnosis: string; riskLevel: string; score: string; alert: string }>,
-  medicationRows: Array<{ patientName: string; taken: number; total: number; rateLabel: string }>,
+  summaryRows: Array<{
+    patientName: string;
+    diagnosis: string;
+    riskLevel: string;
+    score: string;
+    alert: string;
+    enrolledAt: string;
+  }>,
+  medicationRows: Array<{
+    patientName: string;
+    taken: number;
+    total: number;
+    rateLabel: string;
+  }>,
   patientDetails: PatientDetailSection[],
   notes: string[],
 ): string[][] {
+  void notes; // notes omitted — keep file clean
+
   const rows: string[][] = [];
-  rows.push(["Section", "Patient", "Field 1", "Field 2", "Field 3", "Field 4", "Field 5", "Field 6"]);
-  rows.push(["Summary", "Patient", "Diagnosis", "Risk level", "Score", "Alert"]);
-  summaryRows.forEach((row) => rows.push(["Summary", row.patientName, row.diagnosis, row.riskLevel, row.score, row.alert]));
-  rows.push([]);
-  rows.push(["Medication Compliance", "Patient", "Taken", "Total", "Rate"]);
-  medicationRows.forEach((row) => rows.push(["Medication Compliance", row.patientName, String(row.taken), String(row.total), row.rateLabel]));
+
+  // ── Section 1: Patient Registry ─────────────────────────────────────────────
+  rows.push(["PATIENT REGISTRY"]);
+  rows.push([
+    "No.",
+    "Patient Name",
+    "Diagnosis",
+    "Risk Level",
+    "Risk Score",
+    "Alert Status",
+    "Enrolled On",
+  ]);
+  summaryRows.forEach((r, i) =>
+    rows.push([
+      String(i + 1),
+      r.patientName,
+      r.diagnosis,
+      r.riskLevel,
+      r.score,
+      r.alert,
+      r.enrolledAt,
+    ]),
+  );
+
+  rows.push([], []);
+
+  // ── Section 2: Medication Compliance ────────────────────────────────────────
+  rows.push(["MEDICATION COMPLIANCE"]);
+  rows.push(["Patient Name", "Doses Taken", "Total Doses", "Compliance Rate"]);
+  medicationRows.forEach((r) =>
+    rows.push([r.patientName, String(r.taken), String(r.total), r.rateLabel]),
+  );
+
+  rows.push([], []);
+
+  // ── Section 3: Patient Details ───────────────────────────────────────────────
+  rows.push(["PATIENT DETAILS"]);
+  rows.push([
+    "Patient Name",
+    "Mobile",
+    "Gender",
+    "Date of Birth",
+    "Address",
+    "Emergency Contact",
+    "Emergency Phone",
+    "Enrolled On",
+    "Primary Diagnosis",
+    "Effective Dashboard",
+    "Comorbidities",
+  ]);
 
   patientDetails.forEach((patient) => {
-    rows.push([]);
-    rows.push(["Patient Detail", patient.patientName]);
-    [
-      ["Demographics", patient.demographics],
-      ["Diagnosis", patient.diagnosis],
-      ["Respiratory Support", patient.respiratorySupport],
-    ].forEach(([section, entries]) => {
-      rows.push([section as string, patient.patientName, "Field", "Value"]);
-      (entries as Array<[string, string]>).forEach(([field, value]) => rows.push([section as string, patient.patientName, field, value]));
-    });
-
-    [
-      ["PFT History", ["Date", "FEV1/FVC", "FEV1", "FVC", "DLCO", "Other"], patient.pftRows],
-      ["Medication History", ["Drug", "Route", "Dose", "Frequency", "Start", "End"], patient.medicationRows],
-      ["Daily Logs", ["Date", "SpO2 Rest", "SpO2 Walk", "mMRC", "AQI", "Symptoms"], patient.logRows],
-      ["Alerts", ["Date", "Type", "Status", "Reason"], patient.alertRows],
-      ["Instructions", ["Date", "Instruction", "Read At"], patient.instructionRows],
-    ].forEach(([section, headers, entries]) => {
-      rows.push([section as string, patient.patientName, ...(headers as string[])]);
-      (entries as string[][]).forEach((entry) => rows.push([section as string, patient.patientName, ...entry]));
-    });
+    const dem = Object.fromEntries(patient.demographics);
+    const diag = Object.fromEntries(patient.diagnosis);
+    rows.push([
+      patient.patientName,
+      safePhone(dem["Mobile"] ?? ""),
+      dem["Gender"] ?? "n/a",
+      dem["Date of birth"] ?? "n/a",
+      dem["Address"] ?? "n/a",
+      dem["Emergency contact"] ?? "n/a",
+      safePhone(dem["Emergency phone"] ?? ""),
+      dem["Enrolled on"] ?? "n/a",
+      diag["Primary diagnosis"] ?? "n/a",
+      diag["Effective dashboard"] ?? "n/a",
+      diag["Comorbidities"] ?? "n/a",
+    ]);
   });
 
-  rows.push([]);
-  rows.push(["Notes"]);
-  notes.forEach((note) => rows.push(["Notes", note]));
+  rows.push([], []);
+
+  // ── Section 4: Daily Logs ────────────────────────────────────────────────────
+  if (patientDetails.some((p) => p.logRows.length > 0)) {
+    rows.push(["DAILY LOGS"]);
+    rows.push([
+      "Patient Name",
+      "Date",
+      "SpO2 Rest (%)",
+      "SpO2 Walk (%)",
+      "mMRC Score",
+      "AQI",
+      "VAS Symptoms",
+    ]);
+    patientDetails.forEach((patient) => {
+      patient.logRows.forEach((log) => {
+        rows.push([patient.patientName, ...log]);
+      });
+    });
+    rows.push([], []);
+  }
+
+  // ── Section 5: Alerts ────────────────────────────────────────────────────────
+  if (patientDetails.some((p) => p.alertRows.length > 0)) {
+    rows.push(["ALERTS"]);
+    rows.push(["Patient Name", "Date", "Alert Type", "Status", "Reason"]);
+    patientDetails.forEach((patient) => {
+      patient.alertRows.forEach((alert) => {
+        rows.push([patient.patientName, ...alert]);
+      });
+    });
+    rows.push([], []);
+  }
+
+  // ── Section 6: Medications ───────────────────────────────────────────────────
+  if (patientDetails.some((p) => p.medicationRows.length > 0)) {
+    rows.push(["MEDICATIONS"]);
+    rows.push(["Patient Name", "Drug", "Route", "Dose", "Frequency", "Start Date", "End Date"]);
+    patientDetails.forEach((patient) => {
+      patient.medicationRows.forEach((med) => {
+        rows.push([patient.patientName, ...med]);
+      });
+    });
+    rows.push([], []);
+  }
+
+  // ── Section 7: PFT History ───────────────────────────────────────────────────
+  if (patientDetails.some((p) => p.pftRows.length > 0)) {
+    rows.push(["PFT HISTORY"]);
+    rows.push(["Patient Name", "Test Date", "FEV1/FVC Ratio", "FEV1", "FVC", "DLCO", "Other"]);
+    patientDetails.forEach((patient) => {
+      patient.pftRows.forEach((pft) => {
+        rows.push([patient.patientName, ...pft]);
+      });
+    });
+  }
+
   return rows;
+}
+
+function rowsToExcelHtml(rows: string[][]): string {
+  const SECTION_TITLES = new Set([
+    "PATIENT REGISTRY",
+    "MEDICATION COMPLIANCE",
+    "PATIENT DETAILS",
+    "DAILY LOGS",
+    "ALERTS",
+    "MEDICATIONS",
+    "PFT HISTORY",
+  ]);
+
+  // Column headers are always the row immediately after a section title
+  let nextIsHeader = false;
+
+  const tableRows = rows.map((row) => {
+    if (row.length === 0) {
+      nextIsHeader = false;
+      return `<tr><td style="padding:5px;border:none">&nbsp;</td></tr>`;
+    }
+
+    const isSectionTitle = row.length === 1 && SECTION_TITLES.has(row[0]);
+
+    if (isSectionTitle) {
+      nextIsHeader = true;
+      return `<tr>
+  <td colspan="12" style="
+    background:#1a3a4a;
+    color:#ffffff;
+    font-family:Calibri,Arial,sans-serif;
+    font-size:11pt;
+    font-weight:bold;
+    padding:8px 12px;
+    letter-spacing:0.5px;
+    border-bottom:2px solid #0d2535;
+  ">${htmlEscape(row[0])}</td>
+</tr>`;
+    }
+
+    if (nextIsHeader) {
+      nextIsHeader = false;
+      const cells = row.map(
+        (cell) => `<td style="
+    background:#e8f0f3;
+    color:#1a3a4a;
+    font-family:Calibri,Arial,sans-serif;
+    font-size:10pt;
+    font-weight:bold;
+    padding:6px 10px;
+    border:1px solid #b0c4cc;
+    white-space:nowrap;
+  ">${htmlEscape(cell)}</td>`,
+      ).join("");
+      return `<tr>${cells}</tr>`;
+    }
+
+    const cells = row.map(
+      (cell) => `<td style="
+    font-family:Calibri,Arial,sans-serif;
+    font-size:10pt;
+    color:#222222;
+    padding:5px 10px;
+    border:1px solid #d4dfe3;
+    vertical-align:top;
+  ">${htmlEscape(cell)}</td>`,
+    ).join("");
+    return `<tr>${cells}</tr>`;
+  });
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body  { font-family: Calibri, Arial, sans-serif; font-size: 10pt; margin: 0; }
+    table { border-collapse: collapse; width: 100%; }
+    tr:nth-child(even) td { background-color: #f5f9fb; }
+    tr:nth-child(odd)  td { background-color: #ffffff; }
+    td[style*="background:#e8f0f3"] { background-color: #e8f0f3 !important; }
+    td[style*="background:#1a3a4a"] { background-color: #1a3a4a !important; color: #ffffff !important; }
+  </style>
+</head>
+<body>
+<table>${tableRows.join("\n")}</table>
+</body>
+</html>`;
 }
 
 function formatExportDate(value: string | null | undefined): string {
@@ -824,14 +1031,16 @@ export async function POST(request: Request): Promise<NextResponse> {
       const diagnosis = diagnosesByPatient.get(patient.id);
       const score = latestScores.get(patient.id);
       const alert = latestAlerts.get(patient.id);
+      // Show human readable primary diagnosis; fall back to effective_dashboard label
+      const diagnosisDisplay = diagnosis?.primary_diagnosis ?? diagnosis?.effective_dashboard ?? "n/a";
 
       return {
         patientName: patient.name,
-        diagnosis:
-          diagnosis?.effective_dashboard ?? diagnosis?.primary_diagnosis ?? "n/a",
+        diagnosis: diagnosisDisplay,
         riskLevel: score?.risk_level ?? score?.indicator_color ?? "n/a",
         score: score ? String(score.global_score) : "n/a",
         alert: alert?.alert_type ?? "n/a",
+        enrolledAt: formatExportDate(patient.created_at),
       };
     });
 
@@ -862,23 +1071,23 @@ export async function POST(request: Request): Promise<NextResponse> {
         patientName: patient.name,
         demographics: [
           ["Patient ID", patient.id],
-          ["Mobile", displayValue(patient.mobile_number)],
-          ["Alternate mobile", displayValue(patient.alternate_mobile_number)],
+          ["Mobile", safePhone(patient.mobile_number)],
+          ["Alternate mobile", safePhone(patient.alternate_mobile_number)],
           ["Gender", displayValue(patient.gender)],
           ["Date of birth", displayValue(patient.date_of_birth)],
           ["Address", displayValue(patient.address)],
           ["Emergency contact", displayValue(patient.emergency_contact_name)],
-          ["Emergency phone", displayValue(patient.emergency_contact_phone)],
-          ["Registered at", formatExportDate(patient.created_at)],
+          ["Emergency phone", safePhone(patient.emergency_contact_phone)],
+          ["Enrolled on", formatExportDate(patient.created_at)],
           ["Last updated", formatExportDate(patient.updated_at)],
         ] as Array<[string, string]>,
         diagnosis: [
-          ["Primary diagnosis", displayValue(diagnosis?.primary_diagnosis)],
-          ["Effective dashboard", displayValue(diagnosis?.effective_dashboard)],
-          ["Post ICU sub diagnosis", displayValue(diagnosis?.post_icu_sub_diagnosis)],
-          ["Comorbidities", displayValue(diagnosis?.comorbidities)],
-          ["Comorbidities other", displayValue(diagnosis?.comorbidities_other_text)],
-          ["Diagnosed at", displayValue(diagnosis?.diagnosed_at)],
+          ["Primary diagnosis",        displayValue(diagnosis?.primary_diagnosis)],
+          ["Effective dashboard",       displayValue(diagnosis?.effective_dashboard)],
+          ["Post ICU sub diagnosis",    displayValue(diagnosis?.post_icu_sub_diagnosis)],
+          ["Comorbidities",            displayValue(diagnosis?.comorbidities)],
+          ["Comorbidities other",      displayValue(diagnosis?.comorbidities_other_text)],
+          ["Diagnosed at",             displayValue(diagnosis?.diagnosed_at)],
         ] as Array<[string, string]>,
         respiratorySupport: supportRows,
         pftRows: (pftByPatient.get(patient.id) ?? []).map((pft) => [
@@ -940,7 +1149,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (payload.format === "csv") {
       const filename = `saans-export-${payload.export_type}-${timestamp}.csv`;
-      return new NextResponse(rowsToCsv(spreadsheetRows), {
+      // Prepend UTF-8 BOM so Excel opens CSV with correct encoding
+      const bom = "\uFEFF";
+      return new NextResponse(bom + rowsToCsv(spreadsheetRows), {
         status: 200,
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
@@ -954,7 +1165,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return new NextResponse(rowsToExcelHtml(spreadsheetRows), {
         status: 200,
         headers: {
-          "Content-Type": "application/vnd.ms-excel; charset=utf-8",
+          "Content-Type": "application/vnd.ms-excel",
           "Content-Disposition": `attachment; filename="${filename}"`,
         },
       });

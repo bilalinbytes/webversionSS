@@ -2,9 +2,8 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 46%) minmax(0, 54%);
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #ffffff;
   isolation: isolate;
 }
@@ -598,10 +597,16 @@
   .input,
   .submitButton {
     height: 3.3rem;
+    font-size: 16px;
   }
 
   .googleButton {
     height: 3.05rem;
+    font-size: 16px;
+  }
+
+  .otpInput {
+    font-size: 16px;
   }
 }
 
