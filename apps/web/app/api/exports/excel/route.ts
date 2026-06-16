@@ -57,7 +57,7 @@ function parseCompliance(value: Json | null): { taken: number; total: number } {
   if (!value) return { taken: 0, total: 0 };
   if (typeof value === "boolean") return { taken: value ? 1 : 0, total: 1 };
   if (Array.isArray(value)) {
-    return value.reduce(
+    return value.reduce<{ taken: number; total: number }>(
       (acc, v) => {
         const n = parseCompliance(v as Json);
         return { taken: acc.taken + n.taken, total: acc.total + n.total };
@@ -66,7 +66,7 @@ function parseCompliance(value: Json | null): { taken: number; total: number } {
     );
   }
   if (typeof value === "object") {
-    return Object.values(value as Record<string, Json>).reduce(
+    return Object.values(value as Record<string, Json>).reduce<{ taken: number; total: number }>(
       (acc, v) => {
         const n = parseCompliance(v);
         return { taken: acc.taken + n.taken, total: acc.total + n.total };
