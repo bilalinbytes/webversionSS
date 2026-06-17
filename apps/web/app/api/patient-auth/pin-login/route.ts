@@ -98,23 +98,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     .update(pin + pin_salt + backendPepper)
     .digest("hex");
 
-  // 5. Attempt Supabase Auth password login
-  const supabase = await createClient();
-  const authPassword = "A!" + computedPinHash + "Z_1";
-  const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-    phone: primary_mobile_number,
-    password: authPassword,
-  });
-
-  // 6. Handle failure vs success
-  if (signInError || !authData.session) {
+  // 5. Verify PIN against our DB hash first
+  if (computedPinHash !== pin_hash) {
     const nextAttempts = failedAttempts + 1;
     const isLocked = nextAttempts >= 5;
     const lockoutTime = isLocked
-      ? new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes lockout
+      ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
       : null;
 
-    // Update attempts & lockout status
     await admin
       .from("patient_login_security")
       .update({
@@ -129,16 +120,59 @@ export async function POST(request: Request): Promise<NextResponse> {
         { message: "Too many incorrect PIN attempts. Your account has been locked for 15 minutes." },
         { status: 423 }
       );
-    } else {
-      const remaining = 5 - nextAttempts;
+    }
+    const remaining = 5 - nextAttempts;
+    return NextResponse.json(
+      { message: `Incorrect PIN. You have ${remaining} attempts remaining.` },
+      { status: 401 }
+    );
+  }
+
+  // 6. PIN is correct — sync the auth password and sign in
+  // We re-sync on every login to ensure auth password always matches DB hash.
+  const authPassword = "A!" + computedPinHash + "Z_1";
+
+  // Ensure the auth user exists and has the correct password
+  const { error: updateAuthError } = await admin.auth.admin.updateUserById(patient_id, {
+    password: authPassword,
+    phone_confirm: true,
+  });
+
+  if (updateAuthError) {
+    // Auth user doesn't exist yet — create it
+    const { error: createAuthError } = await admin.auth.admin.createUser({
+      id: patient_id,
+      phone: primary_mobile_number,
+      phone_confirm: true,
+      password: authPassword,
+      user_metadata: { role: "patient" },
+    });
+
+    if (createAuthError) {
+      console.error("Failed to provision auth user on login:", createAuthError);
       return NextResponse.json(
-        { message: `Incorrect PIN. You have ${remaining} attempts remaining.` },
-        { status: 401 }
+        { message: "Login failed. Could not initialize session." },
+        { status: 500 }
       );
     }
   }
 
-  // Success: reset security credentials failed counters
+  // Now sign in with the synced password
+  const supabase = await createClient();
+  const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+    phone: primary_mobile_number,
+    password: authPassword,
+  });
+
+  if (signInError || !authData.session) {
+    console.error("signInWithPassword failed after sync:", signInError);
+    return NextResponse.json(
+      { message: "Login failed. Please try again." },
+      { status: 500 }
+    );
+  }
+
+  // Reset failed attempts on success
   await admin
     .from("patient_login_security")
     .update({
