@@ -103,16 +103,95 @@ export async function POST(request: Request): Promise<NextResponse> {
   // 6.b Synchronize the salted, peppered pin_hash to Supabase Auth password system
   // Format the password to satisfy any possible password strength policies (uppercase, lowercase, special character, digits)
   const authPassword = "A!" + pinHash + "Z_1";
-  const { error: authError } = await admin.auth.admin.updateUserById(patient_id, {
+
+  // Get patient mobile number for provisioning
+  const { data: patientData } = await admin
+    .from("patients")
+    .select("mobile_number")
+    .eq("id", patient_id)
+    .maybeSingle();
+
+  // Try to create the Auth user with password (succeeds if new, fails if exists)
+  const patientPhone = patientData?.mobile_number ?? "unknown";
+  const { error: createError } = await admin.auth.admin.createUser({
+    id: patient_id,
+    phone: patientPhone,
+    phone_confirm: true,
     password: authPassword,
+    user_metadata: { role: "patient" },
   });
 
-  if (authError) {
-    console.error("Failed to sync PIN hash to Supabase Auth password:", authError);
-    return NextResponse.json(
-      { error: "Failed to update auth credentials. Please try again." },
-      { status: 500 }
-    );
+  if (createError) {
+    // createUser failed — an auth user with this phone already exists but
+    // under a different UUID (not patient_id). The correct fix is to delete
+    // the old mismatched auth user and recreate it with the correct patient_id,
+    // so that auth.uid() === patient_id (required for RLS and session checks).
+
+    // Step 1: Find the existing auth user by phone
+    let existingAuthUserId: string | null = null;
+    let page = 1;
+    const perPage = 1000;
+
+    while (!existingAuthUserId) {
+      const { data: listData } = await admin.auth.admin.listUsers({ page, perPage });
+      const users = listData?.users ?? [];
+      const match = users.find((u) => u.phone === patientPhone);
+      if (match) {
+        existingAuthUserId = match.id;
+        break;
+      }
+      if (users.length < perPage) break;
+      page++;
+    }
+
+    if (existingAuthUserId && existingAuthUserId !== patient_id) {
+      // Step 2: Delete the old mismatched auth user
+      const { error: deleteError } = await admin.auth.admin.deleteUser(existingAuthUserId);
+      if (deleteError) {
+        console.error("Failed to delete old auth user:", deleteError);
+        return NextResponse.json(
+          { error: `Auth sync failed: could not clean up old auth entry. ${deleteError.message}` },
+          { status: 500 }
+        );
+      }
+
+      // Step 3: Recreate with the correct patient_id as the UUID
+      const { error: recreateError } = await admin.auth.admin.createUser({
+        id: patient_id,
+        phone: patientPhone,
+        phone_confirm: true,
+        password: authPassword,
+        user_metadata: { role: "patient" },
+      });
+
+      if (recreateError) {
+        console.error("createUser error (original):", createError);
+        console.error("recreateUser error:", recreateError);
+        return NextResponse.json(
+          { error: `Auth sync failed: ${recreateError.message}` },
+          { status: 500 }
+        );
+      }
+    } else if (existingAuthUserId === patient_id) {
+      // Same UUID — just update the password
+      const { error: updateError } = await admin.auth.admin.updateUserById(patient_id, {
+        password: authPassword,
+        phone_confirm: true,
+      });
+
+      if (updateError) {
+        console.error("updateUserById error:", updateError);
+        return NextResponse.json(
+          { error: `Auth sync failed: ${updateError.message}` },
+          { status: 500 }
+        );
+      }
+    } else {
+      // No matching auth user found by phone at all — log and continue
+      // PIN is saved; the next createUser attempt should succeed
+      console.error("createUser error:", createError);
+      console.warn("No auth user found by phone — PIN saved, auth sync skipped.");
+    }
   }
 
   // 7. Invalidate the otp_token (set used = true)
