@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Users, Stethoscope, CheckCircle2 } from "lucide-react";
+import { Download, Users, Stethoscope, CheckCircle2, Calendar } from "lucide-react";
 import styles from "./AdminExportView.module.css";
 
 type Scope = "patients" | "doctors";
 type Format = "csv" | "excel";
+type Duration = "all" | "1" | "7" | "15" | "30" | "90" | "180";
 
 interface ExportOption {
   id: Scope;
@@ -39,9 +40,20 @@ const EXPORT_OPTIONS: ExportOption[] = [
   },
 ];
 
+const DURATION_OPTIONS: { value: Duration; label: string }[] = [
+  { value: "all", label: "All Time" },
+  { value: "1",   label: "Daily" },
+  { value: "7",   label: "Weekly" },
+  { value: "15",  label: "Bi-Weekly (15 Days)" },
+  { value: "30",  label: "Monthly" },
+  { value: "90",  label: "Last 90 Days" },
+  { value: "180", label: "Last 6 Months" },
+];
+
 export function AdminExportView() {
   const [scope, setScope] = useState<Scope>("patients");
   const [format, setFormat] = useState<Format>("csv");
+  const [duration, setDuration] = useState<Duration>("all");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [lastExport, setLastExport] = useState<string | null>(null);
@@ -52,10 +64,9 @@ export function AdminExportView() {
     setLastExport(null);
 
     try {
-      const res = await fetch(
-        `/api/admin/export?scope=${scope}&format=${format}`,
-        { credentials: "include" },
-      );
+      const params = new URLSearchParams({ scope, format });
+      if (duration !== "all") params.set("duration", duration);
+      const res = await fetch(`/api/admin/export?${params}`, { credentials: "include" });
 
       if (!res.ok) {
         const payload = await res.json().catch(() => null) as { error?: string } | null;
@@ -131,6 +142,26 @@ export function AdminExportView() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Duration selector */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>
+              <Calendar size={14} strokeWidth={1.6} />
+              Duration
+            </p>
+            <div className={styles.formatPills}>
+              {DURATION_OPTIONS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  className={`${styles.formatPill} ${duration === d.value ? styles.formatPillActive : ""}`}
+                  onClick={() => setDuration(d.value)}
+                >
+                  {d.label}
+                </button>
+              ))}
             </div>
           </div>
 

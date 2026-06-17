@@ -973,7 +973,7 @@ const ROUTE_OPTS = ["Tablet", "Capsule", "Injection", "Inhaler", "Nebulisation",
 const UNIT_OPTS = ["mg", "mcg", "ml", "puffs", "units", "g", "other"];
 const FREQUENCY_OPTS = ["OD", "BD", "TDS", "Once a week", "Once in 15 days", "Once a month", "Every 6 months"];
 const PATIENT_INSTRUCTION_WORD_LIMIT = 50;
-const PRESCRIPTION_EDITOR_COLUMNS = "76px 130px minmax(180px, 2fr) 90px 80px 140px 110px 120px 120px 176px";
+const PRESCRIPTION_EDITOR_COLUMNS = "76px 130px minmax(180px, 2fr) 90px 80px 140px 110px 120px 120px";
 
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
@@ -1046,34 +1046,38 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
   const fetchPrescriptions = useCallback(async () => {
     setLoading(true);
-    const response = await fetch(`/api/patients/${patientId}/prescriptions`, { credentials: "include" });
-    const body = await response.json().catch(() => null) as { prescriptions?: PrescriptionGroup[]; instruction?: PrescriptionInstruction | null } | null;
+    try {
+      const response = await fetch(`/api/patients/${patientId}/prescriptions`, { credentials: "include" });
+      const body = await response.json().catch(() => null) as { prescriptions?: PrescriptionGroup[]; instruction?: PrescriptionInstruction | null } | null;
 
-    if (response.ok && body?.prescriptions) {
-      setPrescriptions(body.prescriptions);
-      setLatestPrescriptionInstruction(body.instruction ?? null);
-    } else {
-      const supabase = createClient();
-      const res = await supabase
-        .from("medications")
-        .select("id, drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
-        .eq("patient_id", patientId)
-        .order("start_date", { ascending: false })
-        .order("serial_number", { ascending: true });
-      if (!res.data) {
-        setLoading(false);
-        return;
+      if (response.ok && body?.prescriptions) {
+        setPrescriptions(body.prescriptions);
+        setLatestPrescriptionInstruction(body.instruction ?? null);
+      } else {
+        throw new Error("API failed");
       }
-      const grouped: Record<string, PrescriptionMed[]> = {};
-      for (const med of res.data) {
-        const key = med.start_date;
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key]!.push(med as PrescriptionMed);
+    } catch {
+      // Fallback: fetch directly via admin client for the doctor's own patients
+      try {
+        const res = await fetch(`/api/patients/${patientId}/medications`, { credentials: "include" });
+        const body = await res.json().catch(() => null) as { medications?: PrescriptionMed[] } | null;
+        if (!res.ok || !body?.medications) {
+          setLoading(false);
+          return;
+        }
+        const grouped: Record<string, PrescriptionMed[]> = {};
+        for (const med of body.medications) {
+          const key = med.start_date ?? "unknown";
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key]!.push(med as PrescriptionMed);
+        }
+        const sorted = Object.entries(grouped)
+          .sort(([a], [b]) => b.localeCompare(a))
+          .map(([date, medications]) => ({ date, medications }));
+        setPrescriptions(sorted);
+      } catch {
+        setPrescriptions([]);
       }
-      const sorted = Object.entries(grouped)
-        .sort(([a], [b]) => b.localeCompare(a))
-        .map(([date, medications]) => ({ date, medications }));
-      setPrescriptions(sorted);
     }
     setLoading(false);
   }, [patientId]);
@@ -1275,15 +1279,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       });
       if (res.ok) {
         if (activeDrafts.length > 0) {
-          const pdfUrl = `/api/patients/${patientId}/prescriptions?format=pdf&date=${encodeURIComponent(prescriptionDate)}`;
-          const anchor = document.createElement("a");
-          anchor.href = pdfUrl;
-          anchor.download = `saans-prescription-${prescriptionDate}.pdf`;
-          anchor.rel = "noopener";
-          document.body.appendChild(anchor);
-          anchor.click();
-          anchor.remove();
-          setSaveMsg("Prescription saved. PDF download started.");
+          setSaveMsg("Prescription saved successfully.");
         } else {
           setSaveMsg("Instruction sent to patient.");
         }
@@ -1375,7 +1371,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Header row */}
             <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
-              {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date", "Continue/discontinue"].map(h => (
+              {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date"].map(h => (
                 <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
               ))}
             </div>
@@ -1465,34 +1461,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     onChange={e => handleEndDateChange(med._key, e.target.value)}
                     style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
                   />
-                  <select
-                    value={isStopped ? "discontinue" : "continue"}
-                    onChange={e => {
-                      if (e.target.value === "discontinue") {
-                        removeDraft(med._key);
-                      } else {
-                        restoreDraft(med._key);
-                      }
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "5px 6px",
-                      border: `1.5px solid ${isStopped ? "#fca5a5" : "#126969"}`,
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-                      background: isStopped ? "#fdecea" : "#e8f5f1",
-                      color: isStopped ? "#c94d49" : "#126969",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      outline: "none",
-                    }}
-                  >
-                    <option value="continue" style={{ color: "#126969", background: "white" }}>Continue</option>
-                    <option value="discontinue" style={{ color: "#c94d49", background: "white" }}>
-                      {med.source_id ? "Discontinue" : "Remove"}
-                    </option>
-                  </select>
                 </div>
               );
             })}

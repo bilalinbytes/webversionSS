@@ -5,15 +5,17 @@ import { BarChart2, Check, Table2, FileEdit, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./ExportView.module.css";
 
-type ExportType = "Disease-Specific" | "Combined" | "Date-Wise" | "Weekly Snapshot" | "Monthly Summary" | "Single Patient";
+type ExportType = "Daily" | "Weekly" | "Bi-Weekly (15 Days)" | "Monthly" | "Disease-Specific" | "Combined" | "Date-Wise" | "Single Patient";
 type ExportFormat = "pdf" | "excel" | "csv";
 
 const EXPORT_TYPES: { id: ExportType; apiKey: string; sub: string }[] = [
-  { id: "Disease-Specific", apiKey: "disease_specific", sub: "Filter by diagnosis type" },
+  { id: "Daily",           apiKey: "daily",             sub: "24-hour snapshot" },
+  { id: "Weekly",          apiKey: "weekly",            sub: "7-day trend with worst score" },
+  { id: "Bi-Weekly (15 Days)", apiKey: "bi_weekly",     sub: "15-day trend with worst score" },
+  { id: "Monthly",         apiKey: "monthly",           sub: "30d trend with worst score" },
+  { id: "Disease-Specific",apiKey: "disease_specific",  sub: "Filter by diagnosis type" },
   { id: "Combined",        apiKey: "combined",          sub: "All diseases merged" },
   { id: "Date-Wise",       apiKey: "date_wise",         sub: "Select date range" },
-  { id: "Weekly Snapshot", apiKey: "weekly",            sub: "7-day trend summary" },
-  { id: "Monthly Summary", apiKey: "monthly",           sub: "30d + compliance rate" },
   { id: "Single Patient",  apiKey: "single_patient",    sub: "Full patient record" },
 ];
 

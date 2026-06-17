@@ -30,7 +30,9 @@ const exportRequestSchema = z
       "disease_specific",
       "combined",
       "date_wise",
+      "daily",
       "weekly",
+      "bi_weekly",
       "monthly",
       "single_patient",
     ]),
@@ -930,8 +932,24 @@ export async function POST(request: Request): Promise<NextResponse> {
           start: payload.start_date,
           end: payload.end_date,
         });
+      } else if (payload.export_type === "daily") {
+        startLabel = isoDateDaysAgo(1);
+        endLabel = new Date().toISOString();
+        limitToLogs = true;
+        logs = await fetchLogs(admin, selectedPatientIds, {
+          start: startLabel,
+          end: endLabel,
+        });
       } else if (payload.export_type === "weekly") {
         startLabel = isoDateDaysAgo(7);
+        endLabel = new Date().toISOString();
+        limitToLogs = true;
+        logs = await fetchLogs(admin, selectedPatientIds, {
+          start: startLabel,
+          end: endLabel,
+        });
+      } else if (payload.export_type === "bi_weekly") {
+        startLabel = isoDateDaysAgo(15);
         endLabel = new Date().toISOString();
         limitToLogs = true;
         logs = await fetchLogs(admin, selectedPatientIds, {
@@ -971,6 +989,16 @@ export async function POST(request: Request): Promise<NextResponse> {
         created_at: score.computed_at,
       })),
     );
+
+    // Worst score per patient (highest global_score in the period)
+    const worstScoreByPatient = new Map<string, typeof scores[0]>();
+    for (const score of scores) {
+      if (!score.patient_id) continue;
+      const existing = worstScoreByPatient.get(score.patient_id);
+      if (!existing || (score.global_score ?? 0) > (existing.global_score ?? 0)) {
+        worstScoreByPatient.set(score.patient_id, score);
+      }
+    }
     const latestAlerts = latestBy(alerts);
 
     const logsByPatient = new Map<string, DailyLogRow[]>();
@@ -1029,9 +1057,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const summaryRows = patients.map((patient) => {
       const diagnosis = diagnosesByPatient.get(patient.id);
-      const score = latestScores.get(patient.id);
+      const score = worstScoreByPatient.get(patient.id) ?? latestScores.get(patient.id);
       const alert = latestAlerts.get(patient.id);
-      // Show human readable primary diagnosis; fall back to effective_dashboard label
       const diagnosisDisplay = diagnosis?.primary_diagnosis ?? diagnosis?.effective_dashboard ?? "n/a";
 
       return {
@@ -1128,12 +1155,27 @@ export async function POST(request: Request): Promise<NextResponse> {
       };
     });
 
+    // ── Worst score calculation for periodic exports ──────────────
+    // Use the highest (worst) global_score in the period instead of the average
+    let worstScore: number | null = null;
+    if (["weekly", "bi_weekly", "monthly", "daily"].includes(payload.export_type) && scores.length > 0) {
+      const validScores = scores
+        .map((s) => s.global_score)
+        .filter((s): s is number => s !== null);
+      if (validScores.length > 0) {
+        worstScore = Math.max(...validScores);
+      }
+    }
+
     const notes = [
       `Daily logs included: ${deduplicatedLogs.length} (deduplicated from ${logs.length} raw entries, worst-day values kept)`,
       `Red flag score rows included: ${scores.length}`,
       `Disease alerts included: ${alerts.length}`,
       `Medication rows included: ${medications.length}`,
     ];
+    if (worstScore !== null) {
+      notes.push(`Worst score for period: ${worstScore}/10`);
+    }
 
     if (payload.export_type === "monthly" || payload.export_type === "single_patient") {
       notes.push(`PFT history rows included: ${pftRecords.length}`);
