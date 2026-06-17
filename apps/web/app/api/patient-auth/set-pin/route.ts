@@ -123,11 +123,13 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   if (createError) {
     // createUser failed — an auth user with this phone already exists but
-    // under a different UUID (not patient_id). The correct fix is to delete
-    // the old mismatched auth user and recreate it with the correct patient_id,
-    // so that auth.uid() === patient_id (required for RLS and session checks).
+    // under a different UUID. Find it by trying multiple phone formats.
+    const phoneVariants = [
+      patientPhone,
+      patientPhone.replace(/^\+/, ""),
+      patientPhone.startsWith("+") ? patientPhone : `+${patientPhone}`,
+    ];
 
-    // Step 1: Find the existing auth user by phone
     let existingAuthUserId: string | null = null;
     let page = 1;
     const perPage = 1000;
@@ -135,7 +137,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     while (!existingAuthUserId) {
       const { data: listData } = await admin.auth.admin.listUsers({ page, perPage });
       const users = listData?.users ?? [];
-      const match = users.find((u) => u.phone === patientPhone);
+      const match = users.find((u) => u.phone && phoneVariants.includes(u.phone));
       if (match) {
         existingAuthUserId = match.id;
         break;

@@ -128,36 +128,73 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  // 6. PIN is correct — sync the auth password and sign in
-  // We re-sync on every login to ensure auth password always matches DB hash.
+  // 6. PIN is correct — sync auth password and sign in
   const authPassword = "A!" + computedPinHash + "Z_1";
 
-  // Ensure the auth user exists and has the correct password
-  const { error: updateAuthError } = await admin.auth.admin.updateUserById(patient_id, {
-    password: authPassword,
-    phone_confirm: true,
-  });
+  // Search for the auth user by phone — try both +91XXXXXXXXXX and 91XXXXXXXXXX formats
+  const phoneVariants = [
+    primary_mobile_number,
+    primary_mobile_number.replace(/^\+/, ""),   // strip leading +
+    primary_mobile_number.startsWith("+") ? primary_mobile_number : `+${primary_mobile_number}`, // ensure +
+  ];
 
-  if (updateAuthError) {
-    // Auth user doesn't exist yet — create it
-    const { error: createAuthError } = await admin.auth.admin.createUser({
+  let authUserId: string | null = null;
+  let page = 1;
+  while (true) {
+    const { data: listData } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    const users = listData?.users ?? [];
+    const match = users.find((u) => u.phone && phoneVariants.includes(u.phone));
+    if (match) { authUserId = match.id; break; }
+    if (users.length < 1000) break;
+    page++;
+  }
+
+  if (authUserId) {
+    if (authUserId !== patient_id) {
+      // Wrong UUID — delete and recreate with correct patient_id
+      await admin.auth.admin.deleteUser(authUserId);
+      const { error: recreateError } = await admin.auth.admin.createUser({
+        id: patient_id,
+        phone: primary_mobile_number,
+        phone_confirm: true,
+        password: authPassword,
+        user_metadata: { role: "patient" },
+      });
+      if (recreateError) {
+        console.error("Failed to recreate auth user with correct UUID:", recreateError);
+        return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
+      }
+    } else {
+      // Correct UUID — just update the password
+      const { error: updateError } = await admin.auth.admin.updateUserById(patient_id, {
+        password: authPassword,
+      });
+      if (updateError) {
+        console.error("Failed to update auth password:", updateError);
+        return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
+      }
+    }
+  } else {
+    // No auth user found at all — create fresh
+    const { error: createError } = await admin.auth.admin.createUser({
       id: patient_id,
       phone: primary_mobile_number,
       phone_confirm: true,
       password: authPassword,
       user_metadata: { role: "patient" },
     });
-
-    if (createAuthError) {
-      console.error("Failed to provision auth user on login:", createAuthError);
-      return NextResponse.json(
-        { message: "Login failed. Could not initialize session." },
-        { status: 500 }
-      );
+    if (createError) {
+      // Last resort: the phone exists but we can't find it — log all phones for debugging
+      const { data: allUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const phonesInAuth = allUsers?.users?.map((u) => u.phone).filter(Boolean);
+      console.error("Failed to create auth user on login:", createError.message);
+      console.error("primary_mobile_number we searched for:", primary_mobile_number);
+      console.error("phones in auth:", phonesInAuth);
+      return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
     }
   }
 
-  // Now sign in with the synced password
+  // Sign in with the synced password
   const supabase = await createClient();
   const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
     phone: primary_mobile_number,
@@ -165,11 +202,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   });
 
   if (signInError || !authData.session) {
-    console.error("signInWithPassword failed after sync:", signInError);
-    return NextResponse.json(
-      { message: "Login failed. Please try again." },
-      { status: 500 }
-    );
+    console.error("signInWithPassword failed:", signInError);
+    return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
   }
 
   // Reset failed attempts on success

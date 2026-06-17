@@ -242,10 +242,13 @@ function normalizeDiagnosis(primary?: string | null, dashboard?: string | null):
   // Fall back to parsing primary_diagnosis text
   const p = (primary ?? "").toLowerCase();
   if (p.includes("bronchiolitis")) return "asthma";         // Bronchiolitis Obliterans → asthma
+  if (p.includes("bronchitis")) return "asthma";            // Bronchitis → asthma
   if (p.includes("overlap") || p.includes("aco")) return "copd"; // ACO → copd
   if (p.includes("asthma") && p.includes("copd")) return "copd"; // asthma+copd text → copd
+  // OAD / Asthma → asthma (do not incorrectly fall back to copd)
+  if ((p.startsWith("oad /") || p.startsWith("oad/")) && p.includes("asthma")) return "asthma";
   if (p.includes("asthma")) return "asthma";
-  if (p.includes("copd") || p.startsWith("oad")) return "copd";
+  if (p.includes("copd")) return "copd";
   if (p.includes("ild") || p.includes("interstitial")) return "ild";
   if (p.includes("bronchiectasis")) return "bronchiectasis";
   if (p.includes("post_icu") || p.includes("post icu")) return "post_icu";
@@ -895,10 +898,18 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         const disease = log.disease_specific_data;
         const asthmaControl = asthmaControlLevel(disease);
         const kbildResponses = (disease?.kbild_responses ?? {}) as Record<string, unknown>;
-        const symptoms = {
-          ...extractSymptoms(log.vas_symptoms),
-          ...extractDiseaseSymptoms(disease),
-        };
+        const vasSymptoms = extractSymptoms(log.vas_symptoms);
+        const diseaseSymptoms = extractDiseaseSymptoms(disease);
+        // Merge disease symptoms but exclude non-symptom metrics
+        const NON_SYMPTOM_KEYS = new Set([
+          "kbild_score", "pefr_lpm", "pefr_reading", "rescue_inhaler_puffs",
+          "asthma_control_yes_count", "controller_taken",
+          "exercise_tolerance", "exercise_tolerance_good",
+        ]);
+        const filteredDiseaseSymptoms = Object.fromEntries(
+          Object.entries(diseaseSymptoms).filter(([k]) => !NON_SYMPTOM_KEYS.has(k))
+        );
+        const symptoms = { ...vasSymptoms, ...filteredDiseaseSymptoms };
         const medications: Record<string, number> = {};
         for (const [name, taken] of Object.entries(log.medication_compliance ?? {})) {
           if (taken === true || taken === false) medications[normalizeMedicationKey(name)] = taken ? 100 : 0;

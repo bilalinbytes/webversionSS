@@ -24,11 +24,15 @@ function computeEffectiveDashboard(
   // OAD sub-type mapping (strict order matters)
   // Bronchiolitis Obliterans → asthma dashboard
   if (lower.includes("bronchiolitis")) return "asthma";
+  // Bronchitis → asthma dashboard
+  if (lower.includes("bronchitis")) return "asthma";
   // Asthma-COPD Overlap (ACO) → copd dashboard
   if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) return "copd";
-  // Pure asthma
+  // OAD / Asthma → asthma
+  if ((lower.startsWith("oad /") || lower.startsWith("oad/")) && lower.includes("asthma")) return "asthma";
+  // Pure asthma (including standalone "asthma")
   if (lower === "asthma" || (lower.includes("asthma") && !lower.includes("copd"))) return "asthma";
-  // COPD and any other OAD sub-type
+  // COPD and other OAD sub-types (COPD, generic OAD, etc.)
   if (lower === "copd" || lower.startsWith("oad /") || lower.startsWith("oad/") || lower.includes("copd")) return "copd";
 
   if (lower === "bronchiectasis" || lower.startsWith("bronchiectasis /")) return "bronchiectasis";
