@@ -986,8 +986,12 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   const symptomKeys = useMemo(
     () => {
       const vasKeys = Array.from(new Set(dailySeries.flatMap((row) => Object.keys(row.symptoms)))).sort();
+      // Always include all known symptom keys so the dropdown is fully populated
+      // even if the patient hasn't logged that symptom yet
+      const allKnownKeys = KNOWN_SYMPTOM_KEYS.filter((k) => !vasKeys.includes(k));
+      const combined = Array.from(new Set([...vasKeys, ...allKnownKeys])).sort();
       const hasMmrc = dailySeries.some((row) => row.mmrc !== null);
-      return hasMmrc ? [MMRC_SYMPTOM_KEY, ...vasKeys] : vasKeys;
+      return hasMmrc ? [MMRC_SYMPTOM_KEY, ...combined] : combined;
     },
     [dailySeries],
   );
