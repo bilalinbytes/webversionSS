@@ -522,6 +522,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
   const [deleting, setDeleting] = useState(false);
   const [fixingLogins, setFixingLogins] = useState(false);
   const [fixResult, setFixResult] = useState<string | null>(null);
+  const [showAlertsPanel, setShowAlertsPanel] = useState(false);
 
   const handleFixLogins = useCallback(async () => {
     setFixingLogins(true);
@@ -765,7 +766,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             <AnimatedNumber value={high} className={styles.topStatVal} />
             <span className={styles.topStatLbl}>High risk</span>
           </div>
-          <div className={styles.topStat}>
+          <div className={styles.topStat} style={{ cursor: "pointer" }} onClick={() => setShowAlertsPanel(true)}>
             <ShakingBell count={unacknowledgedAlerts} />
             <span className={styles.topStatLbl}>Alerts</span>
           </div>
@@ -1004,6 +1005,85 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           onCancel={() => setDeleteTarget(null)}
           deleting={deleting}
         />
+      )}
+
+      {showAlertsPanel && (
+        <div
+          onClick={() => setShowAlertsPanel(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)",
+            zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 380, maxHeight: "80vh", overflowY: "auto",
+              background: "#fff", borderRadius: "0 0 12px 12px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              padding: "16px 0",
+              fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            }}
+          >
+            <div style={{ padding: "0 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f0ece6" }}>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "#132d36" }}>
+                Alerts ({unacknowledgedAlerts})
+              </span>
+              <button
+                onClick={() => setShowAlertsPanel(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: 18, lineHeight: 1 }}
+              >×</button>
+            </div>
+            {patients
+              .filter((p) => countOpenAlerts(p) > 0)
+              .flatMap((p) =>
+                openAlerts(p).map((alert, i) => ({
+                  patient: p,
+                  alert,
+                  key: `${p.id}-${i}`,
+                }))
+              )
+              .sort((a, b) => new Date(b.alert.created_at ?? "").getTime() - new Date(a.alert.created_at ?? "").getTime())
+              .map(({ patient: p, alert, key }) => (
+                <div
+                  key={key}
+                  onClick={() => { setShowAlertsPanel(false); setSelectedPatient(p); setSelectedInitialTab("Overview"); }}
+                  style={{
+                    padding: "12px 16px", borderBottom: "1px solid #f5f0eb", cursor: "pointer",
+                    background: alert.alert_type === "RED" ? "rgba(220,38,38,0.04)" : "rgba(234,179,8,0.04)",
+                    transition: "background 140ms",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = alert.alert_type === "RED" ? "rgba(220,38,38,0.10)" : "rgba(234,179,8,0.10)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = alert.alert_type === "RED" ? "rgba(220,38,38,0.04)" : "rgba(234,179,8,0.04)")}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                      background: alert.alert_type === "RED" ? "#dc2626" : "#f59e0b",
+                      color: "#fff", letterSpacing: "0.05em",
+                    }}>
+                      {alert.alert_type}
+                    </span>
+                    <span style={{ fontWeight: 600, fontSize: 13, color: "#132d36" }}>{p.name}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+                    {alert.reason_text ?? "Alert triggered"}
+                  </p>
+                  {alert.created_at && (
+                    <p style={{ margin: "4px 0 0", fontSize: 11, color: "#94a3b8" }}>
+                      {new Date(alert.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  )}
+                </div>
+              ))
+            }
+            {unacknowledgedAlerts === 0 && (
+              <p style={{ padding: "24px 16px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                No active alerts
+              </p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
