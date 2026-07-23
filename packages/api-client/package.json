@@ -1,0 +1,31 @@
+{
+  "name": "@o2plus/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./types": "./src/types.ts",
+    "./patient": "./src/patient/index.ts",
+    "./doctor": "./src/doctor/index.ts",
+    "./aqi": "./src/aqi/index.ts",
+    "./transfer": "./src/transfer/index.ts",
+    "./appointments": "./src/appointments/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "@o2plus/types": "workspace:*",
+    "@o2plus/core": "workspace:*",
+    "@o2plus/logger": "workspace:*",
+    "@o2plus/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "typescript": "5.9.2",
+    "vitest": "^3.0.0"
+  }
+}
