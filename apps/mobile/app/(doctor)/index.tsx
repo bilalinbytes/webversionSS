@@ -8,6 +8,8 @@ import { getRiskColor, getRiskLabel } from '@o2plus/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: import { Svg, Polyline } from 'react-native-svg';
 
+import { getDoctorAppointments } from '@o2plus/api-client/doctor';
+
 export default function DoctorDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -22,10 +24,15 @@ export default function DoctorDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch patients
+      const config = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Fetch patients from supabase directly
       const { data: patients, error: pError } = await supabase.from('patients').select('*');
       
-      // Calculate stats based on real data
+      // Fetch real appointments via the next.js API
+      const apptsRes = await getDoctorAppointments(config, session?.access_token);
+      
       let total = 0;
       let critical = 0;
       let highRisk = 0;
@@ -33,11 +40,10 @@ export default function DoctorDashboard() {
       if (patients) {
         total = patients.length;
         
-        // Map real data to alerts and appointments
+        // Map real data to alerts
         const realAlerts: any[] = [];
-        const realAppts: any[] = [];
 
-        patients.forEach((p, index) => {
+        patients.forEach((p) => {
           if (p.latest_score !== null) {
             if (p.latest_score >= 4) {
               critical++;
@@ -51,28 +57,32 @@ export default function DoctorDashboard() {
               highRisk++;
             }
           }
-
-          // Just mock schedule times for the UI list but use real patient names
-          if (index < 3) {
-            realAppts.push({
-              id: p.id,
-              time: ['10:00 AM', '11:30 AM', '02:00 PM'][index],
-              name: p.name || 'Unknown Patient',
-              disease: 'Respiratory Issue', // In a real app we'd fetch patient_diagnoses
-              score: p.latest_score || 0
-            });
-          }
         });
         
         setAlerts(realAlerts.length > 0 ? realAlerts : [
-          // Fallback if no real alerts
           { id: 'mock', name: 'System', issue: 'No critical alerts at this time.', time: 'Now' }
         ]);
-        
-        setAppointments(realAppts);
       }
 
-      setStats({ total, critical, highRisk, appointments: 3 });
+      // Format real appointments
+      const realAppts: any[] = [];
+      if (apptsRes.success && apptsRes.data) {
+        apptsRes.data.forEach((apt: any) => {
+          if (apt.status === 'upcoming' || apt.status === 'approved') {
+            const date = new Date(apt.scheduled_at);
+            realAppts.push({
+              id: apt.id,
+              time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              name: apt.patients?.name || 'Unknown Patient',
+              disease: apt.title || 'Consultation',
+              score: 0 // Ideally fetched from joining patients table
+            });
+          }
+        });
+      }
+      
+      setAppointments(realAppts);
+      setStats({ total, critical, highRisk, appointments: realAppts.length });
       
     } catch (err) {
       console.error(err);

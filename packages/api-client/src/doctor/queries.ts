@@ -40,3 +40,22 @@ export async function getDoctorAppointmentSettings(config: ApiConfig, token?: st
     return { success: false, error: "Network error" };
   }
 }
+
+export async function getDoctorAppointments(config: ApiConfig, token?: string) {
+  const fetcher = config.fetch || globalThis.fetch;
+  const baseUrl = config.baseUrl || "";
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  try {
+    const res = await fetcher(`${baseUrl}/api/appointments`, { headers });
+    if (!res.ok) return { success: false, error: "Failed to fetch appointments" };
+    const data = await res.json();
+    return { success: true, data: data.appointments };
+  } catch (err) {
+    return { success: false, error: "Network error" };
+  }
+}
