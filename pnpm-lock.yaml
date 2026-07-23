@@ -26,12 +26,18 @@ importers:
       '@o2plus/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@o2plus/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@o2plus/theme':
         specifier: workspace:*
         version: link:../../packages/theme
       '@o2plus/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@o2plus/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@react-pdf/renderer':
         specifier: ^4.3.0
         version: 4.5.1(react@19.2.0)
@@ -172,6 +178,18 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.2)
 
+  packages/logger:
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
   packages/scoring-engine:
     devDependencies:
       '@repo/typescript-config':
@@ -244,6 +262,28 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+
+  packages/validation:
+    dependencies:
+      '@o2plus/types':
+        specifier: workspace:*
+        version: link:../types
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@22.15.3)(jiti@2.6.1)(lightningcss@1.32.0)
 
 packages:
 
