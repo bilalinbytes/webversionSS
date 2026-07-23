@@ -1,7 +1,7 @@
 {
   "name": "mobile",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "dependencies": {
     "@o2plus/api-client": "workspace:*",
     "@o2plus/config": "workspace:*",
@@ -10,15 +10,25 @@
     "@o2plus/theme": "workspace:*",
     "@o2plus/types": "workspace:*",
     "@o2plus/validation": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@saans/scoring-engine": "workspace:*",
+    "@supabase/supabase-js": "^2.110.8",
     "expo": "~54.0.36",
+    "expo-constants": "~18.0.13",
+    "expo-linear-gradient": "~15.0.8",
+    "expo-linking": "~8.0.12",
+    "expo-router": "~6.0.24",
     "expo-status-bar": "~3.0.9",
+    "lucide-react-native": "^1.26.0",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "typescript": "~5.3.3"
+    "typescript": "~5.5.3"
   },
   "scripts": {
     "start": "expo start",

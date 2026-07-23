@@ -46,3 +46,55 @@ export async function submitDailyLog(
     };
   }
 }
+
+export async function startPatientImportOTP(
+  config: ApiConfig,
+  mobile_number: string
+): Promise<{ success: boolean; error?: string }> {
+  const fetcher = config.fetch || globalThis.fetch;
+  const baseUrl = config.baseUrl || "";
+
+  try {
+    const response = await fetcher(`${baseUrl}/api/patient-auth/start-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobile_number }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.message || data.error || "Failed to send OTP" };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: "Network error while sending OTP" };
+  }
+}
+
+export async function verifyPatientOTP(
+  config: ApiConfig,
+  mobile_number: string,
+  otp: string,
+  platform: "web" | "mobile" = "web"
+): Promise<{ success: boolean; session?: any; error?: string }> {
+  const fetcher = config.fetch || globalThis.fetch;
+  const baseUrl = config.baseUrl || "";
+
+  try {
+    const response = await fetcher(`${baseUrl}/api/patient-auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobile_number, otp, platform }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.message || data.error || "Invalid OTP" };
+    }
+    
+    const data = await response.json();
+    return { success: true, session: data.session };
+  } catch (err) {
+    return { success: false, error: "Network error while verifying OTP" };
+  }
+}
