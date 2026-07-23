@@ -5,6 +5,7 @@ import { colors } from '@o2plus/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getPatientProfile, getPatientDiagnosis, getPatientRedFlagScore } from '@o2plus/api-client/patient';
+import { fetchAqiForCoordinates } from '@o2plus/api-client/aqi';
 import { getRiskColor, getRiskLabel } from '@o2plus/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ export default function PatientDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [diagnosis, setDiagnosis] = useState<any>(null);
   const [score, setScore] = useState<number | null>(null);
+  const [aqi, setAqi] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -26,17 +28,21 @@ export default function PatientDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const config = { supabase: supabase as any };
-      const [profRes, diagRes, scoreRes] = await Promise.all([
+      const config = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
+      const [profRes, diagRes, scoreRes, aqiRes] = await Promise.all([
         getPatientProfile(config, user!.id),
         getPatientDiagnosis(config, user!.id),
-        getPatientRedFlagScore(config, user!.id)
+        getPatientRedFlagScore(config, user!.id),
+        // Hardcoding New Delhi for AQI example since native GPS requires permissions
+        fetchAqiForCoordinates(config, 28.6139, 77.2090)
       ]);
 
       if (profRes.data) setProfile(profRes.data);
       if (diagRes.data) setDiagnosis(diagRes.data);
       if (scoreRes.data) setScore(scoreRes.data.global_score);
       else setScore(0); // fallback
+      
+      if (aqiRes !== null) setAqi(aqiRes);
     } catch (err) {
       console.error(err);
     } finally {
@@ -111,18 +117,26 @@ export default function PatientDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* AQI Widget (Mocked for now) */}
+        {/* AQI Widget */}
         <Text style={styles.sectionTitle}>Environmental</Text>
         <View style={styles.aqiCard}>
           <View style={styles.aqiLeft}>
             <Wind size={32} color={colors.ui.textPrimary} />
             <View style={styles.aqiTextCont}>
               <Text style={styles.aqiTitle}>Air Quality Index</Text>
-              <Text style={styles.aqiValue}>Moderate (65)</Text>
+              <Text style={styles.aqiValue}>
+                {aqi !== null ? `${aqi > 100 ? 'Poor' : aqi > 50 ? 'Moderate' : 'Good'} (${aqi})` : 'Fetching...'}
+              </Text>
             </View>
           </View>
-          <View style={[styles.aqiBadge, { backgroundColor: colors.risk.yellow.bg }]}>
-            <Text style={[styles.aqiBadgeText, { color: colors.risk.yellow.text }]}>Fair</Text>
+          <View style={[styles.aqiBadge, { 
+            backgroundColor: aqi !== null && aqi > 100 ? colors.risk.red.bg : aqi !== null && aqi > 50 ? colors.risk.yellow.bg : colors.risk.green.bg 
+          }]}>
+            <Text style={[styles.aqiBadgeText, { 
+              color: aqi !== null && aqi > 100 ? colors.risk.red.solid : aqi !== null && aqi > 50 ? colors.risk.yellow.solid : colors.risk.green.solid 
+            }]}>
+              {aqi !== null ? (aqi > 100 ? 'Unhealthy' : aqi > 50 ? 'Fair' : 'Good') : '...'}
+            </Text>
           </View>
         </View>
 

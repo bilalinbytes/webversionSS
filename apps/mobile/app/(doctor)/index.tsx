@@ -32,27 +32,47 @@ export default function DoctorDashboard() {
       
       if (patients) {
         total = patients.length;
-        patients.forEach(p => {
+        
+        // Map real data to alerts and appointments
+        const realAlerts: any[] = [];
+        const realAppts: any[] = [];
+
+        patients.forEach((p, index) => {
           if (p.latest_score !== null) {
-            if (p.latest_score >= 4) critical++;
-            else if (p.latest_score >= 3) highRisk++;
+            if (p.latest_score >= 4) {
+              critical++;
+              realAlerts.push({
+                id: p.id,
+                name: p.name || 'Unknown Patient',
+                issue: `Critical Score: ${p.latest_score}/10`,
+                time: 'Recent'
+              });
+            } else if (p.latest_score >= 3) {
+              highRisk++;
+            }
+          }
+
+          // Just mock schedule times for the UI list but use real patient names
+          if (index < 3) {
+            realAppts.push({
+              id: p.id,
+              time: ['10:00 AM', '11:30 AM', '02:00 PM'][index],
+              name: p.name || 'Unknown Patient',
+              disease: 'Respiratory Issue', // In a real app we'd fetch patient_diagnoses
+              score: p.latest_score || 0
+            });
           }
         });
+        
+        setAlerts(realAlerts.length > 0 ? realAlerts : [
+          // Fallback if no real alerts
+          { id: 'mock', name: 'System', issue: 'No critical alerts at this time.', time: 'Now' }
+        ]);
+        
+        setAppointments(realAppts);
       }
 
-      setStats({ total, critical, highRisk, appointments: 3 }); // Mock appointments count
-      
-      // Mock appointments list for UI reference match
-      setAppointments([
-        { id: 1, time: '10:00 AM', name: 'Bilal Ahmed', disease: 'Bronchial Asthma', score: 4 },
-        { id: 2, time: '11:30 AM', name: 'Sarah Khan', disease: 'COPD', score: 1 },
-        { id: 3, time: '02:00 PM', name: 'John Doe', disease: 'ILD', score: 3 },
-      ]);
-
-      // Mock recent alerts
-      setAlerts([
-        { id: 1, name: 'Bilal Ahmed', issue: 'SpO2 dropped to 88%', time: '10 min ago' },
-      ]);
+      setStats({ total, critical, highRisk, appointments: 3 });
       
     } catch (err) {
       console.error(err);
