@@ -1,0 +1,31 @@
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "expo": "~57.0.8",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "@o2plus/api-client": "workspace:*",
+    "@o2plus/core": "workspace:*",
+    "@o2plus/validation": "workspace:*",
+    "@o2plus/types": "workspace:*",
+    "@o2plus/theme": "workspace:*",
+    "@o2plus/config": "workspace:*",
+    "@o2plus/logger": "workspace:*",
+    "@saans/scoring-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit"
+  },
+  "private": true
+}
