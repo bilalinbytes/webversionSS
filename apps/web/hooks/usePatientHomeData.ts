@@ -2,39 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-export interface PatientHomeData {
-  loading: boolean;
-  spo2Today: number;
-  mmrcToday: number;
-  aqiToday: number;
-  riskScore: number;
-  doctor: string;
-  doctorHospital: string;
-  spo2Trend: number[];
-  mmrcTrend: number[];
-  vasTrend: number[];
-  diseaseSpecificTrend: number[];
-  lastLogDate: string | null;
-  hasTodayLog: boolean;
-  diagnosis: string | null;
-  effectiveDashboard: "asthma" | "copd" | "bronchiectasis" | "ild" | "post_icu" | null;
-  baselineSpo2: number | null;
-  baselineHeartRate: number | null;
-  latestPft: {
-    fev1_fvc_ratio: number | null;
-    fev1: number | null;
-    fvc: number | null;
-    dlco: number | null;
-    test_date: string | null;
-  } | null;
-  todayMedications: Array<{
-    id: string;
-    name: string;
-    dose?: string;
-    taken: boolean | null;
-  }>;
-}
+import { buildPatientHomeData, normalizeDashboard } from "@o2plus/core";
+import type { PatientHomeData } from "@o2plus/types";
 
 const FALLBACKS = {
   spo2Today: 94,
@@ -44,29 +13,6 @@ const FALLBACKS = {
   doctor: "Assigned doctor",
   doctorHospital: "",
 };
-
-function normalizeDashboard(
-  primaryDiagnosis: string | null | undefined,
-  storedDashboard: string | null | undefined,
-): PatientHomeData["effectiveDashboard"] {
-  // stored effective_dashboard is ground truth
-  const stored = (storedDashboard ?? "").toLowerCase().trim();
-  if (["asthma", "copd", "bronchiectasis", "ild", "post_icu"].includes(stored)) {
-    return stored as PatientHomeData["effectiveDashboard"];
-  }
-
-  // fall back to parsing primary_diagnosis text
-  const primary = (primaryDiagnosis ?? "").toLowerCase();
-  if (primary.includes("bronchiolitis")) return "asthma";  // Bronchiolitis Obliterans → asthma
-  if (primary.includes("overlap") || primary.includes("aco") ||
-      (primary.includes("asthma") && primary.includes("copd"))) return "copd"; // ACO → copd
-  if (primary.includes("asthma") && !primary.includes("copd")) return "asthma";
-  if (primary.includes("copd") || primary.startsWith("oad")) return "copd";
-  if (primary.includes("bronchiectasis")) return "bronchiectasis";
-  if (primary.includes("ild") || primary.includes("interstitial")) return "ild";
-  if (primary.includes("post_icu") || primary.includes("post icu")) return "post_icu";
-  return null;
-}
 
 export function usePatientHomeData(
   patientId: string | null,
@@ -143,116 +89,23 @@ export function usePatientHomeData(
           .order("start_date", { ascending: false }),
       ]);
 
-      const doctor = doctorPayload?.doctor as
+      const doctorData = doctorPayload?.doctor as
         | { name?: string | null; hospital?: string | null }
         | null
         | undefined;
-      const activeDashboard = normalizeDashboard(
-        diagnosisRes.data?.primary_diagnosis,
-        diagnosisRes.data?.effective_dashboard ?? effectiveDashboard,
-      );
 
-      // reverse so index 0 = oldest, index 13 = most recent (sparkline order)
-      const logs = (logsRes.data ?? [])
-        .filter((log) => {
-          if (!activeDashboard) return true;
-          const diseaseData = log.disease_specific_data as Record<string, unknown> | null;
-          return diseaseData?.effective_dashboard === activeDashboard;
-        })
-        .slice()
-        .reverse();
-      const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(todayStart);
-      todayEnd.setDate(todayEnd.getDate() + 1);
-      const todayLog = logs
-        .filter((log) => {
-          const loggedAt = log.logged_at ? new Date(log.logged_at) : null;
-          return loggedAt !== null && loggedAt >= todayStart && loggedAt < todayEnd;
-        })
-        .at(-1) ?? null;
-
-      const spo2Trend = logs.map(l => l.spo2_rest ?? FALLBACKS.spo2Today);
-      const mmrcTrend = logs.map(l => l.mmrc_today ?? 0);
-      const vasTrend = logs.map(l => {
-        const vas = l.vas_symptoms as Record<string, number> | null;
-        if (!vas) return 0;
-        const vals = Object.values(vas).filter(v => typeof v === "number");
-        return vals.length > 0 ? Math.max(...vals) : 0;
+      const result = buildPatientHomeData({
+        effectiveDashboardFallback: effectiveDashboard as any,
+        logs: logsRes.data ?? [],
+        score: scoreRes.data ?? null,
+        doctor: doctorData ?? null,
+        diagnosis: diagnosisRes.data ?? null,
+        baseline: baselineRes.data ?? null,
+        latestPft: pftRes.data ?? null,
+        medications: medRes.data ?? [],
       });
 
-      const diseaseSpecificTrend = logs.map(l => {
-        const d = l.disease_specific_data as Record<string, unknown>;
-        if (activeDashboard === "asthma") {
-          return typeof d?.rescue_inhaler_puffs === "number" ? d.rescue_inhaler_puffs : 0;
-        }
-        if (activeDashboard === "copd" || activeDashboard === "post_icu") {
-          return typeof d?.energy_level === "number" ? d.energy_level : 5;
-        }
-        if (activeDashboard === "ild") {
-          return typeof d?.kbild_score === "number" ? d.kbild_score : 0;
-        }
-        return 0;
-      });
-
-      setData({
-        loading: false,
-        spo2Today: todayLog?.spo2_rest ?? FALLBACKS.spo2Today,
-        mmrcToday: todayLog?.mmrc_today ?? FALLBACKS.mmrcToday,
-        aqiToday: todayLog?.aqi_value ?? FALLBACKS.aqiToday,
-        riskScore: scoreRes.data?.global_score ?? FALLBACKS.riskScore,
-        doctor: doctor?.name ?? FALLBACKS.doctor,
-        doctorHospital: doctor?.hospital ?? FALLBACKS.doctorHospital,
-        spo2Trend: spo2Trend.length > 0 ? spo2Trend : [],
-        mmrcTrend: mmrcTrend.length > 0 ? mmrcTrend : [],
-        vasTrend: vasTrend.length > 0 ? vasTrend : [],
-        diseaseSpecificTrend: diseaseSpecificTrend.length > 0 ? diseaseSpecificTrend : [],
-        lastLogDate: latestLog?.logged_at ?? null,
-        hasTodayLog: todayLog !== null,
-        diagnosis: diagnosisRes.data?.primary_diagnosis ?? null,
-        effectiveDashboard: activeDashboard,
-        baselineSpo2: baselineRes.data?.baseline_spo2 ?? null,
-        baselineHeartRate: null,
-        latestPft: pftRes.data
-          ? {
-              fev1_fvc_ratio: pftRes.data.fev1_fvc_ratio,
-              fev1: pftRes.data.fev1,
-              fvc: pftRes.data.fvc,
-              dlco: pftRes.data.dlco,
-              test_date: pftRes.data.test_date,
-            }
-          : null,
-        todayMedications: (() => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const compliance = (todayLog?.medication_compliance ?? {}) as Record<string, unknown>;
-          return (medRes.data ?? [])
-            .filter((med) => {
-              if (!med.end_date) return true;
-              return new Date(med.end_date) >= today;
-            })
-            .map((med) => {
-              // compliance keys can be med id, drug_name, or normalized versions
-              const keys = [
-                med.id,
-                med.drug_name,
-                med.drug_name.toLowerCase(),
-                med.drug_name.toLowerCase().replace(/[^a-z0-9]/g, ""),
-              ];
-              let taken: boolean | null = null;
-              for (const k of keys) {
-                const v = compliance[k];
-                if (v === true) { taken = true; break; }
-                if (v === false) { taken = false; break; }
-              }
-              const dose = med.dose !== null
-                ? `${med.dose}${med.dose_unit ? ` ${med.dose_unit}` : ""}`
-                : undefined;
-              return { id: med.id, name: med.drug_name, dose, taken };
-            });
-        })(),
-      });
+      setData(result);
     })();
   }, [patientId, doctorId, effectiveDashboard, refreshKey]);
 

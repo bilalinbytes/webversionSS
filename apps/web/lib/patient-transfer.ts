@@ -1,8 +1,5 @@
 import type { PatientData } from "./patient-types";
-
-export function validatePatientId(id: string): boolean {
-  return /^\d{10}$/.test(id);
-}
+export { validatePatientId } from "@o2plus/core";
 
 export async function startPatientImportOTP(
   patientId: string

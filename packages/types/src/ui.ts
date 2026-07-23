@@ -59,7 +59,7 @@ export interface PatientHomeData {
   todayMedications: Array<{
     id: string;
     name: string;
-    dose?: string;
+    dose?: string | undefined;
     taken: boolean | null;
   }>;
 }
