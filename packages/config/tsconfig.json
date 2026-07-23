@@ -1,11 +1,11 @@
 {
-  "extends": "../typescript-config/base.json",
+  "extends": "../typescript-config/strict.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "include": ["src", "__tests__"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
-

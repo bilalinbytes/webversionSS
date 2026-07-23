@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@o2plus/config": "workspace:*",
+    "@o2plus/theme": "workspace:*",
+    "@o2plus/types": "workspace:*",
     "@react-pdf/renderer": "^4.3.0",
     "@repo/ui": "workspace:*",
     "@saans/scoring-engine": "workspace:*",
