@@ -68,6 +68,9 @@ importers:
       expo-status-bar:
         specifier: ~3.0.9
         version: 3.0.9(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)
+      expo-web-browser:
+        specifier: ^57.0.2
+        version: 57.0.2(expo@54.0.36(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)(typescript@5.5.4))(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))
       lucide-react-native:
         specifier: ^1.26.0
         version: 1.26.0(react-native-svg@15.12.1(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)
@@ -3492,6 +3495,12 @@ packages:
     resolution: {integrity: sha512-xyYyVg6V1/SSOZWh4Ni3U129XHCnFHBTcUo0dhWtFDrZbNp/duw5AGsQfb2sVeU0gxWHXSY1+5F0jnKYC7WuOw==}
     peerDependencies:
       react: '*'
+      react-native: '*'
+
+  expo-web-browser@57.0.2:
+    resolution: {integrity: sha512-3vl5kvd7PB48ub6PpNIJUuPxO8xVa6D8RnIgNba6SXRwqFprOfeEZgwTgtm41kz0AAtvMOztUVNEUkwrHKjqMQ==}
+    peerDependencies:
+      expo: '*'
       react-native: '*'
 
   expo@54.0.36:
@@ -9368,6 +9377,11 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0)
       react-native-is-edge-to-edge: 1.3.1(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)
+
+  expo-web-browser@57.0.2(expo@54.0.36(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)(typescript@5.5.4))(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0)):
+    dependencies:
+      expo: 54.0.36(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)(typescript@5.5.4)
+      react-native: 0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0)
 
   expo@54.0.36(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.2.2)(react@19.1.0))(react@19.1.0)(typescript@5.5.4):
     dependencies:

@@ -8,6 +8,10 @@ import { Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { colors } from '@o2plus/theme';
 import { supabase } from '../../lib/supabase';
 import { startPatientImportOTP, verifyPatientOTP } from '@o2plus/api-client/patient';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [activeTab, setActiveTab] = useState<'doctor' | 'patient'>('doctor');
@@ -74,6 +78,40 @@ export default function LoginScreen() {
       setPatientError(err.message || 'Invalid OTP');
     } finally {
       setPatientLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setDoctorLoading(true);
+    setDoctorError('');
+    try {
+      const redirectUri = Linking.createURL('/auth/callback');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUri,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+        
+        if (result.type === 'success' && result.url) {
+          // Parse hash fragment for implicit flow
+          const params = new URLSearchParams(result.url.split('#')[1] || result.url.split('?')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({ access_token, refresh_token });
+          }
+        }
+      }
+    } catch (err: any) {
+      setDoctorError(err.message || 'Google Auth Failed');
+    } finally {
+      setDoctorLoading(false);
     }
   };
 
@@ -168,7 +206,7 @@ export default function LoginScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton}>
+              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
                 {/* Simplified Google text without icon for now */}
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
