@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { buildPatientHomeData, normalizeDashboard } from "@o2plus/core";
+import {
+  getPatientDailyLogs,
+  getPatientRedFlagScore,
+  getPatientDiagnosis,
+  getPatientBaseline,
+  getLatestPftRecord,
+  getPatientMedications,
+} from "@o2plus/api-client/patient";
+import { buildPatientHomeData } from "@o2plus/core";
 import type { PatientHomeData } from "@o2plus/types";
 
 const FALLBACKS = {
@@ -48,45 +56,16 @@ export function usePatientHomeData(
             .catch(() => null)
         : Promise.resolve(null);
 
+      const apiConfig = { supabase };
+
       const [logsRes, scoreRes, doctorPayload, diagnosisRes, baselineRes, pftRes, medRes] = await Promise.all([
-        supabase
-          .from("daily_logs")
-          .select("logged_at, spo2_rest, mmrc_today, aqi_value, vas_symptoms, disease_specific_data, medication_compliance")
-          .eq("patient_id", patientId)
-          .order("logged_at", { ascending: false })
-          .limit(14),
-        supabase
-          .from("red_flag_scores")
-          .select("global_score")
-          .eq("patient_id", patientId)
-          .order("computed_at", { ascending: false })
-          .limit(1)
-          .single(),
+        getPatientDailyLogs(apiConfig, patientId, 14),
+        getPatientRedFlagScore(apiConfig, patientId),
         doctorQuery,
-        supabase
-          .from("patient_diagnoses")
-          .select("primary_diagnosis, effective_dashboard")
-          .eq("patient_id", patientId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single(),
-        supabase
-          .from("patient_baselines")
-          .select("baseline_spo2")
-          .eq("patient_id", patientId)
-          .maybeSingle(),
-        supabase
-          .from("pft_records")
-          .select("test_date, fev1_fvc_ratio, fev1, fvc, dlco")
-          .eq("patient_id", patientId)
-          .order("test_date", { ascending: false })
-          .limit(1)
-          .single(),
-        supabase
-          .from("medications")
-          .select("id, drug_name, dose, dose_unit, end_date")
-          .eq("patient_id", patientId)
-          .order("start_date", { ascending: false }),
+        getPatientDiagnosis(apiConfig, patientId),
+        getPatientBaseline(apiConfig, patientId),
+        getLatestPftRecord(apiConfig, patientId),
+        getPatientMedications(apiConfig, patientId),
       ]);
 
       const doctorData = doctorPayload?.doctor as

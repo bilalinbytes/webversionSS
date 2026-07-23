@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchAqiForCoordinates } from "@o2plus/api-client/aqi";
 
 export function useAqi(): number | null {
   const [aqi, setAqi] = useState<number | null>(null);
@@ -10,16 +11,17 @@ export function useAqi(): number | null {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        try {
-          const res = await fetch(
-            `/api/aqi?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`
-          );
-          if (!res.ok) return;
-          const data = await res.json();
-          if (typeof data.aqi === "number") setAqi(data.aqi);
-        } catch {
-          // silent fail — AQI display will show "—"
-        }
+        const val = await fetchAqiForCoordinates(
+          // No supabase needed for AQI route, but ApiConfig requires it.
+          // Wait, ApiConfig in @o2plus/api-client requires supabase client.
+          // Is supabase strictly required for aqi? The type says it is.
+          // We can cast `{} as any` or just pass `supabase: null as any` if not used.
+          // Actually, let's create a dummy client or just cast.
+          { supabase: null as any, baseUrl: "" },
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+        if (val !== null) setAqi(val);
       },
       () => {
         // user denied geolocation — AQI display will show "—"

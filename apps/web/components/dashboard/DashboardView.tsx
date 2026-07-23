@@ -5,6 +5,7 @@ import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "luc
 import { PatientDetail } from "./PatientDetail";
 import { ImportPatientModal } from "./ImportPatientModal";
 import { createClient } from "@/lib/supabase/client";
+import { getDoctorPatients, acknowledgePatientAlerts as acknowledgePatientAlertsApi } from "@o2plus/api-client/doctor";
 import styles from "./DashboardView.module.css";
 
 // ── Types aligned to Supabase schema ──────────────────────────────────────────
@@ -572,10 +573,12 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     }
     setDoctorId(user.id);
 
-    const response = await fetch("/api/doctor/patients", { credentials: "include" });
-    const body = await response.json() as { patients?: SupabasePatient[]; error?: string };
+    const response = await getDoctorPatients({ supabase: null as any });
+    const body = response.data 
+      ? { patients: response.data as SupabasePatient[] } 
+      : { error: response.error };
 
-    if (!response.ok) {
+    if (!response.success) {
       setFetchError(body.error ?? "Unable to load patients");
     } else {
       setFetchError(null);
@@ -714,13 +717,8 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     window.dispatchEvent(new CustomEvent("saans:alerts-acknowledged", { detail: { count: openCount } }));
 
     try {
-      const response = await fetch("/api/doctor/alerts/acknowledge", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patientId: patient.id }),
-      });
-      if (!response.ok) return;
+      const response = await acknowledgePatientAlertsApi({ supabase: null as any }, patient.id);
+      if (!response.success) return;
     } catch {
       // Non-fatal: opening the patient should not fail if acknowledgement fails.
     }

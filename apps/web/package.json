@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@o2plus/api-client": "workspace:*",
     "@o2plus/config": "workspace:*",
     "@o2plus/core": "workspace:*",
     "@o2plus/logger": "workspace:*",

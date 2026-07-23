@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { getPatientProfile, getPatientDiagnosis } from "@o2plus/api-client/patient";
 
 interface PatientProfile {
   id: string;
@@ -35,19 +36,11 @@ export function PatientProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchPatientData = async (userId: string) => {
+    const apiConfig = { supabase };
+
     const [patientsRes, diagnosisRes] = await Promise.all([
-      supabase
-        .from("patients")
-        .select("id, name, mobile_number, doctor_id, wants_appointments")
-        .eq("id", userId)
-        .single(),
-      supabase
-        .from("patient_diagnoses")
-        .select("effective_dashboard")
-        .eq("patient_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+      getPatientProfile(apiConfig, userId),
+      getPatientDiagnosis(apiConfig, userId),
     ]);
 
     if (!patientsRes.data) {

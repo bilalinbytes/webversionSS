@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getPatientPreviousDayLog } from "@o2plus/api-client/patient";
 
 export interface PreviousDayLogData {
   loading: boolean;
@@ -54,19 +55,11 @@ export function usePreviousDayLog(patientId: string | null): PreviousDayLogData 
     const today = localDateKey();
 
     (async () => {
-      const response = await fetch(`/api/patients/${patientId}/logs/history?days=30`, {
-        cache: "no-store",
-      });
+      const logs = await getPatientPreviousDayLog({ supabase: null as any }, patientId);
 
-      if (!response.ok) {
-        setData({ loading: false, mmrc: null, spo2Rest: null, vasSymptoms: null, logDate: null });
-        return;
-      }
-
-      const payload = (await response.json()) as { logs?: HistoryLog[] };
-      const log = (payload.logs ?? [])
-        .filter((entry) => logDateKey(entry.logged_at) < today)
-        .sort((a, b) => b.logged_at.localeCompare(a.logged_at))[0];
+      const log = (logs ?? [])
+        .filter((entry: any) => logDateKey(entry.logged_at) < today)
+        .sort((a: any, b: any) => b.logged_at.localeCompare(a.logged_at))[0];
 
       if (!log) {
         setData({ loading: false, mmrc: null, spo2Rest: null, vasSymptoms: null, logDate: null });

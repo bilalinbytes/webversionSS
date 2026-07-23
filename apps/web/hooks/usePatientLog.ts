@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { submitDailyLog } from "@o2plus/api-client/patient";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
@@ -39,21 +40,14 @@ export function usePatientLog(): UsePatientLogReturn {
         return false;
       }
 
-      const response = await fetch("/api/patient-logs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      // We only need the access token, not the supabase client for this mutation,
+      // but ApiConfig expects it. We provide a dummy client since it's not used internally.
+      const res = await submitDailyLog({ supabase: null as any }, payload, session.access_token);
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const msg = data?.error ?? `Server error (${response.status}). Please try again.`;
+      if (!res.success) {
         setSubmitState("error");
-        setErrorMessage(msg);
-        setLimitReached(response.status === 429 && data?.code === "daily_log_limit_reached");
+        setErrorMessage(res.error || "Server error. Please try again.");
+        setLimitReached(res.limitReached || false);
         return false;
       }
 
