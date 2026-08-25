@@ -7,13 +7,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { colors } from '@o2plus/theme';
 import { supabase } from '../../lib/supabase';
-import { startPatientImportOTP, verifyPatientOTP } from '@o2plus/api-client/patient';
+import { startPatientImportOTP, verifyPatientOTP, setPatientPin, patientPinLogin } from '@o2plus/api-client/patient';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { useRouter } from 'expo-router';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'doctor' | 'patient'>('doctor');
   
   // Doctor Auth State
@@ -24,11 +26,27 @@ export default function LoginScreen() {
   const [doctorError, setDoctorError] = useState('');
 
   // Patient Auth State
+  const [patientMode, setPatientMode] = useState<'returning' | 'new' | 'forgot'>('returning');
+  const [patientStep, setPatientStep] = useState<'phone' | 'otp' | 'pin'>('phone');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [otpToken, setOtpToken] = useState('');
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [patientLoading, setPatientLoading] = useState(false);
   const [patientError, setPatientError] = useState('');
+  const [patientInfo, setPatientInfo] = useState('');
+
+  const resetPatientFlow = (newMode: 'returning' | 'new' | 'forgot') => {
+    setPatientMode(newMode);
+    setPatientStep('phone');
+    setOtp('');
+    setOtpToken('');
+    setPin('');
+    setConfirmPin('');
+    setPatientError('');
+    setPatientInfo('');
+  };
 
   const handleDoctorLogin = async () => {
     if (!email || !password) return;
@@ -43,11 +61,13 @@ export default function LoginScreen() {
     if (!mobile || mobile.length < 10) return;
     setPatientLoading(true);
     setPatientError('');
+    setPatientInfo('');
     try {
       const apiConfig = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
       const response = await startPatientImportOTP(apiConfig, mobile);
       if (response?.success) {
-        setOtpSent(true);
+        setPatientStep('otp');
+        setPatientInfo('OTP sent successfully.');
       } else {
         setPatientError(response?.error || 'Failed to send OTP');
       }
@@ -59,23 +79,69 @@ export default function LoginScreen() {
   };
 
   const handleVerifyOtp = async () => {
-    if (!otp) return;
+    if (!otp || otp.length !== 6) return;
     setPatientLoading(true);
     setPatientError('');
+    setPatientInfo('');
     try {
       const apiConfig = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
       const response = await verifyPatientOTP(apiConfig, mobile, otp, 'mobile');
-      if (response?.success && response.session) {
-        // If the backend returns a session, we need to set it in the client
-        await supabase.auth.setSession({
-          access_token: response.session.access_token,
-          refresh_token: response.session.refresh_token,
-        });
+      if (response?.success && response.otp_token) {
+        setOtpToken(response.otp_token);
+        setPatientStep('pin');
       } else {
         setPatientError(response?.error || 'Invalid OTP');
       }
     } catch (err: any) {
       setPatientError(err.message || 'Invalid OTP');
+    } finally {
+      setPatientLoading(false);
+    }
+  };
+
+  const handleSetPin = async () => {
+    if (!pin || pin.length !== 4) return;
+    if (pin !== confirmPin) {
+      setPatientError('PINs do not match');
+      return;
+    }
+    setPatientLoading(true);
+    setPatientError('');
+    setPatientInfo('');
+    try {
+      const apiConfig = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
+      const response = await setPatientPin(apiConfig, otpToken, pin, confirmPin);
+      if (response?.success) {
+        setPatientInfo('PIN set successfully. Please log in.');
+        setTimeout(() => resetPatientFlow('returning'), 1500);
+      } else {
+        setPatientError(response?.error || 'Failed to set PIN');
+      }
+    } catch (err: any) {
+      setPatientError(err.message || 'Error setting PIN');
+    } finally {
+      setPatientLoading(false);
+    }
+  };
+
+  const handlePinLogin = async () => {
+    if (!mobile || !pin || pin.length !== 4) return;
+    setPatientLoading(true);
+    setPatientError('');
+    setPatientInfo('');
+    try {
+      const apiConfig = { supabase: supabase as any, baseUrl: process.env.EXPO_PUBLIC_API_URL || '' };
+      const response = await patientPinLogin(apiConfig, mobile, pin);
+      if (response?.success && response.session) {
+        await supabase.auth.setSession({
+          access_token: response.session.access_token,
+          refresh_token: response.session.refresh_token,
+        });
+      } else {
+        setPatientError(response?.error || 'Login failed');
+      }
+    } catch (err: any) {
+      setPatientError(err.message || 'Login error');
     } finally {
       setPatientLoading(false);
     }
@@ -120,7 +186,11 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         
         {/* Header Background */}
         <View style={styles.headerBg}>
@@ -184,7 +254,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity style={styles.forgotPassword} onPress={() => router.push('/(auth)/forgot-password')}>
                 <Text style={styles.linkText}>Forgot password?</Text>
               </TouchableOpacity>
 
@@ -210,6 +280,13 @@ export default function LoginScreen() {
                 {/* Simplified Google text without icon for now */}
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
+                <Text style={{ color: '#64748b' }}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                  <Text style={styles.linkText}>Register here</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -217,53 +294,83 @@ export default function LoginScreen() {
           {activeTab === 'patient' && (
             <View style={styles.formContainer}>
               {patientError ? <Text style={styles.errorText}>{patientError}</Text> : null}
+              {patientInfo ? <Text style={styles.infoText}>{patientInfo}</Text> : null}
 
-              {!otpSent ? (
+              {patientMode === 'returning' && (
                 <>
                   <Text style={styles.label}>Mobile Number</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91 00000 00000"
                     value={mobile}
                     onChangeText={setMobile}
                     keyboardType="phone-pad"
                   />
-                  <TouchableOpacity 
-                    style={styles.primaryButton} 
-                    onPress={handleSendOtp}
-                    disabled={patientLoading}
-                  >
-                    {patientLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.primaryButtonText}>Send OTP →</Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.label}>Enter OTP</Text>
+                  <Text style={styles.label}>4-digit PIN</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="123456"
-                    value={otp}
-                    onChangeText={setOtp}
+                    placeholder="••••"
+                    value={pin}
+                    onChangeText={setPin}
                     keyboardType="number-pad"
-                    maxLength={6}
+                    maxLength={4}
+                    secureTextEntry
                   />
-                  <TouchableOpacity 
-                    style={styles.primaryButton} 
-                    onPress={handleVerifyOtp}
-                    disabled={patientLoading}
-                  >
-                    {patientLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.primaryButtonText}>Verify & Login →</Text>
-                    )}
+                  <TouchableOpacity style={styles.primaryButton} onPress={handlePinLogin} disabled={patientLoading}>
+                    {patientLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Log in →</Text>}
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.forgotPassword} onPress={() => setOtpSent(false)}>
-                    <Text style={styles.linkText}>Change mobile number</Text>
+                  
+                  <View style={styles.helpLinks}>
+                    <TouchableOpacity onPress={() => resetPatientFlow('forgot')}><Text style={styles.linkText}>Forgot PIN?</Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => resetPatientFlow('new')}><Text style={styles.linkText}>First time setup?</Text></TouchableOpacity>
+                  </View>
+                </>
+              )}
+
+              {(patientMode === 'new' || patientMode === 'forgot') && (
+                <>
+                  <Text style={styles.flowTitle}>{patientMode === 'new' ? 'First-time setup' : 'Reset PIN'}</Text>
+                  <Text style={styles.flowCopy}>
+                    {patientMode === 'new' ? 'Verify once with OTP, then set a 4-digit PIN for future logins.' : 'Verify with OTP, then create a new 4-digit PIN.'}
+                  </Text>
+                  
+                  {patientStep === 'phone' && (
+                    <>
+                      <Text style={styles.label}>Mobile Number</Text>
+                      <TextInput style={styles.input} placeholder="+91 00000 00000" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
+                      <TouchableOpacity style={styles.primaryButton} onPress={handleSendOtp} disabled={patientLoading}>
+                        {patientLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Send OTP →</Text>}
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {patientStep === 'otp' && (
+                    <>
+                      <Text style={styles.label}>Enter OTP</Text>
+                      <TextInput style={styles.input} placeholder="123456" value={otp} onChangeText={setOtp} keyboardType="number-pad" maxLength={6} />
+                      <TouchableOpacity style={styles.primaryButton} onPress={handleVerifyOtp} disabled={patientLoading}>
+                        {patientLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Verify OTP →</Text>}
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.forgotPassword} onPress={() => setPatientStep('phone')}>
+                        <Text style={styles.linkText}>Change mobile number</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {patientStep === 'pin' && (
+                    <>
+                      <Text style={styles.label}>{patientMode === 'new' ? 'Create 4-digit PIN' : 'New 4-digit PIN'}</Text>
+                      <TextInput style={styles.input} placeholder="••••" value={pin} onChangeText={setPin} keyboardType="number-pad" maxLength={4} secureTextEntry />
+                      <Text style={styles.label}>Confirm PIN</Text>
+                      <TextInput style={styles.input} placeholder="••••" value={confirmPin} onChangeText={setConfirmPin} keyboardType="number-pad" maxLength={4} secureTextEntry />
+                      <TouchableOpacity style={styles.primaryButton} onPress={handleSetPin} disabled={patientLoading}>
+                        {patientLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Set PIN & Continue →</Text>}
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  <TouchableOpacity style={styles.backLink} onPress={() => resetPatientFlow('returning')}>
+                    <Text style={styles.linkTextCentered}>← Back to PIN Login</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -457,6 +564,40 @@ const styles = StyleSheet.create({
     color: colors.risk.red.solid,
     marginBottom: 16,
     fontSize: 14,
+    textAlign: 'center',
+  },
+  infoText: {
+    color: colors.brand.primary,
+    marginBottom: 16,
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  helpLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  flowTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  flowCopy: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 24,
+  },
+  backLink: {
+    marginTop: 16,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  linkTextCentered: {
+    color: colors.brand.primary,
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
   },
   footer: {

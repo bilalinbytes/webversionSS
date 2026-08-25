@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Home, Users, Calendar, Bell, User } from 'lucide-react-native';
+import { Home, Calendar, Bell, User } from 'lucide-react-native';
 import { colors } from '@o2plus/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DoctorLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -11,8 +14,8 @@ export default function DoctorLayout() {
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: colors.ui.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
         headerShown: false,
@@ -23,13 +26,6 @@ export default function DoctorLayout() {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="patients"
-        options={{
-          title: 'Patients',
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -53,6 +49,8 @@ export default function DoctorLayout() {
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />
+      {/* patients tab hidden — accessed only via router.push from dashboard */}
+      <Tabs.Screen name="patients" options={{ href: null }} />
     </Tabs>
   );
 }
