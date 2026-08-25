@@ -12,7 +12,7 @@ export async function getDoctorPatients(config: ApiConfig, token?: string) {
   try {
     const res = await fetcher(`${baseUrl}/api/doctor/patients`, {
       headers,
-      credentials: "omit", // Using explicit token if needed
+      credentials: "include",
     });
     if (!res.ok) return { success: false, error: "Failed to fetch patients" };
     const data = await res.json();
@@ -32,7 +32,10 @@ export async function getDoctorAppointmentSettings(config: ApiConfig, token?: st
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   try {
-    const res = await fetcher(`${baseUrl}/api/doctor/appointment-settings`, { headers });
+    const res = await fetcher(`${baseUrl}/api/doctor/appointment-settings`, {
+      headers,
+      credentials: "include",
+    });
     if (!res.ok) return { success: false, error: "Failed to fetch settings" };
     const data = await res.json();
     return { success: true, data: data.settings };
@@ -51,7 +54,10 @@ export async function getDoctorAppointments(config: ApiConfig, token?: string) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   try {
-    const res = await fetcher(`${baseUrl}/api/appointments`, { headers });
+    const res = await fetcher(`${baseUrl}/api/appointments`, {
+      headers,
+      credentials: "include",
+    });
     if (!res.ok) return { success: false, error: "Failed to fetch appointments" };
     const data = await res.json();
     return { success: true, data: data.appointments };

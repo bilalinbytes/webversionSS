@@ -49,7 +49,7 @@ export async function getDoctorAppointments(config: ApiConfig, token?: string) {
 
   try {
     // Uses doctor session via cookie/token
-    const res = await fetcher(`${baseUrl}/api/appointments`, { headers, credentials: "omit" });
+    const res = await fetcher(`${baseUrl}/api/appointments`, { headers, credentials: "include" });
     if (!res.ok) return { success: false, error: "Failed to fetch appointments" };
     const data = await res.json();
     return { success: true, data: data.appointments };
