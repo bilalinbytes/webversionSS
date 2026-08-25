@@ -169,22 +169,18 @@ function PdfHeader({ doctorName, generatedAt, title, subtitle }: {
   doctorName: string; generatedAt: string; title: string; subtitle: string;
 }) {
   return (
-    <>
-      <View style={S.headerBand}>
-        <View style={S.headerTop}>
-          <View>
-            <Text style={S.headerTitle}>{title}</Text>
-            <Text style={S.headerSub}>{subtitle}</Text>
-          </View>
-          <View style={S.headerRight}>
-            <Text style={S.headerMeta}>O2Plus Clinical Platform</Text>
-            <Text style={S.headerMeta}>Dr. {doctorName}</Text>
-            <Text style={S.headerMeta}>{generatedAt}</Text>
-          </View>
-        </View>
-      </View>
-      <View style={S.headerStrip} />
-    </>
+    <View style={{ alignItems: "center", marginBottom: 12 }}>
+      <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.5 }}>
+        O2Plus Respiratory Health
+      </Text>
+      <Text style={{ fontSize: 11, color: ACCENT, fontFamily: "Helvetica-Bold", marginTop: 3 }}>
+        {title}
+      </Text>
+      <Text style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>
+        {subtitle} · Dr. {doctorName} · {generatedAt}
+      </Text>
+      <View style={{ width: "100%", height: 2, backgroundColor: ACCENT, marginTop: 8, marginBottom: 8 }} />
+    </View>
   );
 }
 
@@ -295,12 +291,19 @@ function PrescriptionPage({
 
   return (
     <Page size="A4" style={S.page}>
-      <PdfHeader
-        doctorName={doctorName}
-        generatedAt={generatedAt}
-        title="Medical Prescription"
-        subtitle={`O2Plus • ${dashboardLabel(dashboard)} Dashboard`}
-      />
+      {/* ── Branded Centered Header for O2Plus ── */}
+      <View style={{ alignItems: "center", marginBottom: 12 }}>
+        <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.5 }}>
+          O2Plus Respiratory Health
+        </Text>
+        <Text style={{ fontSize: 11, color: ACCENT, fontFamily: "Helvetica-Bold", marginTop: 3 }}>
+          Medical Prescription &amp; Treatment Plan
+        </Text>
+        <Text style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>
+          {dashboardLabel(dashboard)} Dashboard · Attending Physician: Dr. {doctorName} · {generatedAt}
+        </Text>
+        <View style={{ width: "100%", height: 2, backgroundColor: ACCENT, marginTop: 8 }} />
+      </View>
 
       {/* Rx header box */}
       <View style={S.rxHeader}>
@@ -328,15 +331,15 @@ function PrescriptionPage({
       <View style={S.section}>
         <SectionHeading title="Prescribed Medications" />
         <View style={{ border: `1 solid ${BORDER}`, borderRadius: 4, overflow: "hidden" }}>
-          {/* Table header */}
-          <View style={[S.tHead, { padding: "5 8" }]}>
-            <Text style={[S.tHeadCell, { flex: 0.3 }]}>#</Text>
-            <Text style={[S.tHeadCell, { flex: 2 }]}>Medication (Drug Name)</Text>
-            <Text style={[S.tHeadCell, { flex: 1 }]}>Route</Text>
-            <Text style={[S.tHeadCell, { flex: 1 }]}>Dose</Text>
-            <Text style={[S.tHeadCell, { flex: 1 }]}>Frequency</Text>
-            <Text style={[S.tHeadCell, { flex: 1 }]}>Duration</Text>
-            <Text style={S.tHeadLast}>Instructions</Text>
+          {/* Table header with distinct Start Date and End Date columns */}
+          <View style={[S.tHead, { padding: "6 8" }]}>
+            <Text style={[S.tHeadCell, { flex: 0.4 }]}>#</Text>
+            <Text style={[S.tHeadCell, { flex: 2.2 }]}>Medication (Drug Name)</Text>
+            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Route</Text>
+            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Dose</Text>
+            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Frequency</Text>
+            <Text style={[S.tHeadCell, { flex: 1.3 }]}>Start Date</Text>
+            <Text style={[S.tHeadLast, { flex: 1.3 }]}>End Date</Text>
           </View>
           {meds.length === 0 ? (
             <View style={S.medRow}>
@@ -345,13 +348,13 @@ function PrescriptionPage({
           ) : (
             meds.map((row, i) => (
               <View key={i} style={[S.medRow, i % 2 === 1 ? { backgroundColor: LIGHT } : {}]}>
-                <Text style={[S.medNum]}>{i + 1}.</Text>
-                <Text style={[S.medName, { flex: 2 }]}>{row[0] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1 }]}>{row[1] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1 }]}>{row[2] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1 }]}>{row[3] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1 }]}>{row[4] !== "n/a" ? row[4] : "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1 }]}>{row[5] !== "n/a" ? row[5] : "—"}</Text>
+                <Text style={[S.medNum, { flex: 0.4 }]}>{i + 1}.</Text>
+                <Text style={[S.medName, { flex: 2.2 }]}>{row[0] ?? "—"}</Text>
+                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[1] ?? "—"}</Text>
+                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[2] ?? "—"}</Text>
+                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[3] ?? "—"}</Text>
+                <Text style={[S.medDetail, { flex: 1.3 }]}>{row[4] && row[4] !== "n/a" ? row[4] : "—"}</Text>
+                <Text style={[S.medDetail, { flex: 1.3 }]}>{row[5] && row[5] !== "n/a" ? row[5] : "Ongoing"}</Text>
               </View>
             ))
           )}
@@ -605,20 +608,30 @@ function SummaryPage({
         <SectionHeading title="Risk Flag Summary" />
         <DataTable
           headers={["Patient", "Diagnosis", "Dashboard", "Risk Level", "Score", "Alert"]}
-          rows={summaryRows.map((r) => [
-            r.patientName,
-            r.diagnosis,
-            r.diagnosis ? dashboardLabel(
-              r.diagnosis.toLowerCase().includes("asthma") && !r.diagnosis.toLowerCase().includes("copd") ? "asthma"
-              : r.diagnosis.toLowerCase().includes("copd") ? "copd"
-              : r.diagnosis.toLowerCase().includes("ild") ? "ild"
-              : r.diagnosis.toLowerCase().includes("bronch") ? "bronchiectasis"
-              : ""
-            ) : "—",
-            r.riskLevel,
-            r.score,
-            r.alert,
-          ])}
+          rows={summaryRows.map((r) => {
+            const diagLower = (r.diagnosis || "").toLowerCase();
+            const dash = diagLower.includes("bronchiolitis")
+              ? "OAD / Respiratory"
+              : diagLower.includes("bronchiectasis")
+              ? "Bronchiectasis"
+              : diagLower.includes("copd") || diagLower.startsWith("oad")
+              ? "COPD / OAD"
+              : diagLower.includes("asthma")
+              ? "Asthma"
+              : diagLower.includes("ild")
+              ? "ILD"
+              : diagLower.includes("post")
+              ? "Post ICU"
+              : "Respiratory";
+            return [
+              r.patientName,
+              r.diagnosis,
+              dash,
+              r.riskLevel,
+              r.score,
+              r.alert,
+            ];
+          })}
         />
       </View>
 

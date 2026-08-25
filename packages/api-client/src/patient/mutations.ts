@@ -76,7 +76,7 @@ export async function verifyPatientOTP(
   mobile_number: string,
   otp: string,
   platform: "web" | "mobile" = "web"
-): Promise<{ success: boolean; session?: any; error?: string }> {
+): Promise<{ success: boolean; otp_token?: string; error?: string }> {
   const fetcher = config.fetch || globalThis.fetch;
   const baseUrl = config.baseUrl || "";
 
@@ -93,8 +93,61 @@ export async function verifyPatientOTP(
     }
     
     const data = await response.json();
-    return { success: true, session: data.session };
+    return { success: true, otp_token: data.otp_token };
   } catch (err) {
     return { success: false, error: "Network error while verifying OTP" };
+  }
+}
+
+export async function setPatientPin(
+  config: ApiConfig,
+  otp_token: string,
+  pin: string,
+  confirm_pin: string
+): Promise<{ success: boolean; error?: string }> {
+  const fetcher = config.fetch || globalThis.fetch;
+  const baseUrl = config.baseUrl || "";
+
+  try {
+    const response = await fetcher(`${baseUrl}/api/patient-auth/set-pin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ otp_token, pin, confirm_pin }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.message || data.error || "Failed to set PIN" };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: "Network error while setting PIN" };
+  }
+}
+
+export async function patientPinLogin(
+  config: ApiConfig,
+  mobile_number: string,
+  pin: string
+): Promise<{ success: boolean; session?: any; error?: string }> {
+  const fetcher = config.fetch || globalThis.fetch;
+  const baseUrl = config.baseUrl || "";
+
+  try {
+    const response = await fetcher(`${baseUrl}/api/patient-auth/pin-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobile_number, pin }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.message || data.error || "Login failed" };
+    }
+    
+    const data = await response.json();
+    return { success: true, session: data.session };
+  } catch (err) {
+    return { success: false, error: "Network error during login" };
   }
 }

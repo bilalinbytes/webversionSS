@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import { PatientAnalyticsView } from "@/components/patient/PatientAnalyticsView";
+import { useToast } from "@/components/ui/Toast";
 import styles from "./PatientDetail.module.css";
 
 // Legacy Patient type (used as optional fallback prop)
@@ -201,6 +202,7 @@ export function PatientDetail({
   const [newInstruction, setNewInstruction] = useState("");
   const [savingInstruction, setSavingInstruction] = useState(false);
   const [sentInstructionId, setSentInstructionId] = useState<string | null>(null);
+  const toast = useToast();
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -340,7 +342,7 @@ export function PatientDetail({
     setOverviewPrescriptions(
       Array.from(medsByDate.entries())
         .sort(([leftDate], [rightDate]) => rightDate.localeCompare(leftDate))
-        .map(([date, medications]) => ({ date, medications })),
+        .map(([date, medications]) => ({ date, groupKey: date, medications })),
     );
 
     const patientLogEvents: HistoryEvent[] = (historyLogRes.data ?? []).map((log) => ({
@@ -385,6 +387,7 @@ export function PatientDetail({
       setInstructions((prev) => [data as InstructionInfo, ...prev]);
       setNewInstruction("");
       setSentInstructionId((data as InstructionInfo).id);
+      toast.success("Sent");
     }
     setSavingInstruction(false);
   };
@@ -605,13 +608,24 @@ function OverviewTab({
         ) : (
           <div className={styles.prescriptionGroups}>
             {prescriptions.slice(0, 1).map((group) => {
-              const isOpen = openPrescriptionDates.has(group.date);
+              // Use groupKey so same-date prescriptions get distinct toggle state
+              const isOpen = openPrescriptionDates.has(group.groupKey ?? group.date);
+              // Detect if this date has sibling prescriptions (same date, different batch)
+              const isMultiBatch = group.groupKey !== group.date;
+              // Extract batch label from groupKey e.g. "2026-08-25_rx2" → "Prescription 2"
+              const batchMatch = group.groupKey?.match(/_rx(\d+)$/);
+              const batchLabel = batchMatch ? `Prescription ${batchMatch[1]}` : null;
               return (
-              <article key={group.date} className={styles.prescriptionGroup}>
+              <article key={group.groupKey ?? group.date} className={styles.prescriptionGroup}>
                 <div className={styles.prescriptionDateRow}>
                   <div>
                     <span className={styles.prescriptionBadge}>Latest</span>
                     <strong>{fmtDate(group.date)}</strong>
+                    {isMultiBatch && batchLabel && (
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "#0f6e56", fontWeight: 600 }}>
+                        · {batchLabel}
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -619,8 +633,9 @@ function OverviewTab({
                     onClick={() => {
                       setOpenPrescriptionDates((current) => {
                         const next = new Set(current);
-                        if (next.has(group.date)) next.delete(group.date);
-                        else next.add(group.date);
+                        const key = group.groupKey ?? group.date;
+                        if (next.has(key)) next.delete(key);
+                        else next.add(key);
                         return next;
                       });
                     }}
@@ -633,7 +648,7 @@ function OverviewTab({
                   <table className={styles.prescriptionTable}>
                     <thead>
                       <tr>
-                        {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "End Date", "Status"].map((header) => (
+                        {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "Duration / End Date"].map((header) => (
                           <th key={header}>{header}</th>
                         ))}
                       </tr>
@@ -649,7 +664,6 @@ function OverviewTab({
                             <td>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
                             <td>{med.frequency ?? "--"}</td>
                             <td>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
-                            <td>{isActive ? "Continue" : "Discontinued"}</td>
                           </tr>
                         );
                       })}
@@ -946,6 +960,8 @@ interface PrescriptionMed {
 
 interface PrescriptionGroup {
   date: string;
+  savedAt?: string; // ISO timestamp of when this prescription was saved (for same-day disambiguation)
+  groupKey?: string; // unique key: date + groupIndex or saved time
   medications: PrescriptionMed[];
 }
 
@@ -1002,6 +1018,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   // Inline edits for the history table: medId → field → value
   const [inlineEdits, setInlineEdits] = useState<Record<string, { route?: string; frequency?: string; discontinued?: boolean }>>({});
   const [inlineSaving, setInlineSaving] = useState<Record<string, boolean>>({});
+  const toast = useToast();
 
   // Save an inline field change for a medication in the history table
   const saveInlineEdit = async (medId: string, field: "route" | "frequency" | "discontinued", value: string | boolean, today: string) => {
@@ -1065,16 +1082,40 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           setLoading(false);
           return;
         }
-        const grouped: Record<string, PrescriptionMed[]> = {};
+        // Group meds by start_date
+        const byDate: Record<string, PrescriptionMed[]> = {};
         for (const med of body.medications) {
           const key = med.start_date ?? "unknown";
-          if (!grouped[key]) grouped[key] = [];
-          grouped[key]!.push(med as PrescriptionMed);
+          if (!byDate[key]) byDate[key] = [];
+          byDate[key]!.push(med as PrescriptionMed);
         }
-        const sorted = Object.entries(grouped)
-          .sort(([a], [b]) => b.localeCompare(a))
-          .map(([date, medications]) => ({ date, medications }));
-        setPrescriptions(sorted);
+
+        // For each date, split into batches: a new batch starts when serial_number resets to 1
+        // after having already seen a higher serial number (indicates a new prescription save).
+        const allGroups: PrescriptionGroup[] = [];
+        for (const [date, meds] of Object.entries(byDate)) {
+          const sortedMeds = [...meds].sort((a, b) => (a.serial_number ?? 0) - (b.serial_number ?? 0));
+          const batches: PrescriptionMed[][] = [];
+          let currentBatch: PrescriptionMed[] = [];
+          for (const med of sortedMeds) {
+            const sn = med.serial_number ?? 0;
+            if (sn === 1 && currentBatch.length > 0 && (currentBatch[currentBatch.length - 1]?.serial_number ?? 0) > 1) {
+              batches.push(currentBatch);
+              currentBatch = [med];
+            } else {
+              currentBatch.push(med);
+            }
+          }
+          if (currentBatch.length > 0) batches.push(currentBatch);
+
+          batches.forEach((batch, batchIdx) => {
+            const groupKey = batches.length > 1 ? `${date}_rx${batchIdx + 1}` : date;
+            allGroups.push({ date, groupKey, medications: batch });
+          });
+        }
+
+        const sortedGroups = allGroups.sort((a, b) => b.date.localeCompare(a.date) || (b.groupKey ?? b.date).localeCompare(a.groupKey ?? a.date));
+        setPrescriptions(sortedGroups);
       } catch {
         setPrescriptions([]);
       }
@@ -1085,7 +1126,8 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   useEffect(() => { void fetchPrescriptions(); }, [fetchPrescriptions]);
 
   useEffect(() => {
-    setOpenPrescriptionDates(new Set(prescriptions[0]?.date ? [prescriptions[0].date] : []));
+    const firstKey = prescriptions[0]?.groupKey ?? prescriptions[0]?.date;
+    setOpenPrescriptionDates(new Set(firstKey ? [firstKey] : []));
   }, [prescriptions]);
 
   // Auto-load latest prescription into editor
@@ -1280,8 +1322,10 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       if (res.ok) {
         if (activeDrafts.length > 0) {
           setSaveMsg("Prescription saved successfully.");
+          toast.success("Prescription sent");
         } else {
           setSaveMsg("Instruction sent to patient.");
+          toast.success("Sent");
         }
         setShowEditor(false);
         setPatientInstruction("");
@@ -1587,10 +1631,10 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                   <h3 style={{ margin: 0, fontSize: 14, color: "#fff", fontWeight: 700 }}>Prescription: {fmtDate(group.date)}</h3>
                 </div>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={{ minWidth: 960, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                  <table style={{ minWidth: 840, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     <thead>
                       <tr style={{ background: "linear-gradient(90deg, #1a56b0 0%, #2563eb 100%)", borderBottom: "1px solid #1d4ed8" }}>
-                        {["S. No.", "Continue/Discontinue", "Medication Type", "Drug Name", "Dose", "Frequency", "Start Date", "End Date"].map((header) => (
+                        {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "Start Date", "End Date"].map((header) => (
                           <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.9)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
                         ))}
                       </tr>
@@ -1602,29 +1646,6 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                         return (
                           <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", background: isActive ? "#ffffff" : "#fff7f7" }}>
                             <td style={{ padding: "8px 10px" }}>{med.serial_number ?? medIndex + 1}</td>
-                            <td style={{ padding: "8px 10px" }}>
-                              <select
-                                value={isActive ? "continue" : "discontinue"}
-                                disabled={isSaving}
-                                onChange={e => void saveInlineEdit(med.id, "discontinued", e.target.value === "discontinue", today)}
-                                style={{
-                                  padding: "4px 8px",
-                                  borderRadius: 12,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-                                  background: isActive ? "#e8f5f1" : "#fdecea",
-                                  color: isActive ? "#0f6e56" : "#c94d49",
-                                  border: `1px solid ${isActive ? "#a7f3d0" : "#fecaca"}`,
-                                  cursor: isSaving ? "not-allowed" : "pointer",
-                                  outline: "none",
-                                  minWidth: 120,
-                                }}
-                              >
-                                <option value="continue" style={{ color: "#0f6e56", background: "white" }}>Continue</option>
-                                <option value="discontinue" style={{ color: "#c94d49", background: "white" }}>Discontinue</option>
-                              </select>
-                            </td>
                             <td style={{ padding: "8px 10px" }}>
                               <select
                                 value={med.route}

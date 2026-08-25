@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "./src/patient/index.ts",
   "exports": {
     "./types": "./src/types.ts",
     "./patient": "./src/patient/index.ts",

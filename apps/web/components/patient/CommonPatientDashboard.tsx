@@ -92,6 +92,8 @@ export function CommonPatientDashboard({
   doctorHospital,
   nextAppointment,
   spo2Trend,
+  mmrcTrend,
+  vasTrend,
   latestPft,
   onLogToday,
   todayMedications,
@@ -188,6 +190,84 @@ export function CommonPatientDashboard({
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, padding: "2px 9px", borderRadius: 999, background: risk.bg, color: risk.color, fontWeight: 700, width: "fit-content" }}>
             {risk.label}
           </span>
+        </div>
+      </div>
+
+      {/* ── Symptoms Analytics & mMRC ── */}
+      <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <p className={dStyles.cardTitle} style={{ margin: 0 }}>
+              Symptoms &amp; Breathlessness Analytics · लक्षण विश्लेषण
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              Longitudinal tracking based on daily clinical logs
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+              background: mmrcToday >= 3 ? "rgba(201,77,73,0.12)" : "rgba(15,110,86,0.12)",
+              color: mmrcToday >= 3 ? "#c94d49" : "#0f6e56",
+              fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            }}>
+              mMRC Grade: {mmrcToday} / 4
+            </span>
+            {mmrcTrend && mmrcTrend.length > 0 && (
+              <span style={{
+                padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                background: "rgba(19,45,54,0.08)", color: "#132d36",
+                fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+              }}>
+                Worst mMRC (Period): Grade {Math.max(...mmrcTrend, mmrcToday)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Side-by-side Symptoms List and mMRC Score breakdown */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          {/* mMRC Breathlessness Level Card */}
+          <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Breathlessness Scale (mMRC)
+            </span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontSize: 24, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-lora), Georgia, serif" }}>
+                Grade {mmrcToday}
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#c94d49" : "#0f6e56" }}>
+                {mmrcText}
+              </span>
+            </div>
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: "#6d8794", lineHeight: 1.4 }}>
+              {mmrcToday === 0 && "Not troubled with breathlessness except with strenuous exercise."}
+              {mmrcToday === 1 && "Troubled by shortness of breath when hurrying on level ground or walking up slight hill."}
+              {mmrcToday === 2 && "Walks slower than people of same age on level ground because of breathlessness."}
+              {mmrcToday === 3 && "Stops for breath after walking ~100 meters or after a few minutes on level ground."}
+              {mmrcToday >= 4 && "Too breathless to leave house or breathless when dressing/undressing."}
+            </p>
+          </div>
+
+          {/* Core Symptoms Monitoring List */}
+          <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Active Symptoms Monitored
+            </span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 2 }}>
+              {[
+                { name: "Cough / खांसी", status: (vasTrend && vasTrend.length > 0 && vasTrend[vasTrend.length - 1]! > 3) ? "Moderate" : "Mild/None" },
+                { name: "Phlegm / बलगम", status: "Monitored daily" },
+                { name: "Night Waking", status: "Logged in daily form" },
+                { name: "Exertion SpO₂", status: "Recorded on walk" },
+              ].map((sym) => (
+                <div key={sym.name} style={{ display: "flex", flexDirection: "column", padding: "6px 8px", background: "white", borderRadius: 6, border: "1px solid rgba(0,0,0,0.06)" }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#132d36" }}>{sym.name}</span>
+                  <span style={{ fontSize: 10, color: "#6d8794" }}>{sym.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

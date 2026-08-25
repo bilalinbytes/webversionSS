@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 import styles from "./CreatePatientView.module.css";
 // import { z } from "zod"; // Not needed directly here if not validating client-side
 
@@ -567,8 +568,21 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
 
 // ── Step 3: Co-morbidities ────────────────────────────────────────────────────
 function StepComorbidities({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
+  const isNone = data.comorbidities.includes("None") || data.comorbidities.length === 0;
+
+  const toggleNone = () => {
+    // If None is already selected or nothing selected, deselect
+    if (data.comorbidities.includes("None")) {
+      update({ comorbidities: [] });
+    } else {
+      // Select None, clear everything else
+      update({ comorbidities: ["None"], comorbidities_other_text: null });
+    }
+  };
+
   const toggleComorbid = (item: string) => {
-    let next = [...data.comorbidities];
+    // Clicking any real condition removes "None"
+    let next = [...data.comorbidities].filter(i => i !== "None");
     if (next.includes(item)) {
       next = next.filter(i => i !== item);
       if (item === "Others") update({ comorbidities_other_text: null });
@@ -587,7 +601,33 @@ function StepComorbidities({ data, update }: { data: FormData; update: (d: Parti
       <div className={styles.card}>
         <p className={styles.cardTitle}>Associated Conditions</p>
         <p className={styles.cardSub}>Select all that apply</p>
-        <div className={styles.comorbidGrid}>
+
+        {/* NONE option — shown prominently at top */}
+        <button
+          type="button"
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 14px", borderRadius: 8, marginBottom: 12,
+            border: isNone ? "1.5px solid #0f6e56" : "1.5px solid #d1d5db",
+            background: isNone ? "#f0fdf4" : "#fff",
+            color: isNone ? "#0f6e56" : "#374151",
+            fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", width: "100%", textAlign: "left",
+          }}
+          onClick={toggleNone}
+        >
+          <div style={{
+            width: 18, height: 18, borderRadius: 4,
+            border: isNone ? "1.5px solid #0f6e56" : "1.5px solid #9ca3af",
+            background: isNone ? "#0f6e56" : "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            {isNone && <Check size={11} strokeWidth={3} color="white" />}
+          </div>
+          None — No co-morbidities
+        </button>
+
+        {/* Condition list — greyed when None is selected */}
+        <div className={styles.comorbidGrid} style={{ opacity: isNone ? 0.4 : 1, pointerEvents: isNone ? "none" : "auto" }}>
           {COMORBIDITIES.map((item) => (
             <button
               key={item}
@@ -1109,6 +1149,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const update = (updates: Partial<FormData>) => setData(prev => ({ ...prev, ...updates }));
 
@@ -1244,6 +1285,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           }
         }
 
+        toast.success(editPatientId ? "Saved" : "Patient added");
         onDone();
       } else if (res.status === 400) {
         const body = await res.json() as { error?: string; field_errors?: Record<string, string[]> };

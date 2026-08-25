@@ -75,7 +75,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
             <span className={dStyles.emergencyPulse} />
             <AlertTriangle size={16} style={{ color: "#f87171", flexShrink: 0 }} />
             <div className={dStyles.emergencyText}>
-              <strong>Your asthma is uncontrolled this week.</strong> Your doctor has been notified. Please avoid triggers and use your reliever as prescribed.
+              <strong>Your {patient.diagnosis || "respiratory condition"} is uncontrolled this week.</strong> Your doctor has been notified. Please avoid triggers and use your reliever as prescribed.
             </div>
           </div>
         )}
@@ -83,7 +83,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
         <div className={styles.grid}>
           {/* ACT Control Score */}
           <div className={`${dStyles.card} ${styles.controlCard}`}>
-            <p className={dStyles.cardTitle}>My Asthma Control</p>
+            <p className={dStyles.cardTitle}>{patient.diagnosis ? `${patient.diagnosis} Control` : "Symptom Control (ACT)"}</p>
             <p className={dStyles.cardSub}>Based on last 4 weeks</p>
             <div className={dStyles.controlBanner} style={{ background: control.bg }}>
               <span style={{ fontSize: 32 }}>{control.icon}</span>
@@ -97,7 +97,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
             <div className={styles.actGrid}>
               {[
                 { key: "daytime",    label: "Daytime symptoms >2×/week",    val: lastACT.daytime },
-                { key: "nightWaking",label: "Night waking due to asthma",   val: lastACT.nightWaking },
+                { key: "nightWaking",label: "Night waking due to breathing", val: lastACT.nightWaking },
                 { key: "reliever",   label: "Reliever use >2×/week",        val: lastACT.reliever },
                 { key: "activity",   label: "Activity limitation",          val: lastACT.activity },
               ].map(item => (

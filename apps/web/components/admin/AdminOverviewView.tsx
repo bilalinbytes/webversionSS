@@ -166,6 +166,12 @@ export function AdminOverviewView({ onViewChange }: AdminOverviewViewProps) {
               view: "export" as AdminView,
               color: "#1d9e75",
             },
+            {
+              label: "Audit Log & Compliance",
+              desc: "Review legal access history and activity trail",
+              view: "audit" as AdminView,
+              color: "#6366f1",
+            },
           ].map((a) => (
             <button
               key={a.label}

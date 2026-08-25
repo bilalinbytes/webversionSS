@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { submitDailyLog } from "@o2plus/api-client/patient";
+import { useToast } from "@/components/ui/Toast";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
@@ -24,6 +25,7 @@ export function usePatientLog(): UsePatientLogReturn {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
+  const toast = useToast();
 
   const submitLog = useCallback(async (payload: DailyLogPayload): Promise<boolean> => {
     setSubmitState("submitting");
@@ -52,13 +54,14 @@ export function usePatientLog(): UsePatientLogReturn {
       }
 
       setSubmitState("success");
+      toast.success("Log saved");
       return true;
     } catch {
       setSubmitState("error");
       setErrorMessage("Network error. Your data has been preserved — please try again.");
       return false;
     }
-  }, []);
+  }, [toast]);
 
   const reset = useCallback(() => {
     setSubmitState("idle");

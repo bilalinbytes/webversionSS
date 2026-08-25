@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { LayoutDashboard, Stethoscope, Users, Download } from "lucide-react";
+import { LayoutDashboard, Stethoscope, Users, Download, ShieldCheck } from "lucide-react";
 import type { AdminView } from "@/app/admindashboard/AdminDashboardClient";
 import styles from "./AdminSidebar.module.css";
 
@@ -22,6 +22,7 @@ const NAV_ITEMS: {
   { id: "doctors",  icon: Stethoscope,    label: "Doctors"  },
   { id: "patients", icon: Users,          label: "Patients" },
   { id: "export",   icon: Download,       label: "Export"   },
+  { id: "audit",    icon: ShieldCheck,    label: "Audit Log" },
 ];
 
 export function AdminSidebar({

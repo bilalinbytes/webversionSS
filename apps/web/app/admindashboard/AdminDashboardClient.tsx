@@ -7,9 +7,10 @@ import { AdminOverviewView } from "@/components/admin/AdminOverviewView";
 import { AdminDoctorsView } from "@/components/admin/AdminDoctorsView";
 import { AdminPatientsView } from "@/components/admin/AdminPatientsView";
 import { AdminExportView } from "@/components/admin/AdminExportView";
+import { AdminAuditView } from "@/components/admin/AdminAuditView";
 import styles from "./page.module.css";
 
-export type AdminView = "overview" | "doctors" | "patients" | "export";
+export type AdminView = "overview" | "doctors" | "patients" | "export" | "audit";
 
 interface AdminDashboardClientProps {
   adminName: string;
@@ -44,6 +45,7 @@ export function AdminDashboardClient({
           {view === "doctors"  && <AdminDoctorsView />}
           {view === "patients" && <AdminPatientsView />}
           {view === "export"   && <AdminExportView />}
+          {view === "audit"    && <AdminAuditView />}
         </main>
       </div>
     </div>

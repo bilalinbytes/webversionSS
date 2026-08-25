@@ -1250,6 +1250,16 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                     <option key={key} value={key}>{formatMetricName(key)}</option>
                   ))}
                 </select>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10, fontSize: 11, flexWrap: "wrap" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#b91c1c", fontWeight: 600, background: "rgba(226,75,74,0.1)", padding: "3px 8px", borderRadius: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#e24b4a", display: "inline-block" }} />
+                    Symptom Reported: {selectedSymptomSeries.filter(r => (r.value ?? 0) > 0).length} days
+                  </span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#047857", fontWeight: 600, background: "rgba(16,185,129,0.1)", padding: "3px 8px", borderRadius: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                    Absent / Normal: {selectedSymptomSeries.filter(r => r.value === 0).length} days
+                  </span>
+                </div>
                 {selectedSymptomSeries.every((row) => row.value === null) ? (
                   <EmptyChart label="No values recorded for this symptom yet." />
                 ) : (
@@ -1271,9 +1281,23 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                         dataKey="value"
                         name={formatMetricName(selectedSymptom)}
                         stroke={COLORS.indigo}
-                        strokeWidth={3}
-                        dot={{ r: 2.5, fill: COLORS.indigo, strokeWidth: 0 }}
-                        activeDot={{ r: 6, fill: COLORS.indigo, stroke: "#ffffff", strokeWidth: 2.5, style: { filter: `drop-shadow(0 0 6px ${COLORS.indigo}80)` } }}
+                        strokeWidth={2.5}
+                        dot={({ cx, cy, payload }: any) => {
+                          if (cx == null || cy == null || payload?.value == null) return null;
+                          const isPresent = Number(payload.value) > 0;
+                          return (
+                            <circle
+                              key={`dot-${cx}-${cy}`}
+                              cx={cx}
+                              cy={cy}
+                              r={isPresent ? 5 : 3.5}
+                              fill={isPresent ? "#e24b4a" : "#10b981"}
+                              stroke="#ffffff"
+                              strokeWidth={1.5}
+                            />
+                          );
+                        }}
+                        activeDot={{ r: 7, fill: COLORS.indigo, stroke: "#ffffff", strokeWidth: 2 }}
                         connectNulls
                         isAnimationActive
                         animationDuration={800}

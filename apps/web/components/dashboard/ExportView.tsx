@@ -1,23 +1,37 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { BarChart2, Check, Table2, FileEdit, FileText } from "lucide-react";
+import {
+  Users,
+  CheckSquare,
+  User,
+  Activity,
+  Calendar,
+  FileSpreadsheet,
+  FileText,
+  FileCode,
+  Check,
+  Search,
+  AlertCircle,
+  Download,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./ExportView.module.css";
 
-type ExportType = "Daily" | "Weekly" | "Bi-Weekly (15 Days)" | "Monthly" | "Disease-Specific" | "Combined" | "Date-Wise" | "Single Patient";
-type ExportFormat = "pdf" | "excel" | "csv";
+export type ExportScope =
+  | "All Patients"
+  | "Selected Patients"
+  | "Single Patient"
+  | "Disease-Specific"
+  | "Date-Wise"
+  | "Daily"
+  | "Weekly"
+  | "Bi-Weekly (15 Days)"
+  | "Monthly";
 
-const EXPORT_TYPES: { id: ExportType; apiKey: string; sub: string }[] = [
-  { id: "Daily",           apiKey: "daily",             sub: "24-hour snapshot" },
-  { id: "Weekly",          apiKey: "weekly",            sub: "7-day trend with worst score" },
-  { id: "Bi-Weekly (15 Days)", apiKey: "bi_weekly",     sub: "15-day trend with worst score" },
-  { id: "Monthly",         apiKey: "monthly",           sub: "30d trend with worst score" },
-  { id: "Disease-Specific",apiKey: "disease_specific",  sub: "Filter by diagnosis type" },
-  { id: "Combined",        apiKey: "combined",          sub: "All diseases merged" },
-  { id: "Date-Wise",       apiKey: "date_wise",         sub: "Select date range" },
-  { id: "Single Patient",  apiKey: "single_patient",    sub: "Full patient record" },
-];
+export type ExportFormat = "excel" | "csv" | "pdf";
 
 interface LivePatient {
   id: string;
@@ -25,6 +39,7 @@ interface LivePatient {
   primary_diagnosis: string | null;
   risk: "critical" | "high" | "moderate" | "stable" | "none";
   score: number | null;
+  created_at: string | null;
 }
 
 interface RecentExport {
@@ -41,17 +56,66 @@ interface ExportViewProps {
 interface DoctorPatientRow {
   id: string;
   name: string;
-  patient_diagnoses: { primary_diagnosis: string | null }[] | null;
+  created_at: string | null;
+  patient_diagnoses: { primary_diagnosis: string | null; effective_dashboard: string | null }[] | null;
   red_flag_scores: { global_score: number | null; computed_at: string | null }[] | null;
 }
 
-const DIAG_COLORS: Record<string, string> = {
-  ild: "#1d9e75",
-  copd: "#378add",
-  asthma: "#639922",
-  bronchiectasis: "#ef9f27",
-  post_infection: "#a259e6",
-};
+const PRIMARY_SCOPES: Array<{
+  id: ExportScope;
+  apiKey: string;
+  title: string;
+  description: string;
+  icon: typeof Users;
+}> = [
+  {
+    id: "All Patients",
+    apiKey: "all_patients",
+    title: "All Patients",
+    description: "Complete patient registry",
+    icon: Users,
+  },
+  {
+    id: "Selected Patients",
+    apiKey: "selected_patients",
+    title: "Selected Patients",
+    description: "Export only selected patients",
+    icon: CheckSquare,
+  },
+  {
+    id: "Single Patient",
+    apiKey: "single_patient",
+    title: "Single Patient",
+    description: "Complete record for one patient",
+    icon: User,
+  },
+  {
+    id: "Disease-Specific",
+    apiKey: "disease_specific",
+    title: "Disease-Specific",
+    description: "Export patients by diagnosis",
+    icon: Activity,
+  },
+  {
+    id: "Date-Wise",
+    apiKey: "date_wise",
+    title: "Date-Wise",
+    description: "Export records within a date range",
+    icon: Calendar,
+  },
+];
+
+const TREND_SCOPES: Array<{
+  id: ExportScope;
+  apiKey: string;
+  title: string;
+  description: string;
+}> = [
+  { id: "Daily", apiKey: "daily", title: "Daily", description: "24-hour snapshot" },
+  { id: "Weekly", apiKey: "weekly", title: "Weekly", description: "7-day trend with worst score" },
+  { id: "Bi-Weekly (15 Days)", apiKey: "bi_weekly", title: "Bi-Weekly", description: "15-day trend with worst score" },
+  { id: "Monthly", apiKey: "monthly", title: "Monthly", description: "30-day trend with worst score" },
+];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CURRENT_YEAR = new Date().getFullYear();
@@ -66,14 +130,12 @@ function DateSelectInput({ value, onChange }: { value: string; onChange: (v: str
   const [month, setMonth] = useState(1);
   const [day, setDay] = useState(1);
 
-  // Sync internal state → parent string value
   const emit = (y: number, m: number, d: number) => {
     const clamped = Math.min(d, daysInMonth(m, y));
     onChange(`${y}-${String(m).padStart(2, "0")}-${String(clamped).padStart(2, "0")}`);
     setDay(clamped);
   };
 
-  // Parse parent value into internal state on mount / external change
   useEffect(() => {
     if (!value) return;
     const [y, m, d] = value.split("-").map(Number);
@@ -89,28 +151,46 @@ function DateSelectInput({ value, onChange }: { value: string; onChange: (v: str
       <select
         className={styles.dateSelect}
         value={day}
-        onChange={(e) => { const d = Number(e.target.value); setDay(d); emit(year, month, d); }}
+        onChange={(e) => {
+          const d = Number(e.target.value);
+          setDay(d);
+          emit(year, month, d);
+        }}
       >
         {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
-          <option key={d} value={d}>{String(d).padStart(2, "0")}</option>
+          <option key={d} value={d}>
+            {String(d).padStart(2, "0")}
+          </option>
         ))}
       </select>
       <select
         className={styles.dateSelect}
         value={month}
-        onChange={(e) => { const m = Number(e.target.value); setMonth(m); emit(year, m, day); }}
+        onChange={(e) => {
+          const m = Number(e.target.value);
+          setMonth(m);
+          emit(year, m, day);
+        }}
       >
         {MONTHS.map((name, i) => (
-          <option key={name} value={i + 1}>{name}</option>
+          <option key={name} value={i + 1}>
+            {name}
+          </option>
         ))}
       </select>
       <select
         className={styles.dateSelect}
         value={year}
-        onChange={(e) => { const y = Number(e.target.value); setYear(y); emit(y, month, day); }}
+        onChange={(e) => {
+          const y = Number(e.target.value);
+          setYear(y);
+          emit(y, month, day);
+        }}
       >
         {YEARS.map((y) => (
-          <option key={y} value={y}>{y}</option>
+          <option key={y} value={y}>
+            {y}
+          </option>
         ))}
       </select>
     </div>
@@ -126,84 +206,71 @@ function scoreToRisk(score: number | null): LivePatient["risk"] {
 }
 
 export function ExportView({ onBack }: ExportViewProps) {
-  const [exportType, setExportType] = useState<ExportType>("Combined");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("pdf");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [diseaseFilter, setDiseaseFilter] = useState("");
+  const [scope, setScope] = useState<ExportScope>("All Patients");
+  const [format, setFormat] = useState<ExportFormat>("excel");
+
+  // Conditional filter states
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [singlePatientId, setSinglePatientId] = useState<string>("");
+  const [diseaseFilter, setDiseaseFilter] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  // Search & data states
+  const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<LivePatient[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [recentExports, setRecentExports] = useState<RecentExport[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  // ── New: Professional Excel export state ──────────────────────────────────
-  const [xlsxExporting, setXlsxExporting] = useState<"all" | "selected" | null>(null);
-  const [xlsxError, setXlsxError] = useState<string | null>(null);
-
-  const handleXlsxExport = async (mode: "all" | "selected") => {
-    setXlsxExporting(mode);
-    setXlsxError(null);
-    try {
-      const body: { patient_ids?: string[] } = {};
-      if (mode === "selected") {
-        body.patient_ids = Array.from(selected);
-      }
-      const res = await fetch("/api/exports/excel", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? `Export failed (${res.status})`);
-      }
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
-      const disposition = res.headers.get("Content-Disposition") ?? "";
-      const match = disposition.match(/filename="(.+)"/);
-      a.download = match?.[1] ?? "o2plus-patients.xlsx";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setXlsxError(err instanceof Error ? err.message : "Export failed.");
-    } finally {
-      setXlsxExporting(null);
-    }
-  };
-
+  // Fetch live doctor patients
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { setLoadingPatients(false); return; }
-
-      // Fetch primary + OTP-imported patients through the doctor API.
-      const patientResponse = await fetch("/api/doctor/patients", { credentials: "include" });
-      const patientPayload = await patientResponse.json().catch(() => null) as { patients?: DoctorPatientRow[] } | null;
-
-      if (patientResponse.ok && patientPayload?.patients) {
-        const live: LivePatient[] = patientPayload.patients.map((p) => {
-          const scores = [...(p.red_flag_scores ?? [])].sort(
-            (a, b) => new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime()
-          );
-          const latestScore = scores[0]?.global_score ?? null;
-          return {
-            id: p.id,
-            name: p.name,
-            primary_diagnosis: (p.patient_diagnoses ?? [])[0]?.primary_diagnosis ?? null,
-            risk: scoreToRisk(latestScore),
-            score: latestScore,
-          };
-        }).sort((left, right) => (right.score ?? -1) - (left.score ?? -1) || left.name.localeCompare(right.name));
-        setPatients(live);
-        setSelected(new Set(live.map((p) => p.id)));
+      if (!user) {
+        setLoadingPatients(false);
+        return;
       }
 
-      // Fetch recent exports (last 5)
+      const patientResponse = await fetch("/api/doctor/patients", { credentials: "include" });
+      const patientPayload = (await patientResponse.json().catch(() => null)) as {
+        patients?: DoctorPatientRow[];
+      } | null;
+
+      if (patientResponse.ok && patientPayload?.patients) {
+        const live: LivePatient[] = patientPayload.patients
+          .map((p) => {
+            const scores = [...(p.red_flag_scores ?? [])].sort(
+              (a, b) =>
+                new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime(),
+            );
+            const latestScore = scores[0]?.global_score ?? null;
+            return {
+              id: p.id,
+              name: p.name,
+              primary_diagnosis:
+                (p.patient_diagnoses ?? [])[0]?.primary_diagnosis ??
+                (p.patient_diagnoses ?? [])[0]?.effective_dashboard ??
+                null,
+              risk: scoreToRisk(latestScore),
+              score: latestScore,
+              created_at: p.created_at,
+            };
+          })
+          .sort(
+            (a, b) =>
+              (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name),
+          );
+
+        setPatients(live);
+        setSelectedIds(new Set(live.map((p) => p.id)));
+        if (live.length > 0 && live[0]) {
+          setSinglePatientId(live[0].id);
+        }
+      }
+
+      // Fetch recent export logs
       const { data: expData } = await supabase
         .from("export_records")
         .select("id, export_type, generated_at, presigned_url")
@@ -215,47 +282,131 @@ export function ExportView({ onBack }: ExportViewProps) {
         setRecentExports(
           expData.map((r) => ({
             id: r.id,
-            export_type: r.export_type ?? "unknown",
+            export_type: r.export_type ?? "registry",
             created_at: r.generated_at,
             presigned_url: r.presigned_url,
-          }))
+          })),
         );
       }
       setLoadingPatients(false);
     });
   }, []);
 
-  const togglePatient = (id: string) => {
-    setSelected((prev) => {
+  // Filtered patients by search query
+  const filteredPatients = useMemo(() => {
+    if (!searchQuery.trim()) return patients;
+    const q = searchQuery.toLowerCase().trim();
+    return patients.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.primary_diagnosis ?? "").toLowerCase().includes(q) ||
+        p.id.toLowerCase().includes(q),
+    );
+  }, [patients, searchQuery]);
+
+  // Distinct disease options with counts
+  const diseaseBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {};
+    patients.forEach((p) => {
+      const diag = p.primary_diagnosis || "Other";
+      counts[diag] = (counts[diag] ?? 0) + 1;
+    });
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+  }, [patients]);
+
+  useEffect(() => {
+    if (scope === "Disease-Specific" && !diseaseFilter && diseaseBreakdown.length > 0 && diseaseBreakdown[0]) {
+      setDiseaseFilter(diseaseBreakdown[0].name);
+    }
+  }, [scope, diseaseFilter, diseaseBreakdown]);
+
+  // Toggle single patient selection
+  const togglePatientSelection = (id: string) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  const toggleAll = () => {
-    setSelected(selected.size === patients.length ? new Set() : new Set(patients.map((p) => p.id)));
+  const toggleSelectAll = () => {
+    if (selectedIds.size === patients.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(patients.map((p) => p.id)));
+    }
   };
 
+  // Format label for button
+  const formatLabel = format === "excel" ? "Excel" : format === "csv" ? "CSV" : "PDF Report";
+
+  // Dynamic Button Text (Requirement 4)
+  const getExportButtonText = (): string => {
+    if (exporting) return `Generating ${formatLabel}…`;
+
+    switch (scope) {
+      case "All Patients":
+        return `Export All Patients — ${formatLabel}`;
+      case "Selected Patients": {
+        const count = selectedIds.size;
+        if (count === 1) return `Export 1 Patient — ${formatLabel}`;
+        return `Export ${count} Patients — ${formatLabel}`;
+      }
+      case "Single Patient":
+        return `Export Single Patient — ${formatLabel}`;
+      case "Disease-Specific":
+        return `Export Disease-Specific Records — ${formatLabel}`;
+      case "Date-Wise":
+        return `Export Date-Wise Records — ${formatLabel}`;
+      case "Daily":
+        return `Export Daily Trends — ${formatLabel}`;
+      case "Weekly":
+        return `Export Weekly Trends — ${formatLabel}`;
+      case "Bi-Weekly (15 Days)":
+        return `Export Bi-Weekly Trends — ${formatLabel}`;
+      case "Monthly":
+        return `Export Monthly Trends — ${formatLabel}`;
+      default:
+        return `Export Patient Records — ${formatLabel}`;
+    }
+  };
+
+  // Validation
+  const isExportReady = useMemo(() => {
+    if (patients.length === 0) return false;
+    if (scope === "Selected Patients" && selectedIds.size === 0) return false;
+    if (scope === "Single Patient" && !singlePatientId) return false;
+    if (scope === "Disease-Specific" && !diseaseFilter) return false;
+    if (scope === "Date-Wise" && (!startDate || !endDate)) return false;
+    return true;
+  }, [scope, patients.length, selectedIds.size, singlePatientId, diseaseFilter, startDate, endDate]);
+
+  // Main Export Handler
   const handleExport = async () => {
     setExporting(true);
     setExportError(null);
+
     try {
-      const typeConfig = EXPORT_TYPES.find((t) => t.id === exportType);
+      const allScopeList = [...PRIMARY_SCOPES, ...TREND_SCOPES];
+      const currentScopeConfig = allScopeList.find((s) => s.id === scope);
+      const apiKey = currentScopeConfig?.apiKey ?? "all_patients";
+
       const body: Record<string, unknown> = {
-        export_type: typeConfig?.apiKey ?? "combined",
-        format: exportFormat,
-        patient_ids: Array.from(selected),
+        export_type: apiKey,
+        format,
       };
-      if (exportType === "Disease-Specific") {
+
+      if (scope === "Selected Patients") {
+        body.patient_ids = Array.from(selectedIds);
+      } else if (scope === "Single Patient") {
+        body.patient_id = singlePatientId;
+        body.patient_ids = [singlePatientId];
+      } else if (scope === "Disease-Specific") {
         body.disease_filter = diseaseFilter;
-      }
-      if (exportType === "Date-Wise") {
+      } else if (scope === "Date-Wise") {
         body.start_date = startDate;
         body.end_date = endDate;
-      }
-      if (exportType === "Single Patient") {
-        body.patient_id = Array.from(selected)[0];
       }
 
       const res = await fetch("/api/exports", {
@@ -265,312 +416,441 @@ export function ExportView({ onBack }: ExportViewProps) {
       });
 
       if (!res.ok) {
-        const payload = await res.json().catch(() => null);
-        setExportError(payload?.details ?? payload?.error ?? `Export failed (${res.status})`);
-        return;
+        const payload = (await res.json().catch(() => null)) as { error?: string; details?: string } | null;
+        throw new Error(payload?.error ?? payload?.details ?? `Export failed with status ${res.status}`);
       }
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? `saans-export.${exportFormat === "excel" ? "xls" : exportFormat}`;
+
+      const contentDisposition = res.headers.get("Content-Disposition") ?? "";
+      const match = contentDisposition.match(/filename="(.+)"/);
+      const extension = format === "excel" ? "xlsx" : format === "csv" ? "csv" : "pdf";
+      a.download = match?.[1] ?? `O2Plus_Patient_Export.${extension}`;
+
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      setExportError(error instanceof Error ? error.message : "Export failed.");
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Failed to generate export file.");
     } finally {
       setExporting(false);
     }
   };
 
-  // Compute panel distribution from live data
-  const diagCounts: Record<string, number> = {};
-  patients.forEach((p) => {
-    const d = (p.primary_diagnosis ?? "unknown").toLowerCase();
-    diagCounts[d] = (diagCounts[d] ?? 0) + 1;
-  });
-  const totalPatients = patients.length;
-  const criticalCount = patients.filter((p) => p.risk === "critical").length;
-
-  const panelDist = Object.entries(diagCounts).map(([diag, count]) => ({
-    label: diag.toUpperCase(),
-    count,
-    pct: totalPatients > 0 ? Math.round((count / totalPatients) * 100) : 0,
-    color: DIAG_COLORS[diag] ?? "#888",
-  })).sort((a, b) => b.count - a.count);
-  const diseaseOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          patients
-            .map((patient) => patient.primary_diagnosis?.toLowerCase())
-            .filter((diagnosis): diagnosis is string => Boolean(diagnosis)),
-        ),
-      ).sort(),
-    [patients],
-  );
-  const canExport =
-    selected.size > 0 &&
-    (exportType !== "Disease-Specific" || Boolean(diseaseFilter)) &&
-    (exportType !== "Date-Wise" || (Boolean(startDate) && Boolean(endDate))) &&
-    (exportType !== "Single Patient" || selected.size === 1);
-
-  useEffect(() => {
-    if (exportType !== "Disease-Specific") return;
-    if (diseaseFilter && diseaseOptions.includes(diseaseFilter)) return;
-    setDiseaseFilter(diseaseOptions[0] ?? "");
-  }, [diseaseFilter, diseaseOptions, exportType]);
-
   return (
     <div className={styles.view}>
+      {/* Top Header Bar */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Export Patient Data</h1>
-          <p className={styles.sub}>6 export types · PDF, Excel, CSV · Downloads directly to your device</p>
+          <p className={styles.sub}>
+            Clinical Cohort Registry &amp; Dossiers · Standardized 33-Column .xlsx, CSV, and Clinical PDF
+          </p>
         </div>
-        <button type="button" className={styles.btnGhost} onClick={onBack}>← Dashboard</button>
-      </div>
-
-      {/* ── Professional Excel Export ─────────────────────────────────────── */}
-      <div className={styles.xlsxActions} style={{ padding: "12px 24px", display: "flex", gap: 10, flexShrink: 0, borderBottom: "1px solid rgba(19,45,54,0.08)", background: "#fff" }}>
-        <button
-          type="button"
-          className={styles.xlsxBtnOutline}
-          style={{ background: "none", border: "1.5px solid rgba(19,45,54,0.18)", color: "#496977", height: 38, padding: "0 16px", borderRadius: 8, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
-          disabled={xlsxExporting !== null || selected.size === 0}
-          onClick={() => handleXlsxExport("selected")}
-        >
-          {xlsxExporting === "selected"
-            ? "Generating…"
-            : `Export Selected (${selected.size})`}
+        <button type="button" className={styles.btnGhost} onClick={onBack}>
+          ← Back to Dashboard
         </button>
-        <button
-          type="button"
-          className={styles.xlsxBtnPrimary}
-          disabled={xlsxExporting !== null || patients.length === 0}
-          onClick={() => handleXlsxExport("all")}
-        >
-          {xlsxExporting === "all"
-            ? "Generating…"
-            : `Export All My Patients (${patients.length})`}
-        </button>
-        {xlsxError && (
-          <p style={{ fontSize: 12, color: "#c94d49", margin: "auto 0" }}>{xlsxError}</p>
-        )}
       </div>
 
       <div className={styles.layout}>
-        {/* Left */}
+        {/* Left Column: Configuration Workflow */}
         <div className={styles.left}>
-          {/* Summary stats — live */}
-          <div className={styles.summaryGrid}>
-            {[
-              { val: totalPatients, lbl: "Total patients" },
-              { val: criticalCount, lbl: "Critical alerts", red: true },
-              { val: Object.keys(diagCounts).length, lbl: "Disease types" },
-              { val: Array.from(selected).length, lbl: "Selected" },
-            ].map((s) => (
-              <div key={s.lbl} className={styles.summaryCard}>
-                <p className={`${styles.summaryVal} ${s.red ? styles.summaryRed : ""}`}>{s.val}</p>
-                <p className={styles.summaryLbl}>{s.lbl}</p>
+          {/* SECTION 1: EXPORT SCOPE */}
+          <div className={styles.card}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionNumber}>1</span>
+              <div>
+                <p className={styles.cardTitle}>Export Scope</p>
+                <p className={styles.cardSubtitle}>Select patient cohort or report mode</p>
               </div>
-            ))}
+            </div>
+
+            {/* Primary: PATIENT EXPORTS */}
+            <p className={styles.groupLabel}>PATIENT EXPORTS</p>
+            <div className={styles.scopeGrid}>
+              {PRIMARY_SCOPES.map((s) => {
+                const IconComponent = s.icon;
+                const isSelected = scope === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`${styles.scopeCard} ${isSelected ? styles.scopeCardActive : ""}`}
+                    onClick={() => {
+                      setScope(s.id);
+                      setExportError(null);
+                    }}
+                  >
+                    <div className={styles.scopeIconWrapper}>
+                      <IconComponent
+                        size={18}
+                        strokeWidth={2}
+                        className={isSelected ? styles.scopeIconActive : styles.scopeIcon}
+                      />
+                    </div>
+                    <div className={styles.scopeText}>
+                      <p className={styles.scopeTitle}>{s.title}</p>
+                      <p className={styles.scopeDesc}>{s.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Secondary: CLINICAL TREND EXPORTS */}
+            <div className={styles.secondarySection}>
+              <div className={styles.trendHeader}>
+                <TrendingUp size={14} style={{ color: "#0f6e56" }} />
+                <span className={styles.groupLabel} style={{ margin: 0 }}>CLINICAL TREND EXPORTS</span>
+              </div>
+              <div className={styles.trendGrid}>
+                {TREND_SCOPES.map((t) => {
+                  const isSelected = scope === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`${styles.trendCard} ${isSelected ? styles.trendCardActive : ""}`}
+                      onClick={() => {
+                        setScope(t.id);
+                        setExportError(null);
+                      }}
+                    >
+                      <p className={styles.trendTitle}>{t.title}</p>
+                      <p className={styles.trendDesc}>{t.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Panel distribution — live */}
+          {/* SECTION 2: CONDITIONAL FILTERS */}
           <div className={styles.card}>
-            <p className={styles.cardTitle}>
-              <BarChart2 size={15} strokeWidth={1.5} style={{ color: "#0f6e56" }} />
-              Panel Distribution
-            </p>
-            {panelDist.map((d) => (
-              <div key={d.label} className={styles.barRow}>
-                <span className={styles.barLabel}>{d.label}</span>
-                <div className={styles.barTrack}>
-                  <div className={styles.barFill} style={{ width: `${d.pct}%`, background: d.color }} />
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionNumber}>2</span>
+              <div>
+                <p className={styles.cardTitle}>Conditional Filters</p>
+                <p className={styles.cardSubtitle}>
+                  {scope === "All Patients" && "Exporting entire registered cohort"}
+                  {scope === "Selected Patients" && `${selectedIds.size} of ${patients.length} patients selected`}
+                  {scope === "Single Patient" && "Select specific patient to export dossier"}
+                  {scope === "Disease-Specific" && "Filter patients by primary diagnosis"}
+                  {scope === "Date-Wise" && "Select chronological date range"}
+                  {(scope === "Daily" || scope === "Weekly" || scope === "Bi-Weekly (15 Days)" || scope === "Monthly") && `Aggregating trends for ${scope} window`}
+                </p>
+              </div>
+            </div>
+
+            {/* All Patients: Informative confirmation banner */}
+            {(scope === "All Patients" || scope === "Daily" || scope === "Weekly" || scope === "Bi-Weekly (15 Days)" || scope === "Monthly") && (
+              <div className={styles.infoBanner}>
+                <ShieldCheck size={20} className={styles.infoIcon} />
+                <div>
+                  <p className={styles.infoTitle}>
+                    {scope === "All Patients" ? "Clinical Patient Registry" : `${scope} Cohort Trends`}
+                  </p>
+                  <p className={styles.infoText}>
+                    Generates <strong>ONE FLAT TABLE</strong> on the <strong>Patient Registry</strong> sheet with all <strong>33 clinical columns</strong> (1 row per patient). No separate multi-sections, no raw JSON.
+                  </p>
                 </div>
-                <span className={styles.barCount}>{d.count}</span>
               </div>
-            ))}
-            {panelDist.length === 0 && <p style={{ fontSize: 12, color: "#888" }}>No data yet.</p>}
-          </div>
+            )}
 
-          {/* Export type */}
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>
-              <Table2 size={15} strokeWidth={1.5} style={{ color: "#0f6e56" }} />
-              Export Type
-            </p>
-            <div className={styles.typeGrid}>
-              {EXPORT_TYPES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`${styles.typeCard} ${exportType === t.id ? styles.typeCardSelected : ""}`}
-                  onClick={() => {
-                    setExportType(t.id);
-                    setExportError(null);
-                  }}
-                >
-                  <p className={styles.typeTitle}>{t.id}</p>
-                  <p className={styles.typeSub}>{t.sub}</p>
-                </button>
-              ))}
-            </div>
-          </div>
+            {/* Selected Patients: Selection interface with search and counter */}
+            {scope === "Selected Patients" && (
+              <div className={styles.filterSection}>
+                <div className={styles.filterBar}>
+                  <div className={styles.searchBox}>
+                    <Search size={15} className={styles.searchIcon} />
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      placeholder="Search patient name, diagnosis, or UHID…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <button type="button" className={styles.btnSecondary} onClick={toggleSelectAll}>
+                    {selectedIds.size === patients.length ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
 
-          {/* Format & options */}
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>
-              <FileEdit size={15} strokeWidth={1.5} style={{ color: "#0f6e56" }} />
-              Format &amp; Options
-            </p>
-            <p className={styles.formatLabel}>File Format</p>
-            <div className={styles.formatPills}>
-              {[
-                { id: "pdf", label: "PDF Report" },
-                { id: "excel", label: "Excel" },
-                { id: "csv", label: "CSV" },
-              ].map((format) => (
-                <button
-                  key={format.id}
-                  type="button"
-                  className={`${styles.formatPill} ${exportFormat === format.id ? styles.formatPillActive : ""}`}
-                  onClick={() => setExportFormat(format.id as ExportFormat)}
-                >
-                  {format.label}
-                </button>
-              ))}
-            </div>
-            {exportType === "Disease-Specific" && (
-              <div className={styles.dateField}>
-                <label className={styles.dateLabel}>Disease</label>
+                <div className={styles.patientSelectionCount}>
+                  <CheckSquare size={15} style={{ color: "#0f6e56" }} />
+                  <span>
+                    <strong>{selectedIds.size}</strong> {selectedIds.size === 1 ? "patient" : "patients"} selected
+                  </span>
+                </div>
+
+                <div className={styles.patientListScroll}>
+                  {filteredPatients.map((p) => {
+                    const isChecked = selectedIds.has(p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        className={`${styles.patientSelectRow} ${isChecked ? styles.patientSelectRowChecked : ""}`}
+                        onClick={() => togglePatientSelection(p.id)}
+                      >
+                        <div className={`${styles.customCheckbox} ${isChecked ? styles.customCheckboxChecked : ""}`}>
+                          {isChecked && <Check size={12} strokeWidth={3} />}
+                        </div>
+                        <div className={styles.patientSelectInfo}>
+                          <p className={styles.patientSelectName}>{p.name}</p>
+                          <p className={styles.patientSelectMeta}>
+                            UHID: P-{p.id.slice(0, 8).toUpperCase()} · {p.primary_diagnosis ?? "Unspecified"}
+                          </p>
+                        </div>
+                        <span className={`${styles.riskBadge} ${styles[`risk_${p.risk}`]}`}>
+                          {p.risk.toUpperCase()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Single Patient: Searchable Radio Selector */}
+            {scope === "Single Patient" && (
+              <div className={styles.filterSection}>
+                <div className={styles.searchBox}>
+                  <Search size={15} className={styles.searchIcon} />
+                  <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder="Search patient name, diagnosis, or UHID…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.patientListScroll}>
+                  {filteredPatients.map((p) => {
+                    const isSelected = singlePatientId === p.id;
+                    return (
+                      <div
+                        key={p.id}
+                        className={`${styles.patientSelectRow} ${isSelected ? styles.patientSelectRowChecked : ""}`}
+                        onClick={() => setSinglePatientId(p.id)}
+                      >
+                        <div className={`${styles.customRadio} ${isSelected ? styles.customRadioChecked : ""}`}>
+                          {isSelected && <div className={styles.customRadioDot} />}
+                        </div>
+                        <div className={styles.patientSelectInfo}>
+                          <p className={styles.patientSelectName}>{p.name}</p>
+                          <p className={styles.patientSelectMeta}>
+                            UHID: P-{p.id.slice(0, 8).toUpperCase()} · {p.primary_diagnosis ?? "Unspecified"}
+                          </p>
+                        </div>
+                        <span className={`${styles.riskBadge} ${styles[`risk_${p.risk}`]}`}>
+                          {p.risk.toUpperCase()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Disease-Specific: Diagnosis Dropdown */}
+            {scope === "Disease-Specific" && (
+              <div className={styles.filterSection}>
+                <label className={styles.fieldLabel}>Select Primary Diagnosis</label>
                 <select
-                  className={styles.dateSelect}
+                  className={styles.selectInput}
                   value={diseaseFilter}
-                  onChange={(event) => setDiseaseFilter(event.target.value)}
+                  onChange={(e) => setDiseaseFilter(e.target.value)}
                 >
-                  {diseaseOptions.map((diagnosis) => (
-                    <option key={diagnosis} value={diagnosis}>
-                      {diagnosis.toUpperCase()}
+                  {diseaseBreakdown.map((d) => (
+                    <option key={d.name} value={d.name}>
+                      {d.name} ({d.count} {d.count === 1 ? "patient" : "patients"})
                     </option>
                   ))}
                 </select>
               </div>
             )}
-            {exportType === "Date-Wise" && (
-              <div className={styles.dateGrid}>
-                <div className={styles.dateField}>
-                  <label className={styles.dateLabel}>Start Date</label>
-                  <DateSelectInput value={startDate} onChange={setStartDate} />
-                </div>
-                <div className={styles.dateField}>
-                  <label className={styles.dateLabel}>End Date</label>
-                  <DateSelectInput value={endDate} onChange={setEndDate} />
+
+            {/* Date-Wise: Start and End Date Pickers */}
+            {scope === "Date-Wise" && (
+              <div className={styles.filterSection}>
+                <div className={styles.dateGrid}>
+                  <div>
+                    <label className={styles.fieldLabel}>Start Date</label>
+                    <DateSelectInput value={startDate} onChange={setStartDate} />
+                  </div>
+                  <div>
+                    <label className={styles.fieldLabel}>End Date</label>
+                    <DateSelectInput value={endDate} onChange={setEndDate} />
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <button
-            type="button"
-            className={styles.exportBtn}
-            onClick={handleExport}
-            disabled={exporting || !canExport}
-          >
-            {exporting ? `Generating ${exportFormat.toUpperCase()}...` : `Export ${Array.from(selected).length} Patients - ${exportFormat.toUpperCase()} ->`}
-          </button>
-          {exportType === "Single Patient" && selected.size !== 1 && (
-            <p style={{ fontSize: 12, color: "#b54708", marginTop: 8 }}>
-              Select exactly one patient for a single-patient export.
-            </p>
-          )}
-          {exportError && (
-            <p style={{ fontSize: 12, color: "#b42318", marginTop: 8 }}>
-              {exportError}
-            </p>
-          )}
-
-        </div>
-
-        {/* Right */}
-        <div className={styles.right}>
-          {/* Patient selection — live */}
-          <div>
-            <p className={styles.rightTitle}>Select Patients</p>
-            <button type="button" className={styles.selectAll} onClick={toggleAll}>
-              <div className={`${styles.ckbox} ${selected.size === patients.length && patients.length > 0 ? styles.ckboxChecked : ""}`}>
-                {selected.size === patients.length && patients.length > 0 && <Check size={10} strokeWidth={3} />}
+          {/* SECTION 3: FILE FORMAT (Excel / CSV / PDF) */}
+          <div className={styles.card}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionNumber}>3</span>
+              <div>
+                <p className={styles.cardTitle}>File Format</p>
+                <p className={styles.cardSubtitle}>Select export output type</p>
               </div>
-              <span>Select all {totalPatients} patients</span>
-            </button>
-            <div className={styles.patientList}>
-              {loadingPatients ? (
-                <p style={{ fontSize: 12, color: "#888", padding: "12px 0" }}>Loading patients…</p>
-              ) : (
-                patients.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={`${styles.patientRow} ${selected.has(p.id) ? styles.patientRowSelected : ""}`}
-                    onClick={() => togglePatient(p.id)}
-                  >
-                    <div className={styles.patientLeft}>
-                      <div className={`${styles.ckbox} ${selected.has(p.id) ? styles.ckboxChecked : ""}`}>
-                        {selected.has(p.id) && <Check size={10} strokeWidth={3} />}
-                      </div>
-                      <span className={styles.patientName}>{p.name}</span>
-                    </div>
-                    <div className={styles.patientRight}>
-                      <span className={styles.diagTag}>{p.primary_diagnosis?.toUpperCase() ?? "—"}</span>
-                      <span
-                        className={styles.scoreTag}
-                        style={{
-                          color: p.risk === "critical" ? "#e24b4a"
-                            : p.risk === "high" ? "#d85a30"
-                            : p.risk === "moderate" ? "#ef9f27"
-                            : "#639922",
-                        }}
-                      >
-                        {p.score ?? "—"}
-                      </span>
-                    </div>
-                  </button>
-                ))
-              )}
+            </div>
+
+            <div className={styles.formatGrid}>
+              <button
+                type="button"
+                className={`${styles.formatCard} ${format === "excel" ? styles.formatCardActive : ""}`}
+                onClick={() => setFormat("excel")}
+              >
+                <FileSpreadsheet size={20} className={format === "excel" ? styles.formatIconActive : styles.formatIcon} />
+                <div>
+                  <p className={styles.formatTitle}>Excel (.xlsx)</p>
+                  <p className={styles.formatSub}>Standard 33-column clinical registry</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.formatCard} ${format === "csv" ? styles.formatCardActive : ""}`}
+                onClick={() => setFormat("csv")}
+              >
+                <FileCode size={20} className={format === "csv" ? styles.formatIconActive : styles.formatIcon} />
+                <div>
+                  <p className={styles.formatTitle}>CSV (.csv)</p>
+                  <p className={styles.formatSub}>UTF-8 delimited data table</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.formatCard} ${format === "pdf" ? styles.formatCardActive : ""}`}
+                onClick={() => setFormat("pdf")}
+              >
+                <FileText size={20} className={format === "pdf" ? styles.formatIconActive : styles.formatIcon} />
+                <div>
+                  <p className={styles.formatTitle}>PDF Report (.pdf)</p>
+                  <p className={styles.formatSub}>Formatted clinical summary dossier</p>
+                </div>
+              </button>
             </div>
           </div>
 
-          {/* Recent exports — live */}
-          <div>
-            <p className={styles.rightTitle}>Recent Exports</p>
+          {/* SECTION 4: EXPORT ACTION BUTTON */}
+          <div className={styles.actionCard}>
+            {exportError && (
+              <div className={styles.errorBanner}>
+                <AlertCircle size={16} />
+                <span>{exportError}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className={styles.btnPrimary}
+              onClick={handleExport}
+              disabled={exporting || !isExportReady}
+            >
+              {exporting ? (
+                <div className={styles.loadingSpinner} />
+              ) : (
+                <Download size={18} strokeWidth={2.2} />
+              )}
+              <span>{getExportButtonText()}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column: Panel Overview & Recent History */}
+        <div className={styles.right}>
+          {/* Cohort Summary */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>Cohort Overview</p>
+            <div className={styles.summaryStatsGrid}>
+              <div className={styles.statBox}>
+                <p className={styles.statVal}>{patients.length}</p>
+                <p className={styles.statLbl}>Total Patients</p>
+              </div>
+              <div className={styles.statBox}>
+                <p className={`${styles.statVal} ${styles.statRed}`}>
+                  {patients.filter((p) => p.risk === "critical").length}
+                </p>
+                <p className={styles.statLbl}>Critical Risk</p>
+              </div>
+              <div className={styles.statBox}>
+                <p className={styles.statVal}>{diseaseBreakdown.length}</p>
+                <p className={styles.statLbl}>Disease Panels</p>
+              </div>
+              <div className={styles.statBox}>
+                <p className={`${styles.statVal} ${styles.statGreen}`}>
+                  {patients.filter((p) => p.risk === "stable").length}
+                </p>
+                <p className={styles.statLbl}>Stable</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Disease Distribution */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>Panel Distribution</p>
+            <div className={styles.panelList}>
+              {diseaseBreakdown.map((d) => {
+                const pct = patients.length > 0 ? Math.round((d.count / patients.length) * 100) : 0;
+                return (
+                  <div key={d.name} className={styles.panelItem}>
+                    <div className={styles.panelHeader}>
+                      <span className={styles.panelName}>{d.name}</span>
+                      <span className={styles.panelCount}>
+                        {d.count} ({pct}%)
+                      </span>
+                    </div>
+                    <div className={styles.panelTrack}>
+                      <div className={styles.panelBar} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent Exports Log */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>Recent Export History</p>
             {recentExports.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#888" }}>No exports yet.</p>
+              <p className={styles.emptyText}>No recent exports generated yet.</p>
             ) : (
-              recentExports.map((h) => (
-                <div key={h.id} className={styles.histItem}>
-                  <div className={styles.histIcon}>
-                    <FileText size={13} strokeWidth={1.5} style={{ color: "#0f6e56" }} />
+              <div className={styles.recentList}>
+                {recentExports.map((item) => (
+                  <div key={item.id} className={styles.recentItem}>
+                    <div className={styles.recentIconBox}>
+                      <FileSpreadsheet size={15} className={styles.recentIcon} />
+                    </div>
+                    <div className={styles.recentInfo}>
+                      <p className={styles.recentType}>{item.export_type.replace(/_/g, " ").toUpperCase()} EXPORT</p>
+                      <p className={styles.recentTime}>
+                        {item.created_at
+                          ? new Date(item.created_at).toLocaleString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Recent"}
+                      </p>
+                    </div>
+                    {item.presigned_url && (
+                      <a href={item.presigned_url} target="_blank" rel="noreferrer" className={styles.recentDownloadLink}>
+                        <Download size={13} />
+                      </a>
+                    )}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p className={styles.histName}>{h.export_type} export</p>
-                    <p className={styles.histMeta}>
-                      {h.created_at ? new Date(h.created_at).toLocaleString("en-IN") : "Unknown time"}
-                    </p>
-                  </div>
-                  {h.presigned_url && (
-                    <a
-                      href={h.presigned_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: 11, color: "#126969" }}
-                    >
-                      Download
-                    </a>
-                  )}
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
