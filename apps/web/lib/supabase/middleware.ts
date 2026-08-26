@@ -46,6 +46,7 @@ export async function updateSession(request: NextRequest) {
   // API routes handle their own auth via Bearer token — exclude them from the
   // redirect so they can return proper 401 JSON instead of a 307 to /login.
   const isAuthRoute =
+    path === "/" ||
     path.startsWith("/login") ||
     isPatientLoginRoute ||
     isAdminLoginRoute ||
@@ -131,8 +132,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated user hitting login or root → skip to dashboard
-  if (user && (path === "/" || path.startsWith("/login") || path.startsWith("/register"))) {
+  // Authenticated user hitting login or register → skip to dashboard
+  if (user && (path.startsWith("/login") || path.startsWith("/register"))) {
     const { data: doctorRow } = await supabase
       .from("doctors")
       .select("id")
