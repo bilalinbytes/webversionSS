@@ -604,6 +604,34 @@ function SinglePatientDossierDocument({
   );
 }
 
+function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  if (rows.length === 0) {
+    return (
+      <View style={S.table}>
+        <View style={S.tRow}>
+          <Text style={[S.tCellLast, { color: MUTED }]}>No records available.</Text>
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={S.table}>
+      <View style={S.tHead}>
+        {headers.map((h, i) => (
+          <Text key={h} style={i === headers.length - 1 ? S.tHeadLast : S.tHeadCell}>{h}</Text>
+        ))}
+      </View>
+      {rows.map((row, ri) => (
+        <View key={ri} style={ri % 2 === 0 ? S.tRow : S.tRowAlt}>
+          {row.map((cell, ci) => (
+            <Text key={ci} style={ci === row.length - 1 ? S.tCellLast : S.tCell}>{cell}</Text>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 // ─── Multi-Patient Cohort Summary Page ─────────────────────────────────────
 
 function CohortSummaryPage({
