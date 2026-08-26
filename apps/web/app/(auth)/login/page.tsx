@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useRef, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, Stethoscope, UserRound } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Stethoscope, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
@@ -203,7 +203,7 @@ function LoginContent() {
       <div className={styles.panelBloom} aria-hidden="true" />
 
       <section className={styles.leftColumn}>
-        <div className={styles.brand}>
+        <Link href="/" className={styles.brand}>
           <SaansBrandIcon className={styles.brandIcon} />
           <div>
             <p className={styles.brandTitle}>O2Plus</p>
@@ -211,10 +211,14 @@ function LoginContent() {
               Connecting missing dots with your doctor....
             </p>
           </div>
-        </div>
+        </Link>
 
         <div className={styles.formShell}>
           <header className={styles.header}>
+            <Link href="/" className={styles.backHomeLink}>
+              <ArrowLeft size={15} />
+              <span>Back to Home</span>
+            </Link>
             <h1 className={styles.title}>Doctor Portal</h1>
             <p className={styles.subtitle}>
               Sign in to your clinical dashboard.

@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import {
+  ArrowLeft,
   Loader2,
   RotateCcw,
   ShieldCheck,
@@ -370,6 +371,10 @@ function PatientLoginContent() {
     <main className={styles.page}>
       <section className={styles.card}>
         <header className={styles.header}>
+          <Link href="/" className={styles.backHomeLink}>
+            <ArrowLeft size={15} />
+            <span>Back to Home</span>
+          </Link>
           <p className={styles.eyebrow}>O2Plus</p>
           <h1 className={styles.title}>Patient Login</h1>
           <p className={styles.subtitle}>

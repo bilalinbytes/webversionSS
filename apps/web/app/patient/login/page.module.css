@@ -33,6 +33,29 @@
   gap: 0.65rem;
 }
 
+.backHomeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #1e6091;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
+  width: fit-content;
+}
+
+.backHomeLink:hover,
+.backHomeLink:focus-visible {
+  color: #164e77;
+  transform: translateX(-3px);
+  outline: none;
+}
+
 .eyebrow {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.78rem;
