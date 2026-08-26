@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, CheckCircle, X } from "lucide-react";
+import { ArrowLeft, CheckCircle, FileText, X } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import { PatientAnalyticsView } from "@/components/patient/PatientAnalyticsView";
+import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./PatientDetail.module.css";
 
@@ -202,6 +203,7 @@ export function PatientDetail({
   const [newInstruction, setNewInstruction] = useState("");
   const [savingInstruction, setSavingInstruction] = useState(false);
   const [sentInstructionId, setSentInstructionId] = useState<string | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const toast = useToast();
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
@@ -433,6 +435,16 @@ export function PatientDetail({
             </div>
           </div>
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.backBtn}
+              onClick={() => setReportModalOpen(true)}
+              style={{ background: "#1e6091", color: "#ffffff", borderColor: "#1e6091" }}
+              title="Download Date-Filtered Single Patient Clinical PDF Report"
+            >
+              <FileText size={14} />
+              <span>Export PDF Report</span>
+            </button>
             <button type="button" className={styles.backBtn} onClick={onClose}>
               <ArrowLeft size={14} />
               <span>Back</span>
@@ -442,6 +454,14 @@ export function PatientDetail({
             </button>
           </div>
         </div>
+
+        <PatientReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          patientId={resolvedId}
+          patientName={displayName}
+          isDoctorView={true}
+        />
 
         {/* Body */}
         <div className={styles.body}>

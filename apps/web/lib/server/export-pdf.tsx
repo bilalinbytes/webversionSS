@@ -51,16 +51,17 @@ export interface ExportPdfProps {
 
 export type ExportPdfDocumentElement = React.ReactElement<DocumentProps>;
 
-// ─── Design tokens ───────────────────────────────────────────────────────────
-const BRAND   = "#132d36";
-const ACCENT  = "#126969";
-const LIGHT   = "#f7fafb";
-const BORDER  = "#d4dfe3";
-const MUTED   = "#6d8794";
+// ─── Design tokens (Medical Blue Brand Theme) ──────────────────────────────
+const BRAND   = "#0f2b48"; // Deep Navy
+const ACCENT  = "#1e6091"; // Medical Blue
+const CYAN    = "#38bdf8"; // Bright Cyan Accent
+const LIGHT   = "#f8fafc"; // Slate surface card
+const BORDER  = "#e2e8f0"; // Subtle border
+const MUTED   = "#64748b"; // Muted body text
 const WHITE   = "#ffffff";
-const RED     = "#c94d49";
-const GREEN   = "#0f6e56";
-const AMBER   = "#b7791f";
+const RED     = "#dc2626"; // Critical alert red
+const GREEN   = "#16a34a"; // Stable green
+const AMBER   = "#ea580c"; // Moderate warning amber
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const S = StyleSheet.create({

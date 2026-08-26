@@ -482,6 +482,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                     className={`${styles.scopeCard} ${isSelected ? styles.scopeCardActive : ""}`}
                     onClick={() => {
                       setScope(s.id);
+                      if (s.id === "Single Patient") setFormat("pdf");
                       setExportError(null);
                     }}
                   >
@@ -705,25 +706,31 @@ export function ExportView({ onBack }: ExportViewProps) {
             <div className={styles.formatGrid}>
               <button
                 type="button"
-                className={`${styles.formatCard} ${format === "excel" ? styles.formatCardActive : ""}`}
-                onClick={() => setFormat("excel")}
+                className={`${styles.formatCard} ${format === "excel" ? styles.formatCardActive : ""} ${scope === "Single Patient" ? styles.formatCardDisabled : ""}`}
+                onClick={() => scope !== "Single Patient" && setFormat("excel")}
+                disabled={scope === "Single Patient"}
               >
                 <FileSpreadsheet size={20} className={format === "excel" ? styles.formatIconActive : styles.formatIcon} />
                 <div>
                   <p className={styles.formatTitle}>Excel (.xlsx)</p>
-                  <p className={styles.formatSub}>Standard 33-column clinical registry</p>
+                  <p className={styles.formatSub}>
+                    {scope === "Single Patient" ? "Available for Cohort exports" : "Standard 33-column clinical registry"}
+                  </p>
                 </div>
               </button>
 
               <button
                 type="button"
-                className={`${styles.formatCard} ${format === "csv" ? styles.formatCardActive : ""}`}
-                onClick={() => setFormat("csv")}
+                className={`${styles.formatCard} ${format === "csv" ? styles.formatCardActive : ""} ${scope === "Single Patient" ? styles.formatCardDisabled : ""}`}
+                onClick={() => scope !== "Single Patient" && setFormat("csv")}
+                disabled={scope === "Single Patient"}
               >
                 <FileCode size={20} className={format === "csv" ? styles.formatIconActive : styles.formatIcon} />
                 <div>
                   <p className={styles.formatTitle}>CSV (.csv)</p>
-                  <p className={styles.formatSub}>UTF-8 delimited data table</p>
+                  <p className={styles.formatSub}>
+                    {scope === "Single Patient" ? "Available for Cohort exports" : "UTF-8 delimited data table"}
+                  </p>
                 </div>
               </button>
 
@@ -735,7 +742,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                 <FileText size={20} className={format === "pdf" ? styles.formatIconActive : styles.formatIcon} />
                 <div>
                   <p className={styles.formatTitle}>PDF Report (.pdf)</p>
-                  <p className={styles.formatSub}>Formatted clinical summary dossier</p>
+                  <p className={styles.formatSub}>3-Page Executive Clinical Dossier</p>
                 </div>
               </button>
             </div>

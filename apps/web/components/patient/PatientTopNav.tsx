@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bell, Calendar, Download, Eye, FileText, Pill } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
+import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
 import styles from "./PatientTopNav.module.css";
 
@@ -145,6 +146,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [appointmentNotification, setAppointmentNotification] = useState<AppointmentNotification | null>(null);
   const [seenAppointmentKey, setSeenAppointmentKey] = useState<string | null>(null);
   const [doctorAcceptsAppointments, setDoctorAcceptsAppointments] = useState<boolean | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
     doctorName: "Assigned doctor",
     doctorHospital: "",
@@ -550,10 +552,26 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             </div>
           )}
         </div>
+        <button
+          type="button"
+          className={styles.reportBtn}
+          onClick={() => setReportModalOpen(true)}
+          title="Download My Clinical Report (PDF)"
+        >
+          <FileText size={15} />
+          <span className={styles.reportBtnText}>My Report</span>
+        </button>
+
         <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
           <span className={styles.logoutEn}>Sign Out</span>
           <span className={styles.logoutHi}>साइन आउट</span>
         </button>
+
+        <PatientReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          patientName={patientName}
+        />
         <div className={styles.profileWrap}>
           <button
             type="button"
