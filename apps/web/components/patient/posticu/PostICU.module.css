@@ -31,7 +31,20 @@
 .milestoneItemDone .milestoneLabel { color: #27500a; }
 
 .doctorRow { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-.doctorAvatar { width: 44px; height: 44px; border-radius: 50%; background: #04342c; color: #9fe1cb; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.doctorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--med-blue-100, #e8f1f8);
+  color: var(--med-blue-600, #1e6091);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
 .doctorName    { font-size: 15px; font-weight: 600; color: #1a1a18; font-family: var(--font-lora), Georgia, serif; }
 .doctorHospital { font-size: 12px; color: #888680; margin-top: 2px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
 .doctorSpec    { font-size: 11px; color: #aaa9a6; margin-top: 1px; font-family: var(--font-dm-sans), system-ui, sans-serif; }

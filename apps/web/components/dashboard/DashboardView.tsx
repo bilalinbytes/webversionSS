@@ -290,8 +290,8 @@ function DeleteConfirmDialog({
   );
 }
 
-// ── Patient card ──────────────────────────────────────────────────────────────
-function PatientCard({
+// ── Patient Table Row ─────────────────────────────────────────────────────────
+function PatientTableRow({
   patient,
   onClick,
   onAnalyticsClick,
@@ -306,8 +306,6 @@ function PatientCard({
   animIndex: number;
   onDeleteClick: (e: React.MouseEvent) => void;
 }) {
-  const [pressed, setPressed] = useState(false);
-
   const latestScore = patient.red_flag_scores?.[0];
   const score = latestScore?.global_score ?? null;
   const risk: RiskLevel = score !== null ? scoreToRisk(score) : "none";
@@ -328,21 +326,20 @@ function PatientCard({
     ? new Date(latestScore.computed_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
     : "No data";
 
-  const riskBorderClass = {
-    critical: styles.cardBorderCritical,
-    high:     styles.cardBorderHigh,
-    moderate: styles.cardBorderModerate,
-    stable:   styles.cardBorderStable,
-    none:     styles.cardBorderNone,
+  const rowBorderClass = {
+    critical: styles.rowBorderCritical,
+    high:     styles.rowBorderHigh,
+    moderate: styles.rowBorderModerate,
+    stable:   styles.rowBorderStable,
+    none:     styles.rowBorderNone,
   }[risk];
 
-  // SRS §2.2 — labels must be RED/ORANGE/YELLOW/GREEN
   const riskLabel: Record<RiskLevel, string> = {
-    critical: "RED",
-    high:     "ORANGE",
-    moderate: "YELLOW",
-    stable:   "GREEN",
-    none:     "No data",
+    critical: "CRITICAL",
+    high:     "HIGH",
+    moderate: "MODERATE",
+    stable:   "STABLE",
+    none:     "NO DATA",
   };
 
   const avatarClass = {
@@ -353,112 +350,109 @@ function PatientCard({
     none:     styles.avatarNone,
   }[risk];
 
-  const scoreClass = {
-    critical: styles.scoreCritical,
-    high:     styles.scoreHigh,
-    moderate: styles.scoreModerate,
-    stable:   styles.scoreStable,
-    none:     styles.scoreNone,
-  }[risk];
-
   return (
-    <article
-      className={`${styles.patientCard} ${riskBorderClass} ${pressed ? styles.cardPressed : ""}`}
-      style={{ animationDelay: `${animIndex * 50}ms` }}
+    <div
+      className={`${styles.patientRow} ${rowBorderClass}`}
+      style={{ animationDelay: `${animIndex * 25}ms` }}
       onClick={onClick}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className={styles.cardTop}>
-        <div className={`${styles.cardAvatar} ${avatarClass}`}>{initials}</div>
-        <div className={styles.cardMeta}>
-          <div className={styles.cardName}>{patient.name}</div>
+      {/* 1. Patient Info */}
+      <div className={styles.colPatient}>
+        <div className={`${styles.patientAvatar} ${avatarClass}`}>{initials}</div>
+        <div className={styles.patientDetails}>
+          <p className={styles.patientName}>{patient.name}</p>
+          <span className={styles.patientId}>
+            {patient.mobile_number ? `+91 ${patient.mobile_number}` : `ID: ${patient.id.slice(0, 8)}`}
+          </span>
         </div>
-        {score !== null ? (
-          <div className={`${styles.cardScore} ${scoreClass}`}>{score}</div>
-        ) : (
-          <div className={`${styles.cardScore} ${styles.scoreNone}`}>—</div>
+      </div>
+
+      {/* 2. Diagnosis & Comorbidities */}
+      <div className={styles.colDiag}>
+        <span className={styles.diagBadge} title={diagnosisLine}>{diagnosisLine}</span>
+        <span className={styles.comorbidText} title={comorbidityLine}>{comorbidityLine}</span>
+      </div>
+
+      {/* 3. Risk Level */}
+      <div className={styles.colRisk}>
+        <span className={`${styles.riskBadge} ${styles[`riskBadge_${risk}`]}`}>
+          {riskLabel[risk]}
+        </span>
+        {score !== null && (
+          <span className={styles.scoreCircle}>({score})</span>
         )}
       </div>
 
-      <div className={styles.cardRiskRow}>
-        <span className={`${styles.riskBadge} ${styles[`riskBadge_${risk}`]} ${risk === "critical" ? styles.riskBadgeBlink : ""}`}>
-          {riskLabel[risk]}
-        </span>
-        <span className={styles.cardRiskMeta} title={diagnosisLine}>{diagnosisLine}</span>
+      {/* 4. Last Check-In */}
+      <div className={styles.colLast}>
+        {lastLog}
       </div>
-      <div className={styles.cardComorbidityRow} title={comorbidityLine}>
-        {comorbidityLine}
-      </div>
-      {latestAlert?.reason_text && (
-        <p className={styles.cardAlertReason}>{latestAlert.reason_text}</p>
-      )}
 
-      <div className={styles.cardFooter}>
-        <span className={styles.cardLastLog}>Last: {lastLog}</span>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button
-            type="button"
-            aria-label={`Delete ${patient.name}`}
-            onClick={onDeleteClick}
-            style={{
-              padding: "5px 8px", borderRadius: 6, border: "1px solid rgba(201,77,73,0.25)",
-              background: "rgba(201,77,73,0.06)", color: "#c94d49", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 160ms ease",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,77,73,0.14)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(201,77,73,0.06)")}
-          >
-            <Trash2 size={13} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            className={styles.cardAnalyticsBtn}
-            onClick={onAnalyticsClick}
-          >
-            <Activity size={12} strokeWidth={2} />
-            Analytics
-          </button>
-          <button
-            type="button"
-            className={styles.cardFolderBtn}
-            aria-label={`Open treatment folder for ${patient.name}`}
-            title="Treatment folder"
-            onClick={onFolderClick}
-          >
-            <FolderOpen size={13} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            className={styles.cardViewBtn}
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-          >
-            View
-          </button>
-        </div>
+      {/* 5. Active Alerts */}
+      <div className={styles.colAlert}>
+        {latestAlert?.reason_text ? (
+          <span className={styles.alertReasonText} title={latestAlert.reason_text}>
+            ⚠️ {latestAlert.reason_text}
+          </span>
+        ) : (
+          <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>—</span>
+        )}
       </div>
-    </article>
+
+      {/* 6. Action Triggers */}
+      <div className={styles.colActions}>
+        <button
+          type="button"
+          aria-label={`Delete ${patient.name}`}
+          className={styles.btnActionDelete}
+          onClick={onDeleteClick}
+          title="Delete patient"
+        >
+          <Trash2 size={13} strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className={styles.btnActionIcon}
+          onClick={onAnalyticsClick}
+          title="Analytics"
+          aria-label={`View analytics for ${patient.name}`}
+        >
+          <Activity size={13} strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className={styles.btnActionIcon}
+          aria-label={`Open treatment folder for ${patient.name}`}
+          title="Treatment folder"
+          onClick={onFolderClick}
+        >
+          <FolderOpen size={13} strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className={styles.btnRowView}
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+        >
+          View →
+        </button>
+      </div>
+    </div>
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-function SkeletonCard() {
+// ── Skeleton Row ─────────────────────────────────────────────────────────────
+function SkeletonRow() {
   return (
-    <div className={styles.skeleton}>
-      <div className={styles.skRow}>
-        <div className={`${styles.skCircle} ${styles.shimmer}`} />
-        <div className={styles.skLines}>
-          <div className={`${styles.skLine} ${styles.skLineLong} ${styles.shimmer}`} />
-          <div className={`${styles.skLine} ${styles.skLineShort} ${styles.shimmer}`} />
-        </div>
-      </div>
-      <div className={`${styles.skBlock} ${styles.shimmer}`} />
-      <div className={`${styles.skLine} ${styles.skLineMed} ${styles.shimmer}`} />
+    <div className={styles.skeletonRow}>
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "80%" }} />
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "70%" }} />
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "60%" }} />
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "50%" }} />
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "40%" }} />
+      <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "90%" }} />
     </div>
   );
 }
@@ -948,25 +942,41 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           </div>
 
           {loading ? (
-            <div className={styles.monitorGrid} key={filterKey}>
-              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+            <div className={styles.tableContainer} key={filterKey}>
+              <div className={styles.tableHeaderRow}>
+                <span>Patient & ID</span>
+                <span>Diagnosis & Comorbidities</span>
+                <span>Risk Level</span>
+                <span>Last Check-In</span>
+                <span>Active Alerts</span>
+                <span style={{ textAlign: "right" }}>Actions</span>
+              </div>
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
             </div>
           ) : fetchError ? (
             <ErrorState message={fetchError} />
           ) : filteredPatients.length === 0 ? (
             <EmptyState onAdd={() => onViewChange("create")} />
           ) : (
-            <div className={styles.monitorGrid} key={filterKey}>
+            <div className={styles.tableContainer} key={filterKey}>
+              <div className={styles.tableHeaderRow}>
+                <span>Patient & ID</span>
+                <span>Diagnosis & Comorbidities</span>
+                <span>Risk Level</span>
+                <span>Last Check-In</span>
+                <span>Active Alerts</span>
+                <span style={{ textAlign: "right" }}>Actions</span>
+              </div>
               {filteredPatients.map((p, i) => (
-                <PatientCard
-                          key={p.id}
-                          patient={p}
-                          animIndex={i}
-                          onClick={() => openPatient(p)}
-                          onAnalyticsClick={(e) => { e.stopPropagation(); openPatient(p, "Analytics"); }}
-                          onFolderClick={(e) => { e.stopPropagation(); openPatient(p, "Treatment Folder"); }}
-                          onDeleteClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
-                        />
+                <PatientTableRow
+                  key={p.id}
+                  patient={p}
+                  animIndex={i}
+                  onClick={() => openPatient(p)}
+                  onAnalyticsClick={(e) => { e.stopPropagation(); openPatient(p, "Analytics"); }}
+                  onFolderClick={(e) => { e.stopPropagation(); openPatient(p, "Treatment Folder"); }}
+                  onDeleteClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                />
               ))}
             </div>
           )}

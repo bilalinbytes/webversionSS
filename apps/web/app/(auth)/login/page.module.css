@@ -11,7 +11,7 @@
 .tealPanel {
   position: absolute;
   inset: 0 0 0 43%;
-  background: linear-gradient(180deg, #173d45 0%, #132d36 56%, #112931 100%);
+  background: linear-gradient(180deg, #0a192f 0%, #0f2b48 56%, #164e77 100%);
   clip-path: ellipse(92% 124% at 100% 50%);
   z-index: 0;
 }
@@ -155,15 +155,15 @@
 }
 
 .portalOptionActive {
-  background: #133744;
+  background: #1e6091;
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(19, 55, 68, 0.18);
+  box-shadow: 0 4px 14px rgba(30, 96, 145, 0.25);
 }
 
 .portalOptionActive:hover,
 .portalOptionActive:focus-visible {
   color: #ffffff;
-  background: #133744;
+  background: #164e77;
   transform: translateY(-1px);
 }
 
@@ -419,8 +419,8 @@
   margin-top: 0.75rem;
   border: 0;
   border-radius: 0.85rem;
-  background: #133744;
-  box-shadow: 0 12px 30px rgba(19, 55, 68, 0.16);
+  background: #1e6091;
+  box-shadow: 0 4px 14px rgba(30, 96, 145, 0.25);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.97rem;
   font-weight: 600;
@@ -435,8 +435,8 @@
 
 .submitButton:hover:not(:disabled),
 .submitButton:focus-visible:not(:disabled) {
-  background: #194453;
-  box-shadow: 0 16px 34px rgba(19, 55, 68, 0.22);
+  background: #164e77;
+  box-shadow: 0 6px 18px rgba(30, 96, 145, 0.32);
   transform: translateY(-1px);
   outline: none;
 }
