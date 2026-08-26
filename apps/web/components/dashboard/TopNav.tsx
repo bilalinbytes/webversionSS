@@ -45,6 +45,7 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
   // SRS §2.1 — real unacknowledged alert count
   const [alertCount, setAlertCount] = useState(0);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
   const [actionDrafts, setActionDrafts] = useState<Record<string, { date: string; time: string; remarks: string }>>({});
 
@@ -281,13 +282,48 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
             </div>
           )}
         </div>
-        <button type="button" className={styles.notifBtn} aria-label="Notifications">
-          <Bell size={16} strokeWidth={1.5} />
-          {alertCount > 0 && <span className={styles.notifBadge}>{alertCount}</span>}
-        </button>
-        <div className={styles.doctorPill}>
-          <div className={styles.doctorAvatar}>{initials}</div>
-          <span className={styles.doctorName}>{doctorName}</span>
+        <div className={styles.profileWrap}>
+          <button
+            type="button"
+            className={styles.doctorPill}
+            aria-label="View doctor profile"
+            onClick={() => {
+              setProfileOpen((open) => !open);
+              setAppointmentOpen(false);
+            }}
+          >
+            <div className={styles.doctorAvatar}>{initials}</div>
+            <span className={styles.doctorName}>{doctorName}</span>
+          </button>
+          {profileOpen && (
+            <div className={styles.profilePanel}>
+              <div className={styles.profileHeader}>
+                <div className={styles.profileAvatarLarge}>{initials}</div>
+                <div>
+                  <p className={styles.profileTitle}>Doctor Profile</p>
+                  <p className={styles.profileName}>{doctorName}</p>
+                  <p className={styles.profileSub}>Specialty: <strong>Pulmonology &amp; Critical Care</strong></p>
+                </div>
+              </div>
+              <div className={styles.profileGrid}>
+                <div className={styles.profileInfoBox}>
+                  <p className={styles.profileLabel}>Role</p>
+                  <p className={styles.profileValue}>Attending Pulmonologist</p>
+                </div>
+                <div className={styles.profileInfoBox}>
+                  <p className={styles.profileLabel}>Platform Status</p>
+                  <p className={styles.profileValue} style={{ color: "#16a34a" }}>Verified Clinical Practitioner</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.profileSignOutBtn}
+                onClick={handleLogout}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>

@@ -334,6 +334,38 @@
   font-weight: 700;
 }
 
+.logoutBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: all 140ms ease;
+  white-space: nowrap;
+}
+
+.logoutBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.logoutEn {
+  font-weight: 600;
+}
+
+.logoutHi {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
 .signOutBtn {
   min-height: 38px;
   padding: 6px 14px;

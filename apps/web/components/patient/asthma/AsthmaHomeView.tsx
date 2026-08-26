@@ -28,7 +28,7 @@ interface Props {
 
 // ACT score logic
 function getControlStatus(yesCount: number) {
-  if (yesCount === 0) return { label: "Well Controlled", color: "#639922", bg: "#eaf3de", icon: "" };
+  if (yesCount === 0) return { label: "Well Controlled", color: "#16a34a", bg: "#f0fdf4", icon: "" };
   if (yesCount <= 2)  return { label: "Partly Controlled", color: "#ef9f27", bg: "#fef9e7", icon: "" };
   return { label: "Uncontrolled", color: "#e24b4a", bg: "#fcebeb", icon: "" };
 }
