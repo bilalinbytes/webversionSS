@@ -83,7 +83,7 @@ export async function renderPdfRegistry(bundle: ExportDataBundle): Promise<Buffe
           String(l.spo2Rest),
           l.spo2Walk ? String(l.spo2Walk) : "—",
           String(l.mmrc),
-          l.aqiValue ? String(l.aqiValue) : "—",
+          l.aqi ? String(l.aqi) : "—",
           String(l.riskScore),
           l.vasSymptoms || "Stable",
         ])

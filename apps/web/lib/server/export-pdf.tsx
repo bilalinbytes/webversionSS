@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   type DocumentProps,
   Document,
@@ -206,8 +206,8 @@ function SpO2TrendChart({ logRows }: { logRows: string[][] }) {
         {/* Threshold Dash Lines */}
         <Line x1={padX} y1={y90} x2={svgW - padX} y2={y90} stroke="#ea580c" strokeDasharray="3 3" strokeWidth={0.8} />
         <Line x1={padX} y1={y88} x2={svgW - padX} y2={y88} stroke="#dc2626" strokeDasharray="3 3" strokeWidth={0.8} />
-        <SvgText x={padX - 18} y={y90 + 2} fontSize={6} fill="#ea580c">90%</SvgText>
-        <SvgText x={padX - 18} y={y88 + 2} fontSize={6} fill="#dc2626">88%</SvgText>
+        <SvgText x={padX - 18} y={y90 + 2} style={{ fontSize: 6, fill: "#ea580c" }}>90%</SvgText>
+        <SvgText x={padX - 18} y={y88 + 2} style={{ fontSize: 6, fill: "#dc2626" }}>88%</SvgText>
 
         {/* Trend Polyline */}
         <Polyline points={polylinePoints} stroke="#1e6091" strokeWidth={1.8} fill="none" />
@@ -451,13 +451,13 @@ function SinglePatientDossierDocument({
               patient.logRows.slice(0, 12).map((row, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
                   <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
-                  <Text style={[S.tCell, { flex: 1, color: parseFloat(row[1]) < 88 ? RED : parseFloat(row[1]) < 90 ? AMBER : BRAND, fontFamily: "Helvetica-Bold" }]}>
+                  <Text style={[S.tCell, { flex: 1, color: parseFloat(row[1] ?? "0") < 88 ? RED : parseFloat(row[1] ?? "0") < 90 ? AMBER : BRAND, fontFamily: "Helvetica-Bold" }]}>
                     {row[1] ? `${row[1]}%` : "—"}
                   </Text>
                   <Text style={[S.tCell, { flex: 1 }]}>{row[2] ? `${row[2]}%` : "—"}</Text>
                   <Text style={[S.tCell, { flex: 1 }]}>{row[3] || "—"}</Text>
                   <Text style={[S.tCell, { flex: 1 }]}>{row[4] || "—"}</Text>
-                  <Text style={[S.tCell, { flex: 1.2, color: parseFloat(row[5]) >= 7 ? RED : parseFloat(row[5]) >= 4 ? AMBER : GREEN, fontFamily: "Helvetica-Bold" }]}>
+                  <Text style={[S.tCell, { flex: 1.2, color: parseFloat(row[5] ?? "0") >= 7 ? RED : parseFloat(row[5] ?? "0") >= 4 ? AMBER : GREEN, fontFamily: "Helvetica-Bold" }]}>
                     {row[5] ? `${row[5]} / 10` : "—"}
                   </Text>
                   <Text style={[S.tCellLast, { flex: 1.8 }]}>{row[3] ? `mMRC Grade ${row[3]}` : "Stable"}</Text>
