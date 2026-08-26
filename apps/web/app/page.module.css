@@ -1,29 +1,28 @@
 ﻿/* ==========================================================
-   O2Plus · Landing Page
-   Design system identical to login/register pages:
-     Primary:  #1e6091  (button blue)
-     Dark:     #132d36  (heading)
-     Medium:   #255669  (links)
-     Muted:    #627b89  (body text)
-     Subtle:   #6d8794  (labels)
-     Surface:  #f4f8fb  (card bg)
-     Border:   rgba(19,45,54,0.12)
-     Serif:    var(--font-lora)
-     Sans:     var(--font-dm-sans)
+   O2Plus · Landing Page Design System
+   Teal/Navy Brand Palette & Pulmonary Rhythm Animations
    ========================================================== */
 
-/* ─ Keyframes ─ */
+/* ─ Keyframe Animations ─ */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(22px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes cardFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.05); opacity: 0.85; }
 }
-@keyframes livePulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
-  50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(22,163,74,0); }
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+  50%       { opacity: 0.4; box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+@keyframes waveDash {
+  0%   { stroke-dashoffset: 800; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes floatWidget {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
 }
 
 /* ─ Root ─ */
@@ -135,7 +134,6 @@
   align-items: center;
   overflow: hidden;
 }
-/* Right half dark panel — identical to login page's tealPanel */
 .heroBg {
   position: absolute;
   inset: 0 0 0 48%;
@@ -161,17 +159,26 @@
   gap: 1.1rem;
   animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
 }
-.heroEyebrow {
-  font-size: 0.72rem;
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #6d8794;
-  margin: 0;
+  letter-spacing: 0.04em;
+  color: #1e6091;
+  background: #e8f1f8;
+  border: 1px solid rgba(30, 96, 145, 0.2);
+  width: fit-content;
+}
+.badgeHeartIcon {
+  color: #dc2626;
 }
 .heroHeading {
   font-family: var(--font-lora), Georgia, serif;
-  font-size: clamp(2.6rem, 4.5vw, 4rem);
+  font-size: clamp(2.6rem, 4.5vw, 3.8rem);
   font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.02em;
@@ -251,138 +258,161 @@
 }
 .heroRegisterLink:hover { color: #173d45; text-decoration: underline; }
 
-/* Hero right — floating card */
+/* Hero Right — Animated Pulmonary Oximetry Widget */
 .heroRight {
   display: flex;
   justify-content: center;
   align-items: center;
   animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.12s both;
 }
-.heroCard {
-  width: min(100%, 380px);
+.pulmonaryWidget {
+  width: min(100%, 390px);
   background: #ffffff;
-  border-radius: 1.1rem;
-  border: 1px solid rgba(19,45,54,0.1);
-  box-shadow: 0 24px 60px rgba(10,25,47,0.28), 0 2px 6px rgba(10,25,47,0.1);
+  border-radius: 1.15rem;
+  border: 1px solid rgba(19,45,54,0.12);
+  box-shadow: 0 24px 60px rgba(10,25,47,0.32), 0 2px 6px rgba(10,25,47,0.1);
   overflow: hidden;
-  animation: cardFloat 6s ease-in-out infinite;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: floatWidget 6s ease-in-out infinite;
 }
-.heroCardHeader {
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.widgetHeaderLeft {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(19,45,54,0.08);
-  background: #f9fcfd;
 }
-.heroCardLiveDot {
+.livePulseDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #16a34a;
-  animation: livePulse 2s ease infinite;
+  background: #dc2626;
+  animation: liveBlink 1.8s infinite;
 }
-.heroCardLiveLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #627b89;
-  letter-spacing: 0.04em;
-}
-.heroPatientList {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 0;
-}
-.heroPatientRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 18px;
-  transition: background 140ms ease;
-}
-.heroPatientRow:hover { background: #f9fcfd; }
-.heroPatientAvatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+.widgetTitle {
   font-size: 0.82rem;
   font-weight: 700;
+  color: #132d36;
+}
+.widgetBadgeAlert {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #991b1b;
+  background: #fee2e2;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.oximetryRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+}
+.spo2Block {
+  display: flex;
+  flex-direction: column;
+}
+.spo2Value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #dc2626;
+  font-family: var(--font-lora), Georgia, serif;
+  line-height: 1;
+}
+.spo2Label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 4px;
+}
+.pulseBlock {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #e2e8f0;
+  padding-left: 12px;
+}
+.pulseValue {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e6091;
+  font-family: var(--font-lora), Georgia, serif;
+  line-height: 1;
+}
+.pulseLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 4px;
+}
+.waveContainer {
+  position: relative;
+  height: 50px;
+  background: #0a192f;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.waveSvg {
+  width: 100%;
+  height: 100%;
+}
+.wavePath {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 800;
+  animation: waveDash 3s linear infinite;
+}
+.triageBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.triageBannerIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #ea580c;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.heroPatientInfo {
-  flex: 1;
-  min-width: 0;
+.triageBannerText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
-.heroPatientName {
-  font-size: 0.87rem;
-  font-weight: 600;
-  color: #132d36;
+.triageBannerText strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9a3412;
 }
-.heroPatientDx {
-  font-size: 0.75rem;
-  color: #879ca8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.heroPatientRisk {
+.triageBannerText span {
   font-size: 0.7rem;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-.heroCardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 18px;
-  border-top: 1px solid rgba(19,45,54,0.08);
-  font-size: 0.73rem;
-  color: #879ca8;
-  background: #f9fcfd;
-}
-.heroCardFooterArrow {
-  color: #255669;
-  font-weight: 600;
-  cursor: pointer;
+  color: #c2410c;
 }
 
-/* ─ SHARED SECTION STYLES ─ */
-.sectionEyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #6d8794;
-  margin: 0 0 0.6rem;
-}
-.sectionHeading {
-  font-family: var(--font-lora), Georgia, serif;
-  font-size: clamp(1.9rem, 3vw, 2.8rem);
-  font-weight: 500;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  color: #132d36;
-  margin: 0 0 1rem;
-}
-.sectionBody {
-  font-size: 0.98rem;
-  color: #627b89;
-  line-height: 1.65;
-  max-width: 520px;
-  margin: 0;
-}
-
-/* ─ ABOUT ─ */
+/* ─ ABOUT SECTION ─ */
 .about {
-  padding: 7rem 0;
+  padding: 6rem 0;
   background: #f9fcfd;
   border-top: 1px solid rgba(19,45,54,0.07);
   border-bottom: 1px solid rgba(19,45,54,0.07);
@@ -396,7 +426,11 @@
   gap: 3.5rem;
 }
 .aboutTop {
-  max-width: 580px;
+  max-width: 640px;
+}
+.blueHighlight {
+  color: #1e6091;
+  font-style: italic;
 }
 .aboutGrid {
   display: grid;
@@ -418,15 +452,15 @@
   box-shadow: 0 8px 24px rgba(30,96,145,0.08);
   transform: translateY(-3px);
 }
-.aboutCardNum {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+.aboutCardIconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #e8f1f8;
   color: #1e6091;
-  background: rgba(30,96,145,0.08);
-  width: fit-content;
-  padding: 3px 9px;
-  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .aboutCardTitle {
   font-family: var(--font-lora), Georgia, serif;
@@ -442,13 +476,12 @@
   margin: 0;
 }
 
-/* Conditions strip */
 .conditionsStrip {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
-  padding: 1.5rem 0;
+  padding-top: 1.5rem;
   border-top: 1px solid rgba(19,45,54,0.1);
 }
 .conditionsLabel {
@@ -458,7 +491,6 @@
   letter-spacing: 0.1em;
   color: #6d8794;
   margin: 0;
-  white-space: nowrap;
 }
 .conditionsTags {
   display: flex;
@@ -469,15 +501,91 @@
   padding: 5px 14px;
   border-radius: 100px;
   font-size: 0.82rem;
-  font-weight: 500;
-  color: #255669;
-  background: #eef6f8;
-  border: 1px solid rgba(19,45,54,0.1);
+  font-weight: 600;
+  color: #1e6091;
+  background: #e8f1f8;
+  border: 1px solid rgba(30, 96, 145, 0.15);
+}
+
+/* ─ TESTIMONIAL SECTION (DR. IRFAN SHEIKH) ─ */
+.testimonialSection {
+  padding: 5rem 0;
+  background: linear-gradient(180deg, #0a192f 0%, #0f2b48 100%);
+  color: #ffffff;
+}
+.testimonialInner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+}
+.testimonialCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+.quoteIcon {
+  color: #38bdf8;
+  opacity: 0.8;
+}
+.testimonialQuote {
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-style: italic;
+  line-height: 1.6;
+  color: #f1f5f9;
+  margin: 0;
+}
+.doctorBioRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.doctorAvatarCircle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e6091, #38bdf8);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+}
+.doctorDetails {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.doctorName {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.verifiedIcon {
+  color: #38bdf8;
+}
+.doctorRole {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+}
+.doctorInstitution {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
 }
 
 /* ─ CONTACT ─ */
 .contact {
-  padding: 7rem 0;
+  padding: 6rem 0;
   background: #ffffff;
 }
 .contactInner {
@@ -493,7 +601,30 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-top: 0.5rem;
+}
+.sectionEyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6d8794;
+  margin: 0;
+}
+.sectionHeading {
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #132d36;
+  margin: 0 0 1rem;
+}
+.sectionBody {
+  font-size: 0.98rem;
+  color: #627b89;
+  line-height: 1.65;
+  max-width: 520px;
+  margin: 0;
 }
 .contactInfoList {
   display: flex;
@@ -510,13 +641,13 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #eef6f8;
+  background: #e8f1f8;
   color: #1e6091;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(19,45,54,0.1);
+  border: 1px solid rgba(30, 96, 145, 0.15);
 }
 .contactInfoLabel {
   font-size: 0.72rem;
@@ -530,8 +661,6 @@
   font-weight: 600;
   color: #132d36;
 }
-
-/* Contact form card */
 .contactRight {}
 .contactCard {
   background: #f9fcfd;
@@ -692,7 +821,7 @@
   }
   .heroBg { display: none; }
   .heroRight { justify-content: flex-start; }
-  .heroCard { width: 100%; }
+  .pulmonaryWidget { width: 100%; }
   .aboutGrid { grid-template-columns: 1fr; }
   .contactInner { grid-template-columns: 1fr; gap: 3rem; }
   .navCenter { display: none; }

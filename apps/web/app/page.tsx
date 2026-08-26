@@ -6,6 +6,11 @@ import {
   Smartphone,
   Mail,
   ChevronRight,
+  ShieldCheck,
+  Zap,
+  HeartPulse,
+  Award,
+  Quote,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -24,36 +29,41 @@ export default function Home() {
           </Link>
 
           <div className={styles.navCenter}>
-            <a href="#home"    className={styles.navLink}>Home</a>
-            <a href="#about"   className={styles.navLink}>About</a>
-            <a href="#contact" className={styles.navLink}>Contact</a>
+            <a href="#home"        className={styles.navLink}>Home</a>
+            <a href="#about"       className={styles.navLink}>About</a>
+            <a href="#testimonial" className={styles.navLink}>Clinical Review</a>
+            <a href="#contact"     className={styles.navLink}>Contact</a>
           </div>
 
           <div className={styles.navRight}>
-            <Link href="/patient/login" className={styles.navBtnOutline}>Patient Login</Link>
+            <Link href="/patient/login" className={styles.navBtnOutline}>Patient Portal</Link>
             <Link href="/login"         className={styles.navBtnFill}>Doctor Login</Link>
           </div>
         </div>
       </header>
 
-      {/* ─── HOME ─── */}
+      {/* ─── HOME (HERO) ─── */}
       <section id="home" className={styles.hero}>
-        {/* Background dark panel (matches login page right panel) */}
         <div className={styles.heroBg} />
 
         <div className={styles.heroInner}>
           <div className={styles.heroLeft}>
-            <p className={styles.heroEyebrow}>Respiratory Care Platform</p>
+            <div className={styles.heroBadge}>
+              <HeartPulse size={14} className={styles.badgeHeartIcon} />
+              <span>Next-Gen Pulmonology Intelligence</span>
+            </div>
+
             <h1 className={styles.heroHeading}>
-              Your patients.<br />
-              Between visits.<br />
-              <em>Always monitored.</em>
+              Precision Care.<br />
+              Between Visits.<br />
+              <em>Always Monitored.</em>
             </h1>
+
             <p className={styles.heroBody}>
-              O2Plus connects pulmonologists with their patients in real-time —
-              tracking breathing, symptoms, and recovery without anyone needing to
-              physically be in a clinic.
+              O2Plus empowers pulmonologists with continuous real-time SpO₂, mMRC,
+              and symptom triage — preventing emergency admissions before they happen.
             </p>
+
             <div className={styles.heroCtas}>
               <Link href="/login" className={styles.ctaFill}>
                 <Stethoscope size={17} />
@@ -65,102 +75,147 @@ export default function Home() {
                 Patient App
               </Link>
             </div>
+
             <p className={styles.heroRegister}>
-              New clinic?{" "}
+              Are you a pulmonologist or clinic?{" "}
               <Link href="/register" className={styles.heroRegisterLink}>
-                Create an account <ChevronRight size={13} />
+                Register your practice <ChevronRight size={13} />
               </Link>
             </p>
           </div>
 
           <div className={styles.heroRight}>
-            {/* Floating clinical card */}
-            <div className={styles.heroCard}>
-              <div className={styles.heroCardHeader}>
-                <div className={styles.heroCardLiveDot} />
-                <span className={styles.heroCardLiveLabel}>Live monitoring</span>
+            {/* Animated Pulmonary Oximetry & Triage Monitor Widget */}
+            <div className={styles.pulmonaryWidget}>
+              <div className={styles.widgetHeader}>
+                <div className={styles.widgetHeaderLeft}>
+                  <div className={styles.livePulseDot} />
+                  <span className={styles.widgetTitle}>SpO₂ &amp; Rhythm Monitor</span>
+                </div>
+                <span className={styles.widgetBadgeAlert}>DESATURATION ALERT</span>
               </div>
-              <div className={styles.heroPatientList}>
-                {[
-                  { name: "Arjun K.",   dx: "COPD · Stage III",              risk: "High",     riskColor: "#ea580c", riskBg: "#fff7ed" },
-                  { name: "Priya S.",   dx: "Asthma · Well controlled",      risk: "Stable",   riskColor: "#16a34a", riskBg: "#f0fdf4" },
-                  { name: "Ramesh V.",  dx: "ILD · Post-ICU recovery",       risk: "Moderate", riskColor: "#ca8a04", riskBg: "#fefce8" },
-                ].map((p, i) => (
-                  <div key={i} className={styles.heroPatientRow}>
-                    <div className={styles.heroPatientAvatar}
-                      style={{ background: p.riskBg, color: p.riskColor }}>
-                      {p.name[0]}
-                    </div>
-                    <div className={styles.heroPatientInfo}>
-                      <span className={styles.heroPatientName}>{p.name}</span>
-                      <span className={styles.heroPatientDx}>{p.dx}</span>
-                    </div>
-                    <span className={styles.heroPatientRisk}
-                      style={{ color: p.riskColor, background: p.riskBg }}>
-                      {p.risk}
-                    </span>
-                  </div>
-                ))}
+
+              {/* SpO2 Reading Block */}
+              <div className={styles.oximetryRow}>
+                <div className={styles.spo2Block}>
+                  <span className={styles.spo2Value}>89%</span>
+                  <span className={styles.spo2Label}>SpO₂ (Target 88-92%)</span>
+                </div>
+                <div className={styles.pulseBlock}>
+                  <span className={styles.pulseValue}>104</span>
+                  <span className={styles.pulseLabel}>BPM Pulse Rate</span>
+                </div>
               </div>
-              <div className={styles.heroCardFooter}>
-                <span>3 of 18 patients shown</span>
-                <span className={styles.heroCardFooterArrow}>View all →</span>
+
+              {/* Animated Pulmonary Pulse Wave SVG */}
+              <div className={styles.waveContainer}>
+                <svg className={styles.waveSvg} viewBox="0 0 400 60" preserveAspectRatio="none">
+                  <path
+                    className={styles.wavePath}
+                    d="M 0,30 Q 20,30 30,30 T 50,30 L 60,10 L 70,50 L 80,5 L 90,45 L 100,30 L 140,30 Q 160,30 170,30 T 190,30 L 200,12 L 210,48 L 220,8 L 230,42 L 240,30 L 280,30 Q 300,30 310,30 T 330,30 L 340,10 L 350,50 L 360,5 L 370,45 L 380,30 L 400,30"
+                  />
+                </svg>
+              </div>
+
+              {/* Autonomous Triage Status Banner */}
+              <div className={styles.triageBanner}>
+                <div className={styles.triageBannerIcon}>
+                  <Zap size={16} />
+                </div>
+                <div className={styles.triageBannerText}>
+                  <strong>Autonomous Red-Flag Triage Engine</strong>
+                  <span>High Acuity Detected — Doctor Notified</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── ABOUT ─── */}
+      {/* ─── ABOUT (ADVERTISING & CLINICAL VALUE) ─── */}
       <section id="about" className={styles.about}>
         <div className={styles.aboutInner}>
 
           <div className={styles.aboutTop}>
-            <p className={styles.sectionEyebrow}>About O2Plus</p>
+            <p className={styles.sectionEyebrow}>Clinical Excellence</p>
             <h2 className={styles.sectionHeading}>
-              Medicine happens<br />outside the clinic too.
+              Continuous Protection.<br />
+              <span className={styles.blueHighlight}>Zero Exacerbation Blind Spots.</span>
             </h2>
             <p className={styles.sectionBody}>
-              Between appointments, patients manage complex respiratory conditions alone.
-              O2Plus bridges that gap — giving doctors a real-time view into how their
-              patients are actually doing, and giving patients a simple way to stay connected.
+              Traditional pulmonology relies on sporadic clinic visits every 3 to 6 months.
+              O2Plus turns silent post-discharge periods into an active, intelligent care loop.
             </p>
           </div>
 
           <div className={styles.aboutGrid}>
             <div className={styles.aboutCard}>
-              <div className={styles.aboutCardNum}>01</div>
-              <h3 className={styles.aboutCardTitle}>For Doctors</h3>
+              <div className={styles.aboutCardIconWrap}>
+                <HeartPulse size={22} />
+              </div>
+              <h3 className={styles.aboutCardTitle}>Real-Time Vitals Tracking</h3>
               <p className={styles.aboutCardBody}>
-                See your entire patient panel at once. Know who needs attention before
-                they call you. Make decisions with current data, not last week&apos;s notes.
+                Automatic trend analysis for SpO₂, pulse rate, mMRC dyspnea grades, and ACT scores — surfacing silent drops before emergency room visits.
               </p>
             </div>
+
             <div className={styles.aboutCard}>
-              <div className={styles.aboutCardNum}>02</div>
-              <h3 className={styles.aboutCardTitle}>For Patients</h3>
+              <div className={styles.aboutCardIconWrap}>
+                <ShieldCheck size={22} />
+              </div>
+              <h3 className={styles.aboutCardTitle}>GINA &amp; GOLD Protocol Engine</h3>
               <p className={styles.aboutCardBody}>
-                Log how you feel in under a minute each day. Get reminders for medication.
-                Know your doctor is watching over your recovery — even from home.
+                Built strictly around global guidelines (GINA, GOLD, ATS/ERS). Risk levels are computed autonomously without adding doctor overhead.
               </p>
             </div>
+
             <div className={styles.aboutCard}>
-              <div className={styles.aboutCardNum}>03</div>
-              <h3 className={styles.aboutCardTitle}>Built on Guidelines</h3>
+              <div className={styles.aboutCardIconWrap}>
+                <Zap size={22} />
+              </div>
+              <h3 className={styles.aboutCardTitle}>Instant Red-Flag Triage</h3>
               <p className={styles.aboutCardBody}>
-                Every alert, every threshold, every score in O2Plus is grounded in
-                published global respiratory medicine standards — not guesswork.
+                High-acuity patients automatically bubble up to the top of the workstation so doctors can adjust prescriptions in seconds.
               </p>
             </div>
           </div>
 
-          {/* Conditions strip */}
+          {/* Conditions Pill Bar */}
           <div className={styles.conditionsStrip}>
-            <p className={styles.conditionsLabel}>Conditions we support</p>
+            <p className={styles.conditionsLabel}>Supported Clinical Tracks</p>
             <div className={styles.conditionsTags}>
-              {["Asthma", "COPD", "ILD & Pulmonary Fibrosis", "Bronchiectasis", "Post-ICU Recovery"].map((c, i) => (
+              {["Asthma Control (GINA)", "COPD Management (GOLD)", "ILD & Fibrosis (ATS/ERS)", "Bronchiectasis Surveillance", "Post-ICU Rehabilitation"].map((c, i) => (
                 <span key={i} className={styles.conditionTag}>{c}</span>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── TESTIMONIAL (DR. IRFAN SHEIKH) ─── */}
+      <section id="testimonial" className={styles.testimonialSection}>
+        <div className={styles.testimonialInner}>
+          <div className={styles.testimonialCard}>
+            <Quote size={36} className={styles.quoteIcon} />
+            <p className={styles.testimonialQuote}>
+              &ldquo;O2Plus has fundamentally changed how we monitor high-risk chronic respiratory patients. The ability to detect desaturation events and symptom flares between clinic visits allows us to intervene days before acute hospital admissions.&rdquo;
+            </p>
+            <div className={styles.doctorBioRow}>
+              <div className={styles.doctorAvatarCircle}>
+                <span>IS</span>
+              </div>
+              <div className={styles.doctorDetails}>
+                <div className={styles.doctorName}>
+                  Dr. Irfan Sheikh
+                  <Award size={16} className={styles.verifiedIcon} />
+                </div>
+                <div className={styles.doctorRole}>
+                  Faculty &amp; Specialist in Pulmonary, Critical Care &amp; Sleep Medicine
+                </div>
+                <div className={styles.doctorInstitution}>
+                  Ex-AIIMS New Delhi
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -170,19 +225,19 @@ export default function Home() {
       <section id="contact" className={styles.contact}>
         <div className={styles.contactInner}>
           <div className={styles.contactLeft}>
-            <p className={styles.sectionEyebrow}>Get in touch</p>
+            <p className={styles.sectionEyebrow}>Get In Touch</p>
             <h2 className={styles.sectionHeading}>
-              Ready to bring your practice online?
+              Ready to Upgrade Your Pulmonology Practice?
             </h2>
             <p className={styles.sectionBody}>
-              Whether you&apos;re a solo specialist or running a multi-doctor department,
-              O2Plus is ready for you. Setup takes minutes.
+              Whether you are an individual practitioner or managing a hospital department,
+              O2Plus is built for instant clinical deployment.
             </p>
             <div className={styles.contactInfoList}>
               <div className={styles.contactInfoItem}>
                 <div className={styles.contactInfoIcon}><Mail size={18} /></div>
                 <div>
-                  <div className={styles.contactInfoLabel}>Email</div>
+                  <div className={styles.contactInfoLabel}>Clinical Support</div>
                   <div className={styles.contactInfoValue}>support@o2plus.app</div>
                 </div>
               </div>
@@ -191,20 +246,20 @@ export default function Home() {
 
           <div className={styles.contactRight}>
             <div className={styles.contactCard}>
-              <h3 className={styles.contactCardTitle}>Register your practice</h3>
-              <p className={styles.contactCardSub}>No credit card. Instant access.</p>
+              <h3 className={styles.contactCardTitle}>Register Your Clinic</h3>
+              <p className={styles.contactCardSub}>Takes less than 2 minutes. Instant setup.</p>
               <div className={styles.contactForm}>
                 <div className={styles.contactField}>
-                  <label className={styles.contactLabel}>Your name</label>
-                  <div className={styles.contactInputMock}>Dr. </div>
+                  <label className={styles.contactLabel}>Full Name</label>
+                  <div className={styles.contactInputMock}>Dr. Irfan Sheikh</div>
                 </div>
                 <div className={styles.contactField}>
-                  <label className={styles.contactLabel}>Work email</label>
+                  <label className={styles.contactLabel}>Work Email</label>
                   <div className={styles.contactInputMock}>doctor@hospital.com</div>
                 </div>
               </div>
               <Link href="/register" className={styles.contactCta}>
-                Get started <ArrowRight size={16} />
+                Create Practice Account <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -221,20 +276,20 @@ export default function Home() {
               </div>
               <span className={styles.footerBrandName}>O2Plus</span>
             </div>
-            <p className={styles.footerTagline}>Respiratory care, between visits.</p>
+            <p className={styles.footerTagline}>Precision Respiratory Care — Between Hospital Visits</p>
           </div>
           <nav className={styles.footerNav}>
             <Link href="/login"         className={styles.footerLink}>Doctor Login</Link>
             <Link href="/patient/login" className={styles.footerLink}>Patient Login</Link>
-            <Link href="/register"      className={styles.footerLink}>Register</Link>
+            <Link href="/register"      className={styles.footerLink}>Register Practice</Link>
             <a href="#contact"          className={styles.footerLink}>Contact</a>
           </nav>
         </div>
         <div className={styles.footerBottom}>
           <p className={styles.footerDisclaimer}>
-            O2Plus is a clinical decision support tool for licensed practitioners. In emergencies, call 112 or visit your nearest hospital.
+            O2Plus is a clinical decision support system for licensed medical practitioners. In emergencies, patients must call emergency services (112) or visit the nearest hospital.
           </p>
-          <p className={styles.footerCopy}>© 2025 O2Plus</p>
+          <p className={styles.footerCopy}>© 2026 O2Plus</p>
         </div>
       </footer>
 
