@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import {
   Activity,
   ArrowRight,
@@ -213,7 +213,7 @@ export default function Home() {
                   Faculty &amp; Specialist in Pulmonary, Critical Care &amp; Sleep Medicine
                 </div>
                 <div className={styles.doctorInstitution}>
-                  Ex-AIIMS New Delhi
+                  AIIMS New Delhi
                 </div>
               </div>
             </div>
