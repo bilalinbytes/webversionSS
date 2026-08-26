@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { executeExport } from "@/lib/server/exports/export.service";
 import type { ExportRequestPayload } from "@/lib/server/exports/export.types";
@@ -20,7 +20,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     // Resolve patient record from database
     const { data: patientRow } = await supabase
       .from("patients")
-      .select("id, name, uhid")
+      .select("id, name")
       .eq("id", user.id)
       .maybeSingle();
 
