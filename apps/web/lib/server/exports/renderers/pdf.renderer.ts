@@ -62,22 +62,41 @@ export async function renderPdfRegistry(bundle: ExportDataBundle): Promise<Buffe
         `6MWD: ${r.sixMwd} | %pred FEV1: ${r.pctPredictedFev1} | %pred FVC: ${r.pctPredictedFvc}`,
       ],
     ],
-    medicationRows: r.currentMeds
-      ? r.currentMeds
-          .split(", ")
-          .map((med) => [med, "Oral/Inhaled", "Standard", "As prescribed", "—", "Ongoing"])
-      : [],
+    medicationRows:
+      bundle.singlePatientMeds && bundle.singlePatientMeds.length > 0
+        ? bundle.singlePatientMeds.map((m) => [
+            m.drugName,
+            m.route || "Inhaled",
+            m.dose || "Standard",
+            m.frequency || "As prescribed",
+            m.startDate || "—",
+            m.endDate || m.status || "Ongoing",
+          ])
+        : r.currentMeds
+          ? r.currentMeds
+              .split(", ")
+              .map((med) => [med, "Inhaled", "Standard", "As prescribed", "—", "Ongoing"])
+          : [],
     logRows: bundle.singlePatientLogs
       ? bundle.singlePatientLogs.map((l) => [
           l.date,
           String(l.spo2Rest),
+          l.spo2Walk ? String(l.spo2Walk) : "—",
           String(l.mmrc),
-          l.vasSymptoms,
-          l.medicationCompliance,
+          l.aqiValue ? String(l.aqiValue) : "—",
           String(l.riskScore),
+          l.vasSymptoms || "Stable",
         ])
       : [],
-    alertRows: [],
+    alertRows:
+      bundle.singlePatientAlerts && bundle.singlePatientAlerts.length > 0
+        ? bundle.singlePatientAlerts.map((a) => [
+            a.date,
+            a.alertType || "Desaturation Alert",
+            a.severity || "Critical",
+            a.reason || "SpO2 dropped below target threshold",
+          ])
+        : [],
     instructionRows: [],
   }));
 

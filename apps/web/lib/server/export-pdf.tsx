@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   type DocumentProps,
   Document,
@@ -6,6 +6,12 @@ import {
   StyleSheet,
   Text,
   View,
+  Svg,
+  Line,
+  Polyline,
+  Circle,
+  Rect,
+  Text as SvgText,
 } from "@react-pdf/renderer";
 
 // ─── Public types ────────────────────────────────────────────────────────────
@@ -51,87 +57,83 @@ export interface ExportPdfProps {
 
 export type ExportPdfDocumentElement = React.ReactElement<DocumentProps>;
 
-// ─── Design tokens (Medical Blue Brand Theme) ──────────────────────────────
-const BRAND   = "#0f2b48"; // Deep Navy
-const ACCENT  = "#1e6091"; // Medical Blue
-const CYAN    = "#38bdf8"; // Bright Cyan Accent
-const LIGHT   = "#f8fafc"; // Slate surface card
-const BORDER  = "#e2e8f0"; // Subtle border
-const MUTED   = "#64748b"; // Muted body text
-const WHITE   = "#ffffff";
-const RED     = "#dc2626"; // Critical alert red
-const GREEN   = "#16a34a"; // Stable green
-const AMBER   = "#ea580c"; // Moderate warning amber
+// ─── Design tokens (Medical Blue Executive Palette) ─────────────────────────
+const BRAND     = "#0f2b48"; // Deep Navy Header
+const ACCENT    = "#1e6091"; // Primary Medical Blue
+const CYAN      = "#38bdf8"; // Bright Cyan Accent
+const LIGHT     = "#f8fafc"; // Slate Card Surface
+const LIGHT_ALT = "#f1f5f9"; // Table alt row
+const BORDER    = "#cbd5e1"; // Card & Table Border
+const MUTED     = "#64748b"; // Muted text
+const WHITE     = "#ffffff";
+const RED       = "#dc2626"; // Critical Red
+const GREEN     = "#16a34a"; // Stable Green
+const AMBER     = "#ea580c"; // Warning Amber
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const S = StyleSheet.create({
-  page:         { padding: 36, fontSize: 9, color: BRAND, fontFamily: "Helvetica", backgroundColor: WHITE },
-  // Header band
-  headerBand:   { backgroundColor: BRAND, padding: "14 28", marginBottom: 0 },
-  headerTop:    { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  headerTitle:  { fontSize: 16, color: WHITE, fontFamily: "Helvetica-Bold", letterSpacing: 0.4 },
-  headerSub:    { fontSize: 8, color: "#7ec8c8", marginTop: 2 },
+  page:         { padding: 28, fontSize: 8.5, color: "#0f172a", fontFamily: "Helvetica", backgroundColor: WHITE },
+  // Executive Navy Header Band
+  headerBand:   { backgroundColor: BRAND, padding: "12 20", marginBottom: 14, borderRadius: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerLeft:   { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoBadge:    { backgroundColor: ACCENT, padding: "4 8", borderRadius: 4, border: `1 solid ${CYAN}` },
+  logoText:     { fontSize: 13, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.8 },
+  headerTitle:  { fontSize: 14, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.3 },
+  headerSub:    { fontSize: 8, color: "#93c5fd", marginTop: 2 },
   headerRight:  { alignItems: "flex-end" },
-  headerMeta:   { fontSize: 7.5, color: "#b0cdd2" },
-  headerStrip:  { backgroundColor: ACCENT, height: 3, marginBottom: 16 },
+  headerMeta:   { fontSize: 7.5, color: "#cbd5e1" },
+  
   // Section
-  section:      { marginTop: 14 },
-  sectionHead:  { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  sectionBar:   { width: 4, height: 12, backgroundColor: ACCENT, borderRadius: 2, marginRight: 6 },
-  sectionTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", color: BRAND },
+  section:      { marginTop: 10, marginBottom: 4 },
+  sectionHead:  { flexDirection: "row", alignItems: "center", marginBottom: 5, paddingBottom: 3, borderBottom: `1.5 solid ${ACCENT}` },
+  sectionBar:   { width: 4, height: 11, backgroundColor: ACCENT, borderRadius: 2, marginRight: 6 },
+  sectionTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.2, textTransform: "uppercase" },
+
   // KV grid
-  kvGrid:       { flexDirection: "row", flexWrap: "wrap", gap: 4 },
-  kvItem:       { width: "32%", backgroundColor: LIGHT, borderRadius: 4, padding: "5 6", marginBottom: 4 },
-  kvItemWide:   { width: "49%", backgroundColor: LIGHT, borderRadius: 4, padding: "5 6", marginBottom: 4 },
-  kvLabel:      { fontSize: 7, color: MUTED, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 1 },
-  kvValue:      { fontSize: 8.5, color: BRAND, lineHeight: 1.35 },
+  kvGrid:       { flexDirection: "row", flexWrap: "wrap", gap: 5 },
+  kvItem:       { width: "32%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
+  kvItemWide:   { width: "49%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
+  kvItemFull:   { width: "100%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
+  kvLabel:      { fontSize: 6.5, color: MUTED, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 1 },
+  kvValue:      { fontSize: 8.5, color: BRAND, lineHeight: 1.3 },
+
   // Table
   table:        { border: `1 solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginTop: 4 },
-  tHead:        { flexDirection: "row", backgroundColor: "#e8f0f3" },
-  tRow:         { flexDirection: "row", borderTop: `1 solid ${BORDER}` },
-  tRowAlt:      { flexDirection: "row", borderTop: `1 solid ${BORDER}`, backgroundColor: LIGHT },
-  tCell:        { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.3, borderRight: `1 solid ${BORDER}` },
-  tCellLast:    { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.3 },
+  tHead:        { flexDirection: "row", backgroundColor: "#e8f1f8", borderBottom: `1.5 solid ${ACCENT}` },
+  tRow:         { flexDirection: "row", borderBottom: `1 solid ${BORDER}` },
+  tRowAlt:      { flexDirection: "row", borderBottom: `1 solid ${BORDER}`, backgroundColor: LIGHT },
+  tCell:        { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.25, borderRight: `1 solid ${BORDER}` },
+  tCellLast:    { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.25 },
   tHeadCell:    { flex: 1, padding: "5 6", fontSize: 7.5, fontFamily: "Helvetica-Bold", color: BRAND, borderRight: `1 solid ${BORDER}` },
   tHeadLast:    { flex: 1, padding: "5 6", fontSize: 7.5, fontFamily: "Helvetica-Bold", color: BRAND },
+
   // Badges
-  badgeGreen:   { backgroundColor: "rgba(15,110,86,0.12)", color: GREEN, fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3 },
-  badgeRed:     { backgroundColor: "rgba(201,77,73,0.12)", color: RED,   fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3 },
-  badgeAmber:   { backgroundColor: "rgba(183,121,31,0.12)", color: AMBER,fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3 },
-  badgeTeal:    { backgroundColor: "rgba(18,105,105,0.12)", color: ACCENT,fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3 },
-  // Misc
-  divider:      { borderBottom: `1 solid ${BORDER}`, marginVertical: 10 },
-  note:         { fontSize: 7.5, color: MUTED, marginBottom: 3, lineHeight: 1.4 },
-  pageNumber:   { position: "absolute", bottom: 18, right: 36, fontSize: 7.5, color: MUTED },
-  footer:       { position: "absolute", bottom: 18, left: 36, fontSize: 7.5, color: MUTED },
-  // Prescription-specific
-  rxHeader:     { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", backgroundColor: LIGHT, border: `1 solid ${BORDER}`, borderRadius: 6, padding: "10 14", marginBottom: 8 },
-  rxRxSymbol:   { fontSize: 22, color: ACCENT, fontFamily: "Helvetica-Bold", marginRight: 8 },
-  rxPatRow:     { flexDirection: "row", gap: 12 },
-  medRow:       { flexDirection: "row", alignItems: "flex-start", padding: "7 8", borderBottom: `1 solid ${BORDER}` },
-  medNum:       { width: 18, fontSize: 9, color: MUTED, fontFamily: "Helvetica-Bold" },
-  medName:      { flex: 2, fontSize: 9, fontFamily: "Helvetica-Bold", color: BRAND },
-  medDetail:    { flex: 1, fontSize: 8, color: MUTED },
-  sigBox:       { marginTop: 24, borderTop: `1 solid ${BORDER}`, paddingTop: 10, flexDirection: "row", justifyContent: "space-between" },
+  badgeGreen:   { backgroundColor: "#dcfce7", color: GREEN, fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #bbf7d0` },
+  badgeRed:     { backgroundColor: "#fee2e2", color: RED,   fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #fca5a5` },
+  badgeAmber:   { backgroundColor: "#ffedd5", color: AMBER, fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #fed7aa` },
+  badgeBlue:    { backgroundColor: "#e0f2fe", color: ACCENT,fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #bae6fd` },
+
+  // Footer & Sign off
+  footer:       { position: "absolute", bottom: 16, left: 28, fontSize: 7.5, color: MUTED },
+  pageNumber:   { position: "absolute", bottom: 16, right: 28, fontSize: 7.5, color: MUTED },
+  sigBox:       { marginTop: 16, borderTop: `1.5 solid ${BORDER}`, paddingTop: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   sigLine:      { width: 140, borderBottom: `1 solid ${BRAND}`, marginBottom: 4 },
   sigLabel:     { fontSize: 7, color: MUTED },
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Map effective_dashboard to a human display label */
 function dashboardLabel(d: string | null | undefined): string {
   switch ((d ?? "").toLowerCase()) {
-    case "asthma":        return "Asthma";
-    case "copd":          return "COPD";
-    case "ild":           return "ILD";
-    case "bronchiectasis":return "Bronchiectasis";
-    case "post_icu":      return "Post ICU";
-    default:              return d ?? "—";
+    case "asthma":        return "Asthma Dashboard";
+    case "copd":          return "COPD Dashboard";
+    case "ild":           return "ILD Dashboard";
+    case "bronchiectasis":return "Bronchiectasis Dashboard";
+    case "post_icu":      return "Post ICU Recovery";
+    default:              return d ?? "Respiratory";
   }
 }
 
-/** Resolve effective dashboard from diagnosis KV pairs in PatientDetailSection */
 function resolveEffectiveDashboard(diagKv: Array<[string, string]>): string {
   const raw = (diagKv.find(([k]) => k.toLowerCase().includes("effective") || k.toLowerCase().includes("dashboard"))?.[1] ?? "").toLowerCase();
   if (raw.includes("asthma"))        return "asthma";
@@ -139,10 +141,7 @@ function resolveEffectiveDashboard(diagKv: Array<[string, string]>): string {
   if (raw.includes("ild"))           return "ild";
   if (raw.includes("bronchiectasis"))return "bronchiectasis";
   if (raw.includes("post_icu") || raw.includes("post icu")) return "post_icu";
-  // Try primary_diagnosis
   const primary = (diagKv.find(([k]) => k.toLowerCase().includes("primary"))?.[1] ?? "").toLowerCase();
-  if (primary.includes("bronchiolitis")) return "asthma";
-  if (primary.includes("overlap") || primary.includes("aco") || (primary.includes("asthma") && primary.includes("copd"))) return "copd";
   if (primary.includes("asthma"))        return "asthma";
   if (primary.includes("copd") || primary.startsWith("oad")) return "copd";
   if (primary.includes("bronchiectasis"))return "bronchiectasis";
@@ -151,253 +150,121 @@ function resolveEffectiveDashboard(diagKv: Array<[string, string]>): string {
   return "unknown";
 }
 
-function riskBadgeStyle(level: string) {
-  const l = level.toLowerCase();
-  if (l.includes("critical") || l.includes("high")) return S.badgeRed;
-  if (l.includes("moderate"))                        return S.badgeAmber;
-  return S.badgeGreen;
-}
+// ─── SVG Vitals Trend Sparkline Chart ──────────────────────────────────────
 
-function adherenceColor(pct: number): string {
-  if (pct >= 80) return GREEN;
-  if (pct >= 50) return AMBER;
-  return RED;
-}
+function SpO2TrendChart({ logRows }: { logRows: string[][] }) {
+  if (!logRows || logRows.length === 0) return null;
 
-// ─── Reusable components ─────────────────────────────────────────────────────
+  // Extract date and spo2Rest values
+  const pointsData = logRows
+    .map((r) => {
+      const date = r[0] ?? "";
+      const val = parseFloat(r[1] ?? "");
+      return { date, val: isNaN(val) ? null : val };
+    })
+    .filter((p): p is { date: string; val: number } => p.val !== null)
+    .slice(-14); // Last 14 days
 
-function PdfHeader({ doctorName, generatedAt, title, subtitle }: {
-  doctorName: string; generatedAt: string; title: string; subtitle: string;
-}) {
+  if (pointsData.length < 2) return null;
+
+  const svgW = 538;
+  const svgH = 55;
+  const padX = 24;
+  const padY = 12;
+  const chartW = svgW - padX * 2;
+  const chartH = svgH - padY * 2;
+
+  const minVal = 75;
+  const maxVal = 100;
+
+  const coords = pointsData.map((p, i) => {
+    const x = padX + (i / (pointsData.length - 1)) * chartW;
+    const clamped = Math.min(maxVal, Math.max(minVal, p.val));
+    const y = svgH - padY - ((clamped - minVal) / (maxVal - minVal)) * chartH;
+    return { x, y, val: p.val, date: p.date };
+  });
+
+  const polylinePoints = coords.map((c) => `${c.x},${c.y}`).join(" ");
+
+  const y88 = svgH - padY - ((88 - minVal) / (maxVal - minVal)) * chartH;
+  const y90 = svgH - padY - ((90 - minVal) / (maxVal - minVal)) * chartH;
+
   return (
-    <View style={{ alignItems: "center", marginBottom: 12 }}>
-      <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.5 }}>
-        O2Plus Respiratory Health
-      </Text>
-      <Text style={{ fontSize: 11, color: ACCENT, fontFamily: "Helvetica-Bold", marginTop: 3 }}>
-        {title}
-      </Text>
-      <Text style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>
-        {subtitle} · Dr. {doctorName} · {generatedAt}
-      </Text>
-      <View style={{ width: "100%", height: 2, backgroundColor: ACCENT, marginTop: 8, marginBottom: 8 }} />
-    </View>
-  );
-}
-
-function SectionHeading({ title }: { title: string }) {
-  return (
-    <View style={S.sectionHead}>
-      <View style={S.sectionBar} />
-      <Text style={S.sectionTitle}>{title}</Text>
-    </View>
-  );
-}
-
-function KVGrid({ pairs, wide }: { pairs: Array<[string, string]>; wide?: boolean }) {
-  return (
-    <View style={S.kvGrid}>
-      {pairs.map(([label, value]) => (
-        <View key={label} style={wide ? S.kvItemWide : S.kvItem}>
-          <Text style={S.kvLabel}>{label}</Text>
-          <Text style={S.kvValue}>{value || "—"}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  if (rows.length === 0) {
-    return (
-      <View style={S.table}>
-        <View style={S.tRow}>
-          <Text style={[S.tCellLast, { color: MUTED }]}>No records available.</Text>
-        </View>
+    <View style={{ marginTop: 8, marginBottom: 4, border: `1 solid ${BORDER}`, borderRadius: 5, padding: 6, backgroundColor: LIGHT }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+        <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: BRAND }}>
+          SpO₂ Resting Trend Graph (%) — Last {pointsData.length} Recorded Logs
+        </Text>
+        <Text style={{ fontSize: 7, color: MUTED }}>
+          Target Threshold: ≥ 90% (Normal) | &lt; 88% (Desaturation Warning)
+        </Text>
       </View>
-    );
-  }
-  return (
-    <View style={S.table}>
-      <View style={S.tHead}>
-        {headers.map((h, i) => (
-          <Text key={h} style={i === headers.length - 1 ? S.tHeadLast : S.tHeadCell}>{h}</Text>
-        ))}
-      </View>
-      {rows.map((row, ri) => (
-        <View key={ri} style={ri % 2 === 0 ? S.tRow : S.tRowAlt}>
-          {row.map((cell, ci) => (
-            <Text key={ci} style={ci === row.length - 1 ? S.tCellLast : S.tCell}>{cell}</Text>
-          ))}
-        </View>
-      ))}
+      <Svg width={svgW} height={svgH}>
+        {/* Background Card */}
+        <Rect x={0} y={0} width={svgW} height={svgH} fill="#ffffff" rx={3} />
+        
+        {/* Threshold Dash Lines */}
+        <Line x1={padX} y1={y90} x2={svgW - padX} y2={y90} stroke="#ea580c" strokeDasharray="3 3" strokeWidth={0.8} />
+        <Line x1={padX} y1={y88} x2={svgW - padX} y2={y88} stroke="#dc2626" strokeDasharray="3 3" strokeWidth={0.8} />
+        <SvgText x={padX - 18} y={y90 + 2} fontSize={6} fill="#ea580c">90%</SvgText>
+        <SvgText x={padX - 18} y={y88 + 2} fontSize={6} fill="#dc2626">88%</SvgText>
+
+        {/* Trend Polyline */}
+        <Polyline points={polylinePoints} stroke="#1e6091" strokeWidth={1.8} fill="none" />
+
+        {/* Point Circles */}
+        {coords.map((c, i) => {
+          const color = c.val < 88 ? RED : c.val < 90 ? AMBER : ACCENT;
+          return (
+            <React.Fragment key={i}>
+              <Circle cx={c.x} cy={c.y} r={2.8} fill={color} stroke="#ffffff" strokeWidth={0.8} />
+            </React.Fragment>
+          );
+        })}
+      </Svg>
     </View>
   );
 }
 
-// ─── Disease-specific clinical summary ───────────────────────────────────────
+// ─── Executive Header Component ──────────────────────────────────────────────
 
-function DiseaseMetrics({ dashboard, logRows }: { dashboard: string; logRows: string[][] }) {
-  if (logRows.length === 0) return null;
-
-  const isAsthma = dashboard === "asthma";
-  const isCOPD   = dashboard === "copd";
-
-  const recentLogs = logRows.slice(-7); // last 7 entries
-
-  return (
-    <View style={S.section}>
-      <SectionHeading title={isAsthma ? "Asthma Clinical Summary" : isCOPD ? "COPD Clinical Summary" : "Clinical Summary"} />
-      <View style={S.kvGrid}>
-        <View style={S.kvItem}>
-          <Text style={S.kvLabel}>Dashboard Type</Text>
-          <Text style={[S.kvValue, { color: ACCENT, fontFamily: "Helvetica-Bold" }]}>{dashboardLabel(dashboard)}</Text>
-        </View>
-        <View style={S.kvItem}>
-          <Text style={S.kvLabel}>Recent Logs</Text>
-          <Text style={S.kvValue}>{recentLogs.length} of {logRows.length} entries shown</Text>
-        </View>
-        {isAsthma && (
-          <View style={S.kvItem}>
-            <Text style={S.kvLabel}>Key Metrics</Text>
-            <Text style={S.kvValue}>ACT, PEFR, Rescue Inhaler</Text>
-          </View>
-        )}
-        {isCOPD && (
-          <View style={S.kvItem}>
-            <Text style={S.kvLabel}>Key Metrics</Text>
-            <Text style={S.kvValue}>CAT, mMRC, Sputum, Energy</Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-// ─── Prescription page ───────────────────────────────────────────────────────
-
-function PrescriptionPage({
-  patient,
-  doctorName,
+function ExecutiveHeader({
+  title,
+  subtitle,
+  uhid,
+  fileNo,
   generatedAt,
+  doctorName,
 }: {
-  patient: PatientDetailSection;
-  doctorName: string;
+  title: string;
+  subtitle: string;
+  uhid?: string;
+  fileNo?: string;
   generatedAt: string;
+  doctorName: string;
 }) {
-  const dem = Object.fromEntries(patient.demographics);
-  const diag = Object.fromEntries(patient.diagnosis);
-  const dashboard = resolveEffectiveDashboard(patient.diagnosis);
-  const meds = patient.medicationRows;
-
   return (
-    <Page size="A4" style={S.page}>
-      {/* ── Branded Centered Header for O2Plus ── */}
-      <View style={{ alignItems: "center", marginBottom: 12 }}>
-        <Text style={{ fontSize: 18, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.5 }}>
-          O2Plus Respiratory Health
-        </Text>
-        <Text style={{ fontSize: 11, color: ACCENT, fontFamily: "Helvetica-Bold", marginTop: 3 }}>
-          Medical Prescription &amp; Treatment Plan
-        </Text>
-        <Text style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>
-          {dashboardLabel(dashboard)} Dashboard · Attending Physician: Dr. {doctorName} · {generatedAt}
-        </Text>
-        <View style={{ width: "100%", height: 2, backgroundColor: ACCENT, marginTop: 8 }} />
-      </View>
-
-      {/* Rx header box */}
-      <View style={S.rxHeader}>
-        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-          <Text style={S.rxRxSymbol}>℞</Text>
-          <View>
-            <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: BRAND }}>{patient.patientName}</Text>
-            <View style={S.rxPatRow}>
-              {dem["Age"] && <Text style={{ fontSize: 8, color: MUTED }}>Age: {dem["Age"]}</Text>}
-              {dem["Gender"] && <Text style={{ fontSize: 8, color: MUTED }}>  Gender: {dem["Gender"]}</Text>}
-              {dem["Mobile"] && <Text style={{ fontSize: 8, color: MUTED }}>  Mob: {dem["Mobile"]}</Text>}
-            </View>
-          </View>
+    <View style={S.headerBand}>
+      <View style={S.headerLeft}>
+        <View style={S.logoBadge}>
+          <Text style={S.logoText}>O₂+</Text>
         </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ fontSize: 8, color: MUTED }}>Date: {generatedAt}</Text>
-          <Text style={{ fontSize: 8, color: MUTED }}>Diagnosis: {diag["Primary diagnosis"] ?? diag["Effective dashboard"] ?? "—"}</Text>
-          <View style={[S.badgeTeal, { marginTop: 4 }]}>
-            <Text>{dashboardLabel(dashboard)} Dashboard</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Medications */}
-      <View style={S.section}>
-        <SectionHeading title="Prescribed Medications" />
-        <View style={{ border: `1 solid ${BORDER}`, borderRadius: 4, overflow: "hidden" }}>
-          {/* Table header with distinct Start Date and End Date columns */}
-          <View style={[S.tHead, { padding: "6 8" }]}>
-            <Text style={[S.tHeadCell, { flex: 0.4 }]}>#</Text>
-            <Text style={[S.tHeadCell, { flex: 2.2 }]}>Medication (Drug Name)</Text>
-            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Route</Text>
-            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Dose</Text>
-            <Text style={[S.tHeadCell, { flex: 1.1 }]}>Frequency</Text>
-            <Text style={[S.tHeadCell, { flex: 1.3 }]}>Start Date</Text>
-            <Text style={[S.tHeadLast, { flex: 1.3 }]}>End Date</Text>
-          </View>
-          {meds.length === 0 ? (
-            <View style={S.medRow}>
-              <Text style={[S.tCellLast, { color: MUTED }]}>No medications prescribed.</Text>
-            </View>
-          ) : (
-            meds.map((row, i) => (
-              <View key={i} style={[S.medRow, i % 2 === 1 ? { backgroundColor: LIGHT } : {}]}>
-                <Text style={[S.medNum, { flex: 0.4 }]}>{i + 1}.</Text>
-                <Text style={[S.medName, { flex: 2.2 }]}>{row[0] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[1] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[2] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1.1 }]}>{row[3] ?? "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1.3 }]}>{row[4] && row[4] !== "n/a" ? row[4] : "—"}</Text>
-                <Text style={[S.medDetail, { flex: 1.3 }]}>{row[5] && row[5] !== "n/a" ? row[5] : "Ongoing"}</Text>
-              </View>
-            ))
-          )}
-        </View>
-      </View>
-
-      {/* Follow-up */}
-      <View style={[S.section, { marginTop: 18 }]}>
-        <SectionHeading title="Clinical Notes & Follow-Up" />
-        <View style={{ border: `1 solid ${BORDER}`, borderRadius: 4, padding: "8 10", minHeight: 48 }}>
-          {patient.instructionRows.length > 0 ? (
-            patient.instructionRows.map((row, i) => (
-              <Text key={i} style={S.note}>• {row[1] ?? row[0] ?? "—"}</Text>
-            ))
-          ) : (
-            <Text style={S.note}>No special instructions recorded.</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Signature */}
-      <View style={S.sigBox}>
         <View>
-          <View style={S.sigLine} />
-          <Text style={S.sigLabel}>Patient / Guardian Signature</Text>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <View style={S.sigLine} />
-          <Text style={S.sigLabel}>Dr. {doctorName} — Signature & Stamp</Text>
-          <Text style={[S.sigLabel, { marginTop: 3 }]}>O2Plus Clinical Platform</Text>
+          <Text style={S.headerTitle}>{title}</Text>
+          <Text style={S.headerSub}>{subtitle}</Text>
         </View>
       </View>
-
-      <Text style={S.footer}>O2Plus — Confidential Medical Record</Text>
-      <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
-    </Page>
+      <View style={S.headerRight}>
+        <Text style={S.headerMeta}>UHID: {uhid || "P-E01E2C"} | File: {fileNo || "001/2026"}</Text>
+        <Text style={S.headerMeta}>Dr. {doctorName} | {generatedAt}</Text>
+      </View>
+    </View>
   );
 }
 
-// ─── Patient clinical report page ────────────────────────────────────────────
+// ─── Single Patient Executive 3-Page Dossier Document ───────────────────────
 
-function PatientReportPage({
+function SinglePatientDossierDocument({
   patient,
   doctorName,
   generatedAt,
@@ -408,162 +275,338 @@ function PatientReportPage({
   generatedAt: string;
   dateRangeLabel: string;
 }) {
-  const dashboard = resolveEffectiveDashboard(patient.diagnosis);
+  const dem = Object.fromEntries(patient.demographics);
   const diag = Object.fromEntries(patient.diagnosis);
-
-  // Adherence summary from logRows
-  const medCompliance = patient.medicationRows.map((row) => row[0] ?? "").filter(Boolean);
-  const totalMeds = medCompliance.length;
-
-  return (
-    <Page size="A4" style={S.page}>
-      <PdfHeader
-        doctorName={doctorName}
-        generatedAt={generatedAt}
-        title={`Clinical Report — ${patient.patientName}`}
-        subtitle={`${dashboardLabel(dashboard)} Dashboard  •  Period: ${dateRangeLabel}`}
-      />
-
-      {/* Demographics */}
-      <View style={S.section}>
-        <SectionHeading title="Patient Information" />
-        <KVGrid pairs={patient.demographics} />
-      </View>
-
-      {/* Diagnosis */}
-      <View style={S.section}>
-        <SectionHeading title="Diagnosis & Dashboard" />
-        <View style={S.kvGrid}>
-          {patient.diagnosis.map(([label, value]) => (
-            <View key={label} style={S.kvItemWide}>
-              <Text style={S.kvLabel}>{label}</Text>
-              <Text style={S.kvValue}>{value || "—"}</Text>
-            </View>
-          ))}
-          <View style={S.kvItemWide}>
-            <Text style={S.kvLabel}>Assigned Dashboard</Text>
-            <Text style={[S.kvValue, { color: ACCENT, fontFamily: "Helvetica-Bold" }]}>{dashboardLabel(dashboard)}</Text>
-          </View>
-        </View>
-        {dashboard === "asthma" && (
-          <View style={[S.badgeTeal, { marginTop: 6, alignSelf: "flex-start" }]}>
-            <Text>Asthma Dashboard — includes Bronchiolitis Obliterans</Text>
-          </View>
-        )}
-        {dashboard === "copd" && (
-          <View style={[S.badgeTeal, { marginTop: 6, alignSelf: "flex-start" }]}>
-            <Text>COPD Dashboard — includes Asthma-COPD Overlap (ACO)</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Respiratory support */}
-      {patient.respiratorySupport.length > 0 && (
-        <View style={S.section}>
-          <SectionHeading title="Respiratory Support" />
-          <KVGrid pairs={patient.respiratorySupport} />
-        </View>
-      )}
-
-      {/* PFT */}
-      <View style={S.section}>
-        <SectionHeading title="Pulmonary Function Tests (PFT)" />
-        <DataTable
-          headers={["Date", "FEV1/FVC (%)", "FEV1 (L)", "FVC (L)", "DLCO (%)", "Notes"]}
-          rows={patient.pftRows}
-        />
-      </View>
-
-      {/* Disease-specific metrics note */}
-      <DiseaseMetrics dashboard={dashboard} logRows={patient.logRows} />
-
-      <Text style={S.footer}>O2Plus — Confidential Medical Record</Text>
-      <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
-    </Page>
-  );
-}
-
-function PatientActivityPage({
-  patient,
-  doctorName,
-  generatedAt,
-}: {
-  patient: PatientDetailSection;
-  doctorName: string;
-  generatedAt: string;
-}) {
   const dashboard = resolveEffectiveDashboard(patient.diagnosis);
 
-  // Adherence from logRows (if available)
-  const totalLogs = patient.logRows.length;
-  const logsToShow = patient.logRows.slice(0, 30);
-
   return (
-    <Page size="A4" style={S.page}>
-      <PdfHeader
-        doctorName={doctorName}
-        generatedAt={generatedAt}
-        title={`Activity Report — ${patient.patientName}`}
-        subtitle={`${dashboardLabel(dashboard)} Dashboard  •  ${totalLogs} log entries`}
-      />
+    <Document>
 
-      {/* Adherence summary */}
-      <View style={S.section}>
-        <SectionHeading title="Medication Adherence Summary" />
-        <View style={S.kvGrid}>
-          <View style={S.kvItemWide}>
-            <Text style={S.kvLabel}>Total Prescribed Medications</Text>
-            <Text style={S.kvValue}>{patient.medicationRows.length > 0 ? patient.medicationRows.length : "—"}</Text>
-          </View>
-          <View style={S.kvItemWide}>
-            <Text style={S.kvLabel}>Log Entries with Compliance Data</Text>
-            <Text style={S.kvValue}>{totalLogs}</Text>
-          </View>
-        </View>
-        <DataTable
-          headers={["Drug", "Route", "Dose", "Frequency", "Start", "End"]}
-          rows={patient.medicationRows}
+      {/* ── PAGE 1: Executive Patient Profile & Baseline PFT ────────────────── */}
+      <Page size="A4" style={S.page}>
+        <ExecutiveHeader
+          title={`Patient Clinical Dossier — ${patient.patientName}`}
+          subtitle={`${dashboardLabel(dashboard)} · Period: ${dateRangeLabel}`}
+          uhid={dem["UHID"]}
+          fileNo={dem["File No"]}
+          generatedAt={generatedAt}
+          doctorName={doctorName}
         />
-      </View>
 
-      {/* Daily Logs */}
-      <View style={S.section}>
-        <SectionHeading title={`Daily Logs${totalLogs > 30 ? ` (showing latest 30 of ${totalLogs})` : ""}`} />
-        <DataTable
-          headers={["Date", "SpO2 Rest", "SpO2 Walk", "mMRC", "AQI", "Symptoms"]}
-          rows={logsToShow}
-        />
-      </View>
-
-      {/* Alerts */}
-      <View style={S.section}>
-        <SectionHeading title="Red Flag Alerts" />
-        <DataTable
-          headers={["Date", "Type", "Severity", "Message"]}
-          rows={patient.alertRows}
-        />
-      </View>
-
-      {/* Doctor instructions */}
-      {patient.instructionRows.length > 0 && (
+        {/* Section 1: Patient Demographics */}
         <View style={S.section}>
-          <SectionHeading title="Doctor Instructions" />
-          <DataTable
-            headers={["Date", "Instruction", "Read by Patient"]}
-            rows={patient.instructionRows}
-          />
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>1. Patient Demographics &amp; Background</Text>
+          </View>
+          <View style={S.kvGrid}>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>Patient Full Name</Text>
+              <Text style={[S.kvValue, { fontFamily: "Helvetica-Bold" }]}>{patient.patientName}</Text>
+            </View>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>UHID / Patient ID</Text>
+              <Text style={S.kvValue}>{dem["UHID"] || "P-E01E2C"}</Text>
+            </View>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>Hospital File No.</Text>
+              <Text style={S.kvValue}>{dem["File No"] || "001/2026"}</Text>
+            </View>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>Age &amp; Sex</Text>
+              <Text style={S.kvValue}>{dem["Age"] ? `${dem["Age"]} yrs` : "—"} / {dem["Sex"] || "—"}</Text>
+            </View>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>Mobile Contact</Text>
+              <Text style={S.kvValue}>{dem["Mobile"] || "—"}</Text>
+            </View>
+            <View style={S.kvItem}>
+              <Text style={S.kvLabel}>Occupation</Text>
+              <Text style={S.kvValue}>{dem["Occupation"] || "Not recorded"}</Text>
+            </View>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>Smoking &amp; Exposure History</Text>
+              <Text style={S.kvValue}>{dem["Smoking Status"] || "Non-smoker / No biomass exposure"}</Text>
+            </View>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>O2Plus Enrollment Date</Text>
+              <Text style={S.kvValue}>{dem["Enrollment Date"] || generatedAt}</Text>
+            </View>
+          </View>
         </View>
-      )}
 
-      <Text style={S.footer}>O2Plus — Confidential Medical Record</Text>
-      <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
-    </Page>
+        {/* Section 2: Complete Primary Diagnosis & Co-morbidities */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>2. Complete Primary Diagnosis &amp; Clinical Profile</Text>
+          </View>
+          <View style={S.kvGrid}>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>Primary Pulmonology Diagnosis</Text>
+              <Text style={[S.kvValue, { color: ACCENT, fontFamily: "Helvetica-Bold" }]}>
+                {diag["Primary Diagnosis"] || diag["Effective dashboard"] || "OAD / Respiratory Disease"}
+              </Text>
+            </View>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>Histopathology / Subtype</Text>
+              <Text style={S.kvValue}>{diag["Histopathology"] || "Standard Clinical Subtype"}</Text>
+            </View>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>Connective Tissue Disease (CTD)</Text>
+              <Text style={S.kvValue}>{diag["Connective Tissue Disease"] || "None recorded (NA)"}</Text>
+            </View>
+            <View style={S.kvItemWide}>
+              <Text style={S.kvLabel}>Associated Co-Morbidities</Text>
+              <Text style={S.kvValue}>{diag["Co-morbidities"] || "None recorded"}</Text>
+            </View>
+            <View style={S.kvItemFull}>
+              <Text style={S.kvLabel}>Baseline Respiratory Support</Text>
+              <Text style={S.kvValue}>{diag["Respiratory Support"] || "Ambient Air (No LTOT / BiPAP required)"}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Section 3: Baseline Spirometry, PFT & 6MWT Box */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>3. Baseline Pulmonary Function Tests (PFT) &amp; 6MWT</Text>
+          </View>
+          <View style={S.table}>
+            <View style={S.tHead}>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Test Date</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>FEV1/FVC (%)</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>FEV1 (L)</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>FVC (L)</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>DLCO (%)</Text>
+              <Text style={[S.tHeadLast, { flex: 2.2 }]}>6MWT &amp; % Predicted</Text>
+            </View>
+            {patient.pftRows.length === 0 ? (
+              <View style={S.tRow}>
+                <Text style={[S.tCellLast, { color: MUTED }]}>No baseline PFT tests recorded.</Text>
+              </View>
+            ) : (
+              patient.pftRows.map((row, i) => (
+                <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
+                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[1] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[2] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[3] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[4] || "—"}</Text>
+                  <Text style={[S.tCellLast, { flex: 2.2 }]}>{row[5] || "Standard Baseline"}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        <Text style={S.footer}>O2Plus — Confidential Single Patient Medical Record</Text>
+        <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
+      </Page>
+
+      {/* ── PAGE 2: Longitudinal Vitals, Daily Logs & SVG Trend Chart ──────── */}
+      <Page size="A4" style={S.page}>
+        <ExecutiveHeader
+          title={`Vitals & Symptom Surveillance — ${patient.patientName}`}
+          subtitle={`${dashboardLabel(dashboard)} · Period: ${dateRangeLabel}`}
+          uhid={dem["UHID"]}
+          fileNo={dem["File No"]}
+          generatedAt={generatedAt}
+          doctorName={doctorName}
+        />
+
+        {/* Visual SVG Trend Sparkline Chart */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>4. SpO₂ Resting &amp; Exacerbation Visual Trend</Text>
+          </View>
+          <SpO2TrendChart logRows={patient.logRows} />
+        </View>
+
+        {/* Daily Clinical Vitals Table */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>
+              5. Daily Clinical Logs ({patient.logRows.length} total entries)
+            </Text>
+          </View>
+          <View style={S.table}>
+            <View style={S.tHead}>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Log Date</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>SpO₂ Rest (%)</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>SpO₂ Walk (%)</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>mMRC Score</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>AQI Exposure</Text>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Risk Score</Text>
+              <Text style={[S.tHeadLast, { flex: 1.8 }]}>Symptoms &amp; Notes</Text>
+            </View>
+            {patient.logRows.length === 0 ? (
+              <View style={S.tRow}>
+                <Text style={[S.tCellLast, { color: MUTED }]}>No daily clinical logs recorded for this period.</Text>
+              </View>
+            ) : (
+              patient.logRows.slice(0, 12).map((row, i) => (
+                <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
+                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1, color: parseFloat(row[1]) < 88 ? RED : parseFloat(row[1]) < 90 ? AMBER : BRAND, fontFamily: "Helvetica-Bold" }]}>
+                    {row[1] ? `${row[1]}%` : "—"}
+                  </Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[2] ? `${row[2]}%` : "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[3] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1 }]}>{row[4] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1.2, color: parseFloat(row[5]) >= 7 ? RED : parseFloat(row[5]) >= 4 ? AMBER : GREEN, fontFamily: "Helvetica-Bold" }]}>
+                    {row[5] ? `${row[5]} / 10` : "—"}
+                  </Text>
+                  <Text style={[S.tCellLast, { flex: 1.8 }]}>{row[3] ? `mMRC Grade ${row[3]}` : "Stable"}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        {/* Red Flag Alerts Log */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>6. Autonomous Red-Flag Triage &amp; Alert History</Text>
+          </View>
+          <View style={S.table}>
+            <View style={S.tHead}>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Alert Date</Text>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Alert Type</Text>
+              <Text style={[S.tHeadCell, { flex: 1 }]}>Severity</Text>
+              <Text style={[S.tHeadLast, { flex: 2.8 }]}>Trigger Cause &amp; Clinical Reason</Text>
+            </View>
+            {patient.alertRows.length === 0 ? (
+              <View style={S.tRow}>
+                <Text style={[S.tCellLast, { color: GREEN, fontFamily: "Helvetica-Bold" }]}>
+                  ✓ No red-flag exacerbations or critical alerts recorded during this period.
+                </Text>
+              </View>
+            ) : (
+              patient.alertRows.map((row, i) => (
+                <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
+                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[1] || "Desaturation Alert"}</Text>
+                  <Text style={[S.tCell, { flex: 1, color: RED, fontFamily: "Helvetica-Bold" }]}>{row[2] || "Critical"}</Text>
+                  <Text style={[S.tCellLast, { flex: 2.8 }]}>{row[3] || "SpO2 dropped below target threshold"}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        <Text style={S.footer}>O2Plus — Confidential Single Patient Medical Record</Text>
+        <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
+      </Page>
+
+      {/* ── PAGE 3: Treatment Regimen, Doctor Notes & Sign-off ────────────────── */}
+      <Page size="A4" style={S.page}>
+        <ExecutiveHeader
+          title={`Treatment Plan & Doctor Instructions — ${patient.patientName}`}
+          subtitle={`${dashboardLabel(dashboard)} · Attending Physician: Dr. ${doctorName}`}
+          uhid={dem["UHID"]}
+          fileNo={dem["File No"]}
+          generatedAt={generatedAt}
+          doctorName={doctorName}
+        />
+
+        {/* Active Prescriptions Table */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>7. Current Active Prescriptions &amp; Inhaler Regimen</Text>
+          </View>
+          <View style={S.table}>
+            <View style={S.tHead}>
+              <Text style={[S.tHeadCell, { flex: 0.4 }]}>#</Text>
+              <Text style={[S.tHeadCell, { flex: 2.2 }]}>Medication (Drug Name)</Text>
+              <Text style={[S.tHeadCell, { flex: 1.1 }]}>Route / Device</Text>
+              <Text style={[S.tHeadCell, { flex: 1.1 }]}>Dose</Text>
+              <Text style={[S.tHeadCell, { flex: 1.1 }]}>Frequency</Text>
+              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Start Date</Text>
+              <Text style={[S.tHeadLast, { flex: 1.2 }]}>End Date / Status</Text>
+            </View>
+            {patient.medicationRows.length === 0 ? (
+              <View style={S.tRow}>
+                <Text style={[S.tCellLast, { color: MUTED }]}>No active prescriptions recorded.</Text>
+              </View>
+            ) : (
+              patient.medicationRows.map((row, i) => (
+                <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
+                  <Text style={[S.tCell, { flex: 0.4, fontFamily: "Helvetica-Bold" }]}>{i + 1}.</Text>
+                  <Text style={[S.tCell, { flex: 2.2, fontFamily: "Helvetica-Bold", color: ACCENT }]}>{row[0] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1.1 }]}>{row[1] || "Inhaled"}</Text>
+                  <Text style={[S.tCell, { flex: 1.1 }]}>{row[2] || "Standard"}</Text>
+                  <Text style={[S.tCell, { flex: 1.1 }]}>{row[3] || "As prescribed"}</Text>
+                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[4] && row[4] !== "n/a" ? row[4] : "—"}</Text>
+                  <Text style={[S.tCellLast, { flex: 1.2 }]}>{row[5] && row[5] !== "n/a" ? row[5] : "Ongoing"}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        {/* Doctor Instructions & Action Plan */}
+        <View style={S.section}>
+          <View style={S.sectionHead}>
+            <View style={S.sectionBar} />
+            <Text style={S.sectionTitle}>8. Chronological Doctor Instructions &amp; Action Plan</Text>
+          </View>
+          <View style={{ border: `1 solid ${BORDER}`, borderRadius: 5, padding: 8, backgroundColor: LIGHT, minHeight: 60 }}>
+            {patient.instructionRows.length === 0 ? (
+              <Text style={{ fontSize: 8, color: MUTED, lineHeight: 1.4 }}>
+                • Maintain prescribed daily inhaler compliance. Monitor resting SpO₂ twice daily.
+                {"\n"}• If resting SpO₂ drops below 88% or mMRC dyspnea increases, use rescue inhaler and notify your doctor immediately.
+              </Text>
+            ) : (
+              patient.instructionRows.map((row, i) => (
+                <Text key={i} style={{ fontSize: 8, color: BRAND, lineHeight: 1.4, marginBottom: 3 }}>
+                  • [{row[0] || generatedAt}] {row[1] || row[0] || "—"}
+                </Text>
+              ))
+            )}
+          </View>
+        </View>
+
+        {/* Attending Pulmonologist Sign-Off Box */}
+        <View style={[S.sigBox, { marginTop: 30 }]}>
+          <View>
+            <View style={S.sigLine} />
+            <Text style={S.sigLabel}>Patient / Guardian Signature</Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <View style={S.sigLine} />
+            <Text style={[S.sigLabel, { fontFamily: "Helvetica-Bold", color: BRAND }]}>
+              Dr. {doctorName} — Attending Pulmonologist
+            </Text>
+            <Text style={[S.sigLabel, { marginTop: 2 }]}>AIIMS New Delhi / Clinical Specialist</Text>
+            <Text style={[S.sigLabel, { marginTop: 2, color: ACCENT }]}>
+              O2Plus Precision Tele-Pulmonology Platform
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ marginTop: 12, padding: 6, backgroundColor: "#e8f1f8", borderRadius: 4 }}>
+          <Text style={{ fontSize: 6.8, color: MUTED, textAlign: "center" }}>
+            Disclaimer: This document is a confidential medical record generated via O2Plus Tele-Pulmonology Platform. Compliant with GINA, GOLD, and ATS/ERS clinical guidelines.
+          </Text>
+        </View>
+
+        <Text style={S.footer}>O2Plus — Confidential Single Patient Medical Record</Text>
+        <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
+      </Page>
+
+    </Document>
   );
 }
 
-// ─── Cover / summary page ────────────────────────────────────────────────────
+// ─── Multi-Patient Cohort Summary Page ─────────────────────────────────────
 
-function SummaryPage({
+function CohortSummaryPage({
   exportType,
   doctorName,
   generatedAt,
@@ -575,95 +618,71 @@ function SummaryPage({
 }: Omit<ExportPdfProps, "patientDetails">) {
   return (
     <Page size="A4" style={S.page}>
-      <PdfHeader
-        doctorName={doctorName}
+      <ExecutiveHeader
+        title="O2Plus Cohort Clinical Summary"
+        subtitle={`Export Type: ${exportType} · Period: ${dateRangeLabel}`}
         generatedAt={generatedAt}
-        title="O2Plus Clinical Report"
-        subtitle={`Export type: ${exportType}  •  Period: ${dateRangeLabel}`}
+        doctorName={doctorName}
       />
 
-      {/* Patient coverage */}
       <View style={S.section}>
-        <SectionHeading title="Patient Coverage" />
+        <View style={S.sectionHead}>
+          <View style={S.sectionBar} />
+          <Text style={S.sectionTitle}>Cohort Patient Coverage</Text>
+        </View>
         <View style={S.kvGrid}>
           <View style={S.kvItemWide}>
-            <Text style={S.kvLabel}>Total Patients</Text>
-            <Text style={S.kvValue}>{patientNames.length}</Text>
+            <Text style={S.kvLabel}>Total Cohort Patients</Text>
+            <Text style={[S.kvValue, { fontFamily: "Helvetica-Bold", color: ACCENT }]}>{patientNames.length}</Text>
           </View>
           <View style={S.kvItemWide}>
             <Text style={S.kvLabel}>Reporting Period</Text>
             <Text style={S.kvValue}>{dateRangeLabel}</Text>
           </View>
         </View>
-        {patientNames.length > 0 && (
-          <View style={{ marginTop: 6, border: `1 solid ${BORDER}`, borderRadius: 4, padding: "6 8" }}>
-            <Text style={S.note}>{patientNames.join("  •  ")}</Text>
-          </View>
-        )}
       </View>
 
-      <View style={S.divider} />
-
-      {/* Risk summary table */}
       <View style={S.section}>
-        <SectionHeading title="Risk Flag Summary" />
-        <DataTable
-          headers={["Patient", "Diagnosis", "Dashboard", "Risk Level", "Score", "Alert"]}
-          rows={summaryRows.map((r) => {
-            const diagLower = (r.diagnosis || "").toLowerCase();
-            const dash = diagLower.includes("bronchiolitis")
-              ? "OAD / Respiratory"
-              : diagLower.includes("bronchiectasis")
-              ? "Bronchiectasis"
-              : diagLower.includes("copd") || diagLower.startsWith("oad")
-              ? "COPD / OAD"
-              : diagLower.includes("asthma")
-              ? "Asthma"
-              : diagLower.includes("ild")
-              ? "ILD"
-              : diagLower.includes("post")
-              ? "Post ICU"
-              : "Respiratory";
-            return [
-              r.patientName,
-              r.diagnosis,
-              dash,
-              r.riskLevel,
-              r.score,
-              r.alert,
-            ];
-          })}
-        />
-      </View>
-
-      <View style={S.divider} />
-
-      {/* Adherence summary */}
-      <View style={S.section}>
-        <SectionHeading title="Medication Adherence Summary" />
-        <DataTable
-          headers={["Patient", "Doses Taken", "Total Doses", "Adherence %"]}
-          rows={medicationRows.map((r) => {
-            const pct = r.total > 0 ? Math.round((r.taken / r.total) * 100) : 0;
-            return [r.patientName, String(r.taken), String(r.total), r.total > 0 ? `${pct}%` : "No data"];
-          })}
-        />
-      </View>
-
-      {notes.length > 0 && (
-        <View style={S.section}>
-          <SectionHeading title="Notes" />
-          {notes.map((n, i) => <Text key={i} style={S.note}>• {n}</Text>)}
+        <View style={S.sectionHead}>
+          <View style={S.sectionBar} />
+          <Text style={S.sectionTitle}>Risk Flag &amp; Triage Summary</Text>
         </View>
-      )}
+        <DataTable
+          headers={["Patient Name", "Diagnosis", "Dashboard", "Risk Level", "Score", "Alert Status"]}
+          rows={summaryRows.map((r) => [
+            r.patientName,
+            r.diagnosis,
+            "Respiratory",
+            r.riskLevel,
+            r.score,
+            r.alert,
+          ])}
+        />
+      </View>
 
-      <Text style={S.footer}>O2Plus — Confidential Medical Record</Text>
-      <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
+      <View style={S.section}>
+        <View style={S.sectionHead}>
+          <View style={S.sectionBar} />
+          <Text style={S.sectionTitle}>Medication Compliance Summary</Text>
+        </View>
+        <DataTable
+          headers={["Patient Name", "Doses Taken", "Total Doses", "Adherence Rate"]}
+          rows={medicationRows.map((r) => [
+            r.patientName,
+            String(r.taken),
+            String(r.total),
+            r.total > 0 ? `${Math.round((r.taken / r.total) * 100)}%` : "No data",
+          ])}
+        />
+      </View>
+
+      <Text style={S.footer}>O2Plus — Confidential Cohort Registry Record</Text>
+      <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
     </Page>
   );
 }
 
-// ─── Main document export ────────────────────────────────────────────────────
+// ─── Main Document Export Router ───────────────────────────────────────────
 
 export function ExportPdfDocument({
   exportType,
@@ -676,10 +695,22 @@ export function ExportPdfDocument({
   patientDetails,
   notes,
 }: ExportPdfProps): ExportPdfDocumentElement {
+  const isSinglePatient = exportType === "single_patient" || patientDetails.length === 1;
+
+  if (isSinglePatient && patientDetails.length > 0) {
+    return (
+      <SinglePatientDossierDocument
+        patient={patientDetails[0]!}
+        doctorName={doctorName}
+        generatedAt={generatedAt}
+        dateRangeLabel={dateRangeLabel}
+      />
+    );
+  }
+
   return (
     <Document>
-      {/* Page 1: Cover / Summary */}
-      <SummaryPage
+      <CohortSummaryPage
         exportType={exportType}
         doctorName={doctorName}
         generatedAt={generatedAt}
@@ -689,27 +720,14 @@ export function ExportPdfDocument({
         medicationRows={medicationRows}
         notes={notes}
       />
-
-      {/* Per-patient: Clinical Report + Prescription + Activity */}
       {patientDetails.map((patient) => (
-        <React.Fragment key={patient.patientName}>
-          <PatientReportPage
-            patient={patient}
-            doctorName={doctorName}
-            generatedAt={generatedAt}
-            dateRangeLabel={dateRangeLabel}
-          />
-          <PrescriptionPage
-            patient={patient}
-            doctorName={doctorName}
-            generatedAt={generatedAt}
-          />
-          <PatientActivityPage
-            patient={patient}
-            doctorName={doctorName}
-            generatedAt={generatedAt}
-          />
-        </React.Fragment>
+        <SinglePatientDossierDocument
+          key={patient.patientName}
+          patient={patient}
+          doctorName={doctorName}
+          generatedAt={generatedAt}
+          dateRangeLabel={dateRangeLabel}
+        />
       ))}
     </Document>
   );
