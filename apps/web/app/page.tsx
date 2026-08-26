@@ -12,6 +12,7 @@ import {
   Award,
   Quote,
 } from "lucide-react";
+import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -22,9 +23,7 @@ export default function Home() {
       <header className={styles.nav}>
         <div className={styles.navInner}>
           <Link href="/" className={styles.navBrand}>
-            <div className={styles.navBrandIcon}>
-              <Activity size={16} strokeWidth={2.5} />
-            </div>
+            <SaansBrandIcon />
             <span className={styles.navBrandName}>O2Plus</span>
           </Link>
 
@@ -271,9 +270,7 @@ export default function Home() {
         <div className={styles.footerInner}>
           <div className={styles.footerLeft}>
             <div className={styles.footerBrand}>
-              <div className={styles.navBrandIcon} style={{ width: 28, height: 28, borderRadius: 7 }}>
-                <Activity size={14} strokeWidth={2.5} />
-              </div>
+              <SaansBrandIcon />
               <span className={styles.footerBrandName}>O2Plus</span>
             </div>
             <p className={styles.footerTagline}>Precision Respiratory Care — Between Hospital Visits</p>

@@ -285,7 +285,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
   }
 
   const markPrescriptionSeen = useCallback(() => {
@@ -352,7 +352,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
     ? `/api/patient/prescriptions?format=pdf&date=${encodeURIComponent(latestPrescription.date)}`
     : "";
   const latestPrescriptionFilename = latestPrescription
-    ? `saans-prescription-${latestPrescription.date}.pdf`
+    ? `o2plus-prescription-${latestPrescription.date}.pdf`
     : "";
   const appointmentNotificationKey = getAppointmentNotificationKey(appointmentNotification);
   const showAppointmentBadge = appointmentNotification
@@ -381,8 +381,8 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
       <div className={styles.brand}>
         <SaansBrandIcon className={styles.brandIcon} />
         <div>
-          <p className={styles.brandName}>Saans Sync</p>
-          <p className={styles.brandSub}>Respiratory health companion · श्वसन स्वास्थ्य साथी</p>
+          <p className={styles.brandName}>O2Plus</p>
+          <p className={styles.brandSub}>Respiratory Care Platform</p>
         </div>
       </div>
 

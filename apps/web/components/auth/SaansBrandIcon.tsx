@@ -18,12 +18,12 @@ export function SaansBrandIcon({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="o2bg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#0d5c5c" />
-          <stop offset="100%" stopColor="#126969" />
+          <stop offset="0%" stopColor="#0f2b48" />
+          <stop offset="100%" stopColor="#1e6091" />
         </linearGradient>
         <linearGradient id="o2ring" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5ee8cc" />
-          <stop offset="100%" stopColor="#a8f5e5" />
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#7dd3fc" />
         </linearGradient>
       </defs>
 
@@ -40,7 +40,7 @@ export function SaansBrandIcon({ className }: { className?: string }) {
         fontFamily="'DM Sans', system-ui, sans-serif"
         fontWeight="800"
         fontSize="7.5"
-        fill="#5ee8cc"
+        fill="#38bdf8"
         letterSpacing="-0.5"
       >
         2

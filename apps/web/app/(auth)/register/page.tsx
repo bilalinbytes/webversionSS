@@ -291,7 +291,7 @@ export default function RegisterPage() {
           <div>
             <p className={styles.brandTitle}>O2Plus</p>
             <p className={styles.brandTagline}>
-              Connecting missing dots with your doctor....
+              Precision Respiratory Care Platform
             </p>
           </div>
         </Link>
