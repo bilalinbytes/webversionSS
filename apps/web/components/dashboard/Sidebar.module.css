@@ -1,20 +1,23 @@
-/* ── Clinical Meridian Sidebar — dark teal authority column ─────────────────── */
+/* ── Blue Healthcare Doctor Sidebar ───────────────────────────────────────── */
+/* Tokens: navy #0f2b48, blue #1e6091, cyan #4895ef, surface #ffffff           */
 
 .sidebar {
-  width: 62px;
-  background: linear-gradient(175deg, #173d45 0%, #132d36 60%, #112931 100%);
-  border-right: none;
+  width: 64px;
+  background: var(--med-navy-800, #0f2b48);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 2px 0 8px rgba(15, 43, 72, 0.08);
+  z-index: 40;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  padding: 14px 0;
-  gap: 2px;
+  padding: 12px 0;
+  gap: 4px;
   flex: 1;
 }
 
@@ -25,31 +28,31 @@
   justify-content: center;
   gap: 5px;
   width: 100%;
-  padding: 11px 6px;
+  padding: 10px 4px;
   border: none;
   background: none;
   cursor: pointer;
   border-radius: 0;
-  transition: background 160ms ease;
+  transition: background 140ms ease;
   position: relative;
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .navItemActive {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .navItemActive::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 3px;
-  background: #7ec8c8;
+  top: 18%;
+  bottom: 18%;
+  width: 3.5px;
+  background: var(--med-blue-400, #4895ef);
   border-radius: 0 3px 3px 0;
 }
 
@@ -60,36 +63,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
-  transition: color 160ms ease;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 140ms ease;
 }
 
 .navItemActive .iconWrap {
-  color: #7ec8c8;
+  color: var(--med-blue-400, #4895ef);
 }
 
 .navItem:hover .iconWrap {
-  color: rgba(255, 255, 255, 0.82);
+  color: #ffffff;
 }
 
 .navLabel {
-  font-size: 8px;
+  font-size: 8.5px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.6);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   letter-spacing: 0.02em;
   text-align: center;
   line-height: 1.2;
-  transition: color 160ms ease;
+  transition: color 140ms ease;
 }
 
 .navItemActive .navLabel {
-  color: #7ec8c8;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .navItem:hover .navLabel {
-  color: rgba(255, 255, 255, 0.72);
+  color: #ffffff;
 }
 
 @media (max-width: 760px) {
@@ -98,23 +101,24 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 80;
     width: 100%;
-    height: 62px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 -12px 28px rgba(19,45,54,0.16);
+    height: 56px;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    z-index: 60;
   }
 
   .nav {
     flex-direction: row;
-    padding: 0 10px;
-    align-items: stretch;
-    justify-content: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    align-items: center;
   }
 
   .navItem {
-    max-width: 120px;
-    padding: 8px 12px 7px;
+    flex: 1;
+    height: 100%;
+    padding: 6px 0;
   }
 
   .navItemActive::before {

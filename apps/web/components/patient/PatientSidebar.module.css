@@ -1,39 +1,75 @@
+/* ── Patient Sidebar (Mobile-First Companion Column) ─────────────────────────── */
+/* Tokens: navy #0f2b48, blue #164e77, cyan #4895ef                             */
+
 .sidebar {
-  width: 68px;
-  background: linear-gradient(175deg, #173d45 0%, #132d36 60%, #112931 100%);
+  width: 72px;
+  background: linear-gradient(175deg, #0f2b48 0%, #164e77 60%, #1a4971 100%);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  box-shadow: 2px 0 8px rgba(15, 43, 72, 0.08);
+  z-index: 40;
 }
 
-.nav { display: flex; flex-direction: column; padding: 12px 0; gap: 2px; flex: 1; }
+.nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  gap: 4px;
+  flex: 1;
+}
+
 .navItem {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 5px; width: 100%; padding: 10px 6px;
-  border: none; background: none; cursor: pointer;
-  position: relative; transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 140ms ease;
 }
 
-.navItem:hover { background: rgba(255,255,255,0.07); }
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
 
-.navItemActive { background: rgba(255,255,255,0.12); }
+.navItemActive {
+  background: rgba(255, 255, 255, 0.14);
+}
 
 .navItemActive::before {
   content: "";
-  position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; background: #7ec8c8;
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 3.5px;
+  background: var(--med-blue-400, #4895ef);
   border-radius: 0 3px 3px 0;
 }
 
 .iconWrap {
-  width: 22px; height: 22px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 140ms ease;
 }
 
-.navItemActive .iconWrap { color: #ffffff; }
-.navItem:hover .iconWrap { color: #ffffff; }
+.navItemActive .iconWrap {
+  color: #ffffff;
+}
+
+.navItem:hover .iconWrap {
+  color: #ffffff;
+}
 
 .navLabels {
   display: flex;
@@ -41,16 +77,34 @@
   align-items: center;
   gap: 1px;
 }
+
 .navLabel {
-  font-size: 10px; font-weight: 500;
-  color: rgba(255, 255, 255, 0.45); text-align: center; line-height: 1;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
+
 .navLabelHi {
-  font-size: 9px; font-weight: 400;
-  color: rgba(255, 255, 255, 0.3); text-align: center; line-height: 1;
+  font-size: 9px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
-.navItemActive .navLabel, .navItemActive .navLabelHi { color: #ffffff; }
-.navItem:hover .navLabel, .navItem:hover .navLabelHi { color: #ffffff; }
+
+.navItemActive .navLabel,
+.navItemActive .navLabelHi {
+  color: #ffffff;
+}
+
+.navItem:hover .navLabel,
+.navItem:hover .navLabelHi {
+  color: #ffffff;
+}
 
 @media (max-width: 760px) {
   .sidebar {
@@ -60,9 +114,9 @@
     bottom: 0;
     z-index: 80;
     width: 100%;
-    height: 66px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 -12px 28px rgba(19,45,54,0.18);
+    height: 64px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 -10px 24px rgba(15, 43, 72, 0.18);
   }
 
   .nav {
@@ -71,6 +125,7 @@
     gap: 2px;
     overflow-x: auto;
     scrollbar-width: none;
+    align-items: center;
   }
 
   .nav::-webkit-scrollbar {
@@ -80,8 +135,8 @@
   .navItem {
     min-width: 72px;
     flex: 1 0 72px;
-    padding: 7px 4px 6px;
-    gap: 4px;
+    padding: 6px 4px;
+    gap: 3px;
   }
 
   .navItemActive::before {
@@ -98,13 +153,4 @@
     width: 20px;
     height: 20px;
   }
-
-  .navLabel {
-    font-size: 9px;
-  }
-
-  .navLabelHi {
-    font-size: 8px;
-  }
 }
-

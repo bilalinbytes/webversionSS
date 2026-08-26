@@ -1142,13 +1142,13 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   } satisfies Record<DiagnosisKind, React.ReactNode>;
 
   return (
-    <div style={{ padding: "20px 20px 32px", display: "flex", flexDirection: "column", gap: 20, background: "#f8fafc", minHeight: "100%" }}>
+    <div style={{ padding: "20px 20px 32px", display: "flex", flexDirection: "column", gap: 20, background: "var(--med-bg-canvas, #f8fafc)", minHeight: "100%" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, color: "#132d36" }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--med-navy-800, #0f2b48)", fontFamily: "var(--font-lora), Georgia, serif" }}>
             Patient Analytics · मरीज विश्लेषण{patientName ? `: ${patientName}` : ""}
           </h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6d8794" }}>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--med-text-muted, #64748b)" }}>
             Patient-wise respiratory monitoring with common and disease-specific historical charts. · सामान्य और रोग-विशिष्ट पुराने चार्ट।
           </p>
         </div>
@@ -1158,7 +1158,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
               type="button"
               onClick={() => void handleExport("single")}
               disabled={exporting !== null}
-              style={{ border: "1px solid #126969", background: "#fff", color: "#126969", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+              style={{ border: "1.5px solid var(--med-blue-600, #1e6091)", background: "#ffffff", color: "var(--med-blue-600, #1e6091)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", transition: "background 140ms ease" }}
             >
               {exporting === "single" ? "Exporting..." : "Export Single Patient"}
             </button>
@@ -1166,7 +1166,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
               type="button"
               onClick={() => void handleExport("all")}
               disabled={exporting !== null}
-              style={{ border: 0, background: "#126969", color: "#fff", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+              style={{ border: "none", background: "var(--med-blue-600, #1e6091)", color: "#ffffff", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", transition: "background 140ms ease" }}
             >
               {exporting === "all" ? "Exporting..." : "Export All Patients"}
             </button>

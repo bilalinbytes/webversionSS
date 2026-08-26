@@ -1,13 +1,19 @@
+/* ── Admin Command Center TopNav (Institutional Blue) ────────────────────────── */
+/* Tokens: navy #0a192f, blue #1e6091, cyan #4895ef, surface #ffffff            */
+
 .nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   height: 56px;
-  background: #132d36;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--med-navy-900, #0a192f);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   gap: 16px;
+  box-shadow: 0 2px 8px rgba(10, 25, 47, 0.2);
+  position: relative;
+  z-index: 50;
 }
 
 /* Hamburger — hidden on desktop, shown on mobile */
@@ -20,17 +26,16 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #c8d8dc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 160ms ease;
+  transition: background 140ms ease;
 }
 
 .hamburgerBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .left {
@@ -45,10 +50,11 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(18, 105, 105, 0.35);
-  color: #7fdada;
+  background: rgba(42, 117, 211, 0.25);
+  color: var(--med-blue-400, #4895ef);
+  border: 1px solid rgba(72, 149, 239, 0.35);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -63,9 +69,10 @@
 
 .title {
   font-family: var(--font-lora), Georgia, serif;
-  font-size: 1.05rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   color: #ffffff;
+  margin: 0;
   letter-spacing: -0.01em;
 }
 
@@ -77,20 +84,25 @@
 
 .adminInfo {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .adminName {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e4eef0;
+  color: #ffffff;
+  margin: 0;
   line-height: 1.2;
 }
 
 .adminEmail {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: 0.68rem;
-  color: #7a9aa6;
+  font-size: 0.7rem;
+  color: var(--med-blue-400, #4895ef);
+  margin: 0;
   line-height: 1.2;
 }
 
@@ -98,65 +110,40 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  min-height: 38px;
+  padding: 6px 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #c8d8dc;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.88);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 160ms ease;
+  transition: background 140ms ease, color 140ms ease;
   white-space: nowrap;
 }
 
 .logoutBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
   color: #ffffff;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .nav {
-    height: auto;
-    min-height: 52px;
-    padding: 8px 12px;
-    flex-wrap: wrap;
-    gap: 6px;
+    padding: 0 16px;
   }
-
   .hamburgerBtn {
     display: flex;
-    order: -1;
   }
-
-  .left {
-    flex: 1 1 auto;
-    min-width: 0;
-    flex-wrap: wrap;
-    gap: 6px;
+  .adminEmail {
+    display: none;
   }
-
-  .title {
-    font-size: 0.9rem;
-  }
-
   .divider {
     display: none;
   }
-
-  .right {
-    gap: 8px;
-  }
-
-  .adminInfo {
+  .title {
     display: none;
-  }
-
-  .logoutBtn {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 6px 10px;
-    font-size: 0.72rem;
   }
 }

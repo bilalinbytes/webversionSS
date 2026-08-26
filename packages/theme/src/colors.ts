@@ -2,17 +2,24 @@
  * O2Plus Color Tokens
  *
  * Single source of truth for semantic colors across web and mobile.
+ * Blue Healthcare visual foundation preserving all clinical scoring engine mappings.
  */
 
 export const colors = {
-  // Brand colors
+  // Brand & Medical Blue Palette
   brand: {
-    primary: "#0284c7", // Sky 600
-    primaryLight: "#e0f2fe", // Sky 100
-    primaryDark: "#0369a1", // Sky 700
+    navyDark: "#0a192f",      // Deepest navy for high-security headers & page footers
+    navy: "#0f2b48",          // Primary doctor workstation navigation & clinical headers
+    navyLight: "#1a4971",     // Secondary clinical accents
+    primary: "#1e6091",       // Primary medical brand blue
+    primaryHover: "#164e77",  // Button hover state
+    primaryLight: "#e8f1f8",  // Active tab background / Subtle badge fill
+    primarySurface: "#f4f8fb",// Soft blue tinted canvas
+    accentCyan: "#4895ef",    // Active navigation indicator & focus highlights
+    primaryDark: "#0f2b48",   // Legacy alias
   },
 
-  // Risk levels (Scoring engine indicator colors)
+  // Risk levels (Scoring engine indicator colors — Ground Truth Preserved)
   risk: {
     green: {
       bg: "#dcfce7", // Green 100
@@ -40,26 +47,33 @@ export const colors = {
     },
   },
 
-  // Disease specific colors (Optional, for visual grouping)
+  // Disease specific colors (Telemetry visual grouping)
   diagnosis: {
-    asthma: "#3b82f6", // Blue 500
-    copd: "#f59e0b", // Amber 500
-    ild: "#8b5cf6", // Violet 500
-    bronchiectasis: "#10b981", // Emerald 500
-    post_icu: "#6366f1", // Indigo 500
+    asthma: "#2563eb",         // Blue 600
+    copd: "#d97706",           // Amber 600
+    ild: "#7c3aed",            // Violet 600
+    bronchiectasis: "#059669", // Emerald 600
+    post_icu: "#4f46e5",       // Indigo 600
   },
 
-  // UI Basics
+  // UI Surfaces & Accessible Typography
   ui: {
-    background: "#ffffff",
-    surface: "#f8fafc",
-    surfaceHighlight: "#f1f5f9",
-    border: "#e2e8f0",
-    borderStrong: "#cbd5e1",
-    textPrimary: "#0f172a",
-    textSecondary: "#475569",
-    textMuted: "#64748b",
-    error: "#ef4444",
-    success: "#22c55e",
+    background: "#f8fafc",     // Neutral slate canvas
+    surface: "#ffffff",        // Pure white card & panel surface
+    surfaceHighlight: "#f1f5f9",// Sub-section headers / table header fill
+    border: "#e2e8f0",         // Subtle dividers
+    borderStrong: "#cbd5e1",   // Form input outlines & active card borders
+    textPrimary: "#0f172a",    // Slate 900 (High contrast clinical reading)
+    textSecondary: "#475569",  // Slate 600 (Supporting body copy)
+    textMuted: "#64748b",      // Slate 500 (Captions, units, timestamps)
+    focusRing: "#2a75d3",      // Accessible 2px focus outline
+    error: "#dc2626",          // Accessible clinical error red
+    errorLight: "#fef2f2",     // Error banner fill
+    warning: "#d97706",        // Amber warning
+    warningLight: "#fffbeb",   // Warning banner fill
+    success: "#16a34a",        // Reassuring green
+    successLight: "#f0fdf4",   // Success toast fill
   },
 } as const;
+
+export type ColorTokens = typeof colors;
