@@ -42,8 +42,8 @@
 }
 
 .inputLarge:focus {
-  border-color: rgba(18,105,105,0.5);
-  box-shadow: 0 0 0 3px rgba(18,105,105,0.08);
+  border-color: rgba(30,96,145,0.5);
+  box-shadow: 0 0 0 3px rgba(30,96,145,0.08);
 }
 
 .inputWarn { border-color: rgba(226,75,74,0.6) !important; }
@@ -71,9 +71,9 @@
   cursor: pointer; text-align: left; transition: all 0.12s;
 }
 
-.mmrcBtn:hover { border-color: #126969; background: rgba(18,105,105,0.06); }
+.mmrcBtn:hover { border-color: var(--med-blue-600, #1e6091); background: rgba(30,96,145,0.06); }
 
-.mmrcBtnActive { border-color: #126969 !important; background: rgba(18,105,105,0.06) !important; }
+.mmrcBtnActive { border-color: var(--med-blue-600, #1e6091) !important; background: rgba(30,96,145,0.06) !important; }
 .mmrcBtnWarn.mmrcBtnActive { border-color: #e24b4a !important; background: #fdf5f5 !important; }
 
 .mmrcGrade {
@@ -83,7 +83,7 @@
   font-family: var(--font-lora), Georgia, serif;
 }
 
-.mmrcBtnActive .mmrcGrade { background: #126969; color: white; }
+.mmrcBtnActive .mmrcGrade { background: var(--med-blue-600, #1e6091); color: white; }
 .mmrcBtnWarn.mmrcBtnActive .mmrcGrade { background: #e24b4a; color: white; }
 
 .mmrcLabel {
@@ -107,7 +107,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.vasBtn:hover { border-color: #126969; background: rgba(18,105,105,0.06); }
+.vasBtn:hover { border-color: var(--med-blue-600, #1e6091); background: rgba(30,96,145,0.06); }
 .vasBtnActive { color: white !important; }
 
 .vasLabels {
@@ -132,8 +132,8 @@
   cursor: pointer; transition: all 0.12s; width: 100%; text-align: left;
 }
 
-.medItem:hover { border-color: #126969; background: rgba(18,105,105,0.06); }
-.medTaken { border-color: #126969 !important; background: rgba(18,105,105,0.06) !important; }
+.medItem:hover { border-color: var(--med-blue-600, #1e6091); background: rgba(30,96,145,0.06); }
+.medTaken { border-color: var(--med-blue-600, #1e6091) !important; background: rgba(30,96,145,0.06) !important; }
 
 .medCheck {
   width: 22px; height: 22px; border-radius: 50%;
@@ -142,14 +142,14 @@
   flex-shrink: 0; color: white; transition: all 0.15s;
 }
 
-.medCheckDone { background: #126969; border-color: #126969; }
+.medCheckDone { background: var(--med-blue-600, #1e6091); border-color: var(--med-blue-600, #1e6091); }
 
 .medInfo { flex: 1; }
 .medName { font-size: 13px; font-weight: 600; color: #1a1a18; font-family: var(--font-dm-sans), system-ui, sans-serif; }
 .medFreq { font-size: 11px; color: #888680; margin-top: 1px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
 
 .medStatus { font-size: 11px; font-weight: 600; flex-shrink: 0; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.medStatusTaken  { color: #126969; }
+.medStatusTaken  { color: var(--med-blue-600, #1e6091); }
 .medStatusPending { color: #aaa9a6; }
 
 /* Symptoms */
@@ -166,8 +166,8 @@
   transition: all 0.12s;
 }
 
-.symptomChip:hover { border-color: #126969; background: rgba(18,105,105,0.06); }
-.symptomChipActive { border-color: #126969; background: #126969; color: white; }
+.symptomChip:hover { border-color: var(--med-blue-600, #1e6091); background: rgba(30,96,145,0.06); }
+.symptomChipActive { border-color: var(--med-blue-600, #1e6091); background: var(--med-blue-600, #1e6091); color: white; }
 
 /* Notes */
 .textarea {
@@ -179,8 +179,8 @@
 }
 
 .textarea:focus {
-  border-color: rgba(18,105,105,0.5);
-  box-shadow: 0 0 0 3px rgba(18,105,105,0.08);
+  border-color: rgba(30,96,145,0.5);
+  box-shadow: 0 0 0 3px rgba(30,96,145,0.08);
 }
 
 /* Submit */
@@ -198,13 +198,13 @@
 .btnSubmit {
   min-height: 48px; padding: 12px 28px; border-radius: 10px;
   font-size: 14px; font-weight: 700; cursor: pointer;
-  border: none; background: #126969; color: white;
+  border: none; background: var(--med-blue-600, #1e6091); color: white;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(18,105,105,0.25);
+  box-shadow: 0 4px 16px rgba(30,96,145,0.25);
 }
 
-.btnSubmit:hover:not(:disabled) { background: #0d4a4a; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(18,105,105,0.3); }
+.btnSubmit:hover:not(:disabled) { background: #0d4a4a; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,96,145,0.3); }
 .btnSubmit:active { transform: scale(0.97); }
 .btnSubmit:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
@@ -272,7 +272,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.limitSuccess { color: #0f6e56; }
+.limitSuccess { color: var(--med-blue-600, #1e6091); }
 .limitError { color: #c94d49; }
 
 .sentToast {
@@ -289,7 +289,7 @@
   border-radius: 8px;
   background: #f3fbf8;
   box-shadow: 0 16px 40px rgba(19, 45, 54, 0.16);
-  color: #126969;
+  color: var(--med-blue-600, #1e6091);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
@@ -319,8 +319,8 @@
 
 .successIcon {
   width: 72px; height: 72px; border-radius: 50%;
-  background: rgba(18,105,105,0.10); display: flex; align-items: center; justify-content: center;
-  color: #126969;
+  background: rgba(30,96,145,0.10); display: flex; align-items: center; justify-content: center;
+  color: var(--med-blue-600, #1e6091);
 }
 
 .successTitle {
@@ -336,7 +336,7 @@
 .btnPrimary {
   padding: 10px 24px; border-radius: 10px;
   font-size: 13px; font-weight: 600; cursor: pointer;
-  border: none; background: #126969; color: white;
+  border: none; background: var(--med-blue-600, #1e6091); color: white;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   transition: background 0.15s;
 }
@@ -350,7 +350,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #126969;
+  color: var(--med-blue-600, #1e6091);
   margin-bottom: 4px;
 }
 

@@ -304,7 +304,7 @@ export function AppointmentManagementView() {
 
         <section className={styles.panel}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <CalendarClock size={17} color="#126969" />
+            <CalendarClock size={17} color="var(--med-blue-600, #1e6091)" />
             <p className={styles.panelTitle} style={{ margin: 0 }}>Appointment Queue</p>
           </div>
           <div className={styles.queueTabs}>

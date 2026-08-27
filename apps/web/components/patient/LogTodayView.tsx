@@ -295,8 +295,8 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
                 type="button"
                 className={`${styles.vasBtn} ${vas === i ? styles.vasBtnActive : ""}`}
                 style={vas === i ? {
-                  background: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "#0f6e56",
-                  borderColor: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "#0f6e56",
+                  background: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
+                  borderColor: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
                 } : {}}
                 onClick={() => setVas(i)}
               >

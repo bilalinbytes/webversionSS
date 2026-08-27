@@ -42,13 +42,13 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 44px; padding: 8px 18px; border-radius: 9px;
   cursor: pointer;
-  border: none; background: #126969; color: white;
+  border: none; background: var(--med-blue-600, #1e6091); color: white;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 4px 14px rgba(18,105,105,0.2);
+  box-shadow: 0 4px 14px rgba(30,96,145,0.2);
 }
 .btnEn { font-size: 13px; font-weight: 600; line-height: 1.1; }
 .btnHi { font-size: 10px; font-weight: 400; line-height: 1; opacity: 0.8; }
-.btnPrimary:hover { background: #0d4a4a; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(18,105,105,0.3); }
+.btnPrimary:hover { background: #0d4a4a; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(30,96,145,0.3); }
 .btnPrimary:active { transform: scale(0.97); }
 
 /* Body */
@@ -185,7 +185,7 @@
 
 /* Medications */
 .medCount {
-  font-size: 11px; font-weight: 600; color: #126969;
+  font-size: 11px; font-weight: 600; color: var(--med-blue-600, #1e6091);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
@@ -196,17 +196,17 @@
   padding: 10px 12px; border-radius: 9px;
 }
 
-.medTaken  { background: rgba(18,105,105,0.06); }
+.medTaken  { background: rgba(30,96,145,0.06); }
 .medMissed { background: #fdf5f5; }
 
 .medCheck {
   width: 22px; height: 22px; border-radius: 50%;
   border: 2px solid rgba(0,0,0,0.12);
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; color: #126969;
+  flex-shrink: 0; color: var(--med-blue-600, #1e6091);
 }
 
-.medCheckDone { background: #126969; border-color: #126969; color: white; }
+.medCheckDone { background: var(--med-blue-600, #1e6091); border-color: var(--med-blue-600, #1e6091); color: white; }
 
 .medInfo { flex: 1; min-width: 0; }
 
@@ -221,7 +221,7 @@
 }
 
 .medStatusTaken {
-  font-size: 10px; font-weight: 600; color: #126969;
+  font-size: 10px; font-weight: 600; color: var(--med-blue-600, #1e6091);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   flex-shrink: 0;
 }
@@ -235,11 +235,11 @@
 .btnOutline {
   width: 100%; min-height: 44px; padding: 9px; border-radius: 9px;
   font-size: 12px; font-weight: 600; cursor: pointer;
-  border: 1.5px solid #126969; background: none; color: #126969;
+  border: 1.5px solid var(--med-blue-600, #1e6091); background: none; color: var(--med-blue-600, #1e6091);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   transition: background 0.15s;
 }
-.btnOutline:hover { background: rgba(18,105,105,0.06); }
+.btnOutline:hover { background: rgba(30,96,145,0.06); }
 
 /* Trend cards */
 .trendBadge {
@@ -286,7 +286,7 @@
 
 .doctorAvatar {
   width: 48px; height: 48px; border-radius: 50%;
-  background: #126969; color: #89d3d3;
+  background: var(--med-blue-600, #1e6091); color: #89d3d3;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; font-weight: 700; flex-shrink: 0;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
@@ -312,7 +312,7 @@
   padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.06);
 }
 
-.apptIcon { color: #126969; flex-shrink: 0; margin-top: 1px; }
+.apptIcon { color: var(--med-blue-600, #1e6091); flex-shrink: 0; margin-top: 1px; }
 
 .apptLabel {
   font-size: 10px; color: #888680; text-transform: uppercase;
@@ -338,11 +338,11 @@
   text-align: left; transition: all 0.15s;
 }
 
-.actionBtn:hover { border-color: #126969; background: rgba(18,105,105,0.06); transform: translateY(-2px); }
+.actionBtn:hover { border-color: var(--med-blue-600, #1e6091); background: rgba(30,96,145,0.06); transform: translateY(-2px); }
 .actionBtn:active { transform: scale(0.97); }
 
 .actionBtnPrimary {
-  background: #126969; border-color: #126969;
+  background: var(--med-blue-600, #1e6091); border-color: var(--med-blue-600, #1e6091);
 }
 
 .actionBtnPrimary .actionLabel { color: #ffffff; }

@@ -121,9 +121,9 @@
 }
 
 .active {
-  border-color: #126969;
+  border-color: var(--med-blue-600, #1e6091);
   background: rgba(18, 105, 105, 0.08);
-  color: #126969;
+  color: var(--med-blue-600, #1e6091);
 }
 
 .timeRow {
@@ -158,7 +158,7 @@
 
 .saveBtn,
 .approveBtn {
-  background: #126969;
+  background: var(--med-blue-600, #1e6091);
   color: #ffffff;
 }
 
@@ -188,7 +188,7 @@
 
 .message {
   margin: 10px 0 0;
-  color: #0f6e56;
+  color: var(--med-blue-600, #1e6091);
   font-size: 12px;
   font-weight: 700;
   font-family: var(--font-dm-sans), system-ui, sans-serif;

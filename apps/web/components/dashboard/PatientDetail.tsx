@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, CheckCircle, FileText, X } from "lucide-react";
@@ -825,7 +825,7 @@ function TrendTab({ trendData }: { trendData: TrendPoint[] }) {
             <XAxis dataKey="date" tick={{ fontSize: 10 }} />
             <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10 }} />
             <Tooltip />
-            <Line type="monotone" dataKey="vas" stroke="#126969" strokeWidth={2} dot={false} name="VAS" />
+            <Line type="monotone" dataKey="vas" stroke="var(--med-blue-600, #1e6091)" strokeWidth={2} dot={false} name="VAS" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -845,7 +845,7 @@ function HistoryTab({ trendData, events }: { trendData: TrendPoint[]; events: Hi
         ) : (
           <div style={{ position: "relative", display: "grid", gap: 10 }}>
             {events.map((event) => {
-              const color = event.type === "patient_log" ? "#126969" : event.type === "prescription" ? "#d85a30" : "#496977";
+              const color = event.type === "patient_log" ? "var(--med-blue-600, #1e6091)" : event.type === "prescription" ? "#d85a30" : "#496977";
               const label = event.type === "patient_log" ? "Patient" : event.type === "prescription" ? "Treatment" : "Doctor";
 
               return (
@@ -1383,7 +1383,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           onClick={openNewPrescription}
           style={{
             padding: "8px 14px", borderRadius: 8, border: "none",
-            background: "#126969", color: "white", fontSize: 12, fontWeight: 600,
+            background: "var(--med-blue-600, #1e6091)", color: "white", fontSize: 12, fontWeight: 600,
             cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
           }}
         >
@@ -1405,12 +1405,12 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       {/* -- Prescription Editor -- */}
       {showEditor && (
         <div style={{
-          border: "1.5px solid #126969", borderRadius: 12, padding: 16,
+          border: "1.5px solid var(--med-blue-600, #1e6091)", borderRadius: 12, padding: 16,
           marginBottom: 20, background: "#f7fafb",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#126969", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--med-blue-600, #1e6091)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                 New Prescription
               </p>
               {draftMeds.some((medication) => medication.source_id) && (
@@ -1454,7 +1454,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     opacity: isStopped ? 0.7 : 1,
                   }}
                 >
-                  <span style={{ width: 26, height: 26, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e8f5f1", color: isStopped ? "#c94d49" : "#126969", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                  <span style={{ width: 26, height: 26, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e8f5f1", color: isStopped ? "#c94d49" : "var(--med-blue-600, #1e6091)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     {index + 1}
                   </span>
                   <select
@@ -1533,7 +1533,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
             <button type="button" onClick={addDrug}
-              style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px dashed #126969", background: "none", color: "#126969", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px dashed var(--med-blue-600, #1e6091)", background: "none", color: "var(--med-blue-600, #1e6091)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
             >
               + Add Medication
             </button>
@@ -1543,13 +1543,13 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             marginBottom: 12,
             padding: 12,
             background: "white",
-            border: "1px solid rgba(18,105,105,0.16)",
+            border: "1px solid rgba(30,96,145,0.16)",
             borderRadius: 8,
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
               <label
                 htmlFor="patient-instruction"
-                style={{ fontSize: 11, fontWeight: 700, color: "#126969", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+                style={{ fontSize: 11, fontWeight: 700, color: "var(--med-blue-600, #1e6091)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
               >
                 Patient Instructions
               </label>
@@ -1589,7 +1589,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
               Cancel
             </button>
             <button type="button" onClick={savePrescription} disabled={saving}
-              style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: saving ? "#6d8794" : "#126969", color: "white", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
+              style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: saving ? "#6d8794" : "var(--med-blue-600, #1e6091)", color: "white", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
             >
               {saving ? "Saving-" : "Save Prescription"}
             </button>
