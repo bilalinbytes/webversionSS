@@ -50,8 +50,8 @@ export function VASPicker({ value, onChange, label = "Discomfort (0–10)", labe
           <button key={i} type="button"
             className={`${styles.vasBtn} ${value === i ? styles.vasBtnActive : ""}`}
             style={value === i ? {
-              background: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "#0f6e56",
-              borderColor: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "#0f6e56",
+              background: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
+              borderColor: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
             } : {}}
             onClick={() => onChange(i)}
           >{i}</button>
@@ -61,7 +61,7 @@ export function VASPicker({ value, onChange, label = "Discomfort (0–10)", labe
         <span>None · कोई नहीं</span><span>Moderate · मध्यम</span><span>Worst · सबसे खराब</span>
       </div>
       {value !== null && (
-        <p className={styles.vasSelected} style={{ color: value >= 8 ? "#e24b4a" : value >= 5 ? "#ef9f27" : "#0f6e56" }}>
+        <p className={styles.vasSelected} style={{ color: value >= 8 ? "#e24b4a" : value >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)" }}>
           {value}/10 — {value >= 8 ? "Severe — contact your doctor · गंभीर — डॉक्टर से संपर्क करें" : value >= 5 ? "Moderate · मध्यम" : "Manageable · प्रबंधनीय"}
         </p>
       )}
@@ -164,7 +164,7 @@ function getAqiMeta(aqi: number) {
 
   return {
     label: "Good",
-    tone: "#0f6e56",
+    tone: "var(--med-blue-600, #1e6091)",
     bg: "#f0faf5",
     border: "#a8dec9",
     title: "Good Air Quality",
@@ -458,7 +458,7 @@ export function BreathlessnessTracker({
   const STATUS_OPTIONS: { id: BreathlessnessStatus; label: string; labelHi: string; color: string }[] = [
     { id: "improvement",  label: "Improved", labelHi: "सुधार", color: "#2e9e5b" },
     { id: "deterioration",label: "Worsened", labelHi: "बिगड़ा", color: "#e24b4a" },
-    { id: "no_change",    label: "Static",   labelHi: "स्थिर", color: "#0f6e56" },
+    { id: "no_change",    label: "Static",   labelHi: "स्थिर", color: "var(--med-blue-600, #1e6091)" },
   ];
 
   return (
@@ -592,9 +592,9 @@ export function SymptomsTracker({
                 gap: 5,
                 padding: "6px 12px",
                 borderRadius: 20,
-                border: `1.5px solid ${isActive ? "#0f6e56" : "#d4cfc7"}`,
+                border: `1.5px solid ${isActive ? "var(--med-blue-600, #1e6091)" : "#d4cfc7"}`,
                 background: isActive ? "#e8f5f1" : "white",
-                color: isActive ? "#0f6e56" : "#3d3a35",
+                color: isActive ? "var(--med-blue-600, #1e6091)" : "#3d3a35",
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 400,
                 cursor: "pointer",
@@ -620,7 +620,7 @@ export function SymptomsTracker({
                     {sym.label} · {sym.labelHi}
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ minWidth: 18, textAlign: "right", fontSize: 14, fontWeight: 800, color: (entry.vas ?? 0) >= 8 ? "#e24b4a" : (entry.vas ?? 0) >= 5 ? "#ef9f27" : "#0f6e56" }}>
+                    <span style={{ minWidth: 18, textAlign: "right", fontSize: 14, fontWeight: 800, color: (entry.vas ?? 0) >= 8 ? "#e24b4a" : (entry.vas ?? 0) >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)" }}>
                       {entry.vas ?? 0}{prev?.vas !== null && prev?.vas !== undefined ? ` (${prev.vas})` : ""}
                     </span>
                   </div>
@@ -637,7 +637,7 @@ export function SymptomsTracker({
                     style={{
                       width: "100%",
                       cursor: "pointer",
-                      accentColor: (entry.vas ?? 0) >= 8 ? "#e24b4a" : (entry.vas ?? 0) >= 5 ? "#ef9f27" : "#0f6e56",
+                      accentColor: (entry.vas ?? 0) >= 8 ? "#e24b4a" : (entry.vas ?? 0) >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
                     }}
                   />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2, fontSize: 10, fontWeight: 700, color: "#807a72" }}>

@@ -1,4 +1,4 @@
-﻿/* -- Patient Disease Layout Tokens ------------------------------------------ */
+/* -- Patient Disease Layout Tokens ------------------------------------------ */
 /* Tokens: navy #0f2b48, blue #1e6091, focus #2a75d3, canvas #f8fafc, card #ffffff */
 
 .view {
@@ -256,4 +256,342 @@
 .card:hover, .metricCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(15, 43, 72, 0.08);
+}
+
+/* -- Form Inputs & Cards reconstructed --------------------------------------- */
+
+.card {
+  background: var(--med-surface-card, #ffffff);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 4px rgba(15, 43, 72, 0.02);
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin-bottom: 4px;
+}
+
+.cardTitleHi {
+  font-size: 0.8rem;
+  color: var(--med-text-muted, #64748b);
+  margin-left: 8px;
+}
+
+.cardSub {
+  font-size: 0.8rem;
+  color: var(--med-text-muted, #64748b);
+  margin-bottom: 12px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--med-navy-700, #1e293b);
+  margin-bottom: 8px;
+}
+
+.fieldLabelHi {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--med-text-muted, #64748b);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.yesNoRow {
+  display: flex;
+  gap: 8px;
+}
+
+.yesNoBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--med-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.yesNoBtn:hover {
+  background: var(--med-surface-alt, #f8fafc);
+  border-color: var(--med-blue-400, #60a5fa);
+}
+
+.scaleRow {
+  display: flex;
+  gap: 8px;
+}
+
+.scaleBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--med-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.scaleBtn:hover {
+  background: var(--med-surface-alt, #f8fafc);
+  border-color: var(--med-blue-400, #60a5fa);
+}
+
+.scaleBtnActive {
+  background: var(--med-blue-600, #1e6091) !important;
+  color: #ffffff !important;
+  border-color: var(--med-blue-600, #1e6091) !important;
+}
+
+.numInput {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.numInput:focus {
+  border-color: var(--med-blue-500, #2a75d3);
+  box-shadow: 0 0 0 3px rgba(42, 117, 211, 0.15);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.warningBanner {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  font-size: 0.85rem;
+  color: #9a3412;
+  align-items: flex-start;
+}
+
+.emergencyAlert {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  font-size: 0.85rem;
+  color: #991b1b;
+  align-items: center;
+}
+
+.emergencyPulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #dc2626;
+  animation: pulseGlow 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.emergencyText {
+  margin: 0;
+}
+
+.symptomsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.symptomBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--med-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.symptomBtnHi {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--med-text-muted, #64748b);
+  margin-top: 4px;
+}
+
+.symptomBtn:hover {
+  background: var(--med-surface-alt, #f8fafc);
+  border-color: var(--med-blue-400, #60a5fa);
+}
+
+.symptomBtnActive {
+  background: var(--med-blue-50, #f0f9ff);
+  border-color: var(--med-blue-600, #1e6091);
+  color: var(--med-blue-800, #075985);
+}
+
+.symptomBtnActive .symptomBtnHi {
+  color: var(--med-blue-600, #1e6091);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--med-blue-600, #1e6091);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.submitBtn:hover {
+  background: var(--med-blue-700, #1e40af);
+}
+
+.submitBtn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.submitRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.submitHint {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.textarea:focus {
+  border-color: var(--med-blue-500, #2a75d3);
+  box-shadow: 0 0 0 3px rgba(42, 117, 211, 0.15);
+}
+
+.limitPanel {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.limitTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #991b1b;
+  margin-bottom: 4px;
+}
+
+.limitText {
+  font-size: 0.85rem;
+  color: #7f1d1d;
+  margin-bottom: 12px;
+}
+
+.limitActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.limitCount {
+  font-size: 0.8rem;
+  color: #991b1b;
+}
+
+.emergencySendBtn {
+  padding: 8px 16px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emergencySendBtn:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+
+.limitSuccess {
+  font-size: 0.85rem;
+  color: #16a34a;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.limitError {
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.submitError {
+  font-size: 0.85rem;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-bottom: 16px;
 }

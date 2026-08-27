@@ -25,7 +25,7 @@ const questionTitleStyle: CSSProperties = {
   margin: 0,
   fontSize: 13,
   fontWeight: 800,
-  color: "#132d36",
+  color: "var(--med-navy-800, #0f2b48)",
   lineHeight: 1.35,
 };
 
@@ -241,7 +241,7 @@ function YesNoToggle({
       <button
         type="button"
         className={dStyles.yesNoBtn}
-        style={value === true ? { background: "#0f6e56", borderColor: "#0f6e56", color: "white" } : {}}
+        style={value === true ? { background: "var(--med-blue-600, #1e6091)", borderColor: "var(--med-blue-600, #1e6091)", color: "white" } : {}}
         onClick={() => onChange(true)}
       >
         <span>Yes</span>
@@ -319,7 +319,7 @@ function OptionPills<TValue extends string>({
             className={dStyles.yesNoBtn}
             style={{
               textAlign: "left",
-              borderColor: active ? "#0f6e56" : undefined,
+              borderColor: active ? "var(--med-blue-600, #1e6091)" : undefined,
               background: active ? "#eef8f4" : undefined,
               color: "#1a1a18",
             }}
@@ -408,9 +408,9 @@ function RangeSlider({
           max="10"
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
-          style={{ flex: 1, accentColor: "#0f6e56" }}
+          style={{ flex: 1, accentColor: "var(--med-blue-600, #1e6091)" }}
         />
-        <span style={{ minWidth: 42, textAlign: "center", fontWeight: 800, color: "#132d36" }}>{value}/10</span>
+        <span style={{ minWidth: 42, textAlign: "center", fontWeight: 800, color: "var(--med-navy-800, #0f2b48)" }}>{value}/10</span>
       </div>
     </div>
   );
@@ -427,7 +427,7 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
   const status = yesCount === 0 ? "well_controlled" : yesCount <= 2 ? "partly_controlled" : "poorly_controlled";
   const statusLabel =
     status === "well_controlled"
-      ? { en: "Well Controlled", hi: "अच्छा नियंत्रण", color: "#0f6e56" }
+      ? { en: "Well Controlled", hi: "अच्छा नियंत्रण", color: "var(--med-blue-600, #1e6091)" }
       : status === "partly_controlled"
         ? { en: "Partly Controlled", hi: "आंशिक नियंत्रण", color: "#b7791f" }
         : { en: "Poorly Controlled", hi: "खराब नियंत्रण", color: "#c2410c" };
@@ -809,7 +809,7 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
         })}
       </div>
 
-      <div className={dStyles.warningBanner} style={{ marginTop: 16, background: "#f0faf5", borderColor: "#0f6e56" }}>
+      <div className={dStyles.warningBanner} style={{ marginTop: 16, background: "#f0faf5", borderColor: "var(--med-blue-600, #1e6091)" }}>
         <div>
           <strong>Final score</strong>
           <span style={hindiStyle}>अंतिम स्कोर</span>
