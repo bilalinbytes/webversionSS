@@ -361,7 +361,7 @@ export async function executeExport(
     );
     allPatientLogs = sortedLogs.map((log) => {
       const patient = patients.find((p) => p.id === log.patient_id);
-      const uhid = `P-${log.patient_id.slice(0, 8).toUpperCase()}`;
+      const uhid = log.patient_id ? `P-${log.patient_id.slice(0, 8).toUpperCase()}` : "N/A";
       
       const vasStr = typeof log.vas_symptoms === "object" && log.vas_symptoms
         ? Object.entries(log.vas_symptoms)
