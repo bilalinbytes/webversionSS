@@ -385,8 +385,8 @@ export async function executeExport(
         aqi: safeValue(log.aqi_value),
         vasSymptoms: vasStr,
         medicationCompliance: compStr,
-        riskScore: safeValue(log.computed_risk_score),
-        clinicalNotes: safeValue(log.clinical_notes),
+        riskScore: safeValue((log as any).computed_risk_score),
+        clinicalNotes: safeValue((log as any).clinical_notes),
       };
     });
   }
