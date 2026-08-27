@@ -488,3 +488,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+.radioGroup {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  height: 42px; /* Match input height */
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radioInput {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--med-blue-600, #1e6091);
+}
+
+.radioLabel {
+  font-size: 0.95rem;
+  color: var(--med-navy-800, #0f2b48);
+  font-weight: 500;
+}

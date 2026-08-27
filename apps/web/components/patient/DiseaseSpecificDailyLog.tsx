@@ -320,7 +320,7 @@ function OptionPills<TValue extends string>({
             style={{
               textAlign: "left",
               borderColor: active ? "var(--med-blue-600, #1e6091)" : undefined,
-              background: active ? "#eef8f4" : undefined,
+              background: active ? "#f0f9ff" : undefined,
               color: "#1a1a18",
             }}
             onClick={() => onChange(option.value)}

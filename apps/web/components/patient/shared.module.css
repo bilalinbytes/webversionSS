@@ -405,3 +405,58 @@
   flex-direction: column;
   gap: 7px;
 }
+
+/* -- Side Effects Picker ---------------------------------------------------- */
+.seWrap {
+  background: #ffffff;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.seTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin-bottom: 2px;
+}
+
+.seSub {
+  font-size: 0.75rem;
+  color: var(--med-text-muted, #64748b);
+  margin-bottom: 12px;
+}
+
+.seGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seChip {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--med-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.seChip:hover {
+  background: var(--med-surface-alt, #f8fafc);
+  border-color: var(--med-blue-400, #60a5fa);
+}
+
+.seChipActive {
+  background: var(--med-blue-50, #f0f9ff);
+  border-color: var(--med-blue-600, #1e6091);
+  color: var(--med-blue-800, #075985);
+}
+
+.seLabel {
+  display: block;
+}
