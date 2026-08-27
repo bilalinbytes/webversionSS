@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   DashboardView — Elite Tier-1 Clinical Workstation (Blue Healthcare)
+﻿/* ---------------------------------------------------------------------------
+   DashboardView - Elite Tier-1 Clinical Workstation (Blue Healthcare)
    Tokens:
      navyDark      #0a192f   navy          #0f2b48
      primaryBlue   #1e6091   focusBlue     #2a75d3
@@ -7,9 +7,9 @@
      borderSubtle  #e2e8f0   borderStrong  #cbd5e1
      critical      #dc2626   high          #ea580c
      moderate      #ca8a04   stable        var(--med-blue-600)
-   ═══════════════════════════════════════════════════════════════════════════ */
+   --------------------------------------------------------------------------- */
 
-/* ── Keyframes & Micro-Interactions ─────────────────────────────────────────── */
+/* -- Keyframes & Micro-Interactions ------------------------------------------- */
 @keyframes rowFadeUp {
   from {
     opacity: 0;
@@ -53,7 +53,7 @@
   to   { opacity: 1; }
 }
 
-/* ── View Shell ────────────────────────────────────────────────────────────── */
+/* -- View Shell -------------------------------------------------------------- */
 .view {
   display: flex;
   flex-direction: column;
@@ -63,7 +63,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* ── Top Bar & Clinical Decision Strip ─────────────────────────────────────── */
+/* -- Top Bar & Clinical Decision Strip --------------------------------------- */
 .topBar {
   background: var(--med-surface-card, #ffffff);
   border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
@@ -96,7 +96,7 @@
   font-weight: 500;
 }
 
-/* ── Unified Clinical Summary Strip ────────────────────────────────────────── */
+/* -- Unified Clinical Summary Strip ------------------------------------------ */
 .topBarStats {
   display: flex;
   margin-left: auto;
@@ -256,7 +256,7 @@
   box-shadow: 0 2px 6px rgba(30, 96, 145, 0.3);
 }
 
-/* ── Split Layout ──────────────────────────────────────────────────────────── */
+/* -- Split Layout ------------------------------------------------------------ */
 .splitLayout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -265,7 +265,7 @@
   min-width: 0;
 }
 
-/* ── LEFT: Action Zone (Triage & Urgent Alerts) ─────────────────────────────── */
+/* -- LEFT: Action Zone (Triage & Urgent Alerts) ------------------------------- */
 .actionZone {
   background: var(--med-surface-card, #ffffff);
   border-right: 1px solid var(--med-border-subtle, #e2e8f0);
@@ -547,7 +547,7 @@
   background: var(--med-border-subtle, #e2e8f0);
 }
 
-/* ── RIGHT: Primary Patient Monitoring Table Workstation ───────────────────── */
+/* -- RIGHT: Primary Patient Monitoring Table Workstation --------------------- */
 .monitorZone {
   display: flex;
   flex-direction: column;
@@ -654,7 +654,7 @@
   border-color: var(--med-blue-500, #2a75d3);
 }
 
-/* ── Clinical Table Container ──────────────────────────────────────────────── */
+/* -- Clinical Table Container ------------------------------------------------ */
 .tableContainer {
   flex: 1;
   overflow-y: auto;
@@ -681,7 +681,7 @@
   align-items: center;
 }
 
-/* ── Patient Table Row ─────────────────────────────────────────────────────── */
+/* -- Patient Table Row ------------------------------------------------------- */
 .patientRow {
   position: relative;
   display: grid;
@@ -916,7 +916,7 @@
   border-color: var(--med-blue-600, #1e6091);
 }
 
-/* ── Skeletons ─────────────────────────────────────────────────────────────── */
+/* -- Skeletons --------------------------------------------------------------- */
 .skeletonRow {
   display: grid;
   grid-template-columns: minmax(180px, 1.2fr) minmax(200px, 1.4fr) 110px 100px minmax(130px, 1fr) 160px;
@@ -944,7 +944,7 @@
   animation: shimmer 1.4s infinite;
 }
 
-/* ── Empty State ───────────────────────────────────────────────────────────── */
+/* -- Empty State ------------------------------------------------------------- */
 .emptyState {
   flex: 1;
   display: flex;
@@ -998,7 +998,7 @@
   background: var(--color-navy-hover, #164e77);
 }
 
-/* ── Responsive Behavior ───────────────────────────────────────────────────── */
+/* -- Responsive Behavior ----------------------------------------------------- */
 @media (max-width: 1100px) {
   .tableHeaderRow {
     display: none;

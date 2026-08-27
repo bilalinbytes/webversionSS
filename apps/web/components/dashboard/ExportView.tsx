@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -343,32 +343,32 @@ export function ExportView({ onBack }: ExportViewProps) {
 
   // Dynamic Button Text (Requirement 4)
   const getExportButtonText = (): string => {
-    if (exporting) return `Generating ${formatLabel}…`;
+    if (exporting) return `Generating ${formatLabel}-`;
 
     switch (scope) {
       case "All Patients":
-        return `Export All Patients — ${formatLabel}`;
+        return `Export All Patients - ${formatLabel}`;
       case "Selected Patients": {
         const count = selectedIds.size;
-        if (count === 1) return `Export 1 Patient — ${formatLabel}`;
-        return `Export ${count} Patients — ${formatLabel}`;
+        if (count === 1) return `Export 1 Patient - ${formatLabel}`;
+        return `Export ${count} Patients - ${formatLabel}`;
       }
       case "Single Patient":
-        return `Export Single Patient — ${formatLabel}`;
+        return `Export Single Patient - ${formatLabel}`;
       case "Disease-Specific":
-        return `Export Disease-Specific Records — ${formatLabel}`;
+        return `Export Disease-Specific Records - ${formatLabel}`;
       case "Date-Wise":
-        return `Export Date-Wise Records — ${formatLabel}`;
+        return `Export Date-Wise Records - ${formatLabel}`;
       case "Daily":
-        return `Export Daily Trends — ${formatLabel}`;
+        return `Export Daily Trends - ${formatLabel}`;
       case "Weekly":
-        return `Export Weekly Trends — ${formatLabel}`;
+        return `Export Weekly Trends - ${formatLabel}`;
       case "Bi-Weekly (15 Days)":
-        return `Export Bi-Weekly Trends — ${formatLabel}`;
+        return `Export Bi-Weekly Trends - ${formatLabel}`;
       case "Monthly":
-        return `Export Monthly Trends — ${formatLabel}`;
+        return `Export Monthly Trends - ${formatLabel}`;
       default:
-        return `Export Patient Records — ${formatLabel}`;
+        return `Export Patient Records - ${formatLabel}`;
     }
   };
 
@@ -448,11 +448,11 @@ export function ExportView({ onBack }: ExportViewProps) {
         <div>
           <h1 className={styles.title}>Export Patient Data</h1>
           <p className={styles.sub}>
-            Clinical Cohort Registry &amp; Dossiers · Standardized 33-Column .xlsx, CSV, and Clinical PDF
+            Clinical Cohort Registry &amp; Dossiers - Standardized 33-Column .xlsx, CSV, and Clinical PDF
           </p>
         </div>
         <button type="button" className={styles.btnGhost} onClick={onBack}>
-          ← Back to Dashboard
+          - Back to Dashboard
         </button>
       </div>
 
@@ -571,7 +571,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                     <input
                       type="text"
                       className={styles.searchInput}
-                      placeholder="Search patient name, diagnosis, or UHID…"
+                      placeholder="Search patient name, diagnosis, or UHID-"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -603,7 +603,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                         <div className={styles.patientSelectInfo}>
                           <p className={styles.patientSelectName}>{p.name}</p>
                           <p className={styles.patientSelectMeta}>
-                            UHID: P-{p.id.slice(0, 8).toUpperCase()} · {p.primary_diagnosis ?? "Unspecified"}
+                            UHID: P-{p.id.slice(0, 8).toUpperCase()} - {p.primary_diagnosis ?? "Unspecified"}
                           </p>
                         </div>
                         <span className={`${styles.riskBadge} ${styles[`risk_${p.risk}`]}`}>
@@ -624,7 +624,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                   <input
                     type="text"
                     className={styles.searchInput}
-                    placeholder="Search patient name, diagnosis, or UHID…"
+                    placeholder="Search patient name, diagnosis, or UHID-"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -645,7 +645,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                         <div className={styles.patientSelectInfo}>
                           <p className={styles.patientSelectName}>{p.name}</p>
                           <p className={styles.patientSelectMeta}>
-                            UHID: P-{p.id.slice(0, 8).toUpperCase()} · {p.primary_diagnosis ?? "Unspecified"}
+                            UHID: P-{p.id.slice(0, 8).toUpperCase()} - {p.primary_diagnosis ?? "Unspecified"}
                           </p>
                         </div>
                         <span className={`${styles.riskBadge} ${styles[`risk_${p.risk}`]}`}>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "lucide-react";
@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getDoctorPatients, acknowledgePatientAlerts as acknowledgePatientAlertsApi } from "@o2plus/api-client/doctor";
 import styles from "./DashboardView.module.css";
 
-// ── Types aligned to Supabase schema ──────────────────────────────────────────
+// -- Types aligned to Supabase schema ------------------------------------------
 export type RiskLevel = "critical" | "high" | "moderate" | "stable" | "none";
 
 export interface SupabasePatient {
@@ -38,7 +38,7 @@ export interface SupabasePatient {
   }[] | null;
 }
 
-// Map score → internal risk level
+// Map score - internal risk level
 function scoreToRisk(score: number): RiskLevel {
   if (score >= 9) return "critical";
   if (score >= 7) return "high";
@@ -194,7 +194,7 @@ function ShakingBell({ count }: { count: number }) {
   );
 }
 
-// ── Delete Confirm Dialog ─────────────────────────────────────────────────────
+// -- Delete Confirm Dialog -----------------------------------------------------
 function DeleteConfirmDialog({
   patient,
   onConfirm,
@@ -282,7 +282,7 @@ function DeleteConfirmDialog({
               transition: "background 160ms ease",
             }}
           >
-            {deleting ? "Deleting…" : "Yes, delete"}
+            {deleting ? "Deleting-" : "Yes, delete"}
           </button>
         </div>
       </div>
@@ -290,7 +290,7 @@ function DeleteConfirmDialog({
   );
 }
 
-// ── Patient Table Row ─────────────────────────────────────────────────────────
+// -- Patient Table Row ---------------------------------------------------------
 function PatientTableRow({
   patient,
   onClick,
@@ -399,7 +399,7 @@ function PatientTableRow({
             {latestAlert.reason_text}
           </span>
         ) : (
-          <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>—</span>
+          <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>-</span>
         )}
       </div>
 
@@ -437,14 +437,14 @@ function PatientTableRow({
           className={styles.btnRowView}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
         >
-          View →
+          View -
         </button>
       </div>
     </div>
   );
 }
 
-// ── Skeleton Row ─────────────────────────────────────────────────────────────
+// -- Skeleton Row -------------------------------------------------------------
 function SkeletonRow() {
   return (
     <div className={`${styles.skeletonRow} animate-shimmer`}>
@@ -459,7 +459,7 @@ function SkeletonRow() {
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// -- Empty state ---------------------------------------------------------------
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className={styles.emptyState}>
@@ -477,7 +477,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-// ── Error state ───────────────────────────────────────────────────────────────
+// -- Error state ---------------------------------------------------------------
 function ErrorState({ message }: { message: string }) {
   return (
     <div className={styles.emptyState}>
@@ -487,7 +487,7 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// -- Main ----------------------------------------------------------------------
 interface DashboardViewProps {
   onViewChange: (view: "dashboard" | "create" | "export") => void;
   onEditPatient?: (patientId: string) => void;
@@ -513,7 +513,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
   const [selectedInitialTab, setSelectedInitialTab] = useState("Overview");
   const [showImport, setShowImport] = useState(false);
   const [doctorId, setDoctorId] = useState<string>("");
-  // SRS §1.3 / §2.1 — real unacknowledged alert count from disease_alerts
+  // SRS -1.3 / -2.1 - real unacknowledged alert count from disease_alerts
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<SupabasePatient | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -546,14 +546,14 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
         if ((body.skipped ?? 0) > 0) parts.push(`${body.skipped} skipped (invalid phone)`);
         if ((body.errors ?? 0) > 0) {
           const detail = body.error_details?.map(e => `${e.phone}: ${e.error}`).join("; ") ?? "";
-          parts.push(`${body.errors} failed${detail ? ` — ${detail}` : ""}`);
+          parts.push(`${body.errors} failed${detail ? ` - ${detail}` : ""}`);
         }
-        setFixResult(parts.length > 0 ? parts.join(" · ") : "Nothing to fix — all patients already have login access.");
+        setFixResult(parts.length > 0 ? parts.join(" - ") : "Nothing to fix - all patients already have login access.");
       } else {
         setFixResult(`Failed: ${body.error ?? "unknown error"}`);
       }
     } catch {
-      setFixResult("Network error — please try again.");
+      setFixResult("Network error - please try again.");
     } finally {
       setFixingLogins(false);
     }
@@ -641,7 +641,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
   });
 
   const filteredPatients = patients.filter((p) => {
-    // SRS §2.5 — search by name OR patient ID
+    // SRS -2.5 - search by name OR patient ID
     const searchTerm = search.trim().toLowerCase();
     const searchDigits = search.replace(/\D/g, "");
     const patientPhone = (p.mobile_number ?? "").replace(/\D/g, "");
@@ -726,7 +726,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     void acknowledgePatientAlerts(patient);
   }, [acknowledgePatientAlerts]);
 
-  // Today's date — computed client-side only to avoid SSR hydration mismatch
+  // Today's date - computed client-side only to avoid SSR hydration mismatch
   const [today, setToday] = useState("");
   useEffect(() => {
     setToday(
@@ -741,7 +741,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
 
   return (
     <div className={styles.view}>
-      {/* ── Top bar ── */}
+      {/* -- Top bar -- */}
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <div className={styles.commandTitle}>Clinical Decision Center</div>
@@ -777,7 +777,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             title="Activate login access for all patients who can't log in yet"
             style={{ color: fixingLogins ? "#888" : "#126969", borderColor: "rgba(18,105,105,0.3)" }}
           >
-            {fixingLogins ? "Fixing…" : "Fix Patient Logins"}
+            {fixingLogins ? "Fixing-" : "Fix Patient Logins"}
           </button>
           <button type="button" className={styles.btnImport} onClick={() => setShowImport(true)}>
             <Download size={13} strokeWidth={2} />
@@ -811,13 +811,13 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             type="button"
             onClick={() => setFixResult(null)}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1, color: "inherit", padding: 0 }}
-          >×</button>
+          >-</button>
         </div>
       )}
 
-      {/* ── Body ── */}
+      {/* -- Body -- */}
       <div className={styles.splitLayout}>
-        {/* LEFT — Alert Zone */}
+        {/* LEFT - Alert Zone */}
         <aside className={styles.actionZone}>
           {criticalPatients.length > 0 && (
             <div className={styles.alertPanel}>
@@ -832,7 +832,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                   const initials = p.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
                   const alert = latestOpenAlert(p);
                   const alertText = alert?.reason_text ?? p.patient_diagnoses?.[0]?.primary_diagnosis ?? "Needs review";
-                  const score = p.red_flag_scores?.[0]?.global_score ?? "—";
+                  const score = p.red_flag_scores?.[0]?.global_score ?? "-";
                   return (
                     <div key={p.id} className={styles.criticalBlock}>
                       <div className={styles.criticalBlockTop}>
@@ -869,7 +869,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                 {highPatients.map((p) => {
                   const initials = p.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
                   const alert = latestOpenAlert(p);
-                  const score = p.red_flag_scores?.[0]?.global_score ?? "—";
+                  const score = p.red_flag_scores?.[0]?.global_score ?? "-";
                   const alertText = alert?.reason_text ?? p.patient_diagnoses?.[0]?.primary_diagnosis ?? "";
                   return (
                     <button
@@ -904,14 +904,14 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           </div>
         </aside>
 
-        {/* RIGHT — Patient Grid */}
+        {/* RIGHT - Patient Grid */}
         <div className={styles.monitorZone}>
           <div className={styles.filterBar}>
             <div className={styles.searchWrap}>
               <Search size={13} className={styles.searchIcon} strokeWidth={2} />
               <input
                 className={styles.searchInput}
-                placeholder="Search patient…"
+                placeholder="Search patient-"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setFilterKey((k) => k + 1); }}
               />
@@ -985,7 +985,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
         </div>
       </div>
 
-      {/* Patient detail panel — real data via patientId */}
+      {/* Patient detail panel - real data via patientId */}
       {selectedPatient && (
         <PatientDetail
           patientId={selectedPatient.id}
@@ -1042,7 +1042,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
               <button
                 onClick={() => setShowAlertsPanel(false)}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: 18, lineHeight: 1 }}
-              >×</button>
+              >-</button>
             </div>
             {patients
               .filter((p) => countOpenAlerts(p) > 0)

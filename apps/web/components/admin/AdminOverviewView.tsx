@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -126,7 +126,7 @@ export function AdminOverviewView({ onViewChange }: AdminOverviewViewProps) {
                   className={styles.statValue}
                   style={{ color: loading ? "#bec9c8" : card.color }}
                 >
-                  {loading ? "—" : card.value.toLocaleString()}
+                  {loading ? "-" : card.value.toLocaleString()}
                 </p>
                 <p className={styles.statSub}>{card.sub}</p>
               </div>

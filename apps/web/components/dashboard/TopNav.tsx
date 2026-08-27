@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Bell, CalendarClock } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -42,7 +42,7 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
   const router = useRouter();
   const [doctorName, setDoctorName] = useState("Doctor");
   const [initials, setInitials] = useState("DR");
-  // SRS §2.1 — real unacknowledged alert count
+  // SRS -2.1 - real unacknowledged alert count
   const [alertCount, setAlertCount] = useState(0);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);

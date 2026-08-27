@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, CheckCircle, FileText, X } from "lucide-react";
@@ -30,7 +30,7 @@ interface Patient {
   aqi?: number;
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 interface PatientDetailProps {
   patient?: Patient;
   patientId?: string;
@@ -121,7 +121,7 @@ interface HistoryEvent {
 
 const TABS = ["Overview", "Analytics", "Treatment Folder", "History"];
 
-// ── Helper: compute age ───────────────────────────────────────────────────────
+// -- Helper: compute age -------------------------------------------------------
 function computeAge(dob: string): number {
   const birth = new Date(dob);
   const now = new Date();
@@ -131,14 +131,14 @@ function computeAge(dob: string): number {
   return age;
 }
 
-// ── Helper: format date ───────────────────────────────────────────────────────
+// -- Helper: format date -------------------------------------------------------
 function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function fmtDateTime(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleString("en-IN", {
     day: "numeric",
     month: "short",
@@ -148,7 +148,7 @@ function fmtDateTime(iso: string | null): string {
   });
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 function formatComorbidities(comorbidities: unknown, otherText: string | null | undefined): string {
   const parseString = (value: string): string[] => {
     const trimmed = value.trim();
@@ -187,10 +187,10 @@ export function PatientDetail({
 }: PatientDetailProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Resolve the patient ID — prefer explicit prop, fall back to legacy patient id
+  // Resolve the patient ID - prefer explicit prop, fall back to legacy patient id
   const resolvedId = propPatientId ?? legacyPatient?.id;
 
-  // ── Data state ──────────────────────────────────────────────────────────────
+  // -- Data state --------------------------------------------------------------
   const [patientInfo, setPatientInfo] = useState<PatientInfo | null>(null);
   const [diagnosis, setDiagnosis] = useState<DiagnosisInfo | null>(null);
   const [respSupport, setRespSupport] = useState<RespSupportInfo | null>(null);
@@ -206,7 +206,7 @@ export function PatientDetail({
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const toast = useToast();
 
-  // ── Fetch data ──────────────────────────────────────────────────────────────
+  // -- Fetch data --------------------------------------------------------------
   const fetchData = useCallback(async () => {
     if (!resolvedId) { setLoading(false); return; }
     const supabase = createClient();
@@ -257,7 +257,7 @@ export function PatientDetail({
           : "";
         setPatientInfo({
           id: resolvedId,
-          name: form.name ?? "—",
+          name: form.name ?? "-",
           mobile_number: form.mobile_number ? `+91${form.mobile_number}` : "",
           address: null,
           emergency_contact_name: form.emergency_contact_name ?? null,
@@ -267,7 +267,7 @@ export function PatientDetail({
         });
         if (!diagRes.data) {
           setDiagnosis({
-            primary_diagnosis: form.disease_category || form.primary_diagnosis || "—",
+            primary_diagnosis: form.disease_category || form.primary_diagnosis || "-",
             diagnosed_at: null,
             comorbidities: form.comorbidities ?? null,
             comorbidities_other_text: null,
@@ -356,7 +356,7 @@ export function PatientDetail({
         typeof log.spo2_rest === "number" ? `SpO2 ${log.spo2_rest}%` : null,
         typeof log.mmrc_today === "number" ? `mMRC ${log.mmrc_today}` : null,
         typeof log.aqi_value === "number" ? `AQI ${log.aqi_value}` : null,
-      ].filter(Boolean).join(" · ") || "Daily health log updated",
+      ].filter(Boolean).join(" - ") || "Daily health log updated",
       meta: fmtDate(log.logged_at),
     }));
 
@@ -369,7 +369,7 @@ export function PatientDetail({
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
-  // ── Submit instruction ──────────────────────────────────────────────────────
+  // -- Submit instruction ------------------------------------------------------
   const submitInstruction = async () => {
     if (!newInstruction.trim() || !resolvedId) return;
     if (countWords(newInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT) return;
@@ -394,12 +394,12 @@ export function PatientDetail({
     setSavingInstruction(false);
   };
 
-  // ── Derived display values ──────────────────────────────────────────────────
-  const displayName = patientInfo?.name ?? legacyPatient?.name ?? "—";
+  // -- Derived display values --------------------------------------------------
+  const displayName = patientInfo?.name ?? legacyPatient?.name ?? "-";
   const displayInitials = displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  const displayAge = patientInfo?.date_of_birth ? computeAge(patientInfo.date_of_birth) : legacyPatient?.age ?? "—";
-  const displayGender = patientInfo?.gender ?? (legacyPatient?.gender === "M" ? "Male" : legacyPatient?.gender === "F" ? "Female" : "—");
-  const displayCondition = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "—";
+  const displayAge = patientInfo?.date_of_birth ? computeAge(patientInfo.date_of_birth) : legacyPatient?.age ?? "-";
+  const displayGender = patientInfo?.gender ?? (legacyPatient?.gender === "M" ? "Male" : legacyPatient?.gender === "F" ? "Female" : "-");
+  const displayCondition = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "-";
   const displayComorbidities = formatComorbidities(
     diagnosis?.comorbidities,
     diagnosis?.comorbidities_other_text,
@@ -480,7 +480,7 @@ export function PatientDetail({
 
           {loading && (
             <div className={styles.tabPlaceholder}>
-              <p>Loading patient data…</p>
+              <p>Loading patient data-</p>
             </div>
           )}
 
@@ -519,7 +519,7 @@ export function PatientDetail({
   );
 }
 
-// ── Overview Tab ──────────────────────────────────────────────────────────────
+// -- Overview Tab --------------------------------------------------------------
 function OverviewTab({
   displaySpo2,
   displayMmrc,
@@ -582,20 +582,20 @@ function OverviewTab({
       <div className={styles.trendRow}>
         {[
           {
-            label: "SpO₂ Rest",
-            val: displaySpo2 !== null ? `${displaySpo2}%` : "—",
+            label: "SpO- Rest",
+            val: displaySpo2 !== null ? `${displaySpo2}%` : "-",
             change: displaySpo2 !== null && displaySpo2 < 93 ? "Below target" : "Normal range",
             warn: displaySpo2 !== null && displaySpo2 < 93,
           },
           {
             label: "Breathing (mMRC)",
-            val: displayMmrc !== null ? String(displayMmrc) : "—",
+            val: displayMmrc !== null ? String(displayMmrc) : "-",
             change: displayMmrc !== null && displayMmrc >= 3 ? "Severe breathlessness" : "Moderate or less",
             warn: displayMmrc !== null && displayMmrc >= 3,
           },
           {
             label: "Air Quality (AQI)",
-            val: displayAqi !== null ? String(displayAqi) : "—",
+            val: displayAqi !== null ? String(displayAqi) : "-",
             change: typeof displayAqi === "number" && displayAqi > 150 ? "Unhealthy" : "Acceptable",
             warn: typeof displayAqi === "number" && displayAqi > 150,
           },
@@ -632,7 +632,7 @@ function OverviewTab({
               const isOpen = openPrescriptionDates.has(group.groupKey ?? group.date);
               // Detect if this date has sibling prescriptions (same date, different batch)
               const isMultiBatch = group.groupKey !== group.date;
-              // Extract batch label from groupKey e.g. "2026-08-25_rx2" → "Prescription 2"
+              // Extract batch label from groupKey e.g. "2026-08-25_rx2" - "Prescription 2"
               const batchMatch = group.groupKey?.match(/_rx(\d+)$/);
               const batchLabel = batchMatch ? `Prescription ${batchMatch[1]}` : null;
               return (
@@ -643,7 +643,7 @@ function OverviewTab({
                     <strong>{fmtDate(group.date)}</strong>
                     {isMultiBatch && batchLabel && (
                       <span style={{ marginLeft: 8, fontSize: 11, color: "var(--med-blue-600)", fontWeight: 600 }}>
-                        · {batchLabel}
+                        - {batchLabel}
                       </span>
                     )}
                   </div>
@@ -769,14 +769,14 @@ function OverviewTab({
           Export Patient Record
         </button>
         <button type="button" className={styles.btnPrimary} onClick={() => { onClose(); onEdit?.(); }}>
-          Edit Patient →
+          Edit Patient -
         </button>
       </div>
     </>
   );
 }
 
-// ── Trend Graphs Tab ──────────────────────────────────────────────────────────
+// -- Trend Graphs Tab ----------------------------------------------------------
 function TrendTab({ trendData }: { trendData: TrendPoint[] }) {
   if (trendData.length === 0) {
     return (
@@ -788,16 +788,16 @@ function TrendTab({ trendData }: { trendData: TrendPoint[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingTop: 8 }}>
-      {/* SpO₂ */}
+      {/* SpO- */}
       <div>
-        <p className={styles.sparkLabel}>SpO₂ over last 30 days (%)</p>
+        <p className={styles.sparkLabel}>SpO- over last 30 days (%)</p>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
             <XAxis dataKey="date" tick={{ fontSize: 10 }} />
             <YAxis domain={[70, 100]} tick={{ fontSize: 10 }} />
             <Tooltip />
-            <Line type="monotone" dataKey="spo2" stroke="#e24b4a" strokeWidth={2} dot={false} name="SpO₂ %" />
+            <Line type="monotone" dataKey="spo2" stroke="#e24b4a" strokeWidth={2} dot={false} name="SpO- %" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -894,7 +894,7 @@ function HistoryTab({ trendData, events }: { trendData: TrendPoint[]; events: Hi
   );
 }
 
-// ── Medications Tab ───────────────────────────────────────────────────────────
+// -- Medications Tab -----------------------------------------------------------
 export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationInfo[]; title: string }) {
   if (activeMeds.length === 0) {
     return (
@@ -950,8 +950,8 @@ export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationIn
                     <tr key={med.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
                       <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.route}</td>
                       <td style={{ padding: "8px 12px", fontWeight: 600, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.drug_name}</td>
-                      <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "—"}</td>
-                      <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.frequency ?? "—"}</td>
+                      <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "-"}</td>
+                      <td style={{ padding: "8px 12px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.frequency ?? "-"}</td>
                       <td style={{ padding: "8px 12px", color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
                     </tr>
                   ))}
@@ -965,7 +965,7 @@ export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationIn
   );
 }
 
-// ── Treatment Tab ─────────────────────────────────────────────────────────────
+// -- Treatment Tab -------------------------------------------------------------
 interface PrescriptionMed {
   id: string;
   drug_name: string;
@@ -1035,7 +1035,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(new Set());
-  // Inline edits for the history table: medId → field → value
+  // Inline edits for the history table: medId - field - value
   const [inlineEdits, setInlineEdits] = useState<Record<string, { route?: string; frequency?: string; discontinued?: boolean }>>({});
   const [inlineSaving, setInlineSaving] = useState<Record<string, boolean>>({});
   const toast = useToast();
@@ -1363,7 +1363,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   };
 
   if (loading) {
-    return <div className={styles.tabPlaceholder}><p>Loading treatment history…</p></div>;
+    return <div className={styles.tabPlaceholder}><p>Loading treatment history-</p></div>;
   }
 
   return (
@@ -1402,7 +1402,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      {/* ── Prescription Editor ── */}
+      {/* -- Prescription Editor -- */}
       {showEditor && (
         <div style={{
           border: "1.5px solid #126969", borderRadius: 12, padding: 16,
@@ -1483,7 +1483,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                     type="number"
                     value={med.dose}
                     disabled={isStopped}
-                    placeholder="—"
+                    placeholder="-"
                     onChange={e => updateDraft(med._key, { dose: e.target.value })}
                     style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
                   />
@@ -1591,7 +1591,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             <button type="button" onClick={savePrescription} disabled={saving}
               style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: saving ? "#6d8794" : "#126969", color: "white", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
             >
-              {saving ? "Saving…" : "Save Prescription"}
+              {saving ? "Saving-" : "Save Prescription"}
             </button>
           </div>
 
@@ -1603,7 +1603,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      {/* ── Timeline ── */}
+      {/* -- Timeline -- */}
       {prescriptions.length === 0 ? (
         <div className={styles.tabPlaceholder}>
           <p>No prescriptions yet. Click &quot;+ New Prescription&quot; to add the first one.</p>
@@ -1723,7 +1723,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   );
 }
 
-// ── PFT Records Tab ───────────────────────────────────────────────────────────
+// -- PFT Records Tab -----------------------------------------------------------
 export function PftTab({ records }: { records: PftInfo[] }) {
   if (records.length === 0) {
     return (
@@ -1751,15 +1751,15 @@ export function PftTab({ records }: { records: PftInfo[] }) {
               return (
                 <tr key={r.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
                   <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "nowrap" }}>{fmtDate(r.test_date)}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1_fvc_ratio ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fev1_pct_pred as string) ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1 ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fvc_pct_pred as string) ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fvc ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.dlco ?? "—"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.six_mwd as string) ?? "—"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1_fvc_ratio ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fev1_pct_pred as string) ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1 ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fvc_pct_pred as string) ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fvc ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.dlco ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.six_mwd as string) ?? "-"}</td>
                   <td style={{ padding: "8px 10px", color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                    {(other.min_spo2 as string) ?? "—"} / {(other.max_spo2 as string) ?? "—"}
+                    {(other.min_spo2 as string) ?? "-"} / {(other.max_spo2 as string) ?? "-"}
                   </td>
                 </tr>
               );

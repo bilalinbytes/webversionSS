@@ -1,5 +1,5 @@
-/* ==========================================================
-   O2Plus · Landing Page Design System
+ï»¿/* ==========================================================
+   O2Plus - Landing Page Design System
    Teal/Navy Brand Palette & Pulmonary Rhythm Animations
    ========================================================== */
 
@@ -258,7 +258,7 @@
 }
 .heroRegisterLink:hover { color: var(--med-navy-hover); text-decoration: underline; }
 
-/* Hero Right — Animated Pulmonary Oximetry Widget */
+/* Hero Right - Animated Pulmonary Oximetry Widget */
 .heroRight {
   display: flex;
   justify-content: center;

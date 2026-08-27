@@ -1,6 +1,6 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-/* ─── Blue Healthcare Design Tokens ─── */
+/* --- Blue Healthcare Design Tokens --- */
 @theme {
   --font-lora: var(--font-lora);
   --font-dm-sans: var(--font-dm-sans);
@@ -27,7 +27,7 @@
   --color-sage: #e8f1f8;
 }
 
-/* ─── Global Variables & Semantic Theme ─── */
+/* --- Global Variables & Semantic Theme --- */
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -90,7 +90,7 @@ textarea {
   font: inherit;
 }
 
-/* ─── Accessible Keyboard Focus Rings ─── */
+/* --- Accessible Keyboard Focus Rings --- */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -105,7 +105,7 @@ a {
   text-decoration: none;
 }
 
-/* ─── Accessible Reduced Motion Support (WCAG 2.1) ─── */
+/* --- Accessible Reduced Motion Support (WCAG 2.1) --- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -117,19 +117,19 @@ a {
   }
 }
 
-/* ─── Focus ring helper ─── */
+/* --- Focus ring helper --- */
 .focus-teal:focus {
   outline: none;
   box-shadow: 0 0 0 2px #2a75d3;
   border-color: #2a75d3;
 }
 
-/* ─── Fade transition for legacy panel ─── */
+/* --- Fade transition for legacy panel --- */
 .figure-fade {
   transition: opacity 300ms ease;
 }
 
-/* ─── Mobile: prevent iOS zoom on inputs (font-size must be ≥ 16px) ─── */
+/* --- Mobile: prevent iOS zoom on inputs (font-size must be - 16px) --- */
 @media (max-width: 768px) {
   input[type="text"],
   input[type="email"],
@@ -145,7 +145,7 @@ a {
   }
 }
 
-/* ─── Touch target baseline ─── */
+/* --- Touch target baseline --- */
 @media (max-width: 768px) {
   button,
   [role="button"],

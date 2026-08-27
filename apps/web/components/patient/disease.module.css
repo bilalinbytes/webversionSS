@@ -1,4 +1,4 @@
-/* ── Patient Disease Layout Tokens ────────────────────────────────────────── */
+﻿/* -- Patient Disease Layout Tokens ------------------------------------------ */
 /* Tokens: navy #0f2b48, blue #1e6091, focus #2a75d3, canvas #f8fafc, card #ffffff */
 
 .view {
@@ -193,7 +193,7 @@
   background: var(--color-navy-hover, #164e77);
 }
 
-/* ── CommonDailyLogView inputs & elements ───────────────────────────────── */
+/* -- CommonDailyLogView inputs & elements --------------------------------- */
 .fieldLabel {
   display: block;
   font-size: 13px;

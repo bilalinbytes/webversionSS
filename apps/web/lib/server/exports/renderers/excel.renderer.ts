@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+﻿import ExcelJS from "exceljs";
 import type { ExportDataBundle, PatientExportRecord } from "../export.types";
 import { getRiskColorStyles } from "../aggregation/risk-level";
 
@@ -112,7 +112,7 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
   wb.created = new Date();
   wb.modified = new Date();
 
-  // ── Sheet 1: Patient Registry (Single Flat Table for All Patients / Cohorts) ─
+  // -- Sheet 1: Patient Registry (Single Flat Table for All Patients / Cohorts) -
   const ws = wb.addWorksheet("Patient Registry", {
     properties: { defaultRowHeight: 22 },
     views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
@@ -186,7 +186,7 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
     row.commit();
   });
 
-  // ── MULTI-SHEET LOGIC FOR SINGLE PATIENT ONLY ──────────────────────────────
+  // -- MULTI-SHEET LOGIC FOR SINGLE PATIENT ONLY ------------------------------
   if (bundle.scope === "single_patient") {
     // Sheet 2: Daily Clinical Logs
     if (bundle.singlePatientLogs && bundle.singlePatientLogs.length > 0) {

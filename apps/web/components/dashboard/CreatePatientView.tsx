@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
@@ -163,7 +163,7 @@ function Field({
   );
 }
 
-// ── Step 1: Basic Info ────────────────────────────────────────────────────────
+// -- Step 1: Basic Info --------------------------------------------------------
 function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; update: (d: Partial<FormData>) => void; errors: Record<string, string>, isEdit?: boolean }) {
   const updateField = <K extends keyof FormData>(key: K, val: FormData[K]) => {
     update({ [key]: val } as Pick<FormData, K>);
@@ -238,7 +238,7 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
 
       <div className={styles.card}>
         <p className={styles.cardTitle}>Contact Details</p>
-        <p className={styles.cardSub}>The patient logs in using their mobile number. This must be correct — they cannot log in without it.</p>
+        <p className={styles.cardSub}>The patient logs in using their mobile number. This must be correct - they cannot log in without it.</p>
         <div className={styles.grid2}>
           <Field label="Mobile Number" required error={errors["mobile_number"] || errors["global_mobile"]}>
             <div style={{ position: "relative" }}>
@@ -259,7 +259,7 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
                 onChange={e => { updateField("mobile_number", e.target.value.replace(/\D/g, "")); setDuplicateCheck("idle"); }}
               />
               {duplicateCheck === "checking" && (
-                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#888" }}>checking…</span>
+                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#888" }}>checking-</span>
               )}
               {duplicateCheck === "available" && (
                 <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#2d7a38", fontSize: 12 }}>OK</span>
@@ -272,19 +272,19 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
             )}
             {duplicateCheck !== "duplicate" && !errors["mobile_number"] && !errors["global_mobile"] && data.mobile_number.length > 0 && !mobileValid && (
               <span className={styles.fieldError} style={{ color: "#ef9f27" }}>
-                <AlertCircle size={11} /> Must be 10 digits starting with 6–9
+                <AlertCircle size={11} /> Must be 10 digits starting with 6-9
               </span>
             )}
             {duplicateCheck === "available" && (
               <span style={{ fontSize: 11, color: "#2d7a38", marginTop: 3, display: "block" }}>
-                Available — patient will log in with +91{data.mobile_number}
+                Available - patient will log in with +91{data.mobile_number}
               </span>
             )}
           </Field>
           <Field label="Alternate Mobile (Caretaker)" error={errors["alternate_mobile"]}>
             <input
               className={`${styles.input} ${errors["alternate_mobile"] ? styles.inputError : (data.alternate_mobile && altMobileValid) ? styles.inputValid : ""}`}
-              placeholder="Optional — caretaker&apos;s number"
+              placeholder="Optional - caretaker&apos;s number"
               value={data.alternate_mobile}
               maxLength={10}
               onChange={e => updateField("alternate_mobile", e.target.value.replace(/\D/g, ""))}
@@ -296,7 +296,7 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
   );
 }
 
-// ── Step 2: Diagnosis ─────────────────────────────────────────────────────────
+// -- Step 2: Diagnosis ---------------------------------------------------------
 const ILD_SUBTYPES = [
   "Idiopathic pulmonary fibrosis",
   "Hypersensitivity pneumonitis",
@@ -388,9 +388,9 @@ function getEffectiveDashboard(data: FormData): string {
     case "ILD": return "ild";
     case "OAD": {
       const d = data.oad_diagnosis.toLowerCase();
-      // Bronchiolitis Obliterans → asthma dashboard
+      // Bronchiolitis Obliterans - asthma dashboard
       if (d.includes("bronchiolitis")) return "asthma";
-      // Asthma-COPD Overlap (ACO) → copd dashboard
+      // Asthma-COPD Overlap (ACO) - copd dashboard
       if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
       // Pure asthma
       if (d.includes("asthma") && !d.includes("copd")) return "asthma";
@@ -466,7 +466,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
           <div className={styles.grid2}>
             <Field label="ILD Sub-type">
               <select className={styles.select} value={data.ild_subtype} onChange={e => update({ ild_subtype: e.target.value, ild_other_text: "" })}>
-                <option value="">— Select sub-type —</option>
+                <option value="">- Select sub-type -</option>
                 {ILD_SUBTYPES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
@@ -498,7 +498,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
           <div className={styles.grid2}>
             <Field label="Specific Diagnosis">
               <select className={styles.select} value={data.oad_diagnosis} onChange={e => update({ oad_diagnosis: e.target.value, oad_other_text: "" })}>
-                <option value="">— Select diagnosis —</option>
+                <option value="">- Select diagnosis -</option>
                 {OAD_DIAGNOSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
@@ -518,7 +518,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
           <div className={styles.grid2}>
             <Field label="Cause">
               <select className={styles.select} value={data.bronchiectasis_cause} onChange={e => update({ bronchiectasis_cause: e.target.value, bronchiectasis_other_text: "" })}>
-                <option value="">— Select cause —</option>
+                <option value="">- Select cause -</option>
                 {BRONCHIECTASIS_CAUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
@@ -539,7 +539,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
           <div className={styles.grid2}>
             <Field label="Cause">
               <select className={styles.select} value={data.posticu_cause} onChange={e => update({ posticu_cause: e.target.value, posticu_other_text: "" })}>
-                <option value="">— Select cause —</option>
+                <option value="">- Select cause -</option>
                 {POSTICU_CAUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
@@ -566,7 +566,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
   );
 }
 
-// ── Step 3: Co-morbidities ────────────────────────────────────────────────────
+// -- Step 3: Co-morbidities ----------------------------------------------------
 function StepComorbidities({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
   const isNone = data.comorbidities.includes("None");
 
@@ -602,7 +602,7 @@ function StepComorbidities({ data, update }: { data: FormData; update: (d: Parti
         <p className={styles.cardTitle}>Associated Conditions</p>
         <p className={styles.cardSub}>Select all that apply</p>
 
-        {/* NONE option — shown prominently at top */}
+        {/* NONE option - shown prominently at top */}
         <button
           type="button"
           style={{
@@ -623,10 +623,10 @@ function StepComorbidities({ data, update }: { data: FormData; update: (d: Parti
           }}>
             {isNone && <Check size={11} strokeWidth={3} color="white" />}
           </div>
-          None — No co-morbidities
+          None - No co-morbidities
         </button>
 
-        {/* Condition list — greyed when None is selected */}
+        {/* Condition list - greyed when None is selected */}
         <div className={styles.comorbidGrid} style={{ opacity: isNone ? 0.4 : 1, pointerEvents: isNone ? "none" : "auto" }}>
           {COMORBIDITIES.map((item) => (
             <button
@@ -654,7 +654,7 @@ function StepComorbidities({ data, update }: { data: FormData; update: (d: Parti
   );
 }
 
-// ── Step 4: PFT Records ───────────────────────────────────────────────────────
+// -- Step 4: PFT Records -------------------------------------------------------
 function flag(val: number | null, threshold: number) {
   return val !== null && val < threshold;
 }
@@ -709,31 +709,31 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
                 <input type="date" className={styles.input} value={draft.date} onChange={(e) => setDraft({...draft, date: e.target.value})} />
               </Field>
               <Field label="FEV1/FVC (%)">
-                <input type="number" step="0.01" className={styles.input} placeholder="—" value={draft.ratio} onChange={(e) => setDraft({...draft, ratio: e.target.value})} />
+                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.ratio} onChange={(e) => setDraft({...draft, ratio: e.target.value})} />
               </Field>
               <Field label="FEV1 (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="—" value={draft.fev1_pct_pred} onChange={(e) => setDraft({...draft, fev1_pct_pred: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.fev1_pct_pred} onChange={(e) => setDraft({...draft, fev1_pct_pred: e.target.value})} />
               </Field>
               <Field label="FEV1 (Liters)">
-                <input type="number" step="0.01" className={styles.input} placeholder="—" value={draft.fev1} onChange={(e) => setDraft({...draft, fev1: e.target.value})} />
+                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.fev1} onChange={(e) => setDraft({...draft, fev1: e.target.value})} />
               </Field>
               <Field label="FVC (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="—" value={draft.fvc_pct_pred} onChange={(e) => setDraft({...draft, fvc_pct_pred: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.fvc_pct_pred} onChange={(e) => setDraft({...draft, fvc_pct_pred: e.target.value})} />
               </Field>
               <Field label="FVC (Liters)">
-                <input type="number" step="0.01" className={styles.input} placeholder="—" value={draft.fvc} onChange={(e) => setDraft({...draft, fvc: e.target.value})} />
+                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.fvc} onChange={(e) => setDraft({...draft, fvc: e.target.value})} />
               </Field>
               <Field label="DLCO (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="—" value={draft.dlco} onChange={(e) => setDraft({...draft, dlco: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.dlco} onChange={(e) => setDraft({...draft, dlco: e.target.value})} />
               </Field>
               <Field label="6MWD (m)">
-                <input type="number" step="1" className={styles.input} placeholder="—" value={draft.six_mwd} onChange={(e) => setDraft({...draft, six_mwd: e.target.value})} />
+                <input type="number" step="1" className={styles.input} placeholder="-" value={draft.six_mwd} onChange={(e) => setDraft({...draft, six_mwd: e.target.value})} />
               </Field>
               <Field label="Min SpO2">
-                <input type="number" step="0.1" className={styles.input} placeholder="—" value={draft.min_spo2} onChange={(e) => setDraft({...draft, min_spo2: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.min_spo2} onChange={(e) => setDraft({...draft, min_spo2: e.target.value})} />
               </Field>
               <Field label="Max SpO2">
-                <input type="number" step="0.1" className={styles.input} placeholder="—" value={draft.max_spo2} onChange={(e) => setDraft({...draft, max_spo2: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.max_spo2} onChange={(e) => setDraft({...draft, max_spo2: e.target.value})} />
               </Field>
             </div>
             <div className={styles.addRowActions}>
@@ -765,15 +765,15 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
                 return (
                   <tr key={r._clientId} className={styles.tr}>
                     <td className={styles.td}>{r.test_date}</td>
-                    <td className={`${styles.td} ${flag(r.fev1_fvc_ratio, 0.7) ? styles.abnormal : ""}`}>{r.fev1_fvc_ratio ?? "—"}{flag(r.fev1_fvc_ratio, 0.7) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.fev1_pct_pred || "—"}</td>
-                    <td className={`${styles.td} ${flag(r.fev1, 0.8) ? styles.abnormal : ""}`}>{r.fev1 ?? "—"}{flag(r.fev1, 0.8) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.fvc_pct_pred || "—"}</td>
-                    <td className={`${styles.td} ${flag(r.fvc, 0.8) ? styles.abnormal : ""}`}>{r.fvc ?? "—"}{flag(r.fvc, 0.8) ? " !" : ""}</td>
-                    <td className={`${styles.td} ${flag(r.dlco, 60) ? styles.abnormal : ""}`}>{r.dlco ?? "—"}{flag(r.dlco, 60) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.six_mwd || "—"}</td>
-                    <td className={styles.td}>{ext.min_spo2 || "—"} / {ext.max_spo2 || "—"}</td>
-                    <td className={styles.td}><button type="button" className={styles.removeBtn} onClick={() => removeRow(r._clientId)}>×</button></td>
+                    <td className={`${styles.td} ${flag(r.fev1_fvc_ratio, 0.7) ? styles.abnormal : ""}`}>{r.fev1_fvc_ratio ?? "-"}{flag(r.fev1_fvc_ratio, 0.7) ? " !" : ""}</td>
+                    <td className={styles.td}>{ext.fev1_pct_pred || "-"}</td>
+                    <td className={`${styles.td} ${flag(r.fev1, 0.8) ? styles.abnormal : ""}`}>{r.fev1 ?? "-"}{flag(r.fev1, 0.8) ? " !" : ""}</td>
+                    <td className={styles.td}>{ext.fvc_pct_pred || "-"}</td>
+                    <td className={`${styles.td} ${flag(r.fvc, 0.8) ? styles.abnormal : ""}`}>{r.fvc ?? "-"}{flag(r.fvc, 0.8) ? " !" : ""}</td>
+                    <td className={`${styles.td} ${flag(r.dlco, 60) ? styles.abnormal : ""}`}>{r.dlco ?? "-"}{flag(r.dlco, 60) ? " !" : ""}</td>
+                    <td className={styles.td}>{ext.six_mwd || "-"}</td>
+                    <td className={styles.td}>{ext.min_spo2 || "-"} / {ext.max_spo2 || "-"}</td>
+                    <td className={styles.td}><button type="button" className={styles.removeBtn} onClick={() => removeRow(r._clientId)}>-</button></td>
                   </tr>
                 );
               })}
@@ -791,7 +791,7 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
                 max="100"
                 step="0.1"
                 className={`${styles.input} ${errors["baseline_spo2"] ? styles.inputError : data.baseline_spo2 ? styles.inputValid : ""}`}
-                placeholder="—"
+                placeholder="-"
                 value={data.baseline_spo2}
                 onChange={(e) => update({ baseline_spo2: e.target.value })}
               />
@@ -803,7 +803,7 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
                 max="250"
                 step="1"
                 className={`${styles.input} ${errors["baseline_heart_rate"] ? styles.inputError : data.baseline_heart_rate ? styles.inputValid : ""}`}
-                placeholder="—"
+                placeholder="-"
                 value={data.baseline_heart_rate}
                 onChange={(e) => update({ baseline_heart_rate: e.target.value })}
               />
@@ -815,7 +815,7 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
   );
 }
 
-// ── Step 4: Respiratory Support ───────────────────────────────────────────────
+// -- Step 4: Respiratory Support -----------------------------------------------
 function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
   const rs = data.respiratory_support;
   const updateRS = (updates: Partial<typeof rs>) => update({ respiratory_support: { ...rs, ...updates } });
@@ -937,7 +937,7 @@ function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial
   );
 }
 
-// ── Step 5: Medications ───────────────────────────────────────────────────────
+// -- Step 5: Medications -------------------------------------------------------
 const RTE_OPTS = [
   { v: "inj", l: "Injection" }, { v: "tablet", l: "Tablet" }, { v: "capsule", l: "Capsule" },
   { v: "nebulisation", l: "Nebulisation" }, { v: "inhaler", l: "Inhaler" }, { v: "nasal_spray", l: "Nasal Spray" }
@@ -1100,7 +1100,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
               <span className={styles.medCell}>{m.frequency}</span>
               <span className={`${styles.medCell} ${styles.medMuted}`}>{m.start_date}</span>
               <span className={`${styles.medCell} ${styles.medMuted}`}>{m.end_date || "Ongoing"}</span>
-              <span className={styles.medCell}><button type="button" className={styles.removeBtn} onClick={() => removeMed(m._clientId)}>×</button></span>
+              <span className={styles.medCell}><button type="button" className={styles.removeBtn} onClick={() => removeMed(m._clientId)}>-</button></span>
             </div>
           ))}
         </div>
@@ -1109,7 +1109,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
   );
 }
 
-// ── Step 7: Review ────────────────────────────────────────────────────────────
+// -- Step 7: Review ------------------------------------------------------------
 function StepReview({ data, isEdit }: { data: FormData, isEdit?: boolean }) {
   const summary = getDiagnosisSummary(data);
 
@@ -1120,7 +1120,7 @@ function StepReview({ data, isEdit }: { data: FormData, isEdit?: boolean }) {
       </div>
       <div className={styles.reviewGrid}>
         {[
-          { title: "Basic Info", items: [data.name || "Missing Name", `${data.gender} · Age: ${data.age || "—"}`, data.mobile_number, data.alternate_mobile ? `Alt: ${data.alternate_mobile}` : null].filter(Boolean) as string[] },
+          { title: "Basic Info", items: [data.name || "Missing Name", `${data.gender} - Age: ${data.age || "-"}`, data.mobile_number, data.alternate_mobile ? `Alt: ${data.alternate_mobile}` : null].filter(Boolean) as string[] },
           { title: "Diagnosis", items: [summary, `Comorbidities: ${data.comorbidities.length ? data.comorbidities.join(", ") : "None"}`] },
           { title: "PFT Records", items: [`${data.pft_records.length} entries`] },
           { title: "Respiratory Support", items: [data.respiratory_support.requires_support ? "Yes" : "No Support Required"] },
@@ -1304,7 +1304,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       } else if (res.status === 409) {
         setErrors({ global_mobile: "This mobile number is already registered to a patient." });
         setStep(1);
-        setSubmitError("Patient already registered — this mobile number (+91" + data.mobile_number + ") is already in the system. If this is your patient, they can log in directly. If they belong to another doctor, use the Import Patient feature.");
+        setSubmitError("Patient already registered - this mobile number (+91" + data.mobile_number + ") is already in the system. If this is your patient, they can log in directly. If they belong to another doctor, use the Import Patient feature.");
       } else {
         let serverMsg = "A server error occurred. Please try again.";
         try {
@@ -1326,18 +1326,18 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       return;
     }
 
-    // ── Step 1 validation: block until required fields are complete ──
+    // -- Step 1 validation: block until required fields are complete --
     if (step === 1) {
       const newErrors: Record<string, string> = {};
       if (!data.name.trim()) newErrors["name"] = "Full name is required";
       if (!data.age || isNaN(Number(data.age)) || Number(data.age) < 1 || Number(data.age) > 120) {
-        newErrors["age"] = "Please enter a valid age (1–120)";
+        newErrors["age"] = "Please enter a valid age (1-120)";
       }
       if (!data.gender) newErrors["gender"] = "Please select a sex";
       if (!data.mobile_number || data.mobile_number.length !== 10) {
         newErrors["mobile_number"] = "Mobile number must be exactly 10 digits";
       } else if (!/^[6-9]\d{9}$/.test(data.mobile_number)) {
-        newErrors["mobile_number"] = "Enter a valid Indian mobile number starting with 6–9";
+        newErrors["mobile_number"] = "Enter a valid Indian mobile number starting with 6-9";
       }
       if (data.alternate_mobile && data.alternate_mobile.length > 0 && data.alternate_mobile.length !== 10) {
         newErrors["alternate_mobile"] = "Alternate number must be 10 digits";
@@ -1349,7 +1349,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       setErrors({});
     }
 
-    // ── Step 2 validation: disease category required ──
+    // -- Step 2 validation: disease category required --
     if (step === 2) {
       if (!data.disease_category) {
         setErrors({ primary_diagnosis: "Please select a disease category" });
@@ -1358,7 +1358,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       setErrors({});
     }
 
-    // ── Step 4 validation: Baseline Vitals required ──
+    // -- Step 4 validation: Baseline Vitals required --
     if (step === 4) {
       const newErrors: Record<string, string> = {};
       if (!data.baseline_spo2) {
@@ -1385,7 +1385,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
     <div className={styles.view}>
       <div className={styles.header}>
         <div><h1 className={styles.title}>{editPatientId ? "Edit Patient" : "Create New Patient"}</h1><p className={styles.sub}>Step {step} of 7</p></div>
-        <button type="button" className={styles.btnGhost} onClick={onBack}>← Dashboard</button>
+        <button type="button" className={styles.btnGhost} onClick={onBack}>- Dashboard</button>
       </div>
       <div className={styles.layout}>
         <aside className={styles.stepSidebar}>
@@ -1422,7 +1422,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
             className={styles.btnPrimary}
             onClick={goNext}
             disabled={submitting || (step === 1 && (!data.name.trim() || !data.mobile_number || data.mobile_number.length !== 10 || !data.gender || !data.age))}
-          >            {submitting ? <Loader2 className="animate-spin" size={16}/> : (step === 7 ? (editPatientId ? "Update Patient" : "Create Patient") : "Save & Continue →")}
+          >            {submitting ? <Loader2 className="animate-spin" size={16}/> : (step === 7 ? (editPatientId ? "Update Patient" : "Create Patient") : "Save & Continue -")}
           </button>
         </div>
       </div>

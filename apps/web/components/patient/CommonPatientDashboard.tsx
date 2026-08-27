@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
@@ -75,7 +75,7 @@ function aqiLabel(aqi: number): { label: string; color: string } {
 function spo2Label(spo2: number): { label: string; color: string } {
   if (spo2 >= 95) return { label: "Normal", color: "var(--med-blue-600)" };
   if (spo2 >= 90) return { label: "Borderline", color: "#b7791f" };
-  return { label: "Low — Alert", color: "#c94d49" };
+  return { label: "Low - Alert", color: "#c94d49" };
 }
 
 const MMRC_LABELS = ["No breathlessness", "On hills/hurrying", "Slower than peers", "Stops after ~100m", "Too breathless to leave home"];
@@ -108,11 +108,11 @@ export function CommonPatientDashboard({
   return (
     <div className={dStyles.body} style={{ gap: 14 }}>
 
-      {/* ── Header ── */}
+      {/* -- Header -- */}
       <div className={dStyles.pageHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 className={dStyles.pageTitle} style={{ fontSize: 20 }}>
-            Welcome, {firstName} <span className={dStyles.pageTitleHi}>· स्वागत है</span>
+            Welcome, {firstName} <span className={dStyles.pageTitleHi}>- ------ --</span>
           </h1>
           {diagnosis && (
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--med-text-muted)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
@@ -132,23 +132,23 @@ export function CommonPatientDashboard({
               className={dStyles.submitBtn}
               style={{ padding: "10px 20px", fontSize: 13, borderRadius: 10, minHeight: 44 }}
             >
-              Log Today · आज लॉग करें
+              Log Today - -- --- ----
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Vitals row ── */}
+      {/* -- Vitals row -- */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
 
         {/* SpO2 */}
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Heart size={16} color={spo2.color} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>SpO₂ <span className={dStyles.fieldLabelHi}>ऑक्सीजन</span></span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>SpO- <span className={dStyles.fieldLabelHi}>-------</span></span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: spo2.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
-            {spo2Today > 0 ? `${spo2Today}%` : "—"}
+            {spo2Today > 0 ? `${spo2Today}%` : "-"}
           </p>
           <span style={{ fontSize: 11, color: spo2.color, fontWeight: 600 }}>{spo2Today > 0 ? spo2.label : "No entry today"}</span>
           {spo2Trend && spo2Trend.length > 1 && <SparkLine values={spo2Trend} color={spo2.color} />}
@@ -158,22 +158,22 @@ export function CommonPatientDashboard({
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Wind size={16} color="var(--med-blue-600)" strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Breathlessness <span className={dStyles.fieldLabelHi}>सांस फूलना</span></span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Breathlessness <span className={dStyles.fieldLabelHi}>---- -----</span></span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {mmrcToday}
           </p>
-          <span style={{ fontSize: 11, color: "var(--med-text-muted)" }}>Grade {mmrcToday} — {mmrcText}</span>
+          <span style={{ fontSize: 11, color: "var(--med-text-muted)" }}>Grade {mmrcToday} - {mmrcText}</span>
         </div>
 
         {/* AQI */}
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Activity size={16} color={aqi.color} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Air Quality <span className={dStyles.fieldLabelHi}>वायु गुणवत्ता</span></span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Air Quality <span className={dStyles.fieldLabelHi}>---- --------</span></span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: aqi.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
-            {aqiToday > 0 ? aqiToday : "—"}
+            {aqiToday > 0 ? aqiToday : "-"}
           </p>
           <span style={{ fontSize: 11, color: aqi.color, fontWeight: 600 }}>{aqiToday > 0 ? aqi.label : "No data"}</span>
         </div>
@@ -182,10 +182,10 @@ export function CommonPatientDashboard({
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <AlertCircle size={16} color={risk.color} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Risk Score <span className={dStyles.fieldLabelHi}>जोखिम स्कोर</span></span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Risk Score <span className={dStyles.fieldLabelHi}>----- -----</span></span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: risk.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
-            {riskScore > 0 ? riskScore : "—"}
+            {riskScore > 0 ? riskScore : "-"}
           </p>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, padding: "2px 9px", borderRadius: 999, background: risk.bg, color: risk.color, fontWeight: 700, width: "fit-content" }}>
             {risk.label}
@@ -193,12 +193,12 @@ export function CommonPatientDashboard({
         </div>
       </div>
 
-      {/* ── Symptoms Analytics & mMRC ── */}
+      {/* -- Symptoms Analytics & mMRC -- */}
       <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
             <p className={dStyles.cardTitle} style={{ margin: 0 }}>
-              Symptoms &amp; Breathlessness Analytics · लक्षण विश्लेषण
+              Symptoms &amp; Breathlessness Analytics - ----- --------
             </p>
             <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--med-text-muted)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
               Longitudinal tracking based on daily clinical logs
@@ -256,10 +256,10 @@ export function CommonPatientDashboard({
             </span>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 2 }}>
               {[
-                { name: "Cough / खांसी", status: (vasTrend && vasTrend.length > 0 && vasTrend[vasTrend.length - 1]! > 3) ? "Moderate" : "Mild/None" },
-                { name: "Phlegm / बलगम", status: "Monitored daily" },
+                { name: "Cough / -----", status: (vasTrend && vasTrend.length > 0 && vasTrend[vasTrend.length - 1]! > 3) ? "Moderate" : "Mild/None" },
+                { name: "Phlegm / ----", status: "Monitored daily" },
                 { name: "Night Waking", status: "Logged in daily form" },
-                { name: "Exertion SpO₂", status: "Recorded on walk" },
+                { name: "Exertion SpO-", status: "Recorded on walk" },
               ].map((sym) => (
                 <div key={sym.name} style={{ display: "flex", flexDirection: "column", padding: "6px 8px", background: "white", borderRadius: 6, border: "1px solid rgba(0,0,0,0.06)" }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: "var(--med-navy-800)" }}>{sym.name}</span>
@@ -271,11 +271,11 @@ export function CommonPatientDashboard({
         </div>
       </div>
 
-      {/* ── Today's Medications ── */}
+      {/* -- Today's Medications -- */}
       <div className={dStyles.card}>
         <p className={dStyles.cardTitle}>
-          Today&apos;s Medications · आज की दवाएं
-          <span className={dStyles.cardTitleHi}> — Tap to mark taken / not taken</span>
+          Today&apos;s Medications - -- -- -----
+          <span className={dStyles.cardTitleHi}> - Tap to mark taken / not taken</span>
         </p>
         {(!todayMedications || todayMedications.length === 0) ? (
           <p style={{ margin: 0, fontSize: 13, color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
@@ -303,14 +303,14 @@ export function CommonPatientDashboard({
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, color: "white", fontSize: 13,
                 }}>
-                  {med.taken === true ? <CheckCircle2 size={14} /> : med.taken === false ? "✕" : ""}
+                  {med.taken === true ? <CheckCircle2 size={14} /> : med.taken === false ? "-" : ""}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--med-navy-800)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                    {med.name}{med.dose ? ` — ${med.dose}` : ""}
+                    {med.name}{med.dose ? ` - ${med.dose}` : ""}
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 11, color: med.taken === true ? "var(--med-blue-600)" : med.taken === false ? "#c94d49" : "#888680" }}>
-                    {med.taken === true ? "Taken ✓" : med.taken === false ? "Not taken" : "Not marked yet"}
+                    {med.taken === true ? "Taken -" : med.taken === false ? "Not taken" : "Not marked yet"}
                   </p>
                 </div>
                 {onMedicationToggle && (
@@ -349,19 +349,19 @@ export function CommonPatientDashboard({
         )}
       </div>
 
-      {/* ── PFT Summary (if available) ── */}
+      {/* -- PFT Summary (if available) -- */}
       {latestPft && (latestPft.fev1_fvc_ratio !== null || latestPft.fev1 !== null) && (
         <div className={dStyles.card}>
           <p className={dStyles.cardTitle}>
-            Latest PFT Results · PFT परिणाम
+            Latest PFT Results - PFT ------
             {latestPft.test_date && (
-              <span className={dStyles.cardTitleHi}> — {new Date(latestPft.test_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+              <span className={dStyles.cardTitleHi}> - {new Date(latestPft.test_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
             )}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginTop: 8 }}>
             {[
-              { label: "FEV₁/FVC", value: latestPft.fev1_fvc_ratio !== null ? `${latestPft.fev1_fvc_ratio}%` : null },
-              { label: "FEV₁", value: latestPft.fev1 !== null ? `${latestPft.fev1} L` : null },
+              { label: "FEV-/FVC", value: latestPft.fev1_fvc_ratio !== null ? `${latestPft.fev1_fvc_ratio}%` : null },
+              { label: "FEV-", value: latestPft.fev1 !== null ? `${latestPft.fev1} L` : null },
               { label: "FVC", value: latestPft.fvc !== null ? `${latestPft.fvc} L` : null },
               { label: "DLCO", value: latestPft.dlco !== null ? `${latestPft.dlco}%` : null },
             ].filter((item) => item.value !== null).map((item) => (
@@ -374,9 +374,9 @@ export function CommonPatientDashboard({
         </div>
       )}
 
-      {/* ── Doctor & Appointment ── */}
+      {/* -- Doctor & Appointment -- */}
       <div className={dStyles.card}>
-        <p className={dStyles.cardTitle}>My Care Team · मेरी देखभाल टीम</p>
+        <p className={dStyles.cardTitle}>My Care Team - ---- ------ ---</p>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
           <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--med-blue-600)", color: "var(--med-blue-100)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
             {doctor ? doctor.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "Dr"}
@@ -401,7 +401,7 @@ export function CommonPatientDashboard({
         </div>
       </div>
 
-      {/* ── Log Today CTA if not logged ── */}
+      {/* -- Log Today CTA if not logged -- */}
       {!hasTodayLog && (
         <div style={{ padding: "18px 20px", borderRadius: 14, background: "var(--med-navy-800)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
@@ -409,7 +409,7 @@ export function CommonPatientDashboard({
               You haven&apos;t logged today
             </p>
             <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-              आज का लॉग अभी नहीं किया गया है
+              -- -- --- --- ---- ---- --- --
             </p>
           </div>
           <button
