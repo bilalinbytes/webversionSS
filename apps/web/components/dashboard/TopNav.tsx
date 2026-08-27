@@ -312,7 +312,7 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
                 </div>
                 <div className={styles.profileInfoBox}>
                   <p className={styles.profileLabel}>Platform Status</p>
-                  <p className={styles.profileValue} style={{ color: "#16a34a" }}>Verified Clinical Practitioner</p>
+                  <p className={styles.profileValue} style={{ color: "var(--med-blue-600)" }}>Verified Clinical Practitioner</p>
                 </div>
               </div>
               <button

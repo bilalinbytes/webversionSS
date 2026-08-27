@@ -46,26 +46,26 @@ const REGISTRY_COLUMNS: ColumnDef[] = [
   { header: "Respiratory Support", key: "respiratorySupport",width: 22,  align: "left"   },
 ];
 
-function applyYellowHeaderStyles(row: ExcelJS.Row, columnCount: number) {
-  row.height = 28;
+function applyMainHeaderStyles(row: ExcelJS.Row, columnCount: number) {
+  row.height = 30;
   for (let i = 1; i <= columnCount; i++) {
     const cell = row.getCell(i);
     cell.font = {
       name: "Calibri",
       size: 11,
       bold: true,
-      color: { argb: "FF000000" },
+      color: { argb: "FFFFFFFF" },
     };
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFFFFF00" }, // Bright yellow (#FFFF00)
+      fgColor: { argb: "FF0F2B48" }, // Navy
     };
     cell.border = {
-      top:    { style: "thin", color: { argb: "FF000000" } },
-      left:   { style: "thin", color: { argb: "FF000000" } },
-      bottom: { style: "medium", color: { argb: "FF000000" } },
-      right:  { style: "thin", color: { argb: "FF000000" } },
+      top:    { style: "thin", color: { argb: "FF0A192F" } },
+      left:   { style: "thin", color: { argb: "FF0A192F" } },
+      bottom: { style: "medium", color: { argb: "FF0A192F" } },
+      right:  { style: "thin", color: { argb: "FF0A192F" } },
     };
     cell.alignment = {
       vertical: "middle",
@@ -84,22 +84,23 @@ function applySubSheetHeaderStyles(row: ExcelJS.Row, columnCount: number) {
       name: "Calibri",
       size: 11,
       bold: true,
-      color: { argb: "FF1A2E35" },
+      color: { argb: "FFFFFFFF" },
     };
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFE2E8F0" }, // Soft slate
+      fgColor: { argb: "FF1E6091" }, // Azure Blue
     };
     cell.border = {
-      top:    { style: "thin", color: { argb: "FF94A3B8" } },
-      left:   { style: "thin", color: { argb: "FF94A3B8" } },
-      bottom: { style: "medium", color: { argb: "FF475569" } },
-      right:  { style: "thin", color: { argb: "FF94A3B8" } },
+      top:    { style: "thin", color: { argb: "FF1A4971" } },
+      left:   { style: "thin", color: { argb: "FF1A4971" } },
+      bottom: { style: "medium", color: { argb: "FF1A4971" } },
+      right:  { style: "thin", color: { argb: "FF1A4971" } },
     };
     cell.alignment = {
       vertical: "middle",
       horizontal: "left",
+      wrapText: false,
     };
   }
   row.commit();
@@ -124,7 +125,7 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
   }));
 
   // 1. Header Styling: Bright yellow background (#FFFF00), bold black text, Calibri 11
-  applyYellowHeaderStyles(ws.getRow(1), REGISTRY_COLUMNS.length);
+  applyMainHeaderStyles(ws.getRow(1), REGISTRY_COLUMNS.length);
 
   // 2. Enable AutoFilter across all 33 columns
   ws.autoFilter = {

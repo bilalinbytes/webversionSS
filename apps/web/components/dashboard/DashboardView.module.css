@@ -6,7 +6,7 @@
      canvas        #f8fafc   surface       #ffffff
      borderSubtle  #e2e8f0   borderStrong  #cbd5e1
      critical      #dc2626   high          #ea580c
-     moderate      #ca8a04   stable        #16a34a
+     moderate      #ca8a04   stable        var(--med-blue-600)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Keyframes & Micro-Interactions ─────────────────────────────────────────── */
@@ -138,7 +138,7 @@
 }
 
 .topStatGreen .topStatVal {
-  color: var(--clinical-stable-solid, #16a34a);
+  color: var(--clinical-stable-solid, var(--med-blue-600));
 }
 
 .topStatLbl {
@@ -529,7 +529,7 @@
 }
 
 .qsGreen {
-  color: var(--clinical-stable-solid, #16a34a);
+  color: var(--clinical-stable-solid, var(--med-blue-600));
 }
 
 .qsLbl {
@@ -683,6 +683,7 @@
 
 /* ── Patient Table Row ─────────────────────────────────────────────────────── */
 .patientRow {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(180px, 1.2fr) minmax(200px, 1.4fr) 110px 100px minmax(130px, 1fr) 160px;
   gap: 12px;
@@ -701,6 +702,8 @@
 }
 
 .patientRow:hover {
+  transform: translateY(-2px);
+  z-index: 10;
   background: var(--med-surface-alt, #f8fafc);
   box-shadow: 0 2px 8px rgba(15, 43, 72, 0.06);
   border-color: var(--med-border-strong, #cbd5e1);
@@ -715,7 +718,7 @@
 .rowBorderCritical { border-left-color: var(--clinical-critical-solid, #dc2626); }
 .rowBorderHigh     { border-left-color: var(--clinical-high-solid, #ea580c); }
 .rowBorderModerate { border-left-color: var(--clinical-mod-solid, #ca8a04); }
-.rowBorderStable   { border-left-color: var(--clinical-stable-solid, #16a34a); }
+.rowBorderStable   { border-left-color: var(--clinical-stable-solid, var(--med-blue-600)); }
 .rowBorderNone     { border-left-color: var(--med-border-strong, #cbd5e1); }
 
 /* Column: Patient Info */
@@ -1002,6 +1005,7 @@
   }
 
   .patientRow {
+  position: relative;
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 12px;

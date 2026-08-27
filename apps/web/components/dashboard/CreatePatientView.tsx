@@ -555,7 +555,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
       {/* Diagnosis summary */}
       {data.disease_category && (
         <div className={styles.summaryCard}>
-          <Check size={14} color="#0f6e56" />
+          <Check size={14} color="var(--med-blue-600)" />
           <div>
             <p className={styles.summaryLabel}>Diagnosis Summary</p>
             <p className={styles.summaryValue}>{summary}</p>
@@ -568,7 +568,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
 
 // ── Step 3: Co-morbidities ────────────────────────────────────────────────────
 function StepComorbidities({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
-  const isNone = data.comorbidities.includes("None") || data.comorbidities.length === 0;
+  const isNone = data.comorbidities.includes("None");
 
   const toggleNone = () => {
     // If None is already selected or nothing selected, deselect
@@ -608,17 +608,17 @@ function StepComorbidities({ data, update }: { data: FormData; update: (d: Parti
           style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "10px 14px", borderRadius: 8, marginBottom: 12,
-            border: isNone ? "1.5px solid #0f6e56" : "1.5px solid #d1d5db",
+            border: isNone ? "1.5px solid var(--med-blue-600)" : "1.5px solid #d1d5db",
             background: isNone ? "#f0fdf4" : "#fff",
-            color: isNone ? "#0f6e56" : "#374151",
+            color: isNone ? "var(--med-blue-600)" : "#374151",
             fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", width: "100%", textAlign: "left",
           }}
           onClick={toggleNone}
         >
           <div style={{
             width: 18, height: 18, borderRadius: 4,
-            border: isNone ? "1.5px solid #0f6e56" : "1.5px solid #9ca3af",
-            background: isNone ? "#0f6e56" : "#fff",
+            border: isNone ? "1.5px solid var(--med-blue-600)" : "1.5px solid #9ca3af",
+            background: isNone ? "var(--med-blue-600)" : "#fff",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             {isNone && <Check size={11} strokeWidth={3} color="white" />}
@@ -1128,7 +1128,7 @@ function StepReview({ data, isEdit }: { data: FormData, isEdit?: boolean }) {
         ].map((sec) => (
           <div key={sec.title} className={styles.reviewCard}>
              <div className={styles.reviewCardHeader}>
-              <Check size={13} color="#0f6e56" />
+              <Check size={13} color="var(--med-blue-600)" />
               <span className={styles.reviewCardTitle}>{sec.title}</span>
             </div>
             {sec.items.map((it, i) => <p key={i} className={styles.reviewItem}>{it}</p>)}
@@ -1136,7 +1136,7 @@ function StepReview({ data, isEdit }: { data: FormData, isEdit?: boolean }) {
         ))}
       </div>
       <div className={styles.reviewNotice}>
-        <AlertCircle size={14} color="#0f6e56" />
+        <AlertCircle size={14} color="var(--med-blue-600)" />
         <span>All data will be saved to Supabase. Patient will receive an onboarding SMS.</span>
       </div>
     </div>

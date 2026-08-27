@@ -505,7 +505,7 @@ export function ExportView({ onBack }: ExportViewProps) {
             {/* Secondary: CLINICAL TREND EXPORTS */}
             <div className={styles.secondarySection}>
               <div className={styles.trendHeader}>
-                <TrendingUp size={14} style={{ color: "#0f6e56" }} />
+                <TrendingUp size={14} style={{ color: "var(--med-blue-600)" }} />
                 <span className={styles.groupLabel} style={{ margin: 0 }}>CLINICAL TREND EXPORTS</span>
               </div>
               <div className={styles.trendGrid}>
@@ -582,7 +582,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                 </div>
 
                 <div className={styles.patientSelectionCount}>
-                  <CheckSquare size={15} style={{ color: "#0f6e56" }} />
+                  <CheckSquare size={15} style={{ color: "var(--med-blue-600)" }} />
                   <span>
                     <strong>{selectedIds.size}</strong> {selectedIds.size === 1 ? "patient" : "patients"} selected
                   </span>

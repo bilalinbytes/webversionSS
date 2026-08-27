@@ -59,6 +59,8 @@ export interface PatientExportRecord {
 }
 
 export interface DetailedLogRecord {
+  patientName?: string;
+  uhid?: string;
   date: string;
   spo2Rest: number | string;
   spo2Walk: number | string;
@@ -116,6 +118,9 @@ export interface ExportDataBundle {
   singlePatientMeds?: DetailedMedicationRecord[];
   singlePatientPfts?: DetailedPftRecord[];
   singlePatientUhid?: string;
+  
+  // Multi-patient detailed logs
+  allPatientLogs?: DetailedLogRecord[];
 }
 
 export interface ExportResult {

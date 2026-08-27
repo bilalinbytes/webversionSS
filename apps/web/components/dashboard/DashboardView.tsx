@@ -395,7 +395,8 @@ function PatientTableRow({
       <div className={styles.colAlert}>
         {latestAlert?.reason_text ? (
           <span className={styles.alertReasonText} title={latestAlert.reason_text}>
-            ⚠️ {latestAlert.reason_text}
+            <span className="animate-pulse-live" style={{ display: "inline-block", width: 8, height: 8, background: "#dc2626", marginRight: 6, borderRadius: "50%" }}></span>
+            {latestAlert.reason_text}
           </span>
         ) : (
           <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>—</span>
@@ -446,7 +447,8 @@ function PatientTableRow({
 // ── Skeleton Row ─────────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <div className={styles.skeletonRow}>
+    <div className={`${styles.skeletonRow} animate-shimmer`}>
+      <div className={styles.skeletonAvatar} />
       <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "80%" }} />
       <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "70%" }} />
       <div className={`${styles.skBlock} ${styles.shimmer}`} style={{ width: "60%" }} />
@@ -796,7 +798,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           background: fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#fdecea" : "#e8f5f1",
           border: `1px solid ${fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#fca5a5" : "#a7d7c5"}`,
           fontSize: 13,
-          color: fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#c94d49" : "#0f6e56",
+          color: fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#c94d49" : "var(--med-blue-600)",
           fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
           display: "flex",
           alignItems: "center",

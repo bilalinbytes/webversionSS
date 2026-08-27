@@ -7,21 +7,23 @@ import { createAdminClient } from "@/lib/server/supabase-admin";
 export const dynamic = "force-dynamic";
 
 const pdfStyles = StyleSheet.create({
-  page: { padding: 44, backgroundColor: "#ffffff", fontSize: 11, color: "#111827", fontFamily: "Helvetica" },
-  header: { borderBottomWidth: 1, borderBottomColor: "#d1d5db", paddingBottom: 12, marginBottom: 18 },
-  title: { fontSize: 18, fontWeight: 700, marginBottom: 6 },
-  meta: { fontSize: 10, color: "#4b5563", marginBottom: 3 },
-  section: { marginTop: 14 },
-  sectionTitle: { fontSize: 12, fontWeight: 700, marginBottom: 8 },
-  row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e5e7eb", paddingVertical: 7 },
-  cellNo: { width: "9%" },
-  cellRoute: { width: "12%" },
-  cellDrug: { width: "20%" },
-  cell: { width: "10%" },
-  cellDate: { width: "12%" },
-  cellStatus: { width: "15%" },
-  instruction: { borderWidth: 1, borderColor: "#d1d5db", padding: 10, minHeight: 54, lineHeight: 1.5 },
-  footer: { position: "absolute", left: 44, right: 44, bottom: 36, flexDirection: "row", justifyContent: "space-between", color: "#6b7280", fontSize: 9 },
+  page: { padding: 40, backgroundColor: "#ffffff", fontSize: 9, color: "#0f172a", fontFamily: "Helvetica" },
+  header: { backgroundColor: "#0f2b48", color: "#ffffff", padding: 20, marginBottom: 20, borderRadius: 4 },
+  title: { fontSize: 18, fontWeight: "bold", marginBottom: 6, color: "#ffffff" },
+  meta: { fontSize: 9, color: "#e2e8f0", marginBottom: 3 },
+  section: { marginTop: 12 },
+  sectionTitle: { fontSize: 11, fontWeight: "bold", marginBottom: 8, color: "#1e6091", borderBottomWidth: 1, borderBottomColor: "#cbd5e1", paddingBottom: 4 },
+  row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingVertical: 6 },
+  rowEven: { backgroundColor: "#f8fafc" },
+  tableHeader: { flexDirection: "row", backgroundColor: "#f1f5f9", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "#cbd5e1", fontWeight: "bold" },
+  cellNo: { width: "7%", paddingHorizontal: 4 },
+  cellRoute: { width: "10%", paddingHorizontal: 4 },
+  cellDrug: { width: "20%", paddingHorizontal: 4 },
+  cell: { width: "8%", paddingHorizontal: 4 },
+  cellDate: { width: "11%", paddingHorizontal: 4 },
+  cellStatus: { width: "13%", paddingHorizontal: 4 },
+  instruction: { borderWidth: 1, borderColor: "#cbd5e1", backgroundColor: "#f8fafc", padding: 10, minHeight: 46, lineHeight: 1.4, borderRadius: 4 },
+  footer: { position: "absolute", left: 40, right: 40, bottom: 30, flexDirection: "row", justifyContent: "space-between", color: "#64748b", fontSize: 8, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 10 },
 });
 
 function PrescriptionPdfDocument({

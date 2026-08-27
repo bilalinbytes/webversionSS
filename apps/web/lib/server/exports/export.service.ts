@@ -59,7 +59,16 @@ export async function executeExport(
   const dateStamp = getFormattedDateStamp();
 
   // 1. Resolve authorized patient IDs for this doctor
-  const authorizedIds = await fetchAuthorizedPatientIds(admin, doctorId);
+  let authorizedIds = await fetchAuthorizedPatientIds(admin, doctorId);
+
+  // If no patients found, check if the caller is actually a patient requesting their own data
+  if (authorizedIds.length === 0 && payload.export_type === "single_patient" && (payload.patient_id === doctorId || (payload.patient_ids && payload.patient_ids[0] === doctorId))) {
+    const { data: selfCheck } = await admin.from("patients").select("id").eq("id", doctorId).maybeSingle();
+    if (selfCheck) {
+       authorizedIds = [doctorId];
+    }
+  }
+
   if (authorizedIds.length === 0) {
     throw new Error("No authorized patients found for this doctor.");
   }
@@ -345,6 +354,43 @@ export async function executeExport(
     });
   }
 
+  let allPatientLogs: DetailedLogRecord[] | undefined;
+  if (normalizedScope === "all_patients" || normalizedScope === "selected_patients") {
+    const sortedLogs = [...rawLogs].sort(
+      (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
+    );
+    allPatientLogs = sortedLogs.map((log) => {
+      const patient = patients.find((p) => p.id === log.patient_id);
+      const uhid = `P-${log.patient_id.slice(0, 8).toUpperCase()}`;
+      
+      const vasStr = typeof log.vas_symptoms === "object" && log.vas_symptoms
+        ? Object.entries(log.vas_symptoms)
+            .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`)
+            .join(", ")
+        : "--";
+
+      const compStr = typeof log.medication_compliance === "object" && log.medication_compliance
+        ? Object.entries(log.medication_compliance)
+            .map(([k, v]) => `${k}: ${v ? "Taken" : "Missed"}`)
+            .join(", ")
+        : "--";
+
+      return {
+        patientName: patient?.name || "Unknown",
+        uhid,
+        date: formatDateDDMMYYYY(log.logged_at),
+        spo2Rest: safeValue(log.spo2_rest),
+        spo2Walk: safeValue(log.spo2_exertion),
+        mmrc: safeValue(log.mmrc_today),
+        aqi: safeValue(log.aqi_value),
+        vasSymptoms: vasStr,
+        medicationCompliance: compStr,
+        riskScore: safeValue(log.computed_risk_score),
+        clinicalNotes: safeValue(log.clinical_notes),
+      };
+    });
+  }
+
   // 8. Compute Standardized File Name (Requirement 19)
   let baseFilename = `O2Plus_All_Patient_Records_${dateStamp}`;
   if (normalizedScope === "selected_patients") {
@@ -371,6 +417,7 @@ export async function executeExport(
     singlePatientMeds,
     singlePatientPfts,
     singlePatientUhid,
+    allPatientLogs,
   };
 
   // 9. Delegate to format renderer

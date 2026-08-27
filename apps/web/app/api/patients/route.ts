@@ -280,6 +280,8 @@ export async function GET(request: Request): Promise<NextResponse> {
       trach_vent_tidal_volume: support?.trach_vent_tidal_volume ?? null,
       trach_vent_fio2_percent: support?.trach_vent_fio2_percent ?? null,
     },
+    baseline_spo2: (pftRes.data && pftRes.data.length > 0) ? ((pftRes.data[pftRes.data.length - 1].other_fields as Record<string, string | null>)?.baseline_spo2 ?? "") : "",
+    baseline_heart_rate: (pftRes.data && pftRes.data.length > 0) ? ((pftRes.data[pftRes.data.length - 1].other_fields as Record<string, string | null>)?.baseline_heart_rate ?? "") : "",
     pft_records: (pftRes.data ?? []).map((row) => {
       const other = (row.other_fields ?? {}) as Record<string, string | null>;
       return {

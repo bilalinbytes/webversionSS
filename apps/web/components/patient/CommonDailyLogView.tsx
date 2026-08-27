@@ -49,6 +49,7 @@ interface CommonDailyLogViewProps {
   patientId: string;
   medicationMap: { id: string; name: string; dose: string; route: string; frequency: string }[];
   onSuccess?: () => void;
+  diagnosisLabel?: string;
 }
 
 function dashboardLabel(dashboard: DashboardType) {
@@ -116,6 +117,7 @@ export function CommonDailyLogView({
   patientId,
   medicationMap,
   onSuccess,
+  diagnosisLabel,
 }: CommonDailyLogViewProps) {
   const { submitState, submitLog, errorMessage, limitReached, reset } = usePatientLog();
   const aqi = useAqi();
@@ -364,7 +366,7 @@ export function CommonDailyLogView({
       <div className={dStyles.pageHeader}>
         <div>
           <h1 className={dStyles.pageTitle}>
-            Log Today - {dashboardLabel(dashboard)}
+            Log Today - {diagnosisLabel || dashboardLabel(dashboard)}
             <span className={dStyles.pageTitleHi}> · दैनिक लॉग - {dashboardHindi(dashboard)}</span>
           </h1>
           <p className={dStyles.pageSub}>

@@ -308,6 +308,100 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
+.notifTime {
+  display: block;
+  font-size: 11px;
+  color: var(--med-text-muted, #64748b);
+  margin-top: 4px;
+}
+
+.notifMessage {
+  font-size: 13px;
+  color: var(--med-text-primary, #0f172a);
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.notifMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--med-text-secondary, #475569);
+}
+
+.notifAttachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--med-bg-canvas, #f8fafc);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  text-decoration: none;
+  color: inherit;
+  transition: background 140ms ease;
+}
+
+.notifAttachment:hover {
+  background: #f1f5f9;
+}
+
+.notifAttachmentTitle {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--med-navy-800, #0f2b48);
+}
+
+.notifAttachmentMeta {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--med-text-muted, #64748b);
+}
+
+.notifActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.notifPdfLink,
+.notifViewLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 140ms ease;
+}
+
+.notifPdfLink {
+  color: var(--med-blue-600, #1e6091);
+  background: #ffffff;
+  border: 1px solid var(--med-blue-600, #1e6091);
+}
+
+.notifPdfLink:hover {
+  background: var(--med-blue-50, #f0f7ff);
+}
+
+.notifViewLink {
+  color: #ffffff;
+  background: var(--med-blue-600);
+  border: 1px solid var(--med-blue-600);
+}
+
+.notifViewLink:hover {
+  background: var(--med-navy-hover);
+}
+
 .doctorChip {
   display: flex;
   align-items: center;

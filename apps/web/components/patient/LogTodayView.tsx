@@ -26,6 +26,24 @@ export function LogTodayView({ onLogSubmitted }: { onLogSubmitted?: () => void }
   const [spo2Ex, setSpo2Ex] = useState("");
   const [mmrc, setMmrc] = useState<number | null>(null);
   const [vas, setVas] = useState<number | null>(null);
+  const [diagnosisLabel, setDiagnosisLabel] = useState<string>("");
+
+  useEffect(() => {
+    if (patient?.id) {
+      const fetchLabel = async () => {
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const { data } = await supabase.from("diagnoses").select("primary_diagnosis").eq("patient_id", patient.id).maybeSingle();
+          if (data?.primary_diagnosis) {
+            setDiagnosisLabel(data.primary_diagnosis);
+          }
+        } catch (err) {}
+      };
+      fetchLabel();
+    }
+  }, [patient?.id]);
+
   const [meds, setMeds] = useState<Record<string, boolean>>(
     Object.fromEntries(MEDICATIONS.map(m => [m.id, m.takenToday]))
   );
@@ -158,10 +176,10 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
     return <PostICULogView patientId={patient?.id || ""} medicationMap={medicationMap} />;
   }
   if (effective_dashboard === "asthma") {
-    return <AsthmaLogView patientId={patient?.id || ""} medicationMap={medicationMap} />;
+    return <AsthmaLogView patientId={patient?.id || ""} medicationMap={medicationMap} diagnosisLabel={diagnosisLabel} />;
   }
   if (effective_dashboard === "copd") {
-    return <COPDLogView patientId={patient?.id || ""} medicationMap={medicationMap} />;
+    return <COPDLogView patientId={patient?.id || ""} medicationMap={medicationMap} diagnosisLabel={diagnosisLabel} />;
   }
   if (effective_dashboard === "bronchiectasis") {
     return <BronchLogView patientId={patient?.id || ""} medicationMap={medicationMap} />;

@@ -642,7 +642,7 @@ function OverviewTab({
                     <span className={styles.prescriptionBadge}>Latest</span>
                     <strong>{fmtDate(group.date)}</strong>
                     {isMultiBatch && batchLabel && (
-                      <span style={{ marginLeft: 8, fontSize: 11, color: "#0f6e56", fontWeight: 600 }}>
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "var(--med-blue-600)", fontWeight: 600 }}>
                         · {batchLabel}
                       </span>
                     )}
@@ -926,7 +926,7 @@ export function MedicationsTab({ activeMeds, title }: { activeMeds: MedicationIn
               display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
               padding: "6px 12px", background: "#f5f3ee", borderRadius: 6,
             }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#0f6e56", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--med-blue-600)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Prescription
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: "#1a1a18" }}>
@@ -1395,7 +1395,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
         <div style={{
           padding: "8px 12px", borderRadius: 8, marginBottom: 12, fontSize: 12,
           background: saveMsg.includes("failed") || saveMsg.includes("error") || saveMsg.includes("Add ") ? "#fdecea" : "#e8f5f1",
-          color: saveMsg.includes("failed") || saveMsg.includes("error") || saveMsg.includes("Add ") ? "#c94d49" : "#0f6e56",
+          color: saveMsg.includes("failed") || saveMsg.includes("error") || saveMsg.includes("Add ") ? "#c94d49" : "var(--med-blue-600)",
           fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
         }}>
           {saveMsg}
@@ -1596,7 +1596,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           </div>
 
           {saveMsg && (
-            <p style={{ margin: "10px 0 0", fontSize: 12, color: saveMsg.includes("failed") || saveMsg.includes("error") || saveMsg.includes("Add ") ? "#c94d49" : "#0f6e56", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+            <p style={{ margin: "10px 0 0", fontSize: 12, color: saveMsg.includes("failed") || saveMsg.includes("error") || saveMsg.includes("Add ") ? "#c94d49" : "var(--med-blue-600)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
               {saveMsg}
             </p>
           )}

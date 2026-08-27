@@ -38,7 +38,7 @@ export interface CommonDashboardProps {
   onMedicationToggle?: (id: string, taken: boolean) => void;
 }
 
-function SparkLine({ values, color = "#126969" }: { values: number[]; color?: string }) {
+function SparkLine({ values, color = "var(--med-blue-600)" }: { values: number[]; color?: string }) {
   if (!values || values.length < 2) return null;
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -60,20 +60,20 @@ function SparkLine({ values, color = "#126969" }: { values: number[]; color?: st
 }
 
 function riskLabel(score: number): { label: string; color: string; bg: string } {
-  if (score <= 3) return { label: "Stable", color: "#0f6e56", bg: "rgba(15,110,86,0.1)" };
+  if (score <= 3) return { label: "Stable", color: "var(--med-blue-600)", bg: "var(--med-blue-50)" };
   if (score <= 6) return { label: "Moderate", color: "#b7791f", bg: "rgba(183,121,31,0.1)" };
   return { label: "High Risk", color: "#c94d49", bg: "rgba(201,77,73,0.1)" };
 }
 
 function aqiLabel(aqi: number): { label: string; color: string } {
-  if (aqi <= 50) return { label: "Good", color: "#0f6e56" };
+  if (aqi <= 50) return { label: "Good", color: "var(--med-blue-600)" };
   if (aqi <= 100) return { label: "Moderate", color: "#b7791f" };
   if (aqi <= 150) return { label: "Unhealthy for Sensitive", color: "#d85a30" };
   return { label: "Unhealthy", color: "#c94d49" };
 }
 
 function spo2Label(spo2: number): { label: string; color: string } {
-  if (spo2 >= 95) return { label: "Normal", color: "#0f6e56" };
+  if (spo2 >= 95) return { label: "Normal", color: "var(--med-blue-600)" };
   if (spo2 >= 90) return { label: "Borderline", color: "#b7791f" };
   return { label: "Low — Alert", color: "#c94d49" };
 }
@@ -115,14 +115,14 @@ export function CommonPatientDashboard({
             Welcome, {firstName} <span className={dStyles.pageTitleHi}>· स्वागत है</span>
           </h1>
           {diagnosis && (
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-              <strong style={{ color: "#132d36" }}>{diagnosis}</strong>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--med-text-muted)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              <strong style={{ color: "var(--med-navy-800)" }}>{diagnosis}</strong>
             </p>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {hasTodayLog ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 999, background: "rgba(15,110,86,0.1)", color: "#0f6e56", fontSize: 12, fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 999, background: "var(--med-blue-50)", color: "var(--med-blue-600)", fontSize: 12, fontWeight: 700 }}>
               <CheckCircle2 size={14} /> Today logged
             </span>
           ) : (
@@ -157,13 +157,13 @@ export function CommonPatientDashboard({
         {/* mMRC */}
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wind size={16} color="#126969" strokeWidth={2} />
+            <Wind size={16} color="var(--med-blue-600)" strokeWidth={2} />
             <span className={dStyles.fieldLabel} style={{ margin: 0 }}>Breathlessness <span className={dStyles.fieldLabelHi}>सांस फूलना</span></span>
           </div>
-          <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
+          <p style={{ margin: 0, fontSize: 36, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {mmrcToday}
           </p>
-          <span style={{ fontSize: 11, color: "#6d8794" }}>Grade {mmrcToday} — {mmrcText}</span>
+          <span style={{ fontSize: 11, color: "var(--med-text-muted)" }}>Grade {mmrcToday} — {mmrcText}</span>
         </div>
 
         {/* AQI */}
@@ -200,7 +200,7 @@ export function CommonPatientDashboard({
             <p className={dStyles.cardTitle} style={{ margin: 0 }}>
               Symptoms &amp; Breathlessness Analytics · लक्षण विश्लेषण
             </p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--med-text-muted)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
               Longitudinal tracking based on daily clinical logs
             </p>
           </div>
@@ -208,7 +208,7 @@ export function CommonPatientDashboard({
             <span style={{
               padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
               background: mmrcToday >= 3 ? "rgba(201,77,73,0.12)" : "rgba(15,110,86,0.12)",
-              color: mmrcToday >= 3 ? "#c94d49" : "#0f6e56",
+              color: mmrcToday >= 3 ? "#c94d49" : "var(--med-blue-600)",
               fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
             }}>
               mMRC Grade: {mmrcToday} / 4
@@ -216,7 +216,7 @@ export function CommonPatientDashboard({
             {mmrcTrend && mmrcTrend.length > 0 && (
               <span style={{
                 padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
-                background: "rgba(19,45,54,0.08)", color: "#132d36",
+                background: "rgba(19,45,54,0.08)", color: "var(--med-navy-800)",
                 fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
               }}>
                 Worst mMRC (Period): Grade {Math.max(...mmrcTrend, mmrcToday)}
@@ -229,18 +229,18 @@ export function CommonPatientDashboard({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
           {/* mMRC Breathlessness Level Card */}
           <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Breathlessness Scale (mMRC)
             </span>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: 24, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-lora), Georgia, serif" }}>
+              <span style={{ fontSize: 24, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif" }}>
                 Grade {mmrcToday}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#c94d49" : "#0f6e56" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#c94d49" : "var(--med-blue-600)" }}>
                 {mmrcText}
               </span>
             </div>
-            <p style={{ margin: "4px 0 0", fontSize: 11, color: "#6d8794", lineHeight: 1.4 }}>
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--med-text-muted)", lineHeight: 1.4 }}>
               {mmrcToday === 0 && "Not troubled with breathlessness except with strenuous exercise."}
               {mmrcToday === 1 && "Troubled by shortness of breath when hurrying on level ground or walking up slight hill."}
               {mmrcToday === 2 && "Walks slower than people of same age on level ground because of breathlessness."}
@@ -251,7 +251,7 @@ export function CommonPatientDashboard({
 
           {/* Core Symptoms Monitoring List */}
           <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Active Symptoms Monitored
             </span>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 2 }}>
@@ -262,8 +262,8 @@ export function CommonPatientDashboard({
                 { name: "Exertion SpO₂", status: "Recorded on walk" },
               ].map((sym) => (
                 <div key={sym.name} style={{ display: "flex", flexDirection: "column", padding: "6px 8px", background: "white", borderRadius: 6, border: "1px solid rgba(0,0,0,0.06)" }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "#132d36" }}>{sym.name}</span>
-                  <span style={{ fontSize: 10, color: "#6d8794" }}>{sym.status}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--med-navy-800)" }}>{sym.name}</span>
+                  <span style={{ fontSize: 10, color: "var(--med-text-muted)" }}>{sym.status}</span>
                 </div>
               ))}
             </div>
@@ -298,18 +298,18 @@ export function CommonPatientDashboard({
               >
                 <div style={{
                   width: 26, height: 26, borderRadius: "50%",
-                  border: `2px solid ${med.taken === true ? "#0f6e56" : med.taken === false ? "#c94d49" : "rgba(0,0,0,0.18)"}`,
-                  background: med.taken === true ? "#0f6e56" : "white",
+                  border: `2px solid ${med.taken === true ? "var(--med-blue-600)" : med.taken === false ? "#c94d49" : "rgba(0,0,0,0.18)"}`,
+                  background: med.taken === true ? "var(--med-blue-600)" : "white",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, color: "white", fontSize: 13,
                 }}>
                   {med.taken === true ? <CheckCircle2 size={14} /> : med.taken === false ? "✕" : ""}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#132d36", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--med-navy-800)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     {med.name}{med.dose ? ` — ${med.dose}` : ""}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: med.taken === true ? "#0f6e56" : med.taken === false ? "#c94d49" : "#888680" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: med.taken === true ? "var(--med-blue-600)" : med.taken === false ? "#c94d49" : "#888680" }}>
                     {med.taken === true ? "Taken ✓" : med.taken === false ? "Not taken" : "Not marked yet"}
                   </p>
                 </div>
@@ -320,8 +320,8 @@ export function CommonPatientDashboard({
                       onClick={() => onMedicationToggle(med.id, true)}
                       style={{
                         minHeight: 44, minWidth: 64, padding: "6px 12px", borderRadius: 8, border: "none",
-                        background: med.taken === true ? "#0f6e56" : "rgba(15,110,86,0.1)",
-                        color: med.taken === true ? "white" : "#0f6e56",
+                        background: med.taken === true ? "var(--med-blue-600)" : "var(--med-blue-50)",
+                        color: med.taken === true ? "white" : "var(--med-blue-600)",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
                         fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
                       }}
@@ -366,8 +366,8 @@ export function CommonPatientDashboard({
               { label: "DLCO", value: latestPft.dlco !== null ? `${latestPft.dlco}%` : null },
             ].filter((item) => item.value !== null).map((item) => (
               <div key={item.label} style={{ padding: "10px 12px", background: "#f8f7f5", borderRadius: 8, border: "1px solid rgba(19,45,54,0.07)" }}>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{item.label}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700, color: "#132d36", fontFamily: "var(--font-lora), Georgia, serif" }}>{item.value}</p>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{item.label}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif" }}>{item.value}</p>
               </div>
             ))}
           </div>
@@ -378,23 +378,23 @@ export function CommonPatientDashboard({
       <div className={dStyles.card}>
         <p className={dStyles.cardTitle}>My Care Team · मेरी देखभाल टीम</p>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#126969", color: "#89d3d3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--med-blue-600)", color: "var(--med-blue-100)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
             {doctor ? doctor.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "Dr"}
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#132d36", fontFamily: "var(--font-lora), Georgia, serif" }}>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif" }}>
               {doctor || "Your Doctor"}
             </p>
             {doctorHospital && (
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{doctorHospital}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--med-text-muted)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{doctorHospital}</p>
             )}
           </div>
           {nextAppointment && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(18,105,105,0.07)", border: "1px solid rgba(18,105,105,0.15)" }}>
-              <CalendarClock size={16} color="#126969" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--med-blue-50)", border: "1px solid var(--med-border-subtle)" }}>
+              <CalendarClock size={16} color="var(--med-blue-600)" />
               <div>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em" }}>Next Appt</p>
-                <p style={{ margin: "1px 0 0", fontSize: 13, fontWeight: 600, color: "#126969" }}>{nextAppointment}</p>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Next Appt</p>
+                <p style={{ margin: "1px 0 0", fontSize: 13, fontWeight: 600, color: "var(--med-blue-600)" }}>{nextAppointment}</p>
               </div>
             </div>
           )}
@@ -403,7 +403,7 @@ export function CommonPatientDashboard({
 
       {/* ── Log Today CTA if not logged ── */}
       {!hasTodayLog && (
-        <div style={{ padding: "18px 20px", borderRadius: 14, background: "linear-gradient(135deg, #126969 0%, #0f6e56 100%)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ padding: "18px 20px", borderRadius: 14, background: "var(--med-navy-800)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
             <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#ffffff", fontFamily: "var(--font-lora), Georgia, serif" }}>
               You haven&apos;t logged today
@@ -417,7 +417,7 @@ export function CommonPatientDashboard({
             onClick={onLogToday}
             style={{
               minHeight: 44, padding: "10px 24px", borderRadius: 10, border: "none",
-              background: "#ffffff", color: "#126969", fontWeight: 800, fontSize: 14,
+              background: "#ffffff", color: "var(--med-blue-600)", fontWeight: 800, fontSize: 14,
               cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
               boxShadow: "0 4px 14px rgba(0,0,0,0.15)", flexShrink: 0,
             }}
