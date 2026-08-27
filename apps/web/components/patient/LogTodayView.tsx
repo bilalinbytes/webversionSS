@@ -34,7 +34,7 @@ export function LogTodayView({ onLogSubmitted }: { onLogSubmitted?: () => void }
         try {
           const { createClient } = await import("@/lib/supabase/client");
           const supabase = createClient();
-          const { data } = await supabase.from("diagnoses").select("primary_diagnosis").eq("patient_id", patient.id).maybeSingle();
+          const { data } = await (supabase as any).from("diagnoses").select("primary_diagnosis").eq("patient_id", patient.id).maybeSingle();
           if (data?.primary_diagnosis) {
             setDiagnosisLabel(data.primary_diagnosis);
           }
