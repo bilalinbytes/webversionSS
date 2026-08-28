@@ -23,12 +23,12 @@ const pdfStyles = StyleSheet.create({
   sectionTitle: { fontSize: 13, fontWeight: 700, color: "#1e6091", marginBottom: 8, borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingBottom: 4 },
   row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingVertical: 6 },
   rowHeader: { backgroundColor: "#f1f5f9", fontWeight: 700 },
-  cellNo: { width: "9%", paddingHorizontal: 4 },
+  cellNo: { width: "7%", paddingHorizontal: 4 },
   cellRoute: { width: "12%", paddingHorizontal: 4 },
-  cellDrug: { width: "20%", paddingHorizontal: 4 },
-  cell: { width: "10%", paddingHorizontal: 4 },
-  cellDate: { width: "12%", paddingHorizontal: 4 },
-  cellStatus: { width: "15%", paddingHorizontal: 4 },
+  cellDrug: { width: "25%", paddingHorizontal: 4 },
+  cell: { width: "11%", paddingHorizontal: 4 },
+  cellFreq: { width: "14%", paddingHorizontal: 4 },
+  cellDate: { width: "10%", paddingHorizontal: 4 },
   instruction: { borderWidth: 1, borderColor: "#cbd5e1", padding: 10, minHeight: 40, lineHeight: 1.5, borderRadius: 4, backgroundColor: "#f8fafc" },
   footer: { position: "absolute", left: 44, right: 44, bottom: 36, flexDirection: "row", justifyContent: "space-between", color: "#94a3b8", fontSize: 9, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 },
   
@@ -103,10 +103,9 @@ function PrescriptionPdfDocument({
           React.createElement(Text, { style: pdfStyles.cellDrug }, "Drug Name"),
           React.createElement(Text, { style: pdfStyles.cell }, "Dose"),
           React.createElement(Text, { style: pdfStyles.cell }, "Unit"),
-          React.createElement(Text, { style: pdfStyles.cell }, "Freq"),
+          React.createElement(Text, { style: pdfStyles.cellFreq }, "Freq"),
           React.createElement(Text, { style: pdfStyles.cellDate }, "Start"),
-          React.createElement(Text, { style: pdfStyles.cellDate }, "End"),
-          React.createElement(Text, { style: pdfStyles.cellStatus }, "Status")
+          React.createElement(Text, { style: pdfStyles.cellDate }, "End")
         ),
         medications.length === 0 
           ? React.createElement(Text, { style: { padding: 10, color: "#64748b" } }, "No active medications.")
@@ -119,10 +118,9 @@ function PrescriptionPdfDocument({
                 React.createElement(Text, { style: pdfStyles.cellDrug }, medication.drug_name),
                 React.createElement(Text, { style: pdfStyles.cell }, medication.dose !== null ? String(medication.dose) : "-"),
                 React.createElement(Text, { style: pdfStyles.cell }, medication.dose_unit ?? "-"),
-                React.createElement(Text, { style: pdfStyles.cell }, medication.frequency ?? "-"),
+                React.createElement(Text, { style: pdfStyles.cellFreq }, medication.frequency ?? "-"),
                 React.createElement(Text, { style: pdfStyles.cellDate }, medication.start_date ?? prescriptionDate),
-                React.createElement(Text, { style: pdfStyles.cellDate }, medication.end_date ?? "-"),
-                React.createElement(Text, { style: pdfStyles.cellStatus }, medication.end_date ? "Discontinue" : "Continue")
+                React.createElement(Text, { style: pdfStyles.cellDate }, medication.end_date ?? "-")
               )
             )
       ),
@@ -304,7 +302,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const requestedDate = url.searchParams.get("date");
 
     if (requestedFormat === "pdf") {
-      const prescriptionDate = requestedDate ?? new Date().toISOString().split("T")[0];
+      const prescriptionDate: string = requestedDate || (new Date().toISOString().split("T")[0] as string);
       const admin = createAdminClient();
       
       const [patientRes, doctorRes, medsRes, instructionRes, logsRes] = await Promise.all([

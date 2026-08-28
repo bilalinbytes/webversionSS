@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
+import { formatDiagnosisDisplay } from "@o2plus/core";
 import styles from "./PatientTopNav.module.css";
 
 type View = "home" | "log" | "analytics" | "appointments";
@@ -264,10 +265,11 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
       if (cancelled) return;
       const doctor = doctorPayload?.doctor as { name?: string | null; hospital?: string | null } | null | undefined;
+      const rawDiagnosis = diagnosisRes.data?.primary_diagnosis ?? currentPatient.effective_dashboard;
       setProfileMeta({
         doctorName: doctor?.name ?? "Assigned doctor",
         doctorHospital: doctor?.hospital ?? "",
-        diagnosis: diagnosisRes.data?.primary_diagnosis ?? currentPatient.effective_dashboard ?? "Not recorded",
+        diagnosis: (rawDiagnosis ? formatDiagnosisDisplay(rawDiagnosis) : null) ?? "Not recorded",
         nextAppointment,
       });
     }
@@ -276,7 +278,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
       if (!cancelled) {
         setProfileMeta((current) => ({
           ...current,
-          diagnosis: currentPatient.effective_dashboard ?? current.diagnosis,
+          diagnosis: (currentPatient.effective_dashboard ? formatDiagnosisDisplay(currentPatient.effective_dashboard) : null) ?? current.diagnosis,
         }));
       }
     });

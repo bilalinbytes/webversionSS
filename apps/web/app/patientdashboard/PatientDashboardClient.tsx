@@ -11,6 +11,7 @@ import { BookAppointmentView } from "@/components/patient/BookAppointmentView";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
 import { AppointmentPreferenceModal } from "@/components/patient/AppointmentPreferenceModal";
 import { usePatientHomeData } from "@/hooks/usePatientHomeData";
+import { formatDiagnosisDisplay } from "@o2plus/core";
 import styles from "./page.module.css";
 
 type View = "home" | "log" | "analytics" | "appointments";
@@ -33,8 +34,8 @@ function PatientDashboardPageInner() {
   if (loading || !patient) return null;
 
   const diagnosis = homeData.loading
-    ? patient.effective_dashboard ?? null
-    : homeData.diagnosis;
+    ? (patient.effective_dashboard ? formatDiagnosisDisplay(patient.effective_dashboard) : null)
+    : (homeData.diagnosis ?? (patient.effective_dashboard ? formatDiagnosisDisplay(patient.effective_dashboard) : null));
 
   const handleAppointmentModalComplete = async () => {
     setShowAppointmentModal(false);

@@ -33,10 +33,16 @@ export function LogTodayView({ onLogSubmitted }: { onLogSubmitted?: () => void }
       const fetchLabel = async () => {
         try {
           const { createClient } = await import("@/lib/supabase/client");
+          const { formatDiagnosisDisplay } = await import("@o2plus/core");
           const supabase = createClient();
-          const { data } = await (supabase as any).from("diagnoses").select("primary_diagnosis").eq("patient_id", patient.id).maybeSingle();
+          const { data } = await supabase.from("patient_diagnoses").select("primary_diagnosis").eq("patient_id", patient.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
           if (data?.primary_diagnosis) {
-            setDiagnosisLabel(data.primary_diagnosis);
+            const formatted = formatDiagnosisDisplay(data.primary_diagnosis);
+            if (formatted) {
+              setDiagnosisLabel(formatted);
+            } else {
+              setDiagnosisLabel(data.primary_diagnosis);
+            }
           }
         } catch (err) {}
       };

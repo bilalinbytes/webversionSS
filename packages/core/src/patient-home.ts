@@ -8,7 +8,7 @@ import type {
   PftRecord,
   Medication,
 } from "@o2plus/types";
-import { normalizeDashboard } from "./diagnosis";
+import { normalizeDashboard, formatDiagnosisDisplay } from "./diagnosis";
 
 const FALLBACKS = {
   spo2Today: 94,
@@ -130,7 +130,7 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
     diseaseSpecificTrend: diseaseSpecificTrend.length > 0 ? diseaseSpecificTrend : [],
     lastLogDate: latestLog?.logged_at ?? null,
     hasTodayLog: todayLog !== null,
-    diagnosis: diagnosis?.primary_diagnosis ?? null,
+    diagnosis: diagnosis?.primary_diagnosis ? formatDiagnosisDisplay(diagnosis.primary_diagnosis) : null,
     effectiveDashboard: activeDashboard,
     baselineSpo2: baseline?.baseline_spo2 ?? null,
     baselineHeartRate: null,

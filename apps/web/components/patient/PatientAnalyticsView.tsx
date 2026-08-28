@@ -175,6 +175,39 @@ const COLORS = {
   indigo: "#4f46e5",   // Symptoms
 };
 
+const SYMPTOM_COLOR_MAP: Record<string, { color: string; bg: string; border: string; activeBg: string }> = {
+  [MMRC_SYMPTOM_KEY]:       { color: "#dc2626", bg: "#fef2f2", border: "#fca5a5", activeBg: "#dc2626" }, // mMRC (Red)
+  breathlessness:           { color: "#e11d48", bg: "#fff1f2", border: "#fecdd3", activeBg: "#e11d48" }, // Rose
+  cough:                    { color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", activeBg: "#ea580c" }, // Orange
+  cough_frequency:          { color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", activeBg: "#ea580c" },
+  expectoration:            { color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", activeBg: "#059669" }, // Emerald
+  sputum_volume:            { color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4", activeBg: "#0d9488" }, // Teal
+  sputum_clearance:         { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" }, // Sky
+  ease_of_clearance:        { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" },
+  ease_of_sputum_clearance: { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" },
+  chest_pain:               { color: "#db2777", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#db2777" }, // Pink
+  chestPain:                { color: "#db2777", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#db2777" },
+  chest_heaviness:          { color: "#be185d", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#be185d" },
+  haemoptysis:              { color: "#991b1b", bg: "#fef2f2", border: "#f87171", activeBg: "#991b1b" }, // Dark Red
+  hemoptysis:               { color: "#991b1b", bg: "#fef2f2", border: "#f87171", activeBg: "#991b1b" },
+  fever:                    { color: "#c026d3", bg: "#fdf4ff", border: "#f5d0fe", activeBg: "#c026d3" }, // Fuchsia
+  cold_symptoms:            { color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", activeBg: "#0891b2" }, // Cyan
+  pedal_edema:              { color: "#4f46e5", bg: "#eef2ff", border: "#c7d2fe", activeBg: "#4f46e5" }, // Indigo
+  stridor:                  { color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", activeBg: "#7c3aed" }, // Purple
+  difficulty_lying_down:    { color: "#9333ea", bg: "#faf5ff", border: "#e9d5ff", activeBg: "#9333ea" }, // Violet
+  difficulty_swallowing:    { color: "#a855f7", bg: "#faf5ff", border: "#e9d5ff", activeBg: "#a855f7" },
+  excessive_daytime_sleep:  { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" }, // Slate
+  sleep_quality:            { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" },
+  sleep_disturbed:          { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" },
+  energy_level:             { color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", activeBg: "#16a34a" }, // Green
+  anxiety:                  { color: "#d97706", bg: "#fffbeb", border: "#fde68a", activeBg: "#d97706" }, // Amber
+  covid:                    { color: "#ef4444", bg: "#fef2f2", border: "#fca5a5", activeBg: "#ef4444" },
+};
+
+function getSymptomColor(key: string) {
+  return SYMPTOM_COLOR_MAP[key] ?? { color: "#4f46e5", bg: "#eef2ff", border: "#c7d2fe", activeBg: "#4f46e5" };
+}
+
 const ASTHMA_CONTROL_LEVELS: Record<string, { value: number; label: string }> = {
   poorly_controlled: { value: 1, label: "Poorly controlled" },
   partly_controlled: { value: 2, label: "Partly controlled" },
@@ -231,7 +264,12 @@ function numberFromAny(data: Record<string, unknown> | null, keys: string[]): nu
 }
 
 function normalizeDiagnosis(primary?: string | null, dashboard?: string | null): DiagnosisKind {
-  // effective_dashboard is the ground truth — always prefer it
+  const p = (primary ?? "").toLowerCase();
+  if (p.includes("bronchiolitis")) return "asthma"; // Bronchiolitis Obliterans → asthma
+  if (p.includes("bronchitis")) return "asthma"; // Bronchitis → asthma
+  if (p.includes("overlap") || p.includes("aco")) return "copd"; // ACO → copd
+  if (p.includes("asthma") && p.includes("copd")) return "copd"; // asthma+copd text → copd
+
   const db = (dashboard ?? "").toLowerCase().trim();
   if (db === "asthma") return "asthma";
   if (db === "copd") return "copd";
@@ -240,12 +278,6 @@ function normalizeDiagnosis(primary?: string | null, dashboard?: string | null):
   if (db === "post_icu") return "post_icu";
 
   // Fall back to parsing primary_diagnosis text
-  const p = (primary ?? "").toLowerCase();
-  if (p.includes("bronchiolitis")) return "asthma";         // Bronchiolitis Obliterans → asthma
-  if (p.includes("bronchitis")) return "asthma";            // Bronchitis → asthma
-  if (p.includes("overlap") || p.includes("aco")) return "copd"; // ACO → copd
-  if (p.includes("asthma") && p.includes("copd")) return "copd"; // asthma+copd text → copd
-  // OAD / Asthma → asthma (do not incorrectly fall back to copd)
   if ((p.startsWith("oad /") || p.startsWith("oad/")) && p.includes("asthma")) return "asthma";
   if (p.includes("asthma")) return "asthma";
   if (p.includes("copd")) return "copd";
@@ -983,18 +1015,67 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
   }, [pft]);
 
   const selectedPftMetricConfig = PFT_METRICS.find((metric) => metric.key === selectedPftMetric) ?? PFT_METRICS[0];
-  const symptomKeys = useMemo(
-    () => {
-      const vasKeys = Array.from(new Set(dailySeries.flatMap((row) => Object.keys(row.symptoms)))).sort();
-      // Always include all known symptom keys so the dropdown is fully populated
-      // even if the patient hasn't logged that symptom yet
-      const allKnownKeys = KNOWN_SYMPTOM_KEYS.filter((k) => !vasKeys.includes(k));
-      const combined = Array.from(new Set([...vasKeys, ...allKnownKeys])).sort();
-      const hasMmrc = dailySeries.some((row) => row.mmrc !== null);
-      return hasMmrc ? [MMRC_SYMPTOM_KEY, ...combined] : combined;
-    },
-    [dailySeries],
-  );
+
+  const reportedSymptomStats = useMemo(() => {
+    const stats: Record<string, { daysReported: number; totalDays: number; avgSeverity: number }> = {};
+
+    // Check mMRC
+    const mmrcRows = dailySeries.filter((r) => r.mmrc !== null);
+    if (mmrcRows.length > 0) {
+      const positiveMmrc = mmrcRows.filter((r) => (r.mmrc ?? 0) > 0);
+      const totalScore = mmrcRows.reduce((acc, r) => acc + (r.mmrc ?? 0), 0);
+      stats[MMRC_SYMPTOM_KEY] = {
+        daysReported: positiveMmrc.length,
+        totalDays: mmrcRows.length,
+        avgSeverity: Number((totalScore / mmrcRows.length).toFixed(1)),
+      };
+    }
+
+    // Check all symptoms in dailySeries
+    for (const row of dailySeries) {
+      for (const [k, v] of Object.entries(row.symptoms)) {
+        if (v !== null && v !== undefined) {
+          if (!stats[k]) {
+            stats[k] = { daysReported: 0, totalDays: 0, avgSeverity: 0 };
+          }
+          stats[k]!.totalDays += 1;
+          if (v > 0) {
+            stats[k]!.daysReported += 1;
+          }
+        }
+      }
+    }
+
+    // Calculate averages
+    for (const [k, stat] of Object.entries(stats)) {
+      if (k === MMRC_SYMPTOM_KEY) continue;
+      const values = dailySeries.map((r) => r.symptoms[k]).filter((v): v is number => typeof v === "number");
+      if (values.length > 0) {
+        const sum = values.reduce((a, b) => a + b, 0);
+        stat.avgSeverity = Number((sum / values.length).toFixed(1));
+      }
+    }
+
+    return stats;
+  }, [dailySeries]);
+
+  const { reportedSymptomKeys, otherSymptomKeys, symptomKeys } = useMemo(() => {
+    const reported = Object.keys(reportedSymptomStats).sort((a, b) => {
+      const aReported = reportedSymptomStats[a]?.daysReported ?? 0;
+      const bReported = reportedSymptomStats[b]?.daysReported ?? 0;
+      return bReported - aReported;
+    });
+
+    const allKnown = Array.from(new Set([...KNOWN_SYMPTOM_KEYS, MMRC_SYMPTOM_KEY]));
+    const others = allKnown.filter((k) => !reported.includes(k)).sort();
+
+    return {
+      reportedSymptomKeys: reported,
+      otherSymptomKeys: others,
+      symptomKeys: [...reported, ...others],
+    };
+  }, [reportedSymptomStats]);
+
   const selectedSymptomIsMmrc = selectedSymptom === MMRC_SYMPTOM_KEY;
   const selectedSymptomSeries = useMemo(
     () => dailySeries.map((row) => ({
@@ -1005,6 +1086,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
     [dailySeries, selectedSymptom, selectedSymptomIsMmrc],
   );
   const selectedSymptomDomain: [number, number] = selectedSymptomIsMmrc ? [0, 4] : [0, 10];
+  const activeSymptomColor = getSymptomColor(selectedSymptom || MMRC_SYMPTOM_KEY);
 
   useEffect(() => {
     if (symptomKeys.length === 0) {
@@ -1012,9 +1094,9 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       return;
     }
     if (!selectedSymptom || !symptomKeys.includes(selectedSymptom)) {
-      setSelectedSymptom(symptomKeys[0] ?? "");
+      setSelectedSymptom(reportedSymptomKeys[0] ?? symptomKeys[0] ?? "");
     }
-  }, [selectedSymptom, symptomKeys]);
+  }, [selectedSymptom, symptomKeys, reportedSymptomKeys]);
 
   async function handleExport(type: "single" | "all") {
     setExporting(type);
@@ -1100,127 +1182,146 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         <ChartBlock title="Chest Heaviness · छाती में भारीपन" subtitle="VAS chest heaviness trend (0–10) · छाती भारीपन का ट्रेंड">
           <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "chestHeaviness", name: "Chest Heaviness", color: COLORS.red }]} />
         </ChartBlock>
-        <ChartBlock title="Sputum Volume Trend · बलगम की मात्रा" subtitle="0 = none, 10 = large amount · 0 = नहीं, 10 = बहुत अधिक">
-          <MetricLineChart
-            data={dailySeries}
-            yDomain={[0, 10]}
-            lines={[{ key: "sputumVolume", name: "Sputum Volume", color: COLORS.blue }]}
-          />
+        <ChartBlock title="Sputum Volume · बलगम की मात्रा" subtitle="Patient-reported sputum volume · मरीज द्वारा बताई बलगम मात्रा">
+          <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "sputumVolume", name: "Sputum Volume", color: COLORS.gold }]} />
         </ChartBlock>
       </>
     ),
     ild: (
-      <ChartBlock title="KBILD Trends · K-BILD ट्रेंड" subtitle="Total score and individual question scores · कुल और प्रश्न अनुसार स्कोर">
-        <select
-          value={String(selectedKbildMetric)}
-          onChange={(event) => setSelectedKbildMetric(event.target.value as keyof AnalyticsPoint)}
-          style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
-        >
-          {KBILD_METRICS.map((metric) => (
-            <option key={String(metric.key)} value={String(metric.key)}>{metric.label}</option>
-          ))}
-        </select>
-        <MetricLineChart
-          data={dailySeries}
-          yDomain={selectedKbildMetric === "kbild" ? [0, 100] : [1, 7]}
-          lines={[{ key: selectedKbildMetric, name: KBILD_METRICS.find((metric) => metric.key === selectedKbildMetric)?.label ?? "K-BILD", color: COLORS.purple }]}
-        />
-      </ChartBlock>
-    ),
-    bronchiectasis: (
       <>
-        <ChartBlock title="Hemoptysis · खून की खांसी" subtitle="Blood in sputum or hemoptysis score · बलगम/खांसी में खून का स्कोर">
-          <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "hemoptysis", name: "Hemoptysis", color: COLORS.red }]} />
+        <ChartBlock title="K-BILD Score · के-बिल्ड स्कोर" subtitle="King's Brief Interstitial Lung Disease Health Status (0–100) · स्वास्थ्य स्थिति स्कोर">
+          <MetricLineChart data={dailySeries} yDomain={[0, 100]} lines={[{ key: "kbild", name: "K-BILD Score", color: COLORS.teal }]} />
         </ChartBlock>
-        <ChartBlock title="Ease of Sputum Clearance · बलगम निकालने में आसानी" subtitle="Higher score means easier clearance · अधिक स्कोर का मतलब अधिक आसानी">
-          <MetricLineChart data={dailySeries} yDomain={[0, 10]} lines={[{ key: "sputumClearance", name: "Sputum Clearance", color: COLORS.blue }]} />
+        <ChartBlock title="K-BILD Domain Trends · के-बिल्ड डोमेन ट्रेंड" subtitle="Domain score breakdowns across key questionnaire responses · प्रमुख डोमेन स्कोर">
+          <MetricLineChart
+            data={dailySeries}
+            yDomain={[0, 7]}
+            lines={[
+              { key: "kbildQ1", name: "Breathlessness (Q1)", color: COLORS.red },
+              { key: "kbildQ2", name: "Chest tightness (Q2)", color: COLORS.orange },
+              { key: "kbildQ6", name: "Cough (Q6)", color: COLORS.purple },
+            ]}
+          />
         </ChartBlock>
       </>
     ),
+    bronchiectasis: postIcuDiseaseCharts,
     post_icu: postIcuDiseaseCharts,
     unknown: null,
   } satisfies Record<DiagnosisKind, React.ReactNode>;
 
   return (
-    <div style={{ padding: "20px 20px 32px", display: "flex", flexDirection: "column", gap: 20, background: "var(--med-bg-canvas, #f8fafc)", minHeight: "100%" }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--med-navy-800, #0f2b48)", fontFamily: "var(--font-lora), Georgia, serif" }}>
-            Patient Analytics · मरीज विश्लेषण{patientName ? `: ${patientName}` : ""}
-          </h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--med-text-muted, #64748b)" }}>
-            Patient-wise respiratory monitoring with common and disease-specific historical charts. · सामान्य और रोग-विशिष्ट पुराने चार्ट।
-          </p>
-        </div>
-        {viewer === "doctor" && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: "0 0 32px" }}>
+      {viewer === "doctor" && (
+        <section style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#132d36" }}>Patient Export Dossier</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794" }}>Download structured PDF reports for clinical review</p>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
-              onClick={() => void handleExport("single")}
+              onClick={() => handleExport("single")}
               disabled={exporting !== null}
-              style={{ border: "1.5px solid var(--med-blue-600, #1e6091)", background: "#ffffff", color: "var(--med-blue-600, #1e6091)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", transition: "background 140ms ease" }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "7px 14px", borderRadius: 8, border: "1.5px solid #2563eb",
+                background: "#ffffff", color: "#2563eb", fontSize: 12, fontWeight: 700,
+                cursor: exporting ? "not-allowed" : "pointer",
+              }}
             >
-              {exporting === "single" ? "Exporting..." : "Export Single Patient"}
+              {exporting === "single" ? "Exporting..." : "Export Patient PDF"}
             </button>
             <button
               type="button"
-              onClick={() => void handleExport("all")}
+              onClick={() => handleExport("all")}
               disabled={exporting !== null}
-              style={{ border: "none", background: "var(--med-blue-600, #1e6091)", color: "#ffffff", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", transition: "background 140ms ease" }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "7px 14px", borderRadius: 8, border: "none",
+                background: "#2563eb", color: "#ffffff", fontSize: 12, fontWeight: 700,
+                cursor: exporting ? "not-allowed" : "pointer",
+              }}
             >
-              {exporting === "all" ? "Exporting..." : "Export All Patients"}
+              {exporting === "all" ? "Exporting..." : "Combined Cohort PDF"}
             </button>
           </div>
-        )}
-      </div>
-
-      {error && (
-        <div style={{ border: "1px solid #f0b5b2", borderRadius: 8, background: "#fff6f5", color: "#c94d49", padding: "10px 12px", fontSize: 12 }}>
-          {error}
-        </div>
+        </section>
       )}
 
+      {/* PFT Trends Section */}
       <section>
-        <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Common Analytics · सामान्य विश्लेषण</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          <ChartBlock title="PFT Trends · PFT ट्रेंड" subtitle="Choose any PFT field captured during registration · रजिस्ट्रेशन में भरा PFT फील्ड चुनें">
-            {pftSeries.length === 0 ? (
-              <EmptyChart label="No PFT records yet. · अभी PFT रिकॉर्ड नहीं है।" />
-            ) : (
-              <>
-                <select
-                  value={selectedPftMetric}
-                  onChange={(event) => setSelectedPftMetric(event.target.value as PftMetricKey)}
-                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
-                >
-                  {PFT_METRICS.map((metric) => (
-                    <option key={metric.key} value={metric.key}>{metric.label}</option>
-                  ))}
-                </select>
-                {!pftSeries.some((row) => row[selectedPftMetric] !== null) ? (
-                  <EmptyChart label="No values recorded for this PFT field yet. · इस PFT फील्ड का रिकॉर्ड नहीं है।" />
-                ) : (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={pftSeries} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-                      <defs>
-                        <linearGradient id="grad-pft" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor={selectedPftMetricConfig.color} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={selectedPftMetricConfig.color} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.2)" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 10.5, fill: "#94a3b8" }} tickMargin={10} minTickGap={20} axisLine={{ stroke: "rgba(148,163,184,0.25)" }} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }} />
-                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 10, color: "#475569" }} iconType="circle" iconSize={8} />
-                      <Line type="monotoneX" dataKey={selectedPftMetric} stroke={selectedPftMetricConfig.color} strokeWidth={3} dot={{ r: 2.5, fill: selectedPftMetricConfig.color, strokeWidth: 0 }} activeDot={{ r: 6, fill: selectedPftMetricConfig.color, stroke: "#ffffff", strokeWidth: 2.5 }} name={selectedPftMetricConfig.label} connectNulls isAnimationActive animationDuration={800} animationEasing="ease-out" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </>
-            )}
-          </ChartBlock>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Pulmonary Function Tests · फेफड़े के कार्य परीक्षण
+          </p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {PFT_METRICS.map((metric) => (
+              <button
+                key={metric.key}
+                type="button"
+                onClick={() => setSelectedPftMetric(metric.key)}
+                style={{
+                  padding: "4px 10px", borderRadius: 999, border: "1px solid",
+                  borderColor: selectedPftMetric === metric.key ? metric.color : "#cbd5e1",
+                  background: selectedPftMetric === metric.key ? metric.color : "#ffffff",
+                  color: selectedPftMetric === metric.key ? "#ffffff" : "#475569",
+                  fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  transition: "all 120ms ease",
+                }}
+              >
+                {metric.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
+        <ChartBlock
+          title={`PFT Trend: ${selectedPftMetricConfig.label}`}
+          subtitle="Longitudinal spirometry & diffusion capacity over test dates"
+        >
+          {pftSeries.length === 0 || !pftSeries.some((row) => row[selectedPftMetric] !== null) ? (
+            <EmptyChart label="No PFT records found for this metric." />
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={pftSeries} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                <defs>
+                  <linearGradient id="grad-pft" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={selectedPftMetricConfig.color} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={selectedPftMetricConfig.color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.2)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10.5, fill: "#94a3b8" }} tickMargin={10} minTickGap={20} axisLine={{ stroke: "rgba(148,163,184,0.25)" }} tickLine={false} />
+                <YAxis tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }} />
+                <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 10, color: "#475569" }} iconType="circle" iconSize={8} />
+                <Line
+                  type="monotoneX"
+                  dataKey={selectedPftMetric}
+                  stroke={selectedPftMetricConfig.color}
+                  strokeWidth={2.8}
+                  dot={{ r: 3.5, fill: selectedPftMetricConfig.color, strokeWidth: 1.5, stroke: "#ffffff" }}
+                  activeDot={{ r: 6.5, fill: selectedPftMetricConfig.color, stroke: "#ffffff", strokeWidth: 2 }}
+                  name={selectedPftMetricConfig.label}
+                  connectNulls
+                  isAnimationActive
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </ChartBlock>
+      </section>
+
+      {/* Daily Longitudinal Trends Section */}
+      <section>
+        <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Daily Longitudinal Vitals &amp; Symptoms · दैनिक लक्षण एवं वाइटल्स
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
           <ChartBlock title="SpO2 Trends · ऑक्सीजन ट्रेंड" subtitle="Resting and after-walking oxygen saturation · आराम और चलने के बाद ऑक्सीजन">
             <MetricLineChart
               data={dailySeries}
@@ -1236,52 +1337,158 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
             <MetricLineChart data={dailySeries} lines={[{ key: "heartRate", name: "Heart Rate", color: COLORS.purple }]} />
           </ChartBlock>
 
-          <ChartBlock title="Symptoms Trends · लक्षण ट्रेंड" subtitle="Select a symptom to view its trend over time · लक्षण चुनें">
+          {/* Color-Coded Symptoms Trends Chart Block */}
+          <ChartBlock
+            title="Symptoms Trends · लक्षण ट्रेंड"
+            subtitle="Select from patient-reported symptoms (color-coded for easy identification) · लक्षण चुनें"
+          >
             {symptomKeys.length === 0 ? (
               <EmptyChart label="No symptom scores recorded yet." />
             ) : (
               <>
-                <select
-                  value={selectedSymptom}
-                  onChange={(e) => setSelectedSymptom(e.target.value)}
-                  style={{ width: "100%", marginBottom: 10, border: "1px solid #d8d2c8", borderRadius: 8, padding: "8px 10px", fontSize: 12, background: "#fff" }}
-                >
-                  {symptomKeys.map((key) => (
-                    <option key={key} value={key}>{formatMetricName(key)}</option>
-                  ))}
-                </select>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10, fontSize: 11, flexWrap: "wrap" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#b91c1c", fontWeight: 600, background: "rgba(226,75,74,0.1)", padding: "3px 8px", borderRadius: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#e24b4a", display: "inline-block" }} />
-                    Symptom Reported: {selectedSymptomSeries.filter(r => (r.value ?? 0) > 0).length} days
-                  </span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#047857", fontWeight: 600, background: "rgba(16,185,129,0.1)", padding: "3px 8px", borderRadius: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-                    Absent / Normal: {selectedSymptomSeries.filter(r => r.value === 0).length} days
-                  </span>
+                {/* 1. Patient Reported Symptoms Pill Selector */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b" }}>
+                      Patient Reported Symptoms ({reportedSymptomKeys.length})
+                    </span>
+                    {otherSymptomKeys.length > 0 && (
+                      <select
+                        value={otherSymptomKeys.includes(selectedSymptom) ? selectedSymptom : ""}
+                        onChange={(e) => {
+                          if (e.target.value) setSelectedSymptom(e.target.value);
+                        }}
+                        style={{
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          border: "1px solid #cbd5e1",
+                          background: "#ffffff",
+                          color: "#475569",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="">+ Other Symptoms ({otherSymptomKeys.length})</option>
+                        {otherSymptomKeys.map((k) => (
+                          <option key={k} value={k}>{formatMetricName(k)}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                    {reportedSymptomKeys.map((key) => {
+                      const sc = getSymptomColor(key);
+                      const isSelected = selectedSymptom === key;
+                      const stat = reportedSymptomStats[key];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSelectedSymptom(key)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "5px 11px",
+                            borderRadius: 999,
+                            border: `1.5px solid ${isSelected ? sc.color : sc.border}`,
+                            background: isSelected ? sc.activeBg : sc.bg,
+                            color: isSelected ? "#ffffff" : sc.color,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            boxShadow: isSelected ? `0 2px 8px ${sc.color}40` : "none",
+                            transition: "all 120ms ease",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: "50%",
+                              background: isSelected ? "#ffffff" : sc.color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span>{formatMetricName(key)}</span>
+                          {stat && stat.daysReported > 0 && (
+                            <span
+                              style={{
+                                fontSize: 10,
+                                padding: "1px 5px",
+                                borderRadius: 999,
+                                background: isSelected ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.06)",
+                                color: isSelected ? "#ffffff" : sc.color,
+                              }}
+                            >
+                              {stat.daysReported}d
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* 2. Active Symptom Stat Highlight Banner */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: activeSymptomColor.bg,
+                    border: `1px solid ${activeSymptomColor.border}`,
+                    marginBottom: 10,
+                    fontSize: 11.5,
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 9, height: 9, borderRadius: "50%", background: activeSymptomColor.color }} />
+                    <span style={{ fontWeight: 800, color: activeSymptomColor.color }}>
+                      {formatMetricName(selectedSymptom)}
+                    </span>
+                    {selectedSymptomIsMmrc && (
+                      <span style={{ fontSize: 10, color: activeSymptomColor.color, opacity: 0.8 }}>(0–4 Grade)</span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <span style={{ color: activeSymptomColor.color, fontWeight: 700 }}>
+                      Reported: {selectedSymptomSeries.filter((r) => (r.value ?? 0) > 0).length} days
+                    </span>
+                    <span style={{ color: "#059669", fontWeight: 700 }}>
+                      Absent (0): {selectedSymptomSeries.filter((r) => r.value === 0).length} days
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Dynamic Chart with Matching Symptom Color */}
                 {selectedSymptomSeries.every((row) => row.value === null) ? (
                   <EmptyChart label="No values recorded for this symptom yet." />
                 ) : (
                   <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={selectedSymptomSeries} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
                       <defs>
-                        <linearGradient id="grad-symptom" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor={COLORS.indigo} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={COLORS.indigo} stopOpacity={0} />
+                        <linearGradient id={`grad-sym-${selectedSymptom}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={activeSymptomColor.color} stopOpacity={0.2} />
+                          <stop offset="95%" stopColor={activeSymptomColor.color} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.2)" vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 10.5, fill: "#94a3b8" }} tickMargin={10} minTickGap={20} axisLine={{ stroke: "rgba(148,163,184,0.25)" }} tickLine={false} />
-                      <YAxis domain={selectedSymptomDomain} ticks={selectedSymptomIsMmrc ? [0,1,2,3,4] : [0,2,4,6,8,10]} tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <YAxis domain={selectedSymptomDomain} ticks={selectedSymptomIsMmrc ? [0, 1, 2, 3, 4] : [0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10.5, fill: "#94a3b8" }} width={34} allowDecimals={false} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1, strokeDasharray: "4 2" }} />
                       <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 10, color: "#475569" }} iconType="circle" iconSize={8} />
                       <Line
                         type="monotoneX"
                         dataKey="value"
                         name={formatMetricName(selectedSymptom)}
-                        stroke={COLORS.indigo}
-                        strokeWidth={2.5}
+                        stroke={activeSymptomColor.color}
+                        strokeWidth={2.8}
                         dot={({ cx, cy, payload }: any) => {
                           if (cx == null || cy == null || payload?.value == null) return null;
                           const isPresent = Number(payload.value) > 0;
@@ -1290,14 +1497,14 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                               key={`dot-${cx}-${cy}`}
                               cx={cx}
                               cy={cy}
-                              r={isPresent ? 5 : 3.5}
-                              fill={isPresent ? "#e24b4a" : "#10b981"}
+                              r={isPresent ? 5.5 : 3.5}
+                              fill={isPresent ? activeSymptomColor.color : "#10b981"}
                               stroke="#ffffff"
-                              strokeWidth={1.5}
+                              strokeWidth={1.8}
                             />
                           );
                         }}
-                        activeDot={{ r: 7, fill: COLORS.indigo, stroke: "#ffffff", strokeWidth: 2 }}
+                        activeDot={{ r: 7.5, fill: activeSymptomColor.color, stroke: "#ffffff", strokeWidth: 2 }}
                         connectNulls
                         isAnimationActive
                         animationDuration={800}
@@ -1330,8 +1537,6 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         </div>
       </section>
 
-
-
       <section>
         <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           Disease-Specific Analytics · रोग-विशिष्ट विश्लेषण: {diagnosisLabel(diseaseKind)}
@@ -1345,30 +1550,98 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         </div>
       </section>
 
-      <section style={{ border: "1px solid #e7e1d8", borderRadius: 8, background: "#fff", padding: 14 }}>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 800, color: "#132d36" }}>Historical Data</p>
+      {/* Historical Data Table with Color-Coded Symptoms */}
+      <section style={{ border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", padding: 18, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a" }}>Historical Clinical Logs</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748b" }}>Detailed chronological log records with color-coded symptom tags</p>
+          </div>
+          <span style={{ fontSize: 11, color: "#0284c7", fontWeight: 700, background: "#f0f9ff", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: 999 }}>
+            {dailySeries.length} Logged Entries
+          </span>
+        </div>
+
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
-              <tr style={{ background: "#fafafa" }}>
-                {["Date", "SpO2 Rest", "SpO2 Walk", "Heart Rate", "mMRC", "Symptoms", "AQI", "Adherence"].map((header) => (
-                  <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "#77736b" }}>{header}</th>
+              <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0" }}>
+                {["Date", "SpO2 Rest", "SpO2 Walk", "Heart Rate", "mMRC", "Reported Symptoms", "AQI", "Adherence"].map((header) => (
+                  <th key={header} style={{ textAlign: "left", padding: "10px 12px", color: "#475569", fontWeight: 700, fontSize: 11.5 }}>
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {[...dailySeries].reverse().map((row) => (
-                <tr key={row.sortDate} style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                  <td style={{ padding: "8px 10px" }}>{row.date}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.spo2Rest ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.spo2Walk ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.heartRate ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.mmrc ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.symptom ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.aqi ?? "--"}</td>
-                  <td style={{ padding: "8px 10px" }}>{row.adherence !== null ? `${row.adherence}%` : "--"}</td>
-                </tr>
-              ))}
+              {[...dailySeries].reverse().map((row) => {
+                const reportedSymptoms = Object.entries(row.symptoms).filter(([_, val]) => typeof val === "number" && val > 0);
+                return (
+                  <tr key={row.sortDate} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 700, color: "#0f172a" }}>{row.date}</td>
+                    <td style={{ padding: "10px 12px", color: row.spo2Rest && row.spo2Rest < 90 ? "#dc2626" : "#0f172a", fontWeight: 600 }}>
+                      {row.spo2Rest ? `${row.spo2Rest}%` : "--"}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>{row.spo2Walk ? `${row.spo2Walk}%` : "--"}</td>
+                    <td style={{ padding: "10px 12px" }}>{row.heartRate ? `${row.heartRate} bpm` : "--"}</td>
+                    <td style={{ padding: "10px 12px" }}>
+                      {row.mmrc !== null ? (
+                        <span
+                          style={{
+                            padding: "2px 7px",
+                            borderRadius: 6,
+                            background: row.mmrc >= 3 ? "#fee2e2" : "#f1f5f9",
+                            color: row.mmrc >= 3 ? "#b91c1c" : "#334155",
+                            fontWeight: 700,
+                            fontSize: 11,
+                          }}
+                        >
+                          Grade {row.mmrc}
+                        </span>
+                      ) : (
+                        "--"
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>
+                      {reportedSymptoms.length === 0 ? (
+                        <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600 }}>Normal / None</span>
+                      ) : (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {reportedSymptoms.map(([symKey, symVal]) => {
+                            const sc = getSymptomColor(symKey);
+                            return (
+                              <span
+                                key={symKey}
+                                style={{
+                                  padding: "2px 7px",
+                                  borderRadius: 6,
+                                  background: sc.bg,
+                                  border: `1px solid ${sc.border}`,
+                                  color: sc.color,
+                                  fontSize: 10.5,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {formatMetricName(symKey)}: {symVal}/10
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>{row.aqi ?? "--"}</td>
+                    <td style={{ padding: "10px 12px" }}>
+                      {row.adherence !== null ? (
+                        <span style={{ color: row.adherence >= 80 ? "#059669" : row.adherence >= 50 ? "#d97706" : "#dc2626", fontWeight: 700 }}>
+                          {row.adherence}%
+                        </span>
+                      ) : (
+                        "--"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {dailySeries.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ padding: 16, color: "#888680", textAlign: "center" }}>No logged analytics history yet.</td>

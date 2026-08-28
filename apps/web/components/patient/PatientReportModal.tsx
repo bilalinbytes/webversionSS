@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
-import { Calendar, Download, FileText, X, Loader2, Check } from "lucide-react";
+import { Calendar, Download, Eye, FileText, X, Loader2, Check } from "lucide-react";
 import styles from "./PatientReportModal.module.css";
 
 interface PatientReportModalProps {
@@ -30,7 +30,7 @@ export function PatientReportModal({
   const [endDate, setEndDate] = useState<string>(() => {
     return new Date().toISOString().split("T")[0]!;
   });
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingAction, setGeneratingAction] = useState<"view" | "download" | null>(null);
 
   if (!isOpen) return null;
 
@@ -60,8 +60,8 @@ export function PatientReportModal({
     }
   };
 
-  const handleDownload = async () => {
-    setIsGenerating(true);
+  const handleAction = async (action: "view" | "download") => {
+    setGeneratingAction(action);
     try {
       const endpoint = isDoctorView ? "/api/exports" : "/api/patient/report";
       const payload = isDoctorView
@@ -90,36 +90,40 @@ export function PatientReportModal({
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `O2Plus_${patientName.replace(/\s+/g, "_")}_Clinical_Report_${startDate}_to_${endDate}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      onClose();
+
+      if (action === "view") {
+        window.open(url, "_blank");
+      } else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `O2Plus_${patientName.replace(/\s+/g, "_")}_Clinical_Report_${startDate}_to_${endDate}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
     } catch (err) {
-      console.error("Report download failed:", err);
-      alert("Failed to download PDF report. Please try again.");
+      console.error("Report generation failed:", err);
+      alert("Failed to generate PDF report. Please try again.");
     } finally {
-      setIsGenerating(false);
+      setGeneratingAction(null);
     }
   };
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Download Clinical PDF Report">
+      <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Clinical PDF Dossier">
 
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerTitleRow}>
             <div className={styles.iconCircle}>
-              <FileText size={20} />
+              <FileText size={22} />
             </div>
             <div>
-              <h2 className={styles.title}>Download Clinical PDF Dossier</h2>
+              <h2 className={styles.title}>Clinical PDF Dossier</h2>
               <p className={styles.subtitle}>
-                {isDoctorView ? `Generating report for ${patientName}` : "Download your complete 3-page clinical health report"}
+                {isDoctorView ? `Generating dossier for ${patientName}` : "View or save your complete clinical health summary"}
               </p>
             </div>
           </div>
@@ -139,8 +143,8 @@ export function PatientReportModal({
                 { id: "7d", label: "Last 7 Days" },
                 { id: "30d", label: "Last 30 Days" },
                 { id: "90d", label: "Last 90 Days" },
-                { id: "all", label: "All Recorded History" },
-                { id: "custom", label: "Custom Dates" },
+                { id: "all", label: "All History" },
+                { id: "custom", label: "Custom Range" },
               ].map((p) => (
                 <button
                   key={p.id}
@@ -193,10 +197,10 @@ export function PatientReportModal({
           {/* Report Format Summary Box */}
           <div className={styles.formatInfoBox}>
             <div className={styles.formatBadge}>
-              <span>Format: Clinical PDF Dossier Only</span>
+              <span>Clinical PDF Dossier Included Data</span>
             </div>
             <p className={styles.formatDesc}>
-              Includes Patient Demographics, Baseline PFT &amp; Spirometry, Longitudinal $SpO_2$ &amp; mMRC Logs, Red-Flag Triage Events, Active Inhalers, and Doctor Sign-Off.
+              Includes Patient Demographics, Baseline PFT &amp; Spirometry, Longitudinal SpO₂ &amp; mMRC Logs, Red-Flag Triage Events, Active Inhalers, and Doctor Sign-Off.
             </p>
           </div>
 
@@ -204,22 +208,48 @@ export function PatientReportModal({
 
         {/* Footer Actions */}
         <div className={styles.footer}>
-          <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={isGenerating}>
+          <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={generatingAction !== null}>
             Cancel
           </button>
-          <button type="button" className={styles.downloadBtn} onClick={handleDownload} disabled={isGenerating}>
-            {isGenerating ? (
-              <>
-                <Loader2 size={16} className={styles.spinIcon} />
-                <span>Generating PDF...</span>
-              </>
-            ) : (
-              <>
-                <Download size={16} />
-                <span>Download PDF Dossier</span>
-              </>
-            )}
-          </button>
+          <div className={styles.actionBtnGroup}>
+            <button
+              type="button"
+              className={styles.viewBtn}
+              onClick={() => handleAction("view")}
+              disabled={generatingAction !== null}
+            >
+              {generatingAction === "view" ? (
+                <>
+                  <Loader2 size={16} className={styles.spinIcon} />
+                  <span>Loading PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Eye size={16} />
+                  <span>View PDF</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={styles.downloadBtn}
+              onClick={() => handleAction("download")}
+              disabled={generatingAction !== null}
+            >
+              {generatingAction === "download" ? (
+                <>
+                  <Loader2 size={16} className={styles.spinIcon} />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={16} />
+                  <span>Save PDF</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>

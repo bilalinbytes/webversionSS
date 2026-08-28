@@ -88,14 +88,27 @@ function parseDiagnosisLabel(primary: string | null): {
       posticu_other_text: "",
     };
   }
-  if (lower.startsWith("oad") || lower.includes("copd") || lower.includes("asthma")) {
+  if (lower.startsWith("oad") || lower.includes("copd") || lower.includes("asthma") || lower.includes("bronchiolitis")) {
+    const isBronchiolitis = lower.includes("bronchiolitis");
+    const isOverlap = lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"));
+    const isAsthma = lower.includes("asthma") && !isOverlap;
+
+    const oadDiag = parts[1] ?? (
+      isBronchiolitis ? "Bronchiolitis Obliterans" :
+      isOverlap ? "Asthma-COPD Overlap (ACO)" :
+      isAsthma ? "Asthma" : "COPD"
+    );
+    const primDiag = isBronchiolitis ? "asthma" :
+      isOverlap ? "copd" :
+      isAsthma ? "asthma" : "copd";
+
     return {
       disease_category: "OAD",
-      primary_diagnosis: lower.includes("asthma") && !lower.includes("copd") ? "asthma" : "copd",
+      primary_diagnosis: primDiag,
       ild_subtype: "",
       ild_other_text: "",
       is_fibrotic: null,
-      oad_diagnosis: parts[1] ?? (lower.includes("asthma") ? "Asthma" : "COPD"),
+      oad_diagnosis: oadDiag,
       oad_other_text: "",
       bronchiectasis_cause: "",
       bronchiectasis_other_text: "",
@@ -436,7 +449,6 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (diagnosis) {
     const primaryDiagnosis = (diagnosis.primary_diagnosis as string) ?? "";
     const postIcuSub = (diagnosis.post_icu_sub_diagnosis as string) ?? "";
-    const effectiveDashboard = computeEffectiveDashboard(primaryDiagnosis, postIcuSub || undefined);
     const comorbidities = (diagnosis.comorbidities as string[]) ?? [];
 
     // Build a structured diagnosis label from the new disease category fields
@@ -468,11 +480,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       structuredDiagnosis = `Post ICU Recovery / ${cause}`;
     }
 
+    const finalPrimaryDiagnosis = structuredDiagnosis || primaryDiagnosis;
+    const effectiveDashboard = computeEffectiveDashboard(finalPrimaryDiagnosis, postIcuSub || undefined);
+
     const { error: diagError } = await supabase
       .from("patient_diagnoses")
       .insert({
         patient_id: patientId,
-        primary_diagnosis: structuredDiagnosis || primaryDiagnosis,
+        primary_diagnosis: finalPrimaryDiagnosis,
         effective_dashboard: effectiveDashboard,
         comorbidities: comorbidities as unknown as import("@/lib/database.types").Json,
         comorbidities_other_text: (diagnosis.comorbidities_other_text as string) || null,
@@ -669,7 +684,6 @@ export async function PUT(request: Request): Promise<NextResponse> {
   if (diagnosis) {
     const primaryDiagnosis = (diagnosis.primary_diagnosis as string) ?? "";
     const postIcuSub = (diagnosis.post_icu_sub_diagnosis as string) ?? "";
-    const effectiveDashboard = computeEffectiveDashboard(primaryDiagnosis, postIcuSub || undefined);
     const diseaseCategory = (diagnosis.disease_category as string) ?? "";
     const ildSubtype = (diagnosis.ild_subtype as string) ?? "";
     const ildOtherText = (diagnosis.ild_other_text as string) ?? "";
@@ -697,10 +711,13 @@ export async function PUT(request: Request): Promise<NextResponse> {
       structuredDiagnosis = `Post ICU Recovery / ${cause}`;
     }
 
+    const finalPrimaryDiagnosis = structuredDiagnosis || primaryDiagnosis;
+    const effectiveDashboard = computeEffectiveDashboard(finalPrimaryDiagnosis, postIcuSub || undefined);
+
     await admin.from("patient_diagnoses").delete().eq("patient_id", patientId);
     const { error: diagError } = await admin.from("patient_diagnoses").insert({
       patient_id: patientId,
-      primary_diagnosis: structuredDiagnosis || primaryDiagnosis,
+      primary_diagnosis: finalPrimaryDiagnosis,
       effective_dashboard: effectiveDashboard,
       comorbidities: ((diagnosis.comorbidities as string[]) ?? []) as unknown as Json,
       comorbidities_other_text: (diagnosis.comorbidities_other_text as string) || null,

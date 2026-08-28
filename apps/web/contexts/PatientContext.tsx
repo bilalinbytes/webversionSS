@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { getPatientProfile, getPatientDiagnosis } from "@o2plus/api-client/patient";
+import { normalizeDashboard } from "@o2plus/core";
 
 interface PatientProfile {
   id: string;
@@ -56,6 +57,11 @@ export function PatientProvider({ children }: { children: ReactNode }) {
       .map((n: string) => n[0]?.toUpperCase() ?? "")
       .join("");
 
+    const normalizedDashboard = normalizeDashboard(
+      diagnosisRes.data?.primary_diagnosis,
+      diagnosisRes.data?.effective_dashboard,
+    );
+
     setPatient({
       id: p.id,
       name: p.name ?? "Patient",
@@ -63,7 +69,7 @@ export function PatientProvider({ children }: { children: ReactNode }) {
       phone: p.mobile_number ?? null,
       doctor_id: p.doctor_id ?? null,
       effective_dashboard:
-        (diagnosisRes.data?.effective_dashboard as PatientProfile["effective_dashboard"]) ?? null,
+        (normalizedDashboard as PatientProfile["effective_dashboard"]) ?? null,
       wants_appointments: p.wants_appointments ?? null,
     });
     setLoading(false);

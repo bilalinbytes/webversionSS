@@ -33,22 +33,33 @@ export function normalizeDashboard(
   primaryDiagnosis: string | null | undefined,
   storedDashboard: string | null | undefined,
 ): EffectiveDashboardValue | null {
-  // stored effective_dashboard is ground truth
+  const primary = (primaryDiagnosis ?? "").toLowerCase();
+
+  // Bronchiolitis / Bronchiolitis Obliterans → asthma dashboard
+  if (primary.includes("bronchiolitis")) return "asthma";
+
+  // Asthma-COPD Overlap (ACO) → copd dashboard
+  if (
+    primary.includes("overlap") ||
+    primary.includes("aco") ||
+    (primary.includes("asthma") && primary.includes("copd"))
+  ) {
+    return "copd";
+  }
+
+  // stored effective_dashboard is ground truth for post_icu and other standard categories
   const stored = (storedDashboard ?? "").toLowerCase().trim();
   if (["asthma", "copd", "bronchiectasis", "ild", "post_icu"].includes(stored)) {
     return stored as EffectiveDashboardValue;
   }
 
   // fall back to parsing primary_diagnosis text
-  const primary = (primaryDiagnosis ?? "").toLowerCase();
-  if (primary.includes("bronchiolitis")) return "asthma";  // Bronchiolitis Obliterans → asthma
-  if (primary.includes("overlap") || primary.includes("aco") ||
-      (primary.includes("asthma") && primary.includes("copd"))) return "copd"; // ACO → copd
+  if ((primary.startsWith("oad /") || primary.startsWith("oad/")) && primary.includes("asthma")) return "asthma";
   if (primary.includes("asthma") && !primary.includes("copd")) return "asthma";
   if (primary.includes("copd") || primary.startsWith("oad")) return "copd";
   if (primary.includes("bronchiectasis")) return "bronchiectasis";
   if (primary.includes("ild") || primary.includes("interstitial")) return "ild";
-  if (primary.includes("post_icu") || primary.includes("post icu")) return "post_icu";
+  if (primary.includes("post_icu") || primary.includes("post icu") || primary.includes("post-icu")) return "post_icu";
   return null;
 }
 
@@ -57,4 +68,44 @@ export function normalizeDashboard(
  */
 export function formatZodErrors(error: z.ZodError) {
   return error.flatten().fieldErrors;
+}
+
+/**
+ * Formats the raw primary diagnosis text for display in the UI.
+ */
+export function formatDiagnosisDisplay(primaryDiagnosis: string | null | undefined): string | null {
+  if (!primaryDiagnosis) return null;
+  const trimmed = primaryDiagnosis.trim();
+  const lower = trimmed.toLowerCase();
+
+  // OAD / Asthma-COPD overlap (and variations) → "Asthma-COPD Overlap"
+  if (
+    lower.includes("overlap") ||
+    lower.includes("aco") ||
+    (lower.includes("asthma") && lower.includes("copd"))
+  ) {
+    return "Asthma-COPD Overlap";
+  }
+
+  // OAD / Bronchiolitis (and variations like Bronchiolitis Obliterans) → "Bronchiolitis"
+  if (lower.includes("bronchiolitis")) {
+    return "Bronchiolitis";
+  }
+
+  const parts = trimmed.split("/");
+  if ((lower.startsWith("oad /") || lower.startsWith("oad/")) && parts.length > 1) {
+    const sub = parts.slice(1).join("/").trim();
+    if (sub.toLowerCase() === "copd") {
+      return "COPD";
+    }
+    if (sub.toLowerCase() === "asthma") {
+      return "Asthma";
+    }
+    return sub ? sub.charAt(0).toUpperCase() + sub.slice(1) : trimmed;
+  }
+
+  if (lower === "copd") return "COPD";
+  if (lower === "asthma") return "Asthma";
+
+  return trimmed;
 }

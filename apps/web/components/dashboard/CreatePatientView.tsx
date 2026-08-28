@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
-import { Check, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
+import { Check, AlertCircle, ChevronRight, Loader2, User, Stethoscope, Wind, Activity, Pill } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./CreatePatientView.module.css";
 // import { z } from "zod"; // Not needed directly here if not validating client-side
@@ -1110,34 +1110,297 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
 }
 
 // -- Step 7: Review ------------------------------------------------------------
-function StepReview({ data, isEdit }: { data: FormData, isEdit?: boolean }) {
+function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
   const summary = getDiagnosisSummary(data);
 
   return (
     <div className={styles.stepContent}>
-      <div className={styles.stepIntro}>
-        <h2 className={styles.stepTitle}>{isEdit ? "Review & Update" : "Review & Create"}</h2>
-      </div>
-      <div className={styles.reviewGrid}>
-        {[
-          { title: "Basic Info", items: [data.name || "Missing Name", `${data.gender} - Age: ${data.age || "-"}`, data.mobile_number, data.alternate_mobile ? `Alt: ${data.alternate_mobile}` : null].filter(Boolean) as string[] },
-          { title: "Diagnosis", items: [summary, `Comorbidities: ${data.comorbidities.length ? data.comorbidities.join(", ") : "None"}`] },
-          { title: "PFT Records", items: [`${data.pft_records.length} entries`] },
-          { title: "Respiratory Support", items: [data.respiratory_support.requires_support ? "Yes" : "No Support Required"] },
-          { title: "Medications", items: [`${data.medications.length} active`] },
-        ].map((sec) => (
-          <div key={sec.title} className={styles.reviewCard}>
-             <div className={styles.reviewCardHeader}>
-              <Check size={13} color="var(--med-blue-600)" />
-              <span className={styles.reviewCardTitle}>{sec.title}</span>
-            </div>
-            {sec.items.map((it, i) => <p key={i} className={styles.reviewItem}>{it}</p>)}
+      <div className={styles.reviewContainer}>
+        {/* Header Summary Banner */}
+        <div className={styles.reviewHeaderBar}>
+          <div>
+            <h2 className={styles.reviewHeaderTitle}>
+              {isEdit ? "Review & Confirm Patient Updates" : "Review & Confirm Patient Registration"}
+            </h2>
+            <p className={styles.reviewHeaderSubtitle}>
+              Please verify all demographics, clinical diagnosis, respiratory settings, and medications below.
+            </p>
           </div>
-        ))}
-      </div>
-      <div className={styles.reviewNotice}>
-        <AlertCircle size={14} color="var(--med-blue-600)" />
-        <span>All data will be saved to Supabase. Patient will receive an onboarding SMS.</span>
+          <span className={styles.reviewStatusBadge}>
+            <Check size={14} strokeWidth={2.5} />
+            <span>Ready to Save</span>
+          </span>
+        </div>
+
+        <div className={styles.reviewGrid}>
+          {/* Card 1: Demographics */}
+          <div className={styles.reviewCard}>
+            <div className={styles.reviewCardHeader} style={{ background: "#f0f9ff" }}>
+              <div className={styles.reviewCardHeaderLeft}>
+                <div className={styles.reviewIconBox} style={{ background: "#0284c7", color: "#ffffff" }}>
+                  <User size={16} />
+                </div>
+                <span className={styles.reviewCardTitle} style={{ color: "#0369a1" }}>
+                  Personal Information
+                </span>
+              </div>
+              <span className={styles.reviewBadge} style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                Step 1
+              </span>
+            </div>
+            <div className={styles.reviewCardBody}>
+              <div className={styles.reviewInfoRow}>
+                <span className={styles.reviewInfoLabel}>Full Name</span>
+                <span className={styles.reviewInfoValue} style={{ fontSize: 14, color: "#0f172a" }}>
+                  {data.name || "Missing Name"}
+                </span>
+              </div>
+              <div className={styles.reviewBadgeRow}>
+                {data.gender && (
+                  <span className={styles.reviewBadge} style={{ background: "#f1f5f9", color: "#334155" }}>
+                    {data.gender}
+                  </span>
+                )}
+                {data.age && (
+                  <span className={styles.reviewBadge} style={{ background: "#f1f5f9", color: "#334155" }}>
+                    Age: {data.age} yrs
+                  </span>
+                )}
+              </div>
+              <div className={styles.reviewInfoRow}>
+                <span className={styles.reviewInfoLabel}>Mobile</span>
+                <span className={styles.reviewInfoValue}>{data.mobile_number || "—"}</span>
+              </div>
+              {data.alternate_mobile && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Alt Phone</span>
+                  <span className={styles.reviewInfoValue}>{data.alternate_mobile}</span>
+                </div>
+              )}
+              {data.emergency_contact_name && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Emergency Contact</span>
+                  <span className={styles.reviewInfoValue}>
+                    {data.emergency_contact_name} {data.emergency_contact_phone ? `(${data.emergency_contact_phone})` : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 2: Clinical Diagnosis */}
+          <div className={styles.reviewCard}>
+            <div className={styles.reviewCardHeader} style={{ background: "#f5f3ff" }}>
+              <div className={styles.reviewCardHeaderLeft}>
+                <div className={styles.reviewIconBox} style={{ background: "#7c3aed", color: "#ffffff" }}>
+                  <Stethoscope size={16} />
+                </div>
+                <span className={styles.reviewCardTitle} style={{ color: "#6d28d9" }}>
+                  Clinical Diagnosis
+                </span>
+              </div>
+              <span className={styles.reviewBadge} style={{ background: "#ede9fe", color: "#6d28d9" }}>
+                Step 2
+              </span>
+            </div>
+            <div className={styles.reviewCardBody}>
+              <div className={styles.reviewDiagnosisBanner}>
+                <p className={styles.reviewDiagnosisCategory}>{data.disease_category || "Category Unset"}</p>
+                <p className={styles.reviewDiagnosisName}>{summary}</p>
+              </div>
+
+              <div>
+                <span className={styles.reviewInfoLabel}>Comorbidities:</span>
+                <div className={styles.reviewBadgeRow}>
+                  {data.comorbidities.length === 0 ? (
+                    <span className={styles.reviewBadge} style={{ background: "#f8fafc", color: "#64748b" }}>
+                      None recorded
+                    </span>
+                  ) : (
+                    data.comorbidities.map((c) => (
+                      <span key={c} className={styles.reviewBadge} style={{ background: "#e0e7ff", color: "#3730a3" }}>
+                        {c === "Others" && data.comorbidities_other_text ? data.comorbidities_other_text : c}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {data.diagnosed_at && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Diagnosed Date</span>
+                  <span className={styles.reviewInfoValue}>{data.diagnosed_at}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Baseline & Respiratory Support */}
+          <div className={styles.reviewCard}>
+            <div className={styles.reviewCardHeader} style={{ background: "#fff1f2" }}>
+              <div className={styles.reviewCardHeaderLeft}>
+                <div className={styles.reviewIconBox} style={{ background: "#e11d48", color: "#ffffff" }}>
+                  <Wind size={16} />
+                </div>
+                <span className={styles.reviewCardTitle} style={{ color: "#be123c" }}>
+                  Vitals &amp; Respiratory Support
+                </span>
+              </div>
+              <span className={styles.reviewBadge} style={{ background: "#ffe4e6", color: "#be123c" }}>
+                Steps 3 &amp; 5
+              </span>
+            </div>
+            <div className={styles.reviewCardBody}>
+              <div className={styles.reviewVitalsGrid}>
+                <div className={styles.reviewVitalBox}>
+                  <span className={styles.reviewVitalLabel}>Baseline SpO₂</span>
+                  <span className={styles.reviewVitalValue} style={{ color: "#0284c7" }}>
+                    {data.baseline_spo2 ? `${data.baseline_spo2}%` : "—"}
+                  </span>
+                </div>
+                <div className={styles.reviewVitalBox}>
+                  <span className={styles.reviewVitalLabel}>Baseline Heart Rate</span>
+                  <span className={styles.reviewVitalValue} style={{ color: "#7c3aed" }}>
+                    {data.baseline_heart_rate ? `${data.baseline_heart_rate} bpm` : "—"}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.reviewInfoRow}>
+                <span className={styles.reviewInfoLabel}>Respiratory Support:</span>
+                <span
+                  className={styles.reviewBadge}
+                  style={{
+                    background: data.respiratory_support.requires_support ? "#fee2e2" : "#ecfdf5",
+                    color: data.respiratory_support.requires_support ? "#b91c1c" : "#047857",
+                  }}
+                >
+                  {data.respiratory_support.requires_support ? "Support Required" : "No Support Required"}
+                </span>
+              </div>
+
+              {data.respiratory_support.requires_support && (
+                <div className={styles.reviewBadgeRow}>
+                  {data.respiratory_support.ltot_enabled && (
+                    <span className={styles.reviewBadge} style={{ background: "#dbeafe", color: "#1d4ed8" }}>
+                      LTOT: {data.respiratory_support.ltot_litres || 0} L/min
+                    </span>
+                  )}
+                  {data.respiratory_support.bipap_enabled && (
+                    <span className={styles.reviewBadge} style={{ background: "#fef3c7", color: "#b45309" }}>
+                      BiPAP (IPAP: {data.respiratory_support.bipap_ipap || "-"} / EPAP: {data.respiratory_support.bipap_epap || "-"})
+                    </span>
+                  )}
+                  {data.respiratory_support.invasive_vent_enabled && (
+                    <span className={styles.reviewBadge} style={{ background: "#fce7f3", color: "#be185d" }}>
+                      Invasive Vent
+                    </span>
+                  )}
+                  {data.respiratory_support.tracheostomy_enabled && (
+                    <span className={styles.reviewBadge} style={{ background: "#f3e8ff", color: "#7e22ce" }}>
+                      Tracheostomy
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 4: Pulmonary Function Tests */}
+          <div className={styles.reviewCard}>
+            <div className={styles.reviewCardHeader} style={{ background: "#fffbeb" }}>
+              <div className={styles.reviewCardHeaderLeft}>
+                <div className={styles.reviewIconBox} style={{ background: "#d97706", color: "#ffffff" }}>
+                  <Activity size={16} />
+                </div>
+                <span className={styles.reviewCardTitle} style={{ color: "#b45309" }}>
+                  Pulmonary Function Tests (PFT)
+                </span>
+              </div>
+              <span className={styles.reviewBadge} style={{ background: "#fef3c7", color: "#b45309" }}>
+                {data.pft_records.length} Record{data.pft_records.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className={styles.reviewCardBody}>
+              {data.pft_records.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontSize: 12.5, margin: 0, fontStyle: "italic" }}>
+                  No PFT or Spirometry records entered.
+                </p>
+              ) : (
+                <table className={styles.reviewTable}>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>FEV1 (L)</th>
+                      <th>FVC (L)</th>
+                      <th>Ratio</th>
+                      <th>DLCO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.pft_records.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.test_date || "—"}</td>
+                        <td>{r.fev1 ?? "—"}</td>
+                        <td>{r.fvc ?? "—"}</td>
+                        <td>{r.fev1_fvc_ratio ?? "—"}</td>
+                        <td>{r.dlco ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Card 5: Prescriptions & Medications */}
+          <div className={styles.reviewCard} style={{ gridColumn: "1 / -1" }}>
+            <div className={styles.reviewCardHeader} style={{ background: "#ecfdf5" }}>
+              <div className={styles.reviewCardHeaderLeft}>
+                <div className={styles.reviewIconBox} style={{ background: "#059669", color: "#ffffff" }}>
+                  <Pill size={16} />
+                </div>
+                <span className={styles.reviewCardTitle} style={{ color: "#047857" }}>
+                  Prescribed Medication Regimen
+                </span>
+              </div>
+              <span className={styles.reviewBadge} style={{ background: "#d1fae5", color: "#047857" }}>
+                {data.medications.length} Prescribed
+              </span>
+            </div>
+            <div className={styles.reviewCardBody}>
+              {data.medications.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontSize: 12.5, margin: 0, fontStyle: "italic" }}>
+                  No active medications assigned yet.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+                  {data.medications.map((m, i) => (
+                    <div key={i} className={styles.reviewMedCard}>
+                      <div>
+                        <p className={styles.reviewMedName}>{m.drug_name || "Unnamed Drug"}</p>
+                        <p className={styles.reviewMedDetails}>
+                          {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · {m.frequency || "As prescribed"}
+                        </p>
+                      </div>
+                      <span className={styles.reviewBadge} style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                        {m.route || "Oral"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Informative Notice Bar */}
+        <div className={styles.reviewNoticeBox}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>
+            Saving will update the patient record in Supabase. Onboarding credentials &amp; login links will be automatically provisioned.
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1189,7 +1452,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           emergency_contact_phone: data.emergency_contact_phone || null,
         },
         diagnosis: {
-          primary_diagnosis: data.primary_diagnosis || (
+          primary_diagnosis: (
             data.disease_category === "ILD" ? "ild" :
             data.disease_category === "OAD" ? (() => {
               const d = (data.oad_diagnosis ?? "").toLowerCase();
@@ -1199,7 +1462,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
               return "copd";
             })() :
             data.disease_category === "Bronchiectasis" ? "bronchiectasis" :
-            data.disease_category === "Post ICU Recovery" ? "post_icu" : ""
+            data.disease_category === "Post ICU Recovery" ? "post_icu" : (data.primary_diagnosis || "")
           ),
           disease_category: data.disease_category,
           ild_subtype: data.ild_subtype,

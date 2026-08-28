@@ -135,13 +135,17 @@ function dashboardLabel(d: string | null | undefined): string {
 }
 
 function resolveEffectiveDashboard(diagKv: Array<[string, string]>): string {
+  const primary = (diagKv.find(([k]) => k.toLowerCase().includes("primary"))?.[1] ?? "").toLowerCase();
+  if (primary.includes("bronchiolitis")) return "asthma";
+  if (primary.includes("overlap") || primary.includes("aco") || (primary.includes("asthma") && primary.includes("copd"))) return "copd";
+
   const raw = (diagKv.find(([k]) => k.toLowerCase().includes("effective") || k.toLowerCase().includes("dashboard"))?.[1] ?? "").toLowerCase();
   if (raw.includes("asthma"))        return "asthma";
   if (raw.includes("copd"))          return "copd";
   if (raw.includes("ild"))           return "ild";
   if (raw.includes("bronchiectasis"))return "bronchiectasis";
   if (raw.includes("post_icu") || raw.includes("post icu")) return "post_icu";
-  const primary = (diagKv.find(([k]) => k.toLowerCase().includes("primary"))?.[1] ?? "").toLowerCase();
+
   if (primary.includes("asthma"))        return "asthma";
   if (primary.includes("copd") || primary.startsWith("oad")) return "copd";
   if (primary.includes("bronchiectasis"))return "bronchiectasis";

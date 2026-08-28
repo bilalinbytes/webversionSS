@@ -1,4 +1,4 @@
-﻿/* -- Patient Portal TopNav (Blue Healthcare Companion) ------------------------- */
+/* -- Patient Portal TopNav (Blue Healthcare Companion) ------------------------- */
 /* Tokens: navy #0f2b48, blue #1e6091, cyan #4895ef, surface #ffffff, slate #f8fafc */
 
 .nav {
@@ -364,8 +364,8 @@
 
 .notifActions {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .notifPdfLink,
@@ -374,32 +374,37 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
   text-decoration: none;
   transition: all 140ms ease;
-}
-
-.notifPdfLink {
-  color: var(--med-blue-600, #1e6091);
-  background: #ffffff;
-  border: 1px solid var(--med-blue-600, #1e6091);
-}
-
-.notifPdfLink:hover {
-  background: var(--med-blue-50, #f0f7ff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .notifViewLink {
   color: #ffffff;
-  background: var(--med-blue-600);
-  border: 1px solid var(--med-blue-600);
+  background: #059669;
+  border: 1px solid #059669;
 }
 
 .notifViewLink:hover {
-  background: var(--med-navy-hover);
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.28);
+}
+
+.notifPdfLink {
+  color: #ffffff;
+  background: #1e6091;
+  border: 1px solid #1e6091;
+}
+
+.notifPdfLink:hover {
+  background: #164e77;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(30, 96, 145, 0.28);
 }
 
 .doctorChip {
