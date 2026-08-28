@@ -501,12 +501,17 @@ export function CommonDailyLogView({
               </label>
               <input
                 type="number"
-                min={0}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                min={50}
                 max={100}
                 className={dStyles.numInput}
-                placeholder="e.g. 82"
+                placeholder="e.g. 88"
                 value={spo2Exertion}
-                onChange={(event) => setSpo2Exertion(event.target.value)}
+                onChange={(event) => {
+                  const v = event.target.value.replace(/\D/g, "");
+                  if (v === "" || Number(v) <= 100) setSpo2Exertion(v);
+                }}
               />
             </div>
             <div>
@@ -516,12 +521,17 @@ export function CommonDailyLogView({
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={20}
                 max={250}
                 className={dStyles.numInput}
                 placeholder="e.g. 88"
                 value={heartRate}
-                onChange={(event) => setHeartRate(event.target.value)}
+                onChange={(event) => {
+                  const v = event.target.value.replace(/\D/g, "");
+                  if (v === "" || Number(v) <= 250) setHeartRate(v);
+                }}
               />
             </div>
           </div>

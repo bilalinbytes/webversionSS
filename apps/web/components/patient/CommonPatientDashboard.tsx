@@ -176,13 +176,15 @@ export function CommonPatientDashboard({
         {/* AQI */}
         <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Activity size={16} color={aqi.color} strokeWidth={2} />
+            <Activity size={16} color={aqiToday > 0 ? aqi.color : "#64748b"} strokeWidth={2} />
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700 }}>Air Quality (AQI)</span>
           </div>
-          <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: aqi.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
+          <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: aqiToday > 0 ? aqi.color : "#64748b", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {aqiToday > 0 ? aqiToday : "--"}
           </p>
-          <span style={{ fontSize: 11.5, color: aqi.color, fontWeight: 600 }}>{aqiToday > 0 ? aqi.label : "Loading live AQI"}</span>
+          <span style={{ fontSize: 11.5, color: aqiToday > 0 ? aqi.color : "#64748b", fontWeight: 600 }}>
+            {aqiToday > 0 ? aqi.label : "AQI unavailable"}
+          </span>
         </div>
 
         {/* Risk Score */}
@@ -259,33 +261,55 @@ export function CommonPatientDashboard({
           {/* Core Symptoms Monitoring List */}
           <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Active Symptoms Monitored
+              Key Respiratory Indicators
             </span>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 2 }}>
-              {[
-                { name: "Cough", status: (vasTrend && vasTrend.length > 0 && vasTrend[vasTrend.length - 1]! > 3) ? "Moderate" : "Mild / None" },
-                { name: "Phlegm / Sputum", status: "Monitored daily" },
-                { name: "Night Waking", status: "Logged in daily form" },
-                { name: "Exertion SpO₂", status: "Recorded on walk" },
-              ].map((sym) => (
-                <div key={sym.name} style={{ display: "flex", flexDirection: "column", padding: "8px 10px", background: "white", borderRadius: 8, border: "1px solid rgba(0,0,0,0.06)" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--med-navy-800)" }}>{sym.name}</span>
-                  <span style={{ fontSize: 10.5, color: "var(--med-text-muted)" }}>{sym.status}</span>
-                </div>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "var(--med-text-muted)" }}>Oxygenation (Rest)</span>
+                <strong style={{ color: spo2.color }}>{spo2Today > 0 ? `${spo2Today}%` : "Not recorded"}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "var(--med-text-muted)" }}>Daily VAS Symptoms</span>
+                <strong style={{ color: "var(--med-navy-800)" }}>
+                  {vasTrend && vasTrend.length > 0 ? `Level ${vasTrend[vasTrend.length - 1]} / 10` : "Not recorded"}
+                </strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "var(--med-text-muted)" }}>Spirometry / FEV₁</span>
+                <strong style={{ color: "var(--med-navy-800)" }}>
+                  {latestPft?.fev1 ? `${latestPft.fev1} L` : latestPft?.fev1_fvc_ratio ? `Ratio ${latestPft.fev1_fvc_ratio}` : "On file"}
+                </strong>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* -- Today's Medications -- */}
-      <div className={dStyles.card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+      <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <p className={dStyles.cardTitle} style={{ margin: 0 }}>
             Today&apos;s Prescribed Medications
           </p>
-          <span style={{ fontSize: 11.5, color: "var(--med-text-muted)" }}>Tap to mark taken / not taken</span>
+          {todayMedications && todayMedications.length > 0 && (() => {
+            const total = todayMedications.length;
+            const taken = todayMedications.filter((m) => m.taken === true).length;
+            const pct = Math.round((taken / total) * 100);
+            return (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px",
+                borderRadius: 999,
+                background: pct === 100 ? "#f0fdf4" : pct > 0 ? "#eff6ff" : "#f8fafc",
+                border: `1px solid ${pct === 100 ? "#bbf7d0" : pct > 0 ? "#bfdbfe" : "#e2e8f0"}`,
+                color: pct === 100 ? "#166534" : pct > 0 ? "#1e40af" : "#64748b",
+                fontSize: 12, fontWeight: 700,
+              }}>
+                {taken} of {total} doses logged today — {pct}% adherence
+              </span>
+            );
+          })()}
         </div>
+        <span style={{ fontSize: 11.5, color: "var(--med-text-muted)" }}>Tap to mark taken / not taken</span>
         {(!todayMedications || todayMedications.length === 0) ? (
           <p style={{ margin: 0, fontSize: 13, color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
             No medications assigned. Log today to record adherence.

@@ -479,8 +479,14 @@ export function PatientDetail({
           </div>
 
           {loading && (
-            <div className={styles.tabPlaceholder}>
-              <p>Loading patient data-</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "20px 0" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} style={{ height: 90, borderRadius: 10, background: "#f1f5f9", animation: "pulse 1.5s infinite" }} />
+                ))}
+              </div>
+              <div style={{ height: 180, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0", animation: "pulse 1.5s infinite" }} />
+              <div style={{ height: 220, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0", animation: "pulse 1.5s infinite" }} />
             </div>
           )}
 
@@ -582,7 +588,7 @@ function OverviewTab({
       <div className={styles.trendRow}>
         {[
           {
-            label: "SpO- Rest",
+            label: "SpO₂ Rest",
             val: displaySpo2 !== null ? `${displaySpo2}%` : "-",
             change: displaySpo2 !== null && displaySpo2 < 93 ? "Below target" : "Normal range",
             warn: displaySpo2 !== null && displaySpo2 < 93,
@@ -788,16 +794,16 @@ function TrendTab({ trendData }: { trendData: TrendPoint[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingTop: 8 }}>
-      {/* SpO- */}
+      {/* SpO2 */}
       <div>
-        <p className={styles.sparkLabel}>SpO- over last 30 days (%)</p>
+        <p className={styles.sparkLabel}>SpO₂ over last 30 days (%)</p>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
             <XAxis dataKey="date" tick={{ fontSize: 10 }} />
             <YAxis domain={[70, 100]} tick={{ fontSize: 10 }} />
             <Tooltip />
-            <Line type="monotone" dataKey="spo2" stroke="#e24b4a" strokeWidth={2} dot={false} name="SpO- %" />
+            <Line type="monotone" dataKey="spo2" stroke="#e24b4a" strokeWidth={2} dot={false} name="SpO₂ (%)" />
           </LineChart>
         </ResponsiveContainer>
       </div>

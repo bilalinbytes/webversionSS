@@ -354,6 +354,7 @@ export function BookAppointmentView() {
                   <input
                     className={styles.altInput}
                     type="date"
+                    min={new Date().toISOString().slice(0, 10)}
                     value={slotData.date}
                     onChange={(e) => setAnotherSlot((cur) => ({
                       ...cur,
@@ -445,8 +446,18 @@ export function BookAppointmentView() {
                         <input
                           className={styles.dateInput}
                           type="date"
+                          min={new Date().toISOString().slice(0, 10)}
                           value={date}
-                          onChange={(e) => { setDate(e.target.value); setTimeSlot(""); }}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const today = new Date().toISOString().slice(0, 10);
+                            if (val && val < today) {
+                              setDate(today);
+                            } else {
+                              setDate(val);
+                            }
+                            setTimeSlot("");
+                          }}
                         />
                         <Calendar className={styles.dateInputIcon} size={18} />
                       </div>

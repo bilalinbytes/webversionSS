@@ -1007,13 +1007,23 @@
 }
 
 /* -- Responsive Behavior ----------------------------------------------------- */
-@media (max-width: 1100px) {
+@media (max-width: 1280px) {
+  .splitLayout {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .topStat {
+    padding: 4px 14px;
+  }
+}
+
+@media (max-width: 860px) {
   .tableHeaderRow {
     display: none;
   }
 
   .patientRow {
-  position: relative;
+    position: relative;
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 12px;
@@ -1024,16 +1034,14 @@
     border-top: 1px solid var(--med-border-subtle, #e2e8f0);
     padding-top: 8px;
   }
-}
 
-@media (max-width: 900px) {
   .splitLayout {
     grid-template-columns: 1fr;
     overflow-y: auto;
   }
 
   .actionZone {
-    max-height: 240px;
+    max-height: 220px;
     border-right: none;
     border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
   }
@@ -1056,11 +1064,3 @@
     overflow-x: auto;
   }
 }
-
-
-
-
-
-
-
-

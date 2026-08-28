@@ -111,10 +111,21 @@ export function SpO2Input({ value, onChange, label = "SpO₂ at Rest", isCOPD = 
     <div className={styles.spo2Wrap}>
       <label className={styles.fieldLabel}>{label} <span className={styles.req}>*</span></label>
       <div className={styles.spo2InputRow}>
-        <input type="number" min="70" max="100"
+        <input
+          type="number"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          min="50"
+          max="100"
           className={`${styles.spo2Input} ${isLow ? styles.spo2InputWarn : ""}`}
-          placeholder="e.g. 94" value={value}
-          onChange={e => onChange(e.target.value)}
+          placeholder="e.g. 94"
+          value={value}
+          onChange={(e) => {
+            const v = e.target.value.replace(/\D/g, "");
+            if (v === "" || Number(v) <= 100) {
+              onChange(v);
+            }
+          }}
         />
         <span className={styles.spo2Unit}>%</span>
       </div>

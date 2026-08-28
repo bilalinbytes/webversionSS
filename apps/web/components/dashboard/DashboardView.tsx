@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "lucide-react";
@@ -437,7 +437,7 @@ function PatientTableRow({
           className={styles.btnRowView}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
         >
-          View -
+          View →
         </button>
       </div>
     </div>
@@ -472,6 +472,23 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </p>
       <button type="button" className={styles.emptyBtn} onClick={onAdd}>
         + Add Patient
+      </button>
+    </div>
+  );
+}
+
+function FilteredEmptyState({ onReset, search, filter }: { onReset: () => void; search: string; filter: string }) {
+  return (
+    <div className={styles.emptyState}>
+      <div className={styles.emptyIcon}>
+        <Search size={28} strokeWidth={1.5} />
+      </div>
+      <p className={styles.emptyTitle}>No matching patients found</p>
+      <p className={styles.emptySubtitle}>
+        {search ? `No patients match "${search}"` : `No patients found in "${filter}" category`}. Try adjusting your search query or filters.
+      </p>
+      <button type="button" className={styles.emptyBtn} onClick={onReset}>
+        Reset Filters &amp; Search
       </button>
     </div>
   );
@@ -724,7 +741,26 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     setSelectedInitialTab(tab);
     setSelectedPatient(patient);
     void acknowledgePatientAlerts(patient);
+    if (typeof window !== "undefined") {
+      window.history.pushState({ patientModal: true, patientId: patient.id }, "");
+    }
   }, [acknowledgePatientAlerts]);
+
+  const closePatient = useCallback(() => {
+    if (typeof window !== "undefined" && window.history.state?.patientModal) {
+      window.history.back();
+    } else {
+      setSelectedPatient(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setSelectedPatient(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   // Today's date - computed client-side only to avoid SSR hydration mismatch
   const [today, setToday] = useState("");
@@ -777,7 +813,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             title="Activate login access for all patients who can't log in yet"
             style={{ color: fixingLogins ? "#888" : "#126969", borderColor: "rgba(18,105,105,0.3)" }}
           >
-            {fixingLogins ? "Fixing-" : "Fix Patient Logins"}
+            {fixingLogins ? "Fixing Logins..." : "Fix Patient Logins"}
           </button>
           <button type="button" className={styles.btnImport} onClick={() => setShowImport(true)}>
             <Download size={13} strokeWidth={2} />
@@ -811,7 +847,8 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             type="button"
             onClick={() => setFixResult(null)}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1, color: "inherit", padding: 0 }}
-          >-</button>
+            aria-label="Dismiss message"
+          >✕</button>
         </div>
       )}
 
@@ -911,7 +948,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
               <Search size={13} className={styles.searchIcon} strokeWidth={2} />
               <input
                 className={styles.searchInput}
-                placeholder="Search patient-"
+                placeholder="Search by name, ID, or mobile number..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setFilterKey((k) => k + 1); }}
               />
@@ -943,11 +980,24 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
             </label>
           </div>
 
+          <div style={{ padding: "0 4px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "#64748b", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+            <span>Showing <strong>{filteredPatients.length}</strong> of <strong>{patients.length}</strong> patients</span>
+            {(search || filter !== "All") && (
+              <button
+                type="button"
+                onClick={() => { setSearch(""); setFilter("All"); setFilterKey((k) => k + 1); }}
+                style={{ background: "none", border: "none", color: "var(--med-blue-600)", fontWeight: 600, fontSize: 12, cursor: "pointer", padding: 0 }}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+
           {loading ? (
             <div className={styles.tableContainer} key={filterKey}>
               <div className={styles.tableHeaderRow}>
-                <span>Patient & ID</span>
-                <span>Diagnosis & Comorbidities</span>
+                <span>Patient &amp; ID</span>
+                <span>Diagnosis &amp; Comorbidities</span>
                 <span>Risk Level</span>
                 <span>Last Check-In</span>
                 <span>Active Alerts</span>
@@ -958,12 +1008,20 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           ) : fetchError ? (
             <ErrorState message={fetchError} />
           ) : filteredPatients.length === 0 ? (
-            <EmptyState onAdd={() => onViewChange("create")} />
+            patients.length === 0 ? (
+              <EmptyState onAdd={() => onViewChange("create")} />
+            ) : (
+              <FilteredEmptyState
+                search={search}
+                filter={filter}
+                onReset={() => { setSearch(""); setFilter("All"); setFilterKey((k) => k + 1); }}
+              />
+            )
           ) : (
             <div className={styles.tableContainer} key={filterKey}>
               <div className={styles.tableHeaderRow}>
-                <span>Patient & ID</span>
-                <span>Diagnosis & Comorbidities</span>
+                <span>Patient &amp; ID</span>
+                <span>Diagnosis &amp; Comorbidities</span>
                 <span>Risk Level</span>
                 <span>Last Check-In</span>
                 <span>Active Alerts</span>
@@ -990,13 +1048,13 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
         <PatientDetail
           patientId={selectedPatient.id}
           initialTab={selectedInitialTab}
-          onClose={() => setSelectedPatient(null)}
+          onClose={closePatient}
           onEdit={() => {
             const patientId = selectedPatient.id;
-            setSelectedPatient(null);
+            closePatient();
             onEditPatient?.(patientId);
           }}
-          onExport={() => { setSelectedPatient(null); onViewChange("export"); }}
+          onExport={() => { closePatient(); onViewChange("export"); }}
         />
       )}
 

@@ -225,11 +225,18 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
             </Field>
             <Field label="Age (years)" required error={errors["age"]}>
               <input
-                type="number" min={1} max={120}
+                type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                min={1}
+                max={120}
                 className={`${styles.input} ${errors["age"] ? styles.inputError : (data.age && Number(data.age) > 0) ? styles.inputValid : ""}`}
                 placeholder="e.g. 52"
                 value={data.age}
-                onChange={e => updateField("age", e.target.value)}
+                onChange={e => {
+                  const v = e.target.value.replace(/\D/g, "");
+                  if (v === "" || (Number(v) >= 1 && Number(v) <= 120)) updateField("age", v);
+                }}
               />
             </Field>
           </div>
@@ -243,6 +250,10 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
           <Field label="Mobile Number" required error={errors["mobile_number"] || errors["global_mobile"]}>
             <div style={{ position: "relative" }}>
               <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
                 className={`${styles.input} ${
                   errors["mobile_number"] || errors["global_mobile"] || duplicateCheck === "duplicate"
                     ? styles.inputError
@@ -255,11 +266,10 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
                 placeholder="10-digit number (e.g. 9876543210)"
                 value={data.mobile_number}
                 disabled={isEdit}
-                maxLength={10}
-                onChange={e => { updateField("mobile_number", e.target.value.replace(/\D/g, "")); setDuplicateCheck("idle"); }}
+                onChange={e => { updateField("mobile_number", e.target.value.replace(/\D/g, "").slice(0, 10)); setDuplicateCheck("idle"); }}
               />
               {duplicateCheck === "checking" && (
-                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#888" }}>checking-</span>
+                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#888" }}>checking...</span>
               )}
               {duplicateCheck === "available" && (
                 <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#2d7a38", fontSize: 12 }}>OK</span>
@@ -708,32 +718,66 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
               <Field label="Date" required>
                 <input type="date" className={styles.input} value={draft.date} onChange={(e) => setDraft({...draft, date: e.target.value})} />
               </Field>
-              <Field label="FEV1/FVC (%)">
-                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.ratio} onChange={(e) => setDraft({...draft, ratio: e.target.value})} />
-              </Field>
-              <Field label="FEV1 (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.fev1_pct_pred} onChange={(e) => setDraft({...draft, fev1_pct_pred: e.target.value})} />
-              </Field>
               <Field label="FEV1 (Liters)">
-                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.fev1} onChange={(e) => setDraft({...draft, fev1: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="e.g. 2.4"
+                  value={draft.fev1}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const f1 = parseFloat(val);
+                    const fc = parseFloat(draft.fvc);
+                    let ratio = draft.ratio;
+                    if (!isNaN(f1) && !isNaN(fc) && fc > 0) {
+                      ratio = ((f1 / fc) * 100).toFixed(1);
+                    }
+                    setDraft({ ...draft, fev1: val, ratio });
+                  }}
+                />
               </Field>
               <Field label="FVC (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.fvc_pct_pred} onChange={(e) => setDraft({...draft, fvc_pct_pred: e.target.value})} />
+                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.fvc_pct_pred} onChange={(e) => setDraft({...draft, fvc_pct_pred: e.target.value})} />
               </Field>
               <Field label="FVC (Liters)">
-                <input type="number" step="0.01" className={styles.input} placeholder="-" value={draft.fvc} onChange={(e) => setDraft({...draft, fvc: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="e.g. 3.2"
+                  value={draft.fvc}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const fc = parseFloat(val);
+                    const f1 = parseFloat(draft.fev1);
+                    let ratio = draft.ratio;
+                    if (!isNaN(f1) && !isNaN(fc) && fc > 0) {
+                      ratio = ((f1 / fc) * 100).toFixed(1);
+                    }
+                    setDraft({ ...draft, fvc: val, ratio });
+                  }}
+                />
+              </Field>
+              <Field label="FEV1/FVC (%)">
+                <input type="number" step="0.01" inputMode="decimal" className={styles.input} placeholder="e.g. 75.0" value={draft.ratio} onChange={(e) => setDraft({...draft, ratio: e.target.value})} />
+              </Field>
+              <Field label="FEV1 (% Predicted)">
+                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.fev1_pct_pred} onChange={(e) => setDraft({...draft, fev1_pct_pred: e.target.value})} />
               </Field>
               <Field label="DLCO (% Predicted)">
-                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.dlco} onChange={(e) => setDraft({...draft, dlco: e.target.value})} />
+                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.dlco} onChange={(e) => setDraft({...draft, dlco: e.target.value})} />
               </Field>
               <Field label="6MWD (m)">
-                <input type="number" step="1" className={styles.input} placeholder="-" value={draft.six_mwd} onChange={(e) => setDraft({...draft, six_mwd: e.target.value})} />
+                <input type="number" step="1" inputMode="numeric" className={styles.input} placeholder="-" value={draft.six_mwd} onChange={(e) => setDraft({...draft, six_mwd: e.target.value})} />
               </Field>
               <Field label="Min SpO2">
-                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.min_spo2} onChange={(e) => setDraft({...draft, min_spo2: e.target.value})} />
+                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.min_spo2} onChange={(e) => setDraft({...draft, min_spo2: e.target.value})} />
               </Field>
               <Field label="Max SpO2">
-                <input type="number" step="0.1" className={styles.input} placeholder="-" value={draft.max_spo2} onChange={(e) => setDraft({...draft, max_spo2: e.target.value})} />
+                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.max_spo2} onChange={(e) => setDraft({...draft, max_spo2: e.target.value})} />
               </Field>
             </div>
             <div className={styles.addRowActions}>
@@ -1110,7 +1154,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
 }
 
 // -- Step 7: Review ------------------------------------------------------------
-function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
+function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: boolean; onJumpToStep?: (step: number) => void }) {
   const summary = getDiagnosisSummary(data);
 
   return (
@@ -1144,9 +1188,20 @@ function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
                   Personal Information
                 </span>
               </div>
-              <span className={styles.reviewBadge} style={{ background: "#e0f2fe", color: "#0369a1" }}>
-                Step 1
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {onJumpToStep && (
+                  <button
+                    type="button"
+                    onClick={() => onJumpToStep(1)}
+                    style={{ background: "none", border: "none", color: "#0369a1", fontSize: 11.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <span className={styles.reviewBadge} style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                  Step 1
+                </span>
+              </div>
             </div>
             <div className={styles.reviewCardBody}>
               <div className={styles.reviewInfoRow}>
@@ -1199,9 +1254,20 @@ function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
                   Clinical Diagnosis
                 </span>
               </div>
-              <span className={styles.reviewBadge} style={{ background: "#ede9fe", color: "#6d28d9" }}>
-                Step 2
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {onJumpToStep && (
+                  <button
+                    type="button"
+                    onClick={() => onJumpToStep(2)}
+                    style={{ background: "none", border: "none", color: "#6d28d9", fontSize: 11.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <span className={styles.reviewBadge} style={{ background: "#ede9fe", color: "#6d28d9" }}>
+                  Step 2
+                </span>
+              </div>
             </div>
             <div className={styles.reviewCardBody}>
               <div className={styles.reviewDiagnosisBanner}>
@@ -1246,9 +1312,20 @@ function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
                   Vitals &amp; Respiratory Support
                 </span>
               </div>
-              <span className={styles.reviewBadge} style={{ background: "#ffe4e6", color: "#be123c" }}>
-                Steps 3 &amp; 5
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {onJumpToStep && (
+                  <button
+                    type="button"
+                    onClick={() => onJumpToStep(5)}
+                    style={{ background: "none", border: "none", color: "#be123c", fontSize: 11.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <span className={styles.reviewBadge} style={{ background: "#ffe4e6", color: "#be123c" }}>
+                  Steps 3 &amp; 5
+                </span>
+              </div>
             </div>
             <div className={styles.reviewCardBody}>
               <div className={styles.reviewVitalsGrid}>
@@ -1317,9 +1394,20 @@ function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
                   Pulmonary Function Tests (PFT)
                 </span>
               </div>
-              <span className={styles.reviewBadge} style={{ background: "#fef3c7", color: "#b45309" }}>
-                {data.pft_records.length} Record{data.pft_records.length !== 1 ? "s" : ""}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {onJumpToStep && (
+                  <button
+                    type="button"
+                    onClick={() => onJumpToStep(4)}
+                    style={{ background: "none", border: "none", color: "#b45309", fontSize: 11.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <span className={styles.reviewBadge} style={{ background: "#fef3c7", color: "#b45309" }}>
+                  {data.pft_records.length} Record{data.pft_records.length !== 1 ? "s" : ""}
+                </span>
+              </div>
             </div>
             <div className={styles.reviewCardBody}>
               {data.pft_records.length === 0 ? (
@@ -1364,9 +1452,20 @@ function StepReview({ data, isEdit }: { data: FormData; isEdit?: boolean }) {
                   Prescribed Medication Regimen
                 </span>
               </div>
-              <span className={styles.reviewBadge} style={{ background: "#d1fae5", color: "#047857" }}>
-                {data.medications.length} Prescribed
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {onJumpToStep && (
+                  <button
+                    type="button"
+                    onClick={() => onJumpToStep(6)}
+                    style={{ background: "none", border: "none", color: "#047857", fontSize: 11.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <span className={styles.reviewBadge} style={{ background: "#d1fae5", color: "#047857" }}>
+                  {data.medications.length} Prescribed
+                </span>
+              </div>
             </div>
             <div className={styles.reviewCardBody}>
               {data.medications.length === 0 ? (
@@ -1713,7 +1812,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           {step === 4 && <StepPFT data={data} update={update} errors={errors} />}
           {step === 5 && <StepRespSupport data={data} update={update} />}
           {step === 6 && <StepMedications data={data} update={update} />}
-          {step === 7 && <StepReview data={data} isEdit={!!editPatientId} />}
+          {step === 7 && <StepReview data={data} isEdit={!!editPatientId} onJumpToStep={setStep} />}
         </div>
       </div>
 
