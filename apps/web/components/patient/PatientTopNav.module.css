@@ -667,8 +667,89 @@
 .profileMuted {
   margin: 2px 0 0;
   font-size: 11px;
+.profileTag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.profileTagAccent {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f1f8;
+  border: 1px solid rgba(30, 96, 145, 0.25);
+  color: #1e6091;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.profileSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profileSectionTitle {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: #64748b;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.profileGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.profileDoctorCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.doctorAvatarSmall {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e6091;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.profileDoctorName {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f2b48;
+}
+
+.profileDoctorSpecialty {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #1e6091;
+  font-weight: 600;
+}
+
+.profileDoctorHospital {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #64748b;
 }
 
 @media (max-width: 820px) {

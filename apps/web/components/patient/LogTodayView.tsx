@@ -197,12 +197,43 @@ const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
   if (submitState === "success") {
     return (
       <div className={styles.successWrap}>
-        <div className={styles.successIcon}><CheckCircle size={40} strokeWidth={1.5} /></div>
-        <h2 className={styles.successTitle}>Health logged successfully!</h2>
-        <p className={styles.successSub}>Your doctor has been notified.</p>
-        <button type="button" className={styles.btnPrimary} onClick={reset}>
-          Log Again
-        </button>
+        <div style={{
+          maxWidth: 540, width: "100%", background: "#fff", border: "1.5px solid #e2e8f0",
+          borderRadius: 20, padding: "40px 32px", textAlign: "center",
+          boxShadow: "0 10px 35px rgba(15, 43, 72, 0.08)", display: "flex",
+          flexDirection: "column", alignItems: "center"
+        }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%", background: "#f0fdf4",
+            border: "3px solid #bbf7d0", display: "flex", alignItems: "center",
+            justifyContent: "center", color: "#059669", marginBottom: 20
+          }}>
+            <CheckCircle size={48} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0f2b48", margin: 0 }}>
+            Daily Health Logged Successfully!
+          </h2>
+          <p style={{ fontSize: 14, color: "#475569", margin: "10px 0 20px" }}>
+            Your doctor has been notified and your vital readings have been saved to your clinical chart.
+          </p>
+          <div style={{
+            background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10,
+            padding: "10px 14px", color: "#1e40af", fontSize: 13, textAlign: "left",
+            width: "100%", marginBottom: 20
+          }}>
+            ✓ <strong>1 Log Per Day:</strong> Daily check-in complete. You are all set for today!
+          </div>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            onClick={() => {
+              if (onLogSubmitted) onLogSubmitted();
+              else window.location.href = "/patientdashboard";
+            }}
+          >
+            Return to Dashboard
+          </button>
+        </div>
       </div>
     );
   }

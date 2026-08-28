@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { Bell, CalendarClock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
+import { checkAndPlayNotificationAlert } from "@/lib/client/notification-sound";
 import styles from "./TopNav.module.css";
 
 type View = "dashboard" | "create" | "export" | "appointments";
@@ -172,6 +173,14 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
     appointmentMeta(appointment.notes).workflow_status === "requested" ||
     appointmentMeta(appointment.notes).workflow_status === "patient_requested_another"
   );
+
+  useEffect(() => {
+    if (alertCount > 0) {
+      checkAndPlayNotificationAlert(`doctor_alerts_${alertCount}`);
+    } else if (appointmentNotifications.length > 0) {
+      checkAndPlayNotificationAlert(`doctor_appointments_${appointmentNotifications[0]?.id}`);
+    }
+  }, [alertCount, appointmentNotifications]);
 
   return (
     <nav className={styles.nav}>

@@ -8,6 +8,7 @@ import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
 import { formatDiagnosisDisplay } from "@o2plus/core";
+import { checkAndPlayNotificationAlert, playNotificationChime } from "@/lib/client/notification-sound";
 import styles from "./PatientTopNav.module.css";
 
 type View = "home" | "log" | "analytics" | "appointments";
@@ -65,6 +66,13 @@ interface ProfileMeta {
   doctorHospital: string;
   diagnosis: string;
   nextAppointment: string;
+  age?: number | string | null;
+  gender?: string | null;
+  phone?: string | null;
+  alternatePhone?: string | null;
+  emergencyName?: string | null;
+  emergencyPhone?: string | null;
+  enrolledDate?: string | null;
 }
 
 function formatDateTime(value: string | null | undefined, fallbackDate?: string) {
@@ -233,7 +241,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
     const currentPatient = patient;
 
     async function loadProfileMeta() {
-      const [doctorPayload, diagnosisRes, sessionRes] = await Promise.all([
+      const [doctorPayload, diagnosisRes, patientDetailsRes, sessionRes] = await Promise.all([
         currentPatient.doctor_id
           ? fetch("/api/patient-doctor", { credentials: "include" })
               .then((response) => response.ok ? response.json() : null)
@@ -245,7 +253,12 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
           .eq("patient_id", currentPatient.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single(),
+          .maybeSingle(),
+        supabase
+          .from("patients")
+          .select("name, date_of_birth, gender, mobile_number, alternate_mobile_number, emergency_contact_name, emergency_contact_phone, created_at")
+          .eq("id", currentPatient.id)
+          .maybeSingle(),
         supabase.auth.getSession(),
       ]);
 
@@ -266,11 +279,21 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
       if (cancelled) return;
       const doctor = doctorPayload?.doctor as { name?: string | null; hospital?: string | null } | null | undefined;
       const rawDiagnosis = diagnosisRes.data?.primary_diagnosis ?? currentPatient.effective_dashboard;
+      const pt = patientDetailsRes.data;
+      const computedAge = pt?.date_of_birth ? Math.floor((Date.now() - new Date(pt.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+
       setProfileMeta({
-        doctorName: doctor?.name ?? "Assigned doctor",
-        doctorHospital: doctor?.hospital ?? "",
-        diagnosis: (rawDiagnosis ? formatDiagnosisDisplay(rawDiagnosis) : null) ?? "Not recorded",
+        doctorName: doctor?.name ?? "Assigned Pulmonologist",
+        doctorHospital: doctor?.hospital ?? "Pulmonology Clinic",
+        diagnosis: (rawDiagnosis ? formatDiagnosisDisplay(rawDiagnosis) : null) ?? "Respiratory Care Plan",
         nextAppointment,
+        age: Number.isFinite(computedAge) && computedAge !== null && computedAge > 0 ? computedAge : null,
+        gender: pt?.gender ?? null,
+        phone: pt?.mobile_number ?? currentPatient.phone ?? null,
+        alternatePhone: pt?.alternate_mobile_number ?? null,
+        emergencyName: pt?.emergency_contact_name ?? null,
+        emergencyPhone: pt?.emergency_contact_phone ?? null,
+        enrolledDate: pt?.created_at ? formatDate(pt.created_at) : null,
       });
     }
 
@@ -365,6 +388,15 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
     : false;
   const notificationCount = (showPrescriptionBadge ? 1 : 0) + (showAppointmentBadge ? 1 : 0);
   const appointmentStatus = appointmentNotification?.meta?.workflow_status ?? appointmentNotification?.status;
+
+  useEffect(() => {
+    if (notificationCount > 0) {
+      const activeKey = (showPrescriptionBadge ? prescriptionNotificationKey : null) || (showAppointmentBadge ? appointmentNotificationKey : null);
+      if (activeKey) {
+        checkAndPlayNotificationAlert(activeKey);
+      }
+    }
+  }, [notificationCount, showPrescriptionBadge, showAppointmentBadge, prescriptionNotificationKey, appointmentNotificationKey]);
 
   const handleNotificationToggle = () => {
     const nextOpen = !notificationsOpen;
@@ -590,23 +622,75 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
           </button>
           {profileOpen && (
             <div className={styles.profilePanel}>
+              {/* Header */}
               <div className={styles.profileHeader}>
                 <div className={styles.profileAvatar}>{initials || "PT"}</div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p className={styles.profileTitle}>Patient Profile</p>
                   <p className={styles.profileName}>{patientName}</p>
-                  <p className={styles.profileSub}>
-                    Disease / Diagnosis: <strong>{profileMeta.diagnosis}</strong>
-                  </p>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                    {profileMeta.age && (
+                      <span className={styles.profileTag}>{profileMeta.age} yrs</span>
+                    )}
+                    {profileMeta.gender && (
+                      <span className={styles.profileTag}>{profileMeta.gender}</span>
+                    )}
+                    <span className={styles.profileTagAccent}>{profileMeta.diagnosis}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.profileGrid}>
-                <div className={styles.profileInfoBox}>
-                  <p className={styles.profileLabel}>Doctor</p>
-                  <p className={styles.profileValue}>{profileMeta.doctorName}</p>
-                  {profileMeta.doctorHospital && <p className={styles.profileMuted}>{profileMeta.doctorHospital}</p>}
+              {/* Section 1: Patient Contacts & Registration */}
+              <div className={styles.profileSection}>
+                <p className={styles.profileSectionTitle}>Patient Details &amp; Contacts</p>
+                <div className={styles.profileGrid2}>
+                  <div className={styles.profileInfoBox}>
+                    <p className={styles.profileLabel}>Registered Phone</p>
+                    <p className={styles.profileValue}>{profileMeta.phone || "Not recorded"}</p>
+                  </div>
+                  {profileMeta.alternatePhone && (
+                    <div className={styles.profileInfoBox}>
+                      <p className={styles.profileLabel}>Alternate Contact</p>
+                      <p className={styles.profileValue}>{profileMeta.alternatePhone}</p>
+                    </div>
+                  )}
+                  {profileMeta.emergencyName && (
+                    <div className={styles.profileInfoBox}>
+                      <p className={styles.profileLabel}>Emergency Contact</p>
+                      <p className={styles.profileValue}>{profileMeta.emergencyName}</p>
+                      {profileMeta.emergencyPhone && (
+                        <p className={styles.profileMuted}>{profileMeta.emergencyPhone}</p>
+                      )}
+                    </div>
+                  )}
+                  {profileMeta.enrolledDate && (
+                    <div className={styles.profileInfoBox}>
+                      <p className={styles.profileLabel}>Care Plan Enrolled</p>
+                      <p className={styles.profileValue}>{profileMeta.enrolledDate}</p>
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              {/* Section 2: Assigned Doctor Info */}
+              <div className={styles.profileSection}>
+                <p className={styles.profileSectionTitle}>Assigned Pulmonologist</p>
+                <div className={styles.profileDoctorCard}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className={styles.doctorAvatarSmall}>DR</div>
+                    <div>
+                      <p className={styles.profileDoctorName}>{profileMeta.doctorName}</p>
+                      <p className={styles.profileDoctorSpecialty}>Specialist in Respiratory Care</p>
+                      {profileMeta.doctorHospital && (
+                        <p className={styles.profileDoctorHospital}>{profileMeta.doctorHospital}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Next Appointment & Prescription */}
+              <div className={styles.profileGrid}>
                 <div className={styles.profileInfoBox}>
                   <div className={styles.profileLabelIcon}>
                     <Calendar size={13} />
@@ -615,7 +699,7 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                   <p className={styles.profileValue}>{profileMeta.nextAppointment}</p>
                 </div>
                 <div className={styles.profileInfoBoxAccent}>
-                  <p className={styles.profileLabel}>Last Prescribed</p>
+                  <p className={styles.profileLabel}>Last Prescribed Regimen</p>
                   <p className={styles.profileValue}>
                     {latestPrescription ? formatDate(latestPrescription.created_at ?? latestPrescription.date) : "No prescription yet"}
                   </p>

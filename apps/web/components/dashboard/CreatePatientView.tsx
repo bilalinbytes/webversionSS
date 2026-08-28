@@ -1583,15 +1583,9 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
     }
   };
 
-  const goNext = () => {
-    if (step === 7) {
-      handleSubmit();
-      return;
-    }
-
-    // -- Step 1 validation: block until required fields are complete --
-    if (step === 1) {
-      const newErrors: Record<string, string> = {};
+  const validateStepData = (stepNum: number): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    if (stepNum === 1) {
       if (!data.name.trim()) newErrors["name"] = "Full name is required";
       if (!data.age || isNaN(Number(data.age)) || Number(data.age) < 1 || Number(data.age) > 120) {
         newErrors["age"] = "Please enter a valid age (1-120)";
@@ -1605,68 +1599,114 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       if (data.alternate_mobile && data.alternate_mobile.length > 0 && data.alternate_mobile.length !== 10) {
         newErrors["alternate_mobile"] = "Alternate number must be 10 digits";
       }
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
-      setErrors({});
-    }
-
-    // -- Step 2 validation: disease category required --
-    if (step === 2) {
+    } else if (stepNum === 2) {
       if (!data.disease_category) {
-        setErrors({ primary_diagnosis: "Please select a disease category" });
-        return;
+        newErrors["primary_diagnosis"] = "Please select a disease category";
       }
-      setErrors({});
-    }
-
-    // -- Step 4 validation: Baseline Vitals required --
-    if (step === 4) {
-      const newErrors: Record<string, string> = {};
+    } else if (stepNum === 5) {
       if (!data.baseline_spo2) {
         newErrors["baseline_spo2"] = "Baseline SpO2 is required";
       }
       if (!data.baseline_heart_rate) {
         newErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
       }
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
-      setErrors({});
+    }
+    return newErrors;
+  };
+
+  const goNext = () => {
+    if (step === 7) {
+      handleSubmit();
+      return;
     }
 
+    const stepErrors = validateStepData(step);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      return;
+    }
+
+    setErrors({});
     setStep((s) => Math.min(7, s + 1));
   };
+
   const goBack = () => {
     if (step === 1) onBack();
-    else setStep((s) => Math.max(1, s - 1));
+    else {
+      setErrors({});
+      setStep((s) => Math.max(1, s - 1));
+    }
+  };
+
+  const handleStepClick = (targetStep: number) => {
+    if (targetStep === step) return;
+    if (targetStep < step) {
+      // Navigating back is always allowed
+      setErrors({});
+      setStep(targetStep);
+      return;
+    }
+    // If clicking forward, validate current step first
+    const currentStepErrors = validateStepData(step);
+    if (Object.keys(currentStepErrors).length > 0) {
+      setErrors(currentStepErrors);
+      return;
+    }
+    // Only allow advancing 1 step forward or to previously completed steps
+    if (targetStep === step + 1) {
+      setErrors({});
+      setStep(targetStep);
+    }
   };
 
   return (
     <div className={styles.view}>
       <div className={styles.header}>
-        <div><h1 className={styles.title}>{editPatientId ? "Edit Patient" : "Create New Patient"}</h1><p className={styles.sub}>Step {step} of 7</p></div>
-        <button type="button" className={styles.btnGhost} onClick={onBack}>- Dashboard</button>
+        <div>
+          <h1 className={styles.title}>{editPatientId ? "Edit Patient Record" : "Enrol New Patient"}</h1>
+          <p className={styles.sub}>Step {step} of 7 — {STEPS[step - 1]?.label}</p>
+        </div>
+        <button type="button" className={styles.btnGhost} onClick={onBack}>
+          ← Return to Patients
+        </button>
       </div>
+
       <div className={styles.layout}>
         <aside className={styles.stepSidebar}>
           <p className={styles.stepsLabel}>Enrolment Steps</p>
           {STEPS.map((s, i) => {
-             const num = i+1;
-             const isActive = num === step;
-             return (
-               <button key={s.label} type="button" className={`${styles.stepItem} ${isActive ? styles.stepActive : ""}`} onClick={() => setStep(num)}>
-                 <div className={styles.stepBubble}>{num}</div>
-                 <div className={styles.stepText}><p className={styles.stepLabel}>{s.label}</p><p className={styles.stepSub}>{s.sub}</p></div>
-                 {isActive && <ChevronRight size={14} className={styles.stepArrow} />}
-               </button>
-             );
+            const num = i + 1;
+            const isActive = num === step;
+            const isCompleted = num < step;
+            const isClickable = num <= step + 1;
+            return (
+              <button
+                key={s.label}
+                type="button"
+                className={`${styles.stepItem} ${isActive ? styles.stepActive : ""} ${isCompleted ? styles.stepCompleted : ""}`}
+                onClick={() => handleStepClick(num)}
+                title={!isClickable ? "Please complete earlier steps first" : undefined}
+              >
+                <div className={`${styles.stepBubble} ${isCompleted ? styles.stepBubbleCompleted : ""}`}>
+                  {isCompleted ? <Check size={12} strokeWidth={3} /> : num}
+                </div>
+                <div className={styles.stepText}>
+                  <p className={styles.stepLabel}>{s.label}</p>
+                  <p className={styles.stepSub}>{s.sub}</p>
+                </div>
+                {isActive && <ChevronRight size={14} className={styles.stepArrow} />}
+              </button>
+            );
           })}
         </aside>
+
         <div className={styles.formMain}>
-          {submitError && <div className={styles.fieldError} style={{marginBottom: 16, padding: 12, background: "#fee2e2", borderRadius: 6, display: "flex", gap: 8, alignItems: "flex-start"}}><AlertCircle size={14} style={{flexShrink: 0, marginTop: 1}}/> {submitError}</div>}
+          {submitError && (
+            <div className={styles.fieldError} style={{ marginBottom: 16, padding: 12, background: "#fee2e2", borderRadius: 8, display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1, color: "#dc2626" }} />
+              <span style={{ color: "#991b1b", fontWeight: 600, fontSize: 12 }}>{submitError}</span>
+            </div>
+          )}
           {step === 1 && <StepBasicInfo data={data} update={update} errors={errors} isEdit={!!editPatientId} />}
           {step === 2 && <StepDiagnosis data={data} update={update} errors={errors} />}
           {step === 3 && <StepComorbidities data={data} update={update} />}
@@ -1676,19 +1716,37 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           {step === 7 && <StepReview data={data} isEdit={!!editPatientId} />}
         </div>
       </div>
-      <div className={styles.footer}>
-        <div className={styles.footerLeft}></div>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerLeft}>
+          <button type="button" className={styles.btnGhost} onClick={goBack}>
+            {step === 1 ? "Cancel" : "← Back"}
+          </button>
+        </div>
+        <div className={styles.footerCenter}>
+          <span className={styles.footerStepIndicator}>
+            Step {step} of 7: <strong>{STEPS[step - 1]?.label}</strong>
+          </span>
+        </div>
         <div className={styles.footerActions}>
-          <button type="button" className={styles.btnGhost} onClick={goBack}>{step === 1 ? "Cancel" : "Back"}</button>
           <button
             type="button"
             className={styles.btnPrimary}
             onClick={goNext}
-            disabled={submitting || (step === 1 && (!data.name.trim() || !data.mobile_number || data.mobile_number.length !== 10 || !data.gender || !data.age))}
-          >            {submitting ? <Loader2 className="animate-spin" size={16}/> : (step === 7 ? (editPatientId ? "Update Patient" : "Create Patient") : "Save & Continue -")}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Loader2 className="animate-spin" size={15} /> Saving Patient...
+              </span>
+            ) : step === 7 ? (
+              editPatientId ? "Update Patient Record" : "Complete & Save Patient"
+            ) : (
+              "Save & Continue →"
+            )}
           </button>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

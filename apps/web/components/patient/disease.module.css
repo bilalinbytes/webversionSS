@@ -595,3 +595,144 @@
   border: 1px solid #fecaca;
   margin-bottom: 16px;
 }
+
+/* ── Centered Professional Log Submitted Card ─────────────────────────────── */
+.successWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 160px);
+  padding: 32px 16px;
+  background: var(--med-bg-canvas, #f8fafc);
+  width: 100%;
+}
+
+.successCard {
+  max-width: 580px;
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(15, 43, 72, 0.08), 0 2px 8px rgba(15, 43, 72, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.successBadge {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  border: 3px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.15);
+}
+
+.successIconSvg {
+  color: #059669;
+}
+
+.successTitle {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--med-navy-800, #0f2b48);
+  font-family: var(--font-lora), Georgia, serif;
+  margin: 0;
+}
+
+.successTitleHi {
+  font-size: 0.9rem;
+  color: var(--med-text-muted, #64748b);
+  margin: 4px 0 0;
+}
+
+.successSub {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 12px 0 24px;
+  line-height: 1.5;
+}
+
+.successGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.successMetricCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.successMetricLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.successMetricValue {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.successMetricSub {
+  font-size: 0.72rem;
+  color: #059669;
+  font-weight: 600;
+}
+
+.successNoticeBox {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #1e40af;
+  font-size: 0.8rem;
+  text-align: left;
+  line-height: 1.45;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.successActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btnOutline {
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--med-blue-600, #1e6091);
+  background: #ffffff;
+  color: var(--med-blue-600, #1e6091);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.btnOutline:hover {
+  background: #f0f7fc;
+}
+

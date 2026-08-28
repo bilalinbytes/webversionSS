@@ -764,3 +764,60 @@
   font-weight: 500;
 }
 
+/* ── Wizard Sticky Footer Action Bar ─────────────────────────────────────────── */
+.footer {
+  background: #ffffff;
+  border-top: 1.5px solid var(--med-border-subtle, #e2e8f0);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 0 -4px 16px rgba(15, 43, 72, 0.06);
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footerCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footerStepIndicator {
+  font-size: 12px;
+  color: var(--med-text-muted, #64748b);
+  background: var(--med-surface-alt, #f1f5f9);
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+}
+
+.footerStepIndicator strong {
+  color: var(--med-navy-800, #0f2b48);
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepCompleted {
+  opacity: 0.9;
+}
+
+.stepBubbleCompleted {
+  background: var(--med-teal-700, #0f6e56) !important;
+  color: #ffffff !important;
+}
+
+

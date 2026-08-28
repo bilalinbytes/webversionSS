@@ -147,6 +147,39 @@ export function CommonDailyLogView({
   const [emergencyStatus, setEmergencyStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [emergencyError, setEmergencyError] = useState<string | null>(null);
   const [messageToastVisible, setMessageToastVisible] = useState(false);
+  const [alreadyLoggedToday, setAlreadyLoggedToday] = useState<{
+    id: string;
+    logged_at: string;
+    spo2_rest: number | null;
+    spo2_exertion: number | null;
+    mmrc_today: number | null;
+  } | null>(null);
+  const [isEditingExistingLog, setIsEditingExistingLog] = useState(false);
+
+  useEffect(() => {
+    if (!patientId) return;
+    let cancelled = false;
+    const supabase = createClient();
+    const today = new Date().toISOString().split("T")[0]!;
+
+    supabase
+      .from("daily_logs")
+      .select("id, logged_at, spo2_rest, spo2_exertion, mmrc_today")
+      .eq("patient_id", patientId)
+      .gte("logged_at", `${today}T00:00:00`)
+      .lte("logged_at", `${today}T23:59:59`)
+      .order("logged_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setAlreadyLoggedToday(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId, submitState]);
 
   useEffect(() => {
     setMedsTaken((current) => Object.fromEntries(meds.map((m) => [m.id, current[m.id] ?? false])));
@@ -338,14 +371,88 @@ export function CommonDailyLogView({
     }
   }, [emergencyMessage, emergencyStatus]);
 
-  if (submitState === "success") {
+  if (submitState === "success" || (alreadyLoggedToday && !isEditingExistingLog)) {
+    const displayTime = alreadyLoggedToday?.logged_at
+      ? new Date(alreadyLoggedToday.logged_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+      : new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const displayDate = alreadyLoggedToday?.logged_at
+      ? new Date(alreadyLoggedToday.logged_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })
+      : new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
+    const dispSpo2 = alreadyLoggedToday?.spo2_rest ?? (spo2 ? Number(spo2) : null);
+    const dispHr = heartRate ? Number(heartRate) : null;
+    const dispMmrc = alreadyLoggedToday?.mmrc_today ?? mmrc;
+
     return (
       <div className={dStyles.view}>
         <div className={dStyles.successWrap}>
-          <div className={dStyles.successIcon}><CheckCircle size={40} strokeWidth={1.5} /></div>
-          <h2 className={dStyles.successTitle}>Log Submitted · लॉग जमा हुआ</h2>
-          <p className={dStyles.successSub}>Your daily log has been saved. · आपका दैनिक लॉग सेव हो गया है।</p>
-          <button type="button" className={dStyles.btnPrimary} onClick={reset}>Log Again · फिर से लॉग करें</button>
+          <div className={dStyles.successCard}>
+            <div className={dStyles.successBadge}>
+              <CheckCircle size={56} className={dStyles.successIconSvg} />
+            </div>
+
+            <h2 className={dStyles.successTitle}>Daily Log Submitted Successfully!</h2>
+            <p className={dStyles.successTitleHi}>दैनिक स्वास्थ्य लॉग सफलतापूर्वक सेव हो गया है</p>
+
+            <p className={dStyles.successSub}>
+              Recorded for <strong>{displayDate}</strong> at <strong>{displayTime}</strong>. Your clinical team has received your health metrics.
+            </p>
+
+            {/* Vitals Summary Strip */}
+            <div className={dStyles.successGrid}>
+              <div className={dStyles.successMetricCard}>
+                <span className={dStyles.successMetricLabel}>SpO₂ at Rest</span>
+                <strong className={dStyles.successMetricValue} style={{ color: dispSpo2 && dispSpo2 < 90 ? "#dc2626" : "#0f172a" }}>
+                  {dispSpo2 ? `${dispSpo2}%` : "--"}
+                </strong>
+                <span className={dStyles.successMetricSub}>{dispSpo2 && dispSpo2 >= 90 ? "Stable" : dispSpo2 ? "Attention" : "Recorded"}</span>
+              </div>
+
+              <div className={dStyles.successMetricCard}>
+                <span className={dStyles.successMetricLabel}>Heart Rate</span>
+                <strong className={dStyles.successMetricValue}>
+                  {dispHr ? `${dispHr} bpm` : "--"}
+                </strong>
+                <span className={dStyles.successMetricSub}>Resting</span>
+              </div>
+
+              <div className={dStyles.successMetricCard}>
+                <span className={dStyles.successMetricLabel}>Breathlessness</span>
+                <strong className={dStyles.successMetricValue} style={{ color: dispMmrc !== null && dispMmrc >= 3 ? "#dc2626" : "#0f172a" }}>
+                  {dispMmrc !== null ? `Grade ${dispMmrc}` : "--"}
+                </strong>
+                <span className={dStyles.successMetricSub}>mMRC (0–4)</span>
+              </div>
+            </div>
+
+            {/* 1 Log Policy Banner */}
+            <div className={dStyles.successNoticeBox}>
+              <p style={{ margin: 0 }}>
+                ✓ <strong>Daily Check-in Complete:</strong> Patients submit at most 1 log per day to maintain clean clinical longitudinal graphs. You are all set for today!
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className={dStyles.successActions}>
+              <button
+                type="button"
+                className={dStyles.btnPrimary}
+                onClick={() => {
+                  if (onSuccess) onSuccess();
+                  else window.location.href = "/patientdashboard";
+                }}
+              >
+                Return to Health Dashboard
+              </button>
+
+              <button
+                type="button"
+                className={dStyles.btnOutline}
+                onClick={() => setIsEditingExistingLog(true)}
+              >
+                Update / Edit Today&apos;s Entry
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
