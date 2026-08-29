@@ -29,6 +29,7 @@ export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTre
         <CommonPatientDashboard
           name={patient.name}
           diagnosis={patient.diagnosis ?? null}
+          effectiveDashboard="copd"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
           mmrcToday={patient.mmrcToday}

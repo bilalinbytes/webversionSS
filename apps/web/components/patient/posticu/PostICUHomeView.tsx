@@ -36,6 +36,7 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
         <CommonPatientDashboard
           name={patient.name}
           diagnosis={patient.diagnosis ?? null}
+          effectiveDashboard="post_icu"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
           mmrcToday={patient.mmrcToday}

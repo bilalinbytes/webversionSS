@@ -29,6 +29,7 @@ export function BronchHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasT
         <CommonPatientDashboard
           name={patient.name}
           diagnosis={patient.diagnosis ?? null}
+          effectiveDashboard="bronchiectasis"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
           mmrcToday={patient.mmrcToday}

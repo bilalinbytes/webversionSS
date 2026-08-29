@@ -50,6 +50,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
         <CommonPatientDashboard
           name={patient.name}
           diagnosis={patient.diagnosis ?? null}
+          effectiveDashboard="asthma"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
           mmrcToday={patient.mmrcToday}

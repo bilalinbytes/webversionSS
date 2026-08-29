@@ -80,6 +80,7 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
         <CommonPatientDashboard
           name={patient.name}
           diagnosis={patient.diagnosis ?? null}
+          effectiveDashboard="ild"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
           mmrcToday={patient.mmrcToday}

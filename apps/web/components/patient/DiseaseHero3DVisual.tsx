@@ -10,11 +10,18 @@ import {
   HeartPulse,
   TrendingUp,
   Sparkles,
-  CheckCircle2,
   AlertTriangle,
   RotateCw,
 } from "lucide-react";
 import { normalizeDashboard } from "@o2plus/core";
+
+export type CarePathwayType =
+  | "asthma"
+  | "copd"
+  | "ild"
+  | "bronchiectasis"
+  | "post_icu"
+  | "bronchiolitis_obliterans";
 
 export interface DiseaseHero3DVisualProps {
   diagnosis: string | null;
@@ -24,6 +31,77 @@ export interface DiseaseHero3DVisualProps {
   mmrcToday?: number;
   aqiToday?: number;
   onLogToday: () => void;
+}
+
+/**
+ * Resolves the visual Care Pathway configuration from the patient's actual
+ * diagnosis string and effective dashboard.
+ *
+ * Ensures patients with "OAD / Bronchiolitis Obliterans" or other OAD subtypes
+ * see their clinically appropriate pathway and diagnosis without incorrect generic mapping.
+ */
+export function resolveCarePathwayType(
+  diagnosis?: string | null,
+  effectiveDashboard?: string | null,
+): CarePathwayType {
+  const diagLower = (diagnosis ?? "").toLowerCase().trim();
+  const dbLower = (effectiveDashboard ?? "").toLowerCase().trim();
+
+  // 1. Explicit Bronchiolitis Obliterans check
+  if (diagLower.includes("bronchiolitis")) {
+    return "bronchiolitis_obliterans";
+  }
+
+  // 2. Asthma-COPD Overlap (ACO) -> COPD Care Pathway
+  if (
+    diagLower.includes("overlap") ||
+    diagLower.includes("aco") ||
+    (diagLower.includes("asthma") && diagLower.includes("copd"))
+  ) {
+    return "copd";
+  }
+
+  // 3. Diagnosis text string pattern matching
+  if (diagLower.includes("bronchiectasis")) return "bronchiectasis";
+  if (
+    diagLower.includes("ild") ||
+    diagLower.includes("interstitial") ||
+    diagLower.includes("fibrosis") ||
+    diagLower.includes("ipf")
+  ) {
+    return "ild";
+  }
+  if (
+    diagLower.includes("post_icu") ||
+    diagLower.includes("post icu") ||
+    diagLower.includes("post-icu")
+  ) {
+    return "post_icu";
+  }
+  if (
+    (diagLower.startsWith("oad /") || diagLower.startsWith("oad/")) &&
+    diagLower.includes("asthma")
+  ) {
+    return "asthma";
+  }
+  if (diagLower.includes("asthma") && !diagLower.includes("copd")) return "asthma";
+  if (diagLower.includes("copd") || diagLower.startsWith("oad")) return "copd";
+
+  // 4. Fall back to effectiveDashboard column
+  if (dbLower === "copd") return "copd";
+  if (dbLower === "ild") return "ild";
+  if (dbLower === "bronchiectasis") return "bronchiectasis";
+  if (dbLower === "post_icu") return "post_icu";
+  if (dbLower === "asthma") return "asthma";
+
+  // 5. Fallback through core normalizer
+  const normalized = normalizeDashboard(diagnosis, effectiveDashboard);
+  if (normalized === "copd") return "copd";
+  if (normalized === "ild") return "ild";
+  if (normalized === "bronchiectasis") return "bronchiectasis";
+  if (normalized === "post_icu") return "post_icu";
+
+  return "asthma";
 }
 
 export function DiseaseHero3DVisual({
@@ -39,8 +117,8 @@ export function DiseaseHero3DVisual({
   const [rotateY, setRotateY] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Normalize patient's active disease condition
-  const disease = normalizeDashboard(diagnosis, effectiveDashboard) || "asthma";
+  // Resolve active disease pathway configuration
+  const pathwayKey = resolveCarePathwayType(diagnosis, effectiveDashboard);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -70,28 +148,28 @@ export function DiseaseHero3DVisual({
       },
       headline: "Breathe Easy. Live Better.",
       subtitle: "Follow your daily plan, shield against triggers, and keep your airways open.",
-      badge: "Asthma Care Pathway",
+      badge: "ASTHMA CARE PATHWAY",
       statusBadge: "Airways Open & Stable",
       actionGuideTitle: "Today's Helpful Actions",
       actions: [
         {
           icon: Wind,
-          title: "Inhaler with Breath-Hold",
+          title: "Use prescribed inhaler correctly",
           desc: "Inhale slowly and deeply, hold breath for 5–10s for full drug delivery.",
         },
         {
           icon: ShieldCheck,
-          title: "Shield Against Triggers",
+          title: "Avoid known triggers such as dust/smoke",
           desc: "Avoid dust, cold drafts, and high-AQI smoke exposure today.",
         },
         {
           icon: Activity,
-          title: "Morning Peak Flow (PEFR)",
+          title: "Monitor peak flow if part of care plan",
           desc: "Log your morning blow to verify open, inflammation-free airways.",
         },
         {
           icon: Sparkles,
-          title: "Action Plan Awareness",
+          title: "Track symptoms & follow action plan",
           desc: "If chest tightness or wheeze increases, follow prescribed reliever steps.",
         },
       ],
@@ -108,29 +186,34 @@ export function DiseaseHero3DVisual({
       },
       headline: "Conserve Stamina. Clear Airways.",
       subtitle: "Practice pursed-lip breathing, maintain inhaler schedule, and pace daily activities.",
-      badge: "COPD Care Pathway",
+      badge: "COPD CARE PATHWAY",
       statusBadge: "Airflow Paced & Protected",
       actionGuideTitle: "Today's Helpful Actions",
       actions: [
         {
+          icon: Pill,
+          title: "Take prescribed COPD medicines as directed",
+          desc: "Take morning and evening maintenance doses consistently on schedule.",
+        },
+        {
           icon: Wind,
-          title: "Pursed-Lip Breathing",
+          title: "Practice prescribed breathing techniques",
           desc: "Inhale through nose for 2s, exhale slowly through pursed lips for 4s.",
         },
         {
-          icon: Activity,
-          title: "Pace Daily Movement",
-          desc: "Take short, gentle walking breaks with seated rest intervals to save stamina.",
-        },
-        {
-          icon: Pill,
-          title: "Dual Inhaler Schedule",
-          desc: "Take morning and evening maintenance doses consistently.",
+          icon: ShieldCheck,
+          title: "Avoid smoking and polluted air",
+          desc: "Shield lungs from active/passive smoke, biomass fumes, and poor air quality.",
         },
         {
           icon: HeartPulse,
-          title: "Target SpO₂ 88–92%",
-          desc: "Check oxygen levels at rest and maintain your prescribed flow rate.",
+          title: "Monitor SpO₂ and breathlessness",
+          desc: "Check oxygen levels at rest and maintain your prescribed target range (88–92%).",
+        },
+        {
+          icon: Activity,
+          title: "Maintain appropriate physical activity",
+          desc: "Take short, gentle walking breaks with seated rest intervals to save stamina.",
         },
       ],
     },
@@ -146,29 +229,34 @@ export function DiseaseHero3DVisual({
       },
       headline: "Protect Lung Volume. Pace Exertion.",
       subtitle: "Practice diaphragmatic expansion, monitor oxygen during exertion, and adhere to therapy.",
-      badge: "ILD Care Pathway",
+      badge: "ILD CARE PATHWAY",
       statusBadge: "Gas Exchange Monitored",
       actionGuideTitle: "Today's Helpful Actions",
       actions: [
         {
-          icon: Wind,
-          title: "Diaphragmatic Breathing",
-          desc: "Breathe with your belly/diaphragm to maximize lower-lung oxygen intake.",
+          icon: Pill,
+          title: "Follow the prescribed treatment plan",
+          desc: "Take prescribed antifibrotic and anti-inflammatory medications with meals as directed.",
         },
         {
           icon: HeartPulse,
-          title: "Exertional SpO₂ Checks",
-          desc: "Check oxygen before and after climbing stairs or brisk walking.",
+          title: "Monitor oxygen levels as instructed",
+          desc: "Check SpO₂ before and after climbing stairs or exertion, maintaining flow rates.",
         },
         {
-          icon: Pill,
-          title: "Take Antifibrotics with Food",
-          desc: "Take prescribed antifibrotic medication with meals as directed.",
+          icon: Activity,
+          title: "Track breathlessness & activity tolerance",
+          desc: "Pause and recover immediately if breathing effort increases during daily chores.",
+        },
+        {
+          icon: Wind,
+          title: "Complete prescribed breathing exercises",
+          desc: "Practice diaphragmatic expansion to optimize lower-lung oxygen distribution.",
         },
         {
           icon: ShieldCheck,
-          title: "Rest When Short of Breath",
-          desc: "Pause and recover immediately if breathing effort increases during chores.",
+          title: "Keep scheduled clinical follow-ups",
+          desc: "Stay on track with regular PFT tests, 6-minute walks, and clinic reviews.",
         },
       ],
     },
@@ -184,29 +272,34 @@ export function DiseaseHero3DVisual({
       },
       headline: "Clear Airways. Stay Ahead.",
       subtitle: "Perform your daily airway clearance routine, stay hydrated, and monitor sputum baseline.",
-      badge: "Bronchiectasis Care Pathway",
+      badge: "BRONCHIECTASIS CARE PATHWAY",
       statusBadge: "Airways Cleared & Hydrated",
       actionGuideTitle: "Today's Helpful Actions",
       actions: [
         {
           icon: Wind,
-          title: "Morning Airway Clearance",
+          title: "Follow prescribed airway-clearance techniques",
           desc: "Perform your daily huff coughing / PEP device routine to clear mucus.",
         },
         {
           icon: Droplets,
-          title: "Hydrate (6–8 Glasses)",
-          desc: "Drink plenty of water daily to keep bronchial mucus thin and easy to clear.",
+          title: "Stay adequately hydrated where appropriate",
+          desc: "Drink 6–8 glasses of water daily to keep bronchial mucus thin and easy to clear.",
         },
         {
           icon: Activity,
-          title: "Track Sputum Baseline",
+          title: "Track changes in cough and sputum",
           desc: "Note any change in sputum volume, color, or thickness in daily logs.",
         },
         {
-          icon: TrendingUp,
-          title: "15-Min Light Walking",
-          desc: "Light daily movement naturally loosens secretions and supports drainage.",
+          icon: AlertTriangle,
+          title: "Record/report hemoptysis per doctor's instructions",
+          desc: "Promptly record and report any blood streaks according to your care plan.",
+        },
+        {
+          icon: Pill,
+          title: "Take prescribed medications consistently",
+          desc: "Take prescribed inhalers, nebulizers, or scheduled therapies consistently.",
         },
       ],
     },
@@ -222,35 +315,78 @@ export function DiseaseHero3DVisual({
       },
       headline: "Rebuild Strength. Restore Breathing.",
       subtitle: "Progress through your rehabilitation milestones, manage fatigue, and regain vitality.",
-      badge: "Post-ICU Recovery Pathway",
+      badge: "POST-ICU RECOVERY PATHWAY",
       statusBadge: "Rehabilitation in Progress",
       actionGuideTitle: "Today's Helpful Actions",
       actions: [
         {
+          icon: Activity,
+          title: "Follow the prescribed rehabilitation plan",
+          desc: "Complete structured physical rehabilitation exercises guided by your care team.",
+        },
+        {
           icon: Wind,
-          title: "Inspiratory Expansion 3x",
-          desc: "Practice deep lung expansion exercises 3 times daily to rebuild capacity.",
+          title: "Practice prescribed breathing exercises",
+          desc: "Practice deep lung inspiratory expansion exercises 3 times daily.",
         },
         {
           icon: TrendingUp,
-          title: "Gradual Mobility Steps",
-          desc: "Complete gentle walking or chair-stand routines without exhaustion.",
+          title: "Gradually increase activity as advised",
+          desc: "Complete gentle walking or chair-stand routines without causing exhaustion.",
         },
         {
           icon: HeartPulse,
-          title: "Pace Energy & Take Rests",
-          desc: "Balance daily activities with restorative rest breaks to combat fatigue.",
+          title: "Monitor fatigue and breathlessness",
+          desc: "Balance daily activities with restorative rest breaks to manage fatigue.",
         },
         {
           icon: Sparkles,
-          title: "Protein Nutrition & Fluids",
-          desc: "Prioritize wholesome protein and hydration to accelerate muscle repair.",
+          title: "Maintain adequate nutrition & hydration",
+          desc: "Prioritize wholesome protein intake and hydration to accelerate muscle repair.",
+        },
+      ],
+    },
+    bronchiolitis_obliterans: {
+      theme: {
+        bg: "linear-gradient(135deg, #07222c 0%, #0e3a47 50%, #061922 100%)",
+        accent: "#22d3ee",
+        glow: "rgba(34, 211, 238, 0.25)",
+        badgeBg: "rgba(34, 211, 238, 0.15)",
+        badgeBorder: "rgba(34, 211, 238, 0.35)",
+        badgeText: "#22d3ee",
+        cardBg: "rgba(255, 255, 255, 0.95)",
+      },
+      headline: "Protect Small Airways. Breathe Steady.",
+      subtitle: "Follow your prescribed regimen, shield small airways from irritants, and pace daily activities.",
+      badge: "BRONCHIOLITIS OBLITERANS CARE PATHWAY",
+      statusBadge: "Small Airways Shielded & Monitored",
+      actionGuideTitle: "Today's Helpful Actions",
+      actions: [
+        {
+          icon: Pill,
+          title: "Take prescribed medicines & inhalers as directed",
+          desc: "Inhale slowly and use prescribed nebulizers or inhalers consistently on schedule.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Shield against environmental irritants",
+          desc: "Avoid dust, toxic fumes, harsh chemicals, cold drafts, and polluted air.",
+        },
+        {
+          icon: Activity,
+          title: "Monitor symptoms & peak flow if advised",
+          desc: "Track daily breathlessness, cough, and exertion tolerance in your log.",
+        },
+        {
+          icon: Sparkles,
+          title: "Follow your doctor's action plan",
+          desc: "Contact your pulmonologist promptly if breathing difficulty increases.",
         },
       ],
     },
   };
 
-  const current = diseaseConfig[disease as keyof typeof diseaseConfig] || diseaseConfig.asthma;
+  const current = diseaseConfig[pathwayKey] || diseaseConfig.asthma;
   const theme = current.theme;
 
   return (
@@ -443,7 +579,7 @@ export function DiseaseHero3DVisual({
           }}
         >
           {/* 1. ASTHMA 3D ACTION: Inhaler Mist & Trigger Shielding */}
-          {disease === "asthma" && (
+          {pathwayKey === "asthma" && (
             <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
               <defs>
                 <filter id="asthmaGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -500,7 +636,7 @@ export function DiseaseHero3DVisual({
           )}
 
           {/* 2. COPD 3D ACTION: Pursed-Lip Breathing & Streamlined Airflow */}
-          {disease === "copd" && (
+          {pathwayKey === "copd" && (
             <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
               <defs>
                 <filter id="copdGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -544,7 +680,7 @@ export function DiseaseHero3DVisual({
           )}
 
           {/* 3. ILD 3D ACTION: Diaphragmatic Breathing & Gas Diffusion */}
-          {disease === "ild" && (
+          {pathwayKey === "ild" && (
             <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
               <defs>
                 <filter id="ildGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -566,7 +702,7 @@ export function DiseaseHero3DVisual({
                 <path d="M 172 55 C 188 55, 210 75, 218 105 C 226 135, 222 170, 202 185 C 188 195, 175 185, 168 162 C 162 145, 162 95, 166 70 Z" fill="url(#ildLungFill)" stroke="#818cf8" strokeWidth="2" filter="url(#ildGlow)" />
                 <path d="M 156 25 L 164 25 L 164 65 L 156 65 Z" fill="#ffffff" stroke="#818cf8" strokeWidth="1.5" />
 
-                {/* Subpleural Reticular Diffusion Mesh */}
+                {/* Subpleural Reticular Diffusion Mesh (Reassuring, non-frightening) */}
                 <path d="M 115 130 L 125 145 L 118 160" stroke="#c7d2fe" strokeWidth="1.2" strokeDasharray="3 2" />
                 <path d="M 205 130 L 195 145 L 202 160" stroke="#c7d2fe" strokeWidth="1.2" strokeDasharray="3 2" />
               </g>
@@ -578,7 +714,7 @@ export function DiseaseHero3DVisual({
           )}
 
           {/* 4. BRONCHIECTASIS 3D ACTION: Airway Clearance & Mucus Mobilization */}
-          {disease === "bronchiectasis" && (
+          {pathwayKey === "bronchiectasis" && (
             <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
               <defs>
                 <filter id="bronchGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -614,7 +750,7 @@ export function DiseaseHero3DVisual({
           )}
 
           {/* 5. POST-ICU 3D ACTION: Progressive Rehabilitation Milestones */}
-          {disease === "post_icu" && (
+          {pathwayKey === "post_icu" && (
             <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
               <defs>
                 <filter id="postIcuGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -641,6 +777,53 @@ export function DiseaseHero3DVisual({
               <g transform="translate(60, 205)">
                 <rect x="0" y="0" width="200" height="30" rx="15" fill="#1e1308" stroke="#fbbf24" strokeWidth="1.2" />
                 <text x="100" y="20" fill="#fde68a" fontSize="11" fontWeight="700" textAnchor="middle">Rehab Step 2: Active Mobility</text>
+              </g>
+            </svg>
+          )}
+
+          {/* 6. BRONCHIOLITIS OBLITERANS 3D ACTION: Small Airways Protection & Irritant Barrier */}
+          {pathwayKey === "bronchiolitis_obliterans" && (
+            <svg viewBox="0 0 320 250" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxHeight: 240, overflow: "visible" }}>
+              <defs>
+                <filter id="boGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <radialGradient id="boLungFill" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#cffafe" stopOpacity="0.85" />
+                  <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0.15" />
+                </radialGradient>
+              </defs>
+
+              {/* Protective Shield Outer Ring */}
+              <circle cx="160" cy="125" r="100" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.4" />
+              <circle cx="160" cy="125" r="88" fill="#0891b2" opacity="0.08" filter="url(#boGlow)" />
+
+              {/* 3D Breathing Lungs with Small Airway Branching */}
+              <g style={{ animation: "subtleBreathingLoop 4.2s ease-in-out infinite", transformOrigin: "160px 125px" }}>
+                <path d="M 148 55 C 132 55, 110 75, 102 105 C 94 135, 98 170, 118 185 C 132 195, 145 185, 152 162 C 158 145, 158 95, 154 70 Z" fill="url(#boLungFill)" stroke="#22d3ee" strokeWidth="2" filter="url(#boGlow)" />
+                <path d="M 172 55 C 188 55, 210 75, 218 105 C 226 135, 222 170, 202 185 C 188 195, 175 185, 168 162 C 162 145, 162 95, 166 70 Z" fill="url(#boLungFill)" stroke="#22d3ee" strokeWidth="2" filter="url(#boGlow)" />
+                <path d="M 156 25 L 164 25 L 164 65 L 156 65 Z" fill="#cffafe" stroke="#22d3ee" strokeWidth="1.5" />
+
+                {/* Bronchiolar Small Airway Arbors */}
+                <path d="M 158 65 C 146 78, 130 92, 122 118" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+                <path d="M 122 118 Q 112 135, 116 150" stroke="#a5f3fc" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M 162 65 C 174 78, 190 92, 198 118" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+                <path d="M 198 118 Q 208 135, 204 150" stroke="#a5f3fc" strokeWidth="1.5" strokeLinecap="round" />
+              </g>
+
+              {/* Irritant Barrier Deflector */}
+              <g transform="translate(240, 55)">
+                <circle cx="16" cy="16" r="16" fill="rgba(239, 68, 68, 0.15)" stroke="#ef4444" strokeWidth="1.2" />
+                <text x="16" y="21" fill="#fca5a5" fontSize="10" fontWeight="700" textAnchor="middle">Fumes</text>
+                <path d="M 0 16 Q -15 10, -25 2" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+              </g>
+
+              {/* Status Badge */}
+              <g transform="translate(85, 210)">
+                <rect x="0" y="0" width="150" height="26" rx="13" fill="#07222c" stroke="#22d3ee" strokeWidth="1" />
+                <text x="75" y="17" fill="#ffffff" fontSize="11" fontWeight="700" textAnchor="middle">Small Airways Protected</text>
               </g>
             </svg>
           )}
