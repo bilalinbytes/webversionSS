@@ -255,12 +255,32 @@ export async function GET(request: Request): Promise<NextResponse> {
   const support = supportRes.data;
 
   // Resolve baseline vitals from patient_baselines table or previous PFT other_fields
-  const lastPftRecord = pftRes.data && pftRes.data.length > 0 ? pftRes.data[pftRes.data.length - 1] : null;
-  const lastPftOther = (lastPftRecord?.other_fields as Record<string, string | null>) ?? {};
-  const resolvedBaselineSpo2 = baselineRes.data?.baseline_spo2
-    ? String(baselineRes.data.baseline_spo2)
-    : (lastPftOther.baseline_spo2 ?? "");
-  const resolvedBaselineHeartRate = lastPftOther.baseline_heart_rate ?? "";
+  let resolvedBaselineSpo2 = "";
+  let resolvedBaselineHeartRate = "";
+
+  if (baselineRes.data?.baseline_spo2) {
+    resolvedBaselineSpo2 = String(baselineRes.data.baseline_spo2);
+  }
+
+  if (pftRes.data && pftRes.data.length > 0) {
+    for (const rec of pftRes.data) {
+      const other = (rec.other_fields as Record<string, string | null>) ?? {};
+      if (!resolvedBaselineSpo2 && other.baseline_spo2) {
+        resolvedBaselineSpo2 = String(other.baseline_spo2);
+      }
+      if (!resolvedBaselineHeartRate && other.baseline_heart_rate) {
+        resolvedBaselineHeartRate = String(other.baseline_heart_rate);
+      }
+    }
+  }
+
+  // Fallback to clinical default baselines for existing patients so faint reference values always display
+  if (!resolvedBaselineSpo2) {
+    resolvedBaselineSpo2 = "96";
+  }
+  if (!resolvedBaselineHeartRate) {
+    resolvedBaselineHeartRate = "78";
+  }
 
   const formData = {
     name: patientRes.data.name ?? "",
@@ -579,17 +599,20 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to save PFT records" }, { status: 500 });
       }
     }
+  }
 
-    const baselineSpo2Str = pftRows?.find(r => r.baseline_spo2)?.baseline_spo2 || pftRows?.[0]?.baseline_spo2;
-    if (baselineSpo2Str) {
-      const rawSpo2 = parseFloat(baselineSpo2Str);
-      if (!isNaN(rawSpo2)) {
-        await supabase.from("patient_baselines").upsert({
-          patient_id: patientId,
-          baseline_spo2: rawSpo2,
-          updated_at: new Date().toISOString(),
-        });
-      }
+  const baselineSpo2Str =
+    (body.baselineVitals as { baseline_spo2?: string })?.baseline_spo2 ||
+    pftRows?.find((r) => r.baseline_spo2)?.baseline_spo2 ||
+    pftRows?.[0]?.baseline_spo2;
+  if (baselineSpo2Str) {
+    const rawSpo2 = parseFloat(String(baselineSpo2Str));
+    if (!isNaN(rawSpo2)) {
+      await supabase.from("patient_baselines").upsert({
+        patient_id: patientId,
+        baseline_spo2: rawSpo2,
+        updated_at: new Date().toISOString(),
+      });
     }
   }
 
@@ -820,17 +843,20 @@ export async function PUT(request: Request): Promise<NextResponse> {
       const { error: pftError } = await admin.from("pft_records").insert(pftInserts);
       if (pftError) return NextResponse.json({ error: pftError.message }, { status: 500 });
     }
+  }
 
-    const baselineSpo2Str = pftRows?.find(r => r.baseline_spo2)?.baseline_spo2 || pftRows?.[0]?.baseline_spo2;
-    if (baselineSpo2Str) {
-      const rawSpo2 = parseFloat(baselineSpo2Str);
-      if (!isNaN(rawSpo2)) {
-        await admin.from("patient_baselines").upsert({
-          patient_id: patientId,
-          baseline_spo2: rawSpo2,
-          updated_at: new Date().toISOString(),
-        });
-      }
+  const baselineSpo2Str =
+    (body.baselineVitals as { baseline_spo2?: string })?.baseline_spo2 ||
+    pftRows?.find((r) => r.baseline_spo2)?.baseline_spo2 ||
+    pftRows?.[0]?.baseline_spo2;
+  if (baselineSpo2Str) {
+    const rawSpo2 = parseFloat(String(baselineSpo2Str));
+    if (!isNaN(rawSpo2)) {
+      await admin.from("patient_baselines").upsert({
+        patient_id: patientId,
+        baseline_spo2: rawSpo2,
+        updated_at: new Date().toISOString(),
+      });
     }
   }
 

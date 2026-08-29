@@ -1778,6 +1778,10 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           hasRespSupport: data.respiratory_support.requires_support,
           ...data.respiratory_support,
         },
+        baselineVitals: {
+          baseline_spo2: data.baseline_spo2 || "",
+          baseline_heart_rate: data.baseline_heart_rate || "",
+        },
         pftRows: data.pft_records.map((record) => {
           const ext = record as typeof record & { fev1_pct_pred?: string | null; fvc_pct_pred?: string | null; six_mwd?: string | null; min_spo2?: string | null; max_spo2?: string | null; baseline_spo2?: string | null; baseline_heart_rate?: string | null };
           return {
