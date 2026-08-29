@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Zap, RotateCw } from "lucide-react";
+import { Zap } from "lucide-react";
 
 export function Hero3DScene() {
   const [rotateX, setRotateX] = useState(0);
@@ -538,26 +538,6 @@ export function Hero3DScene() {
               <span style={{ fontSize: "0.64rem", color: "#c2410c" }}>High Acuity Detected — Doctor Notified</span>
             </div>
           </div>
-        </div>
-
-        {/* ─── 7. INTERACTION CUE (BOTTOM RIGHT) ─── */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            right: 20,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            color: "rgba(255, 255, 255, 0.75)",
-            fontSize: "0.78rem",
-            fontWeight: 600,
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-            textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-          }}
-        >
-          <RotateCw size={15} style={{ color: "#38bdf8" }} />
-          <span>Move mouse to explore 3D lungs</span>
         </div>
       </div>
     </div>

@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Sparkles,
   AlertTriangle,
-  RotateCw,
 } from "lucide-react";
 import { normalizeDashboard } from "@o2plus/core";
 
@@ -566,19 +565,6 @@ export function DiseaseHero3DVisual({
             >
               {hasTodayLog ? "✓ Today's Log Recorded" : "+ Log Today's Vitals"}
             </button>
-
-            <span
-              style={{
-                fontSize: "0.78rem",
-                color: "#94a3b8",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <RotateCw size={13} style={{ color: theme.accent }} />
-              Tilt mouse to explore 3D
-            </span>
           </div>
         </div>
 
