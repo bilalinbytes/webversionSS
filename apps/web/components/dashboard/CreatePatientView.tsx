@@ -703,21 +703,101 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
   return (
     <div className={styles.stepContent}>
       <div className={styles.stepIntro}>
-        <h2 className={styles.stepTitle}>PFT Records</h2>
-        <p className={styles.stepDesc}>Add pulmonary function test results. All fields except date are optional.</p>
+        <h2 className={styles.stepTitle}>PFT &amp; Baseline Vitals</h2>
+        <p className={styles.stepDesc}>Record baseline vitals and optional pulmonary function / spirometry results.</p>
       </div>
+
+      {/* Card 1: Baseline Vitals */}
+      <div className={styles.card} style={{ marginBottom: 18 }}>
+        <div className={styles.cardTitleRow}>
+          <div>
+            <p className={styles.cardTitle} style={{ margin: 0 }}>
+              Patient Baseline Vitals
+            </p>
+            <p className={styles.cardSub} style={{ margin: "4px 0 0" }}>
+              {isEdit
+                ? "Existing baseline values are displayed below (edit only if updated vitals are needed)."
+                : "Required for daily vitals drop calculations and alert monitoring."}
+            </p>
+          </div>
+          {isEdit ? (
+            <span className={styles.reviewBadge} style={{ background: "#f1f5f9", color: "#475569" }}>
+              Recorded Baseline
+            </span>
+          ) : (
+            <span className={styles.reviewBadge} style={{ background: "#fee2e2", color: "#b91c1c" }}>
+              * Required
+            </span>
+          )}
+        </div>
+
+        <div className={styles.grid2}>
+          <Field label="Baseline SpO2 (%)" required={!isEdit} error={errors["baseline_spo2"]}>
+            <div style={{ position: "relative" }}>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                className={`${styles.input} ${isEdit ? styles.subtleValueInput : ""} ${errors["baseline_spo2"] ? styles.inputError : ""}`}
+                placeholder="96"
+                value={data.baseline_spo2}
+                onChange={(e) => update({ baseline_spo2: e.target.value })}
+              />
+              <span className={styles.subtleRefTag}>% SpO₂</span>
+            </div>
+          </Field>
+          <Field label="Baseline Heart Rate (bpm)" required={!isEdit} error={errors["baseline_heart_rate"]}>
+            <div style={{ position: "relative" }}>
+              <input
+                type="number"
+                min="20"
+                max="250"
+                step="1"
+                className={`${styles.input} ${isEdit ? styles.subtleValueInput : ""} ${errors["baseline_heart_rate"] ? styles.inputError : ""}`}
+                placeholder="78"
+                value={data.baseline_heart_rate}
+                onChange={(e) => update({ baseline_heart_rate: e.target.value })}
+              />
+              <span className={styles.subtleRefTag}>bpm</span>
+            </div>
+          </Field>
+        </div>
+      </div>
+
+      {/* Card 2: PFT Records */}
       <div className={styles.card}>
         <div className={styles.cardTitleRow}>
-          <p className={styles.cardTitle}>Test Results ({data.pft_records.length} entries)</p>
-          {!adding && <button type="button" className={styles.btnOutline} onClick={() => setAdding(true)}>+ Add PFT Record</button>}
+          <div>
+            <p className={styles.cardTitle} style={{ margin: 0 }}>
+              Pulmonary Function Tests ({data.pft_records.length} entries)
+            </p>
+            <p className={styles.cardSub} style={{ margin: "4px 0 0" }}>
+              Optional — spirometry, DLCO, and 6-minute walk test records.
+            </p>
+          </div>
+          {!adding && (
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setAdding(true)}
+            >
+              + Add PFT Record
+            </button>
+          )}
         </div>
 
         {adding && (
           <div className={styles.addRowForm}>
             <p className={styles.addRowTitle}>New PFT Record</p>
             <div className={styles.addRowGrid}>
-              <Field label="Date" required>
-                <input type="date" className={styles.input} value={draft.date} onChange={(e) => setDraft({...draft, date: e.target.value})} />
+              <Field label="Test Date" required>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={draft.date}
+                  onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                />
               </Field>
               <Field label="FEV1 (Liters)">
                 <input
@@ -740,7 +820,15 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                 />
               </Field>
               <Field label="FVC (% Predicted)">
-                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.fvc_pct_pred} onChange={(e) => setDraft({...draft, fvc_pct_pred: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.fvc_pct_pred}
+                  onChange={(e) => setDraft({ ...draft, fvc_pct_pred: e.target.value })}
+                />
               </Field>
               <Field label="FVC (Liters)">
                 <input
@@ -763,117 +851,166 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                 />
               </Field>
               <Field label="FEV1/FVC (%)">
-                <input type="number" step="0.01" inputMode="decimal" className={styles.input} placeholder="e.g. 75.0" value={draft.ratio} onChange={(e) => setDraft({...draft, ratio: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="e.g. 75.0"
+                  value={draft.ratio}
+                  onChange={(e) => setDraft({ ...draft, ratio: e.target.value })}
+                />
               </Field>
               <Field label="FEV1 (% Predicted)">
-                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.fev1_pct_pred} onChange={(e) => setDraft({...draft, fev1_pct_pred: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.fev1_pct_pred}
+                  onChange={(e) => setDraft({ ...draft, fev1_pct_pred: e.target.value })}
+                />
               </Field>
               <Field label="DLCO (% Predicted)">
-                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.dlco} onChange={(e) => setDraft({...draft, dlco: e.target.value})} />
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.dlco}
+                  onChange={(e) => setDraft({ ...draft, dlco: e.target.value })}
+                />
               </Field>
               <Field label="6MWD (m)">
-                <input type="number" step="1" inputMode="numeric" className={styles.input} placeholder="-" value={draft.six_mwd} onChange={(e) => setDraft({...draft, six_mwd: e.target.value})} />
+                <input
+                  type="number"
+                  step="1"
+                  inputMode="numeric"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.six_mwd}
+                  onChange={(e) => setDraft({ ...draft, six_mwd: e.target.value })}
+                />
               </Field>
-              <Field label="Min SpO2">
-                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.min_spo2} onChange={(e) => setDraft({...draft, min_spo2: e.target.value})} />
+              <Field label="Min SpO2 (%)">
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.min_spo2}
+                  onChange={(e) => setDraft({ ...draft, min_spo2: e.target.value })}
+                />
               </Field>
-              <Field label="Max SpO2">
-                <input type="number" step="0.1" inputMode="decimal" className={styles.input} placeholder="-" value={draft.max_spo2} onChange={(e) => setDraft({...draft, max_spo2: e.target.value})} />
+              <Field label="Max SpO2 (%)">
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.max_spo2}
+                  onChange={(e) => setDraft({ ...draft, max_spo2: e.target.value })}
+                />
               </Field>
             </div>
             <div className={styles.addRowActions}>
-              <button type="button" className={styles.btnGhost} onClick={() => setAdding(false)}>Cancel</button>
-              <button type="button" className={styles.btnPrimary} onClick={saveRecord} disabled={!draft.date}>Add Record</button>
+              <button
+                type="button"
+                className={styles.btnGhost}
+                onClick={() => setAdding(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={saveRecord}
+                disabled={!draft.date}
+              >
+                Add Record
+              </button>
             </div>
           </div>
         )}
 
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.th}>Date</th>
-                <th className={styles.th}>FEV1/FVC%</th>
-                <th className={styles.th}>FEV1%pred</th>
-                <th className={styles.th}>FEV1 L</th>
-                <th className={styles.th}>FVC%pred</th>
-                <th className={styles.th}>FVC L</th>
-                <th className={styles.th}>DLCO%</th>
-                <th className={styles.th}>6MWD</th>
-                <th className={styles.th}>SpO2 min/max</th>
-                <th className={styles.th}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.pft_records.map((r) => {
-                const ext = r as typeof r & { fev1_pct_pred?: string | null; fvc_pct_pred?: string | null; six_mwd?: string | null; min_spo2?: string | null; max_spo2?: string | null; baseline_spo2?: string | null; baseline_heart_rate?: string | null };
-                return (
-                  <tr key={r._clientId} className={styles.tr}>
-                    <td className={styles.td}>{r.test_date}</td>
-                    <td className={`${styles.td} ${flag(r.fev1_fvc_ratio, 0.7) ? styles.abnormal : ""}`}>{r.fev1_fvc_ratio ?? "-"}{flag(r.fev1_fvc_ratio, 0.7) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.fev1_pct_pred || "-"}</td>
-                    <td className={`${styles.td} ${flag(r.fev1, 0.8) ? styles.abnormal : ""}`}>{r.fev1 ?? "-"}{flag(r.fev1, 0.8) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.fvc_pct_pred || "-"}</td>
-                    <td className={`${styles.td} ${flag(r.fvc, 0.8) ? styles.abnormal : ""}`}>{r.fvc ?? "-"}{flag(r.fvc, 0.8) ? " !" : ""}</td>
-                    <td className={`${styles.td} ${flag(r.dlco, 60) ? styles.abnormal : ""}`}>{r.dlco ?? "-"}{flag(r.dlco, 60) ? " !" : ""}</td>
-                    <td className={styles.td}>{ext.six_mwd || "-"}</td>
-                    <td className={styles.td}>{ext.min_spo2 || "-"} / {ext.max_spo2 || "-"}</td>
-                    <td className={styles.td}><button type="button" className={styles.removeBtn} onClick={() => removeRow(r._clientId)}>-</button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div className={styles.baselineVitalsSection}>
-          <p className={styles.addRowTitle}>
-            Baseline Vitals{" "}
-            {isEdit ? (
-              <span style={{ color: "#64748b", fontSize: 11, fontWeight: 500 }}>
-                (Recorded baseline values shown below — edit only if updated vitals are needed)
-              </span>
-            ) : (
-              <span style={{ color: "#c94d49", fontSize: 11 }}>* Required for initial enrolment</span>
-            )}
-          </p>
-          <div className={styles.baselineVitalsGrid}>
-            <Field label="Baseline SpO2 (%)" required={!isEdit} error={errors["baseline_spo2"]}>
-              <div style={{ position: "relative" }}>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className={`${styles.input} ${isEdit ? styles.subtleValueInput : ""} ${errors["baseline_spo2"] ? styles.inputError : ""}`}
-                  placeholder="96"
-                  value={data.baseline_spo2}
-                  onChange={(e) => update({ baseline_spo2: e.target.value })}
-                />
-                {isEdit && data.baseline_spo2 && (
-                  <span className={styles.subtleRefTag}>% SpO₂</span>
-                )}
-              </div>
-            </Field>
-            <Field label="Baseline Heart Rate (bpm)" required={!isEdit} error={errors["baseline_heart_rate"]}>
-              <div style={{ position: "relative" }}>
-                <input
-                  type="number"
-                  min="20"
-                  max="250"
-                  step="1"
-                  className={`${styles.input} ${isEdit ? styles.subtleValueInput : ""} ${errors["baseline_heart_rate"] ? styles.inputError : ""}`}
-                  placeholder="78"
-                  value={data.baseline_heart_rate}
-                  onChange={(e) => update({ baseline_heart_rate: e.target.value })}
-                />
-                {isEdit && data.baseline_heart_rate && (
-                  <span className={styles.subtleRefTag}>bpm</span>
-                )}
-              </div>
-            </Field>
+        {data.pft_records.length === 0 ? (
+          <div className={styles.emptyPftState}>
+            <Activity size={22} className={styles.emptyPftIcon} />
+            <p className={styles.emptyPftTitle}>No PFT Records Added</p>
+            <p className={styles.emptyPftSub}>
+              Pulmonary function tests are optional. Click &quot;+ Add PFT Record&quot; to log spirometry or DLCO test results.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className={styles.medTableWrap}>
+            <table className={styles.medTable}>
+              <thead>
+                <tr>
+                  <th>Test Date</th>
+                  <th>FEV1/FVC %</th>
+                  <th>FEV1 %pred</th>
+                  <th>FEV1 (L)</th>
+                  <th>FVC %pred</th>
+                  <th>FVC (L)</th>
+                  <th>DLCO %</th>
+                  <th>6MWD</th>
+                  <th>SpO2 min/max</th>
+                  <th style={{ width: 44, textAlign: "center" }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.pft_records.map((r) => {
+                  const ext = r as typeof r & {
+                    fev1_pct_pred?: string | null;
+                    fvc_pct_pred?: string | null;
+                    six_mwd?: string | null;
+                    min_spo2?: string | null;
+                    max_spo2?: string | null;
+                  };
+                  return (
+                    <tr key={r._clientId}>
+                      <td className={styles.medDateText}>{r.test_date}</td>
+                      <td className={flag(r.fev1_fvc_ratio, 0.7) ? styles.abnormal : ""}>
+                        {r.fev1_fvc_ratio !== null ? `${r.fev1_fvc_ratio}%` : "—"}
+                      </td>
+                      <td>{ext.fev1_pct_pred ? `${ext.fev1_pct_pred}%` : "—"}</td>
+                      <td className={flag(r.fev1, 0.8) ? styles.abnormal : ""}>
+                        {r.fev1 !== null ? `${r.fev1} L` : "—"}
+                      </td>
+                      <td>{ext.fvc_pct_pred ? `${ext.fvc_pct_pred}%` : "—"}</td>
+                      <td className={flag(r.fvc, 0.8) ? styles.abnormal : ""}>
+                        {r.fvc !== null ? `${r.fvc} L` : "—"}
+                      </td>
+                      <td className={flag(r.dlco, 60) ? styles.abnormal : ""}>
+                        {r.dlco !== null ? `${r.dlco}%` : "—"}
+                      </td>
+                      <td>{ext.six_mwd ? `${ext.six_mwd} m` : "—"}</td>
+                      <td>
+                        {ext.min_spo2 || ext.max_spo2
+                          ? `${ext.min_spo2 || "—"} / ${ext.max_spo2 || "—"}%`
+                          : "—"}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className={styles.removeMedBtn}
+                          onClick={() => removeRow(r._clientId)}
+                          title="Remove record"
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
