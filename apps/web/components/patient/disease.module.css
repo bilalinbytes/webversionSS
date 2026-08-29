@@ -48,56 +48,64 @@
   margin: 0;
 }
 
-/* ── Base Card ───────────────────────────────────────────────────────────── */
+/* ── Base Card (3D Clinical Depth) ────────────────────────────────────────── */
 .card {
   background: var(--med-surface-card, #ffffff);
   border: 1px solid var(--med-border-subtle, #e2e8f0);
-  border-radius: 12px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 3px 12px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
   position: relative;
 }
 
-.card:hover, .metricCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(15, 43, 72, 0.06);
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: #cbd5e1;
 }
 
-/* ── Section Color-Coding (Subtle & Clinical) ────────────────────────────────── */
+/* ── Section Color-Coding (Subtle & Clinical 3D Bevels) ──────────────────────── */
 .vitalsCard {
   border-left: 4px solid #0284c7 !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow: 0 3px 12px rgba(2, 132, 199, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .medsCard {
   border-left: 4px solid #059669 !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfffd 100%);
+  box-shadow: 0 3px 12px rgba(5, 150, 105, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .symptomsCard {
   border-left: 4px solid #d97706 !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdfa 100%);
+  box-shadow: 0 3px 12px rgba(217, 119, 6, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .diseaseCard {
   border-left: 4px solid #7c3aed !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfaff 100%);
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .aqiCard {
   border-left: 4px solid #0d9488 !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fafffe 100%);
+  box-shadow: 0 3px 12px rgba(13, 148, 136, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .appointmentCard {
   border-left: 4px solid #4f46e5 !important;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fafaff 100%);
+  box-shadow: 0 3px 12px rgba(79, 70, 229, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .alertCard {
   border-left: 4px solid #dc2626 !important;
-  background: #fffafa;
+  background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+  box-shadow: 0 3px 12px rgba(220, 38, 38, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Section Header Rows & Badges */
@@ -116,13 +124,14 @@
 }
 
 .sectionIconRoundel {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .sectionTitle {
@@ -144,16 +153,17 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.05);
 }
 
 .cardTitle {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--med-navy-800, #0f2b48);
   margin-bottom: 4px;
@@ -199,44 +209,211 @@
   gap: 12px;
 }
 
+/* ── 3D Metric Tiles (Tactile Vitals & Analytics) ─────────────────────────── */
 .metricCard {
   min-width: 0;
   background: var(--med-surface-card, #ffffff);
   border: 1px solid var(--med-border-subtle, #e2e8f0);
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 3px 10px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metricCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .metricCardVitals {
   background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
   border-color: #bae6fd;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardVitals:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.14);
 }
 
 .metricCardSymptoms {
   background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
   border-color: #fde68a;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardSymptoms:hover {
+  border-color: #fcd34d;
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.14);
 }
 
 .metricCardMeds {
   background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
   border-color: #a7f3d0;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardMeds:hover {
+  border-color: #6ee7b7;
+  box-shadow: 0 10px 24px rgba(5, 150, 105, 0.14);
 }
 
 .metricCardAqi {
   background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
   border-color: #99f6e4;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardAqi:hover {
+  border-color: #5eead4;
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.14);
 }
 
 .metricCardAppointment {
   background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
   border-color: #c7d2fe;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardAppointment:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.14);
 }
 
 .metricCardDisease {
   background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
   border-color: #ddd6fe;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.metricCardDisease:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
+}
+
+/* ── Patient Daily Health Pathway 3D Card ─────────────────────────────────── */
+.pathwayWidget {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(15, 43, 72, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+.pathwayStepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.pathwayStepCard {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+  box-shadow: 0 2px 6px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.pathwayStepCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.pathwayStep1::before { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); }
+.pathwayStep2::before { background: linear-gradient(180deg, #34d399 0%, #059669 100%); }
+.pathwayStep3::before { background: linear-gradient(180deg, #a5b4fc 0%, #4f46e5 100%); }
+
+.pathwayStepCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: #cbd5e1;
+}
+
+.pathwayStepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pathwayStepNum {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pathwayStepNum1 { color: #0284c7; }
+.pathwayStepNum2 { color: #059669; }
+.pathwayStepNum3 { color: #4f46e5; }
+
+.pathwayStepStatus {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.statusDone { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.statusPending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.statusActive { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+
+.pathwayStepTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 0;
+}
+
+.pathwayStepSub {
+  font-size: 11.5px;
+  color: var(--med-text-muted, #64748b);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pathwayFooterBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #091e36 0%, #0f2b48 50%, #164e77 100%);
+  border-radius: 10px;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 3px 10px rgba(15, 43, 72, 0.12);
+}
+
+.pathwayFooterText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pathwayFooterEn {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.pathwayFooterHi {
+  font-size: 11px;
+  color: #bae6fd;
+  margin: 0;
+  font-weight: 500;
 }
 
 .metricLabel {
@@ -357,19 +534,26 @@
 .yesNoBtn {
   flex: 1;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1.5px solid var(--med-border-strong, #cbd5e1);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--med-text-secondary, #475569);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .yesNoBtn:hover {
-  background: var(--med-surface-alt, #f8fafc);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   border-color: var(--med-blue-400, #60a5fa);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 43, 72, 0.08);
+}
+
+.yesNoBtn:active {
+  transform: translateY(0);
 }
 
 .scaleRow {
@@ -383,51 +567,57 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 9px 12px;
+  border-radius: 9px;
   border: 1.5px solid var(--med-border-strong, #cbd5e1);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--med-text-secondary, #475569);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .scaleBtn:hover {
-  background: var(--med-surface-alt, #f8fafc);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   border-color: var(--med-blue-400, #60a5fa);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 43, 72, 0.08);
 }
 
 .scaleBtnActive {
-  background: var(--med-blue-600, #1e6091) !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
   color: #ffffff !important;
-  border-color: var(--med-blue-600, #1e6091) !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .warningBanner {
   display: flex;
   gap: 12px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #fed7aa;
-  background: #fff7ed;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
   font-size: 0.85rem;
   color: #9a3412;
   align-items: flex-start;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .emergencyAlert {
   display: flex;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  font-size: 0.85rem;
+  padding: 14px 18px;
+  border-radius: 11px;
+  border: 1px solid #fca5a5;
+  background: linear-gradient(180deg, #fff1f2 0%, #fee2e2 100%);
+  font-size: 0.88rem;
   color: #991b1b;
   align-items: center;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .emergencyPulse {
@@ -437,10 +627,12 @@
   background: #dc2626;
   animation: pulseGlow 1.5s infinite;
   flex-shrink: 0;
+  box-shadow: 0 0 8px #dc2626;
 }
 
 .emergencyText {
   margin: 0;
+  line-height: 1.4;
 }
 
 .symptomsGrid {
@@ -455,15 +647,16 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1.5px solid var(--med-border-strong, #cbd5e1);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--med-text-secondary, #475569);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .symptomBtnHi {
@@ -474,14 +667,17 @@
 }
 
 .symptomBtn:hover {
-  background: var(--med-surface-alt, #f8fafc);
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
   border-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.1);
 }
 
 .symptomBtnActive {
-  background: #fffbeb;
-  border-color: #d97706;
-  color: #92400e;
+  background: linear-gradient(180deg, #fffbeb 0%, #fde68a 100%) !important;
+  border-color: #d97706 !important;
+  color: #92400e !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
 .symptomBtnActive .symptomBtnHi {
@@ -498,28 +694,39 @@
 
 .submitBtn {
   width: 100%;
-  padding: 14px;
-  border-radius: 8px;
-  background: var(--med-blue-600, #1e6091);
+  padding: 13px 22px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 700;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background 0.2s ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .submitBtn:hover {
-  background: var(--med-blue-700, #1e40af);
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.submitBtn:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .submitBtn:disabled {
   background: #94a3b8;
+  box-shadow: none;
   cursor: not-allowed;
+  transform: none;
 }
 
 .submitRow {

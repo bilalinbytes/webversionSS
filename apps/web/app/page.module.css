@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    O2Plus - Landing Page Design System
    Teal/Navy Brand Palette & Pulmonary Rhythm Animations
    ========================================================== */
@@ -813,6 +813,174 @@
   white-space: nowrap;
 }
 
+/* - RESPIRATORY CARE PATHWAY SECTION - */
+.pathwaySection {
+  padding: 5.5rem 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f9fd 50%, #ffffff 100%);
+  border-top: 1px solid rgba(19,45,54,0.06);
+  border-bottom: 1px solid rgba(19,45,54,0.06);
+}
+.pathwayInner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+.pathwayHeader {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.pathwayGrid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.pathwayVisualCard {
+  background: #0f2b48;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(15, 43, 72, 0.2), 0 4px 12px rgba(15, 43, 72, 0.1);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.pathwayVisualCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 26px 60px rgba(15, 43, 72, 0.28);
+}
+.pathwayImageWrap {
+  position: relative;
+  background: #081d33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pathwayImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 490px;
+}
+.pathwayImageCaption {
+  padding: 14px 20px;
+  background: linear-gradient(180deg, rgba(15, 43, 72, 0.95), #0a1c30);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+.captionEn {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 3px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+.captionHi {
+  font-size: 0.85rem;
+  color: #93c5fd;
+  margin: 0;
+  font-weight: 500;
+}
+.pathwayCards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.milestoneCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 1.4rem 1.6rem;
+  background: #ffffff;
+  border: 1px solid rgba(19,45,54,0.09);
+  border-radius: 1.1rem;
+  box-shadow: 0 4px 14px rgba(15, 43, 72, 0.04);
+  transition: all 180ms ease;
+  position: relative;
+  overflow: hidden;
+}
+.milestoneCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+}
+.milestoneCardStep1::before { background: #0284c7; }
+.milestoneCardStep2::before { background: #059669; }
+.milestoneCardStep3::before { background: #4f46e5; }
+
+.milestoneCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 43, 72, 0.08);
+  border-color: rgba(30, 96, 145, 0.25);
+}
+.milestoneIconWrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.milestoneIconStep1 { background: #e0f2fe; color: #0284c7; }
+.milestoneIconStep2 { background: #d1fae5; color: #059669; }
+.milestoneIconStep3 { background: #eef2ff; color: #4f46e5; }
+
+.milestoneBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.milestoneHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.milestoneTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--med-navy-800);
+  margin: 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+.milestoneBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.badgeStep1 { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.badgeStep2 { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.badgeStep3 { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+
+.milestoneDesc {
+  font-size: 0.88rem;
+  color: var(--med-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.milestoneDescHi {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
 /* - RESPONSIVE - */
 @media (max-width: 900px) {
   .heroInner {
@@ -823,6 +991,7 @@
   .heroRight { justify-content: flex-start; }
   .pulmonaryWidget { width: 100%; }
   .aboutGrid { grid-template-columns: 1fr; }
+  .pathwayGrid { grid-template-columns: 1fr; gap: 2rem; }
   .contactInner { grid-template-columns: 1fr; gap: 3rem; }
   .navCenter { display: none; }
 }
@@ -830,6 +999,7 @@
   .heroHeading { font-size: clamp(2.2rem, 9vw, 3rem); }
   .sectionHeading { font-size: clamp(1.8rem, 7vw, 2.4rem); }
   .heroCtas { flex-direction: column; align-items: flex-start; }
+  .milestoneCard { flex-direction: column; gap: 0.85rem; }
   .footerInner { flex-direction: column; align-items: flex-start; }
   .footerNav { gap: 1rem; }
 }

@@ -1,19 +1,41 @@
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-.impactGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-.impactBox  { text-align: center; padding: 14px 8px; border-radius: 10px; margin: 2px; }
-.impactVal  { display: block; font-size: 22px; font-weight: 700; font-family: var(--font-lora), Georgia, serif; }
-.impactLabel { display: block; font-size: 10px; color: #888680; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.impactSub   { display: block; font-size: 10px; color: #aaa9a6; margin-top: 2px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.impactGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.impactBox  {
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  box-shadow: 0 2px 6px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.15s ease;
+}
+.impactBox:hover { transform: translateY(-1px); }
+.impactVal  { display: block; font-size: 22px; font-weight: 700; font-family: var(--font-lora), Georgia, serif; color: var(--med-navy-800, #0f2b48); }
+.impactLabel { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-family: var(--font-dm-sans), system-ui, sans-serif; font-weight: 700; }
+.impactSub   { display: block; font-size: 10.5px; color: #94a3b8; margin-top: 2px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
 
-.aqiNote { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: #e24b4a; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.aqiNote { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: #dc2626; font-family: var(--font-dm-sans), system-ui, sans-serif; font-weight: 600; }
 
 .weeklyGrid { display: flex; flex-direction: column; gap: 8px; }
-.weeklyItem { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 9px; background: #fafafa; }
-.weeklyItemWarn { background: #fdf5f5; }
-.weeklyLabel { font-size: 13px; color: #4a4a46; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.weeklyVal   { font-size: 12px; font-weight: 600; color: #4a4a46; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.weeklyValWarn { color: #e24b4a; }
+.weeklyItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.weeklyItemWarn {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: #fed7aa;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.06);
+}
+.weeklyLabel { font-size: 13px; color: var(--med-text-primary, #0f172a); font-family: var(--font-dm-sans), system-ui, sans-serif; font-weight: 600; }
+.weeklyVal   { font-size: 12px; font-weight: 700; color: var(--med-text-secondary, #475569); font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.weeklyValWarn { color: #dc2626; }
 
 .doctorRow { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .doctorAvatar {

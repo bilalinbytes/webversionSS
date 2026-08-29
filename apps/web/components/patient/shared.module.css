@@ -17,33 +17,37 @@
 
 .vasRow {
   display: flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .vasBtn {
   flex: 1;
   min-height: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1.5px solid var(--med-border-strong, #cbd5e1);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   font-size: 13px;
   font-weight: 700;
   color: var(--med-text-secondary, #475569);
   cursor: pointer;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: all 120ms ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .vasBtn:hover {
   border-color: #d97706;
-  background: #fffbeb;
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.1);
 }
 
 .vasBtnActive {
-  background: #d97706 !important;
-  border-color: #d97706 !important;
+  background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
+  border-color: #b45309 !important;
   color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .vasHints {
@@ -58,11 +62,12 @@
   font-size: 12px;
   font-weight: 700;
   padding: 6px 12px;
-  background: #fffbeb;
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
   color: #b45309;
   border: 1px solid #fde68a;
   border-radius: 8px;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
 }
 
 /* ── mMRC Breathlessness Grade (Color-Graded Clinical Progression) ──────────── */
@@ -78,28 +83,33 @@
   gap: 12px;
   min-height: 48px;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: 11px;
   border: 1.5px solid var(--med-border-subtle, #e2e8f0);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
   cursor: pointer;
   text-align: left;
-  transition: all 120ms ease;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .mmrcBtn:hover {
   border-color: #0284c7;
-  background: #f0f9ff;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
 }
 
 .mmrcBtnActive {
   border-color: #0284c7 !important;
-  background: #f0f9ff !important;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
 .mmrcWarnBtn.mmrcBtnActive {
   border-color: #dc2626 !important;
-  background: #fef2f2 !important;
+  background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%) !important;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
 .mmrcNum {
@@ -116,17 +126,20 @@
   flex-shrink: 0;
   margin-top: 1px;
   font-family: var(--font-lora), Georgia, serif;
-  transition: all 120ms ease;
+  transition: all 0.16s ease;
+  box-shadow: inset 0 1px 2px rgba(15, 43, 72, 0.08);
 }
 
 .mmrcNumActive {
-  background: #0284c7;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
 }
 
 .mmrcNumWarn {
-  background: #dc2626 !important;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 }
 
 .mmrcText {

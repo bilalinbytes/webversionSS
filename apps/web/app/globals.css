@@ -154,11 +154,35 @@ a {
   }
 }
 
+/* -- Premium 3D UI & Enterprise Depth Tokens -- */
+:root {
+  --shadow-3d-ambient: 0 4px 20px -2px rgba(15, 43, 72, 0.07), 0 2px 6px -1px rgba(15, 43, 72, 0.04);
+  --shadow-3d-elevated: 0 12px 32px -4px rgba(15, 43, 72, 0.12), 0 4px 12px -2px rgba(15, 43, 72, 0.06);
+  --shadow-3d-floating: 0 20px 48px -6px rgba(15, 43, 72, 0.18), 0 8px 20px -4px rgba(15, 43, 72, 0.08);
+  --shadow-3d-inset: inset 0 2px 4px 0 rgba(15, 43, 72, 0.06), inset 0 1px 2px 0 rgba(15, 43, 72, 0.04);
+  --bevel-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 0 rgba(15, 43, 72, 0.06);
+  --bevel-dark: inset 0 1px 0 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 0 rgba(0, 0, 0, 0.25);
+  --glass-surface-doctor: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.85) 100%);
+  --glass-surface-patient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
 /* -- Premium Enterprise Animations -- */
 @keyframes pulse-live {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+@keyframes pulse-emerald {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+}
+
+@keyframes pulse-cyan {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(2, 132, 199, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0); }
 }
 
 @keyframes shimmer {
@@ -171,6 +195,16 @@ a {
   border-radius: 50%;
 }
 
+.animate-pulse-emerald {
+  animation: pulse-emerald 2s infinite;
+  border-radius: 50%;
+}
+
+.animate-pulse-cyan {
+  animation: pulse-cyan 2s infinite;
+  border-radius: 50%;
+}
+
 .animate-shimmer {
   animation: shimmer 2.5s infinite linear;
   background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
@@ -178,13 +212,22 @@ a {
 }
 
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hover-lift:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(15, 43, 72, 0.08);
+  box-shadow: var(--shadow-3d-elevated);
+}
+
+.hover-lift-sm {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift-sm:hover {
+  transform: translateY(-1.5px);
+  box-shadow: var(--shadow-3d-ambient);
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+

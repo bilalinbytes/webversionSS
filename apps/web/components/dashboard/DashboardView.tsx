@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "lucide-react";
+import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen, ShieldCheck, Sparkles } from "lucide-react";
 import { PatientDetail } from "./PatientDetail";
 import { ImportPatientModal } from "./ImportPatientModal";
 import { createClient } from "@/lib/supabase/client";
@@ -848,6 +848,88 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           </button>
         </div>
       </div>
+
+      {/* -- Cohort Care Pathway 3D Hub (non-loading, patients exist only) -- */}
+      {!loading && total > 0 && (
+        <div className={styles.pathwayCohortHub}>
+          {/* Left: Artwork badge & motto */}
+          <div className={styles.pathwayCohortLeft}>
+            <div className={styles.pathwayCohortIconBadge}>
+              <Activity size={20} strokeWidth={2.5} />
+            </div>
+            <div className={styles.pathwayCohortTitleWrap}>
+              <p className={styles.pathwayCohortTitle}>
+                Respiratory Care Pathway — Cohort Overview
+              </p>
+              <p className={styles.pathwayCohortSub}>
+                नियमित निगरानी आपको एक कदम आगे रखती है। · Regular monitoring helps you stay ahead.
+              </p>
+            </div>
+          </div>
+
+          {/* Vertical divider */}
+          <div className={styles.pathwayCohortDivider} />
+
+          {/* 3D Step Metrics Grid */}
+          <div className={styles.pathwayCohortGrid}>
+            {/* Step 1 pillar */}
+            <div className={styles.pathwayStepPillar}>
+              <div className={`${styles.pathwayStepIcon} ${styles.pathwayStepIcon1}`}>
+                <Activity size={15} strokeWidth={2.5} />
+              </div>
+              <div className={styles.pathwayStepInfo}>
+                <span className={`${styles.pathwayStepPillarNum} ${styles.pathwayStepNum1}`}>
+                  Step 1 · Daily Check-in
+                </span>
+                <span className={styles.pathwayStepPillarVal}>
+                  {total}
+                  <span className={styles.pathwayStepPillarSub}>enrolled</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Step 2 pillar */}
+            <div className={styles.pathwayStepPillar}>
+              <div className={`${styles.pathwayStepIcon} ${styles.pathwayStepIcon2}`}>
+                <ShieldCheck size={15} strokeWidth={2.5} />
+              </div>
+              <div className={styles.pathwayStepInfo}>
+                <span className={`${styles.pathwayStepPillarNum} ${styles.pathwayStepNum2}`}>
+                  Step 2 · Treatment Tracking
+                </span>
+                <span className={styles.pathwayStepPillarVal}>
+                  {total - critical - high}
+                  <span className={styles.pathwayStepPillarSub}>low–mod</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Step 3 pillar */}
+            <div className={styles.pathwayStepPillar}>
+              <div className={`${styles.pathwayStepIcon} ${styles.pathwayStepIcon3}`}>
+                <Sparkles size={15} strokeWidth={2.5} />
+              </div>
+              <div className={styles.pathwayStepInfo}>
+                <span className={`${styles.pathwayStepPillarNum} ${styles.pathwayStepNum3}`}>
+                  Step 3 · Active Monitoring
+                </span>
+                <span className={styles.pathwayStepPillarVal}>
+                  {stable + moderate}
+                  <span className={styles.pathwayStepPillarSub}>stable–mod</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Alerts pill */}
+            {(critical + high) > 0 && (
+              <div className={styles.pathwayAlertPill}>
+                <span className={styles.pathwayAlertDot} />
+                <span>{critical + high} Needs Review</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* -- Body -- */}
       <div className={styles.splitLayout}>

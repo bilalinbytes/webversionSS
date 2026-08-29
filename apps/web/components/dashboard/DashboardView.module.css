@@ -65,14 +65,16 @@
 
 /* -- Top Bar & Clinical Decision Strip --------------------------------------- */
 .topBar {
-  background: var(--med-surface-card, #ffffff);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
   border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
-  padding: 10px 24px;
+  padding: 11px 24px;
   display: flex;
   align-items: center;
   gap: 20px;
   flex-shrink: 0;
-  box-shadow: 0 1px 2px rgba(15, 43, 72, 0.03);
+  box-shadow: 0 2px 10px rgba(15, 43, 72, 0.03);
+  position: relative;
+  z-index: 10;
 }
 
 .topBarLeft {
@@ -80,7 +82,7 @@
 }
 
 .commandTitle {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: var(--med-navy-800, #0f2b48);
   font-family: var(--font-lora), Georgia, serif;
@@ -92,29 +94,36 @@
 .commandSub {
   font-size: 0.72rem;
   color: var(--med-text-muted, #64748b);
-  margin-top: 1px;
-  font-weight: 500;
+  margin-top: 2px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-/* -- Unified Clinical Summary Strip ------------------------------------------ */
+/* -- Unified Clinical Summary Strip (3D Elevated Pod) ---------------------- */
 .topBarStats {
   display: flex;
   margin-left: auto;
   align-items: center;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid var(--med-border-subtle, #e2e8f0);
   border-radius: 12px;
-  padding: 6px 8px;
-  box-shadow: 0 4px 14px rgba(15, 43, 72, 0.05);
+  padding: 4px 6px;
+  box-shadow: var(--shadow-3d-ambient, 0 4px 14px rgba(15, 43, 72, 0.05)), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .topStat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4px 22px;
+  padding: 5px 20px;
   border-right: 1px solid var(--med-border-subtle, #e2e8f0);
-  transition: all 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.18s ease;
+  border-radius: 8px;
+}
+
+.topStat:hover {
+  background: rgba(15, 43, 72, 0.02);
+  transform: translateY(-1px);
 }
 
 .topStat:last-child {
@@ -129,10 +138,12 @@
   line-height: 1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(15, 43, 72, 0.04);
 }
 
 .topStatRed .topStatVal {
   color: var(--clinical-critical-solid, #dc2626);
+  text-shadow: 0 1px 4px rgba(220, 38, 38, 0.15);
 }
 
 .topStatOrange .topStatVal {
@@ -147,12 +158,12 @@
   font-size: 0.64rem;
   font-weight: 700;
   color: var(--med-text-muted, #64748b);
-  margin-top: 2px;
+  margin-top: 3px;
   display: flex;
   align-items: center;
   gap: 3px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 /* Bell Notification */
@@ -162,8 +173,13 @@
   align-items: center;
   justify-content: center;
   color: var(--med-navy-800, #0f2b48);
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  transition: transform 0.15s ease;
+}
+
+.bellWrap:hover {
+  transform: scale(1.1);
 }
 
 .bellShake {
@@ -178,14 +194,15 @@
   color: #ffffff;
   font-size: 8px;
   font-weight: 800;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.35);
 }
 
 /* Top Bar Action Buttons */
@@ -198,64 +215,280 @@
 
 .btnGhost {
   min-height: 36px;
-  padding: 5px 12px;
-  border-radius: 6px;
+  padding: 5px 13px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--med-border-strong, #cbd5e1);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color: var(--med-text-secondary, #475569);
-  transition: all 120ms ease;
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .btnGhost:hover {
   background: var(--med-surface-alt, #f1f5f9);
   border-color: var(--med-blue-600, #1e6091);
   color: var(--med-blue-600, #1e6091);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 43, 72, 0.08);
 }
 
 .btnGhost:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  box-shadow: inset 0 1px 2px rgba(15, 43, 72, 0.1);
 }
 
 .btnImport {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-height: 36px;
-  padding: 5px 12px;
-  border-radius: 6px;
+  padding: 5px 13px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--med-blue-600, #1e6091);
-  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
   color: var(--med-blue-600, #1e6091);
-  transition: all 120ms ease;
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(30, 96, 145, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .btnImport:hover {
-  background: var(--med-blue-100, #e8f1f8);
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: var(--med-blue-600, #1e6091);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(30, 96, 145, 0.12);
+}
+
+.btnImport:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .btnPrimary {
   min-height: 36px;
-  padding: 5px 14px;
-  border-radius: 6px;
+  padding: 5px 15px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  border: none;
-  background: var(--med-blue-600, #1e6091);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  transition: all 120ms ease;
-  box-shadow: 0 1px 2px rgba(30, 96, 145, 0.2);
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .btnPrimary:hover {
-  background: var(--color-navy-hover, #164e77);
-  box-shadow: 0 2px 6px rgba(30, 96, 145, 0.3);
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btnPrimary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* -- Cohort Care Pathway 3D Hub (Clinical Command Strip) ------------------- */
+.pathwayCohortHub {
+  position: relative;
+  background: linear-gradient(135deg, #091e36 0%, #0f2b48 45%, #164e77 100%);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 16px rgba(10, 25, 47, 0.15);
+  overflow: hidden;
+}
+
+.pathwayCohortHub::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 50%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 90% 50%, rgba(79, 70, 229, 0.1) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.pathwayCohortLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.pathwayCohortIconBadge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7dd3fc;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.pathwayCohortTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pathwayCohortTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pathwayCohortSub {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #bae6fd;
+  font-weight: 500;
+}
+
+.pathwayCohortDivider {
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.04) 100%);
+  flex-shrink: 0;
+}
+
+.pathwayCohortGrid {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 0 auto;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.pathwayStepPillar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 150px;
+}
+
+.pathwayStepPillar:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.pathwayStepIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.pathwayStepIcon1 {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.35), rgba(14, 165, 233, 0.2));
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+}
+
+.pathwayStepIcon2 {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.35), rgba(16, 185, 129, 0.2));
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  color: #34d399;
+}
+
+.pathwayStepIcon3 {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.35), rgba(99, 102, 241, 0.2));
+  border: 1px solid rgba(165, 180, 252, 0.5);
+  color: #a5b4fc;
+}
+
+.pathwayStepInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.pathwayStepPillarNum {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pathwayStepNum1 { color: #7dd3fc; }
+.pathwayStepNum2 { color: #6ee7b7; }
+.pathwayStepNum3 { color: #c7d2fe; }
+
+.pathwayStepPillarVal {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  font-family: var(--font-lora), Georgia, serif;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.pathwayStepPillarSub {
+  font-size: 0.68rem;
+  font-weight: 500;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  opacity: 0.85;
+}
+
+.pathwayAlertPill {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.25) 0%, rgba(185, 28, 28, 0.15) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #fca5a5;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.pathwayAlertDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: pulse-live 2s infinite;
 }
 
 /* -- Split Layout ------------------------------------------------------------ */
@@ -293,11 +526,12 @@
 
 /* Critical Panel */
 .alertPanel {
-  background: linear-gradient(145deg, #fff1f2, #ffe4e6);
+  background: linear-gradient(145deg, #fff1f2 0%, #ffe4e6 100%);
   padding: 16px;
   flex-shrink: 0;
   border-bottom: 1px solid #fecdd3;
-  box-shadow: inset 0 -1px 4px rgba(225, 29, 72, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(225, 29, 72, 0.05);
+  position: relative;
 }
 
 .alertPanelHeader {
@@ -332,37 +566,39 @@
 }
 
 .criticalBlock {
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
-  background: #ffffff;
-  border: 1px solid #ffe4e6;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 3px 10px rgba(225, 29, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: linear-gradient(180deg, #ffffff 0%, #fffbfb 100%);
+  border: 1px solid #fecdd3;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .criticalBlock:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.15);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.15), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .criticalBlockTop {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px 6px;
+  gap: 10px;
+  padding: 10px 12px 8px;
 }
 
 .criticalAvatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: #fee2e2;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #991b1b;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid #fca5a5;
 }
 
 .criticalInfo {
@@ -371,7 +607,7 @@
 }
 
 .criticalName {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--med-text-primary, #0f172a);
   display: flex;
@@ -384,57 +620,63 @@
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.05em;
-  background: #dc2626;
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
   color: #ffffff;
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3);
 }
 
 .criticalAlert {
   font-size: 0.68rem;
   color: #991b1b;
-  margin: 1px 0 0;
+  margin: 2px 0 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .criticalScore {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #dc2626;
   font-family: var(--font-lora), Georgia, serif;
   flex-shrink: 0;
+  text-shadow: 0 1px 2px rgba(220, 38, 38, 0.15);
 }
 
 .criticalBlockActions {
   display: flex;
   border-top: 1px solid #fee2e2;
-  background: #fef2f2;
+  background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
 }
 
 .criticalBtnView {
   flex: 1;
-  padding: 5px;
-  font-size: 0.68rem;
+  padding: 6px;
+  font-size: 0.7rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
   background: none;
   color: #991b1b;
   text-align: center;
-  transition: background 100ms ease;
+  transition: all 120ms ease;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .criticalBtnView:hover {
-  background: rgba(220, 38, 38, 0.12);
+  background: rgba(220, 38, 38, 0.14);
+  color: #7f1d1d;
 }
 
 /* Watch Closely Panel */
 .watchPanel {
-  padding: 10px 12px 8px;
+  padding: 12px 14px 10px;
   border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
   flex-shrink: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdfa 100%);
 }
 
 .watchPanelTitle {
@@ -442,40 +684,43 @@
   font-weight: 800;
   color: var(--med-text-muted, #64748b);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 6px;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
 }
 
 .watchList {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .watchRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  background: #fffaf5;
+  padding: 7px 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
   border: 1px solid #fed7aa;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: background 120ms ease, transform 100ms ease;
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .watchRow:hover {
-  background: #ffedd5;
-  transform: translateX(2px);
+  background: linear-gradient(180deg, #fffaf5 0%, #ffedd5 100%);
+  transform: translateY(-1px) translateX(2px);
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.1);
+  border-color: #fdba74;
 }
 
 .watchAvatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: #ffedd5;
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
   color: #9a3412;
   display: flex;
   align-items: center;
@@ -483,6 +728,8 @@
   font-size: 9.5px;
   font-weight: 800;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15);
+  border: 1px solid #fdba74;
 }
 
 .watchInfo {
@@ -504,10 +751,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .watchScore {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #ea580c;
   font-family: var(--font-lora), Georgia, serif;
@@ -518,10 +766,11 @@
 .quickStats {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 12px;
   margin-top: auto;
   border-top: 1px solid var(--med-border-subtle, #e2e8f0);
-  background: var(--med-surface-alt, #f8fafc);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .qs {
@@ -531,7 +780,7 @@
 
 .qsVal {
   display: block;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-family: var(--font-lora), Georgia, serif;
   color: var(--med-navy-800, #0f2b48);
   font-weight: 700;
@@ -546,13 +795,14 @@
   font-size: 0.62rem;
   font-weight: 700;
   color: var(--med-text-muted, #64748b);
-  margin-top: 1px;
+  margin-top: 2px;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .qsDivider {
   width: 1px;
-  height: 22px;
+  height: 26px;
   background: var(--med-border-subtle, #e2e8f0);
 }
 
@@ -567,7 +817,7 @@
 
 /* Clinical Filter Toolbar */
 .filterBar {
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
   border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
   padding: 12px 24px;
   display: flex;
@@ -575,7 +825,7 @@
   gap: 12px;
   flex-shrink: 0;
   flex-wrap: wrap;
-  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.02);
+  box-shadow: 0 1px 4px rgba(15, 43, 72, 0.02);
 }
 
 .searchWrap {
@@ -604,26 +854,28 @@
   color: var(--med-text-primary, #0f172a);
   outline: none;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  box-shadow: inset 0 1px 2px rgba(15, 43, 72, 0.04);
 }
 
 .searchInput:focus {
   background: #ffffff;
   border-color: var(--med-blue-600, #1e6091);
-  box-shadow: 0 0 0 3px rgba(30, 96, 145, 0.12);
+  box-shadow: 0 0 0 3px rgba(30, 96, 145, 0.12), inset 0 1px 2px rgba(15, 43, 72, 0.02);
 }
 
 /* Segmented Disease Tab Control */
 .segmentedGroup {
   display: inline-flex;
   align-items: center;
-  background: var(--med-surface-alt, #f1f5f9);
+  background: #f1f5f9;
   padding: 3px;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1px solid var(--med-border-subtle, #e2e8f0);
   gap: 2px;
   overflow-x: auto;
   max-width: 100%;
+  box-shadow: inset 0 1px 2px rgba(15, 43, 72, 0.05);
 }
 
 .segmentedTab {
@@ -631,7 +883,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -640,7 +892,7 @@
   color: var(--med-text-muted, #64748b);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   white-space: nowrap;
-  transition: all 140ms ease;
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .segmentedTab:hover {
@@ -651,7 +903,7 @@
   background: #ffffff;
   color: var(--med-blue-600, #1e6091);
   font-weight: 700;
-  box-shadow: 0 1px 4px rgba(15, 43, 72, 0.08);
+  box-shadow: 0 2px 6px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .segmentedCount {
@@ -690,7 +942,7 @@
   min-width: 140px;
   height: 32px;
   border: 1px solid var(--med-border-strong, #cbd5e1);
-  border-radius: 6px;
+  border-radius: 7px;
   background: #ffffff;
   color: var(--med-text-primary, #0f172a);
   cursor: pointer;
@@ -699,13 +951,15 @@
   padding: 0 8px;
   outline: none;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
+  box-shadow: 0 1px 2px rgba(15, 43, 72, 0.04);
 }
 
 .sortSelect:focus {
   border-color: var(--med-blue-500, #2a75d3);
+  box-shadow: 0 0 0 2px rgba(42, 117, 211, 0.15);
 }
 
-/* -- Clinical Table Container (Optimized Density) --------------------------- */
+/* -- Clinical Table Container (Optimized Density & 3D Cards) -------------- */
 .tableContainer {
   flex: 1;
   overflow-y: auto;
@@ -731,31 +985,31 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-/* -- Patient Table Row (High-Density Clinical Row) -------------------------- */
+/* -- Patient Table Row (3D Elevated Clinical Row) -------------------------- */
 .patientRow {
   position: relative;
   display: grid;
   grid-template-columns: minmax(180px, 1.2fr) minmax(200px, 1.4fr) 110px 100px minmax(130px, 1fr) 160px;
   gap: 12px;
-  padding: 10px 18px;
+  padding: 11px 18px;
   margin-bottom: 4px;
-  background: var(--med-surface-card, #ffffff);
-  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+  border-radius: 9px;
   border: 1px solid var(--med-border-subtle, #e2e8f0);
   border-left: 4px solid transparent;
   align-items: center;
   cursor: pointer;
   animation: rowFadeUp 0.2s ease both;
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.02);
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s ease;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .patientRow:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   z-index: 5;
   background: #ffffff;
-  box-shadow: 0 4px 12px rgba(15, 43, 72, 0.06);
-  border-color: var(--med-border-strong, #cbd5e1);
+  box-shadow: 0 6px 18px rgba(15, 43, 72, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: #cbd5e1;
 }
 
 .patientRow:focus-visible {
