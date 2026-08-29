@@ -56,9 +56,14 @@ export function usePatientHomeData(
             .catch(() => null)
         : Promise.resolve(null);
 
+      // Fetch live AQI in parallel
+      const aqiQuery = fetch("/api/aqi")
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null);
+
       const apiConfig = { supabase };
 
-      const [logsRes, scoreRes, doctorPayload, diagnosisRes, baselineRes, pftRes, medRes] = await Promise.all([
+      const [logsRes, scoreRes, doctorPayload, diagnosisRes, baselineRes, pftRes, medRes, aqiPayload] = await Promise.all([
         getPatientDailyLogs(apiConfig, patientId, 14),
         getPatientRedFlagScore(apiConfig, patientId),
         doctorQuery,
@@ -66,6 +71,7 @@ export function usePatientHomeData(
         getPatientBaseline(apiConfig, patientId),
         getLatestPftRecord(apiConfig, patientId),
         getPatientMedications(apiConfig, patientId),
+        aqiQuery,
       ]);
 
       const doctorData = doctorPayload?.doctor as
@@ -83,6 +89,11 @@ export function usePatientHomeData(
         latestPft: pftRes.data ?? null,
         medications: medRes.data ?? [],
       });
+
+      // If today's log hasn't recorded an AQI yet, supply the real-time live AQI
+      if ((!result.hasTodayLog || result.aqiToday === FALLBACKS.aqiToday) && typeof aqiPayload?.aqi === "number") {
+        result.aqiToday = aqiPayload.aqi;
+      }
 
       setData(result);
     })();

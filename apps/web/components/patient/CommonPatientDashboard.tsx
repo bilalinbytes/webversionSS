@@ -359,7 +359,9 @@ export function CommonPatientDashboard({
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: spo2.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {spo2Today > 0 ? `${spo2Today}%` : "--"}
           </p>
-          <span style={{ fontSize: 11.5, color: spo2.color, fontWeight: 600 }}>{spo2Today > 0 ? spo2.label : "No entry today"}</span>
+          <span style={{ fontSize: 11.5, color: spo2.color, fontWeight: 600 }}>
+            {spo2Today > 0 ? `${spo2.label} ${hasTodayLog ? "(Today)" : "(Last Recorded)"}` : "No entry recorded"}
+          </span>
           {spo2Trend && spo2Trend.length > 1 && <SparkLine values={spo2Trend} color={spo2.color} />}
         </div>
 
@@ -378,7 +380,9 @@ export function CommonPatientDashboard({
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {mmrcToday}
           </p>
-          <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 600 }}>Grade {mmrcToday} — {mmrcText}</span>
+          <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 600 }}>
+            Grade {mmrcToday} — {mmrcText} {hasTodayLog ? "(Today)" : "(Last Log)"}
+          </span>
         </div>
 
         {/* AQI */}
@@ -398,7 +402,7 @@ export function CommonPatientDashboard({
             {aqiToday > 0 ? aqiToday : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: aqiToday > 0 ? aqi.color : "#64748b", fontWeight: 600 }}>
-            {aqiToday > 0 ? aqi.label : "AQI unavailable"}
+            {aqiToday > 0 ? `${aqi.label} ${hasTodayLog ? "(Logged)" : "(Live AQI)"}` : "AQI unavailable"}
           </span>
         </div>
 

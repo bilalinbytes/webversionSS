@@ -42,12 +42,15 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
     diagnosis?.effective_dashboard ?? effectiveDashboardFallback,
   );
 
-  // filter and reverse logs so index 0 = oldest, index 13 = most recent (sparkline order)
+  // Preserve all logs belonging to this patient; only filter if tagged with a conflicting dashboard
   const logs = rawLogs
     .filter((log) => {
       if (!activeDashboard) return true;
       const diseaseData = log.disease_specific_data as Record<string, unknown> | null;
-      return diseaseData?.["effective_dashboard"] === activeDashboard;
+      if (diseaseData?.["effective_dashboard"] && diseaseData["effective_dashboard"] !== activeDashboard) {
+        return false;
+      }
+      return true;
     })
     .slice()
     .reverse();
@@ -66,7 +69,10 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
     })
     .at(-1) ?? null;
 
-  const spo2Trend = logs.map(l => l.spo2_rest ?? FALLBACKS.spo2Today);
+  // Active log prefers today's log if submitted, otherwise uses the most recent previously submitted log
+  const activeLog = todayLog ?? latestLog;
+
+  const spo2Trend = logs.map(l => l.spo2_rest ?? (baseline?.baseline_spo2 ?? FALLBACKS.spo2Today));
   const mmrcTrend = logs.map(l => l.mmrc_today ?? 0);
   const vasTrend = logs.map(l => {
     const vas = l.vas_symptoms as Record<string, number> | null;
@@ -91,7 +97,7 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const compliance = (todayLog?.medication_compliance ?? {}) as Record<string, unknown>;
+  const compliance = (activeLog?.medication_compliance ?? {}) as Record<string, unknown>;
   const todayMedications = medications
     .filter((med) => {
       if (!med.end_date) return true;
@@ -118,10 +124,10 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
 
   return {
     loading: false,
-    spo2Today: todayLog?.spo2_rest ?? FALLBACKS.spo2Today,
-    mmrcToday: todayLog?.mmrc_today ?? FALLBACKS.mmrcToday,
-    aqiToday: todayLog?.aqi_value ?? FALLBACKS.aqiToday,
-    riskScore: score?.global_score ?? FALLBACKS.riskScore,
+    spo2Today: activeLog?.spo2_rest ?? (baseline?.baseline_spo2 ?? FALLBACKS.spo2Today),
+    mmrcToday: activeLog?.mmrc_today ?? FALLBACKS.mmrcToday,
+    aqiToday: activeLog?.aqi_value ?? FALLBACKS.aqiToday,
+    riskScore: score?.global_score ?? (activeLog?.spo2_rest ? (activeLog.spo2_rest < 90 ? 8 : (activeLog.spo2_rest < 94 ? 5 : 2)) : FALLBACKS.riskScore),
     doctor: doctor?.name ?? FALLBACKS.doctor,
     doctorHospital: doctor?.hospital ?? FALLBACKS.doctorHospital,
     spo2Trend: spo2Trend.length > 0 ? spo2Trend : [],
