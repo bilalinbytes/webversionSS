@@ -258,7 +258,9 @@ export default function Home() {
                 <div className={styles.contactInfoIcon}><Mail size={18} /></div>
                 <div>
                   <div className={styles.contactInfoLabel}>Clinical Support</div>
-                  <div className={styles.contactInfoValue}>support@o2plus.app</div>
+                  <a href="mailto:o2plus8@gmail.com" className={styles.contactInfoValue} style={{ color: "inherit", textDecoration: "none" }}>
+                    o2plus8@gmail.com
+                  </a>
                 </div>
               </div>
             </div>
@@ -267,19 +269,25 @@ export default function Home() {
           <div className={styles.contactRight}>
             <div className={styles.contactCard}>
               <h3 className={styles.contactCardTitle}>Register Your Clinic</h3>
-              <p className={styles.contactCardSub}>Takes less than 2 minutes. Instant setup.</p>
-              <div className={styles.contactForm}>
-                <div className={styles.contactField}>
-                  <label className={styles.contactLabel}>Full Name</label>
-                  <div className={styles.contactInputMock}>Dr. Mallikarjun</div>
+              <p className={styles.contactCardSub}>Takes less than 2 minutes. Instant setup for pulmonologists and departments.</p>
+              
+              <div className={styles.registerPerksList}>
+                <div className={styles.registerPerkItem}>
+                  <CheckCircle2 size={16} className={styles.perkIcon} />
+                  <span>Real-time patient vitals &amp; red-flag triage</span>
                 </div>
-                <div className={styles.contactField}>
-                  <label className={styles.contactLabel}>Work Email</label>
-                  <div className={styles.contactInputMock}>doctor@hospital.com</div>
+                <div className={styles.registerPerkItem}>
+                  <CheckCircle2 size={16} className={styles.perkIcon} />
+                  <span>Automated guideline-based respiratory pathways</span>
+                </div>
+                <div className={styles.registerPerkItem}>
+                  <CheckCircle2 size={16} className={styles.perkIcon} />
+                  <span>HIPAA-compliant data architecture &amp; PDF reports</span>
                 </div>
               </div>
+
               <Link href="/register" className={styles.contactCta}>
-                Create Practice Account <ArrowRight size={16} />
+                Register Practice Now <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -303,6 +311,21 @@ export default function Home() {
             <a href="#contact"          className={styles.footerLink}>Contact</a>
           </nav>
         </div>
+
+        {/* ─── CREDITS ─── */}
+        <div className={styles.footerCreditsRow}>
+          <div className={styles.footerCreditCard}>
+            <span className={styles.creditRoleLabel}>Conceptualised &amp; Prototyped by</span>
+            <strong className={styles.creditName}>Dr. Irfan Shekh</strong>
+            <span className={styles.creditTitle}>Assistant Professor, AIIMS Delhi</span>
+          </div>
+          <div className={styles.footerCreditCard}>
+            <span className={styles.creditRoleLabel}>Software Architecture &amp; End-to-End Development by</span>
+            <strong className={styles.creditName}>Mohammed Bilal</strong>
+            <span className={styles.creditTitle}>AI &amp; Software Developer</span>
+          </div>
+        </div>
+
         <div className={styles.footerBottom}>
           <p className={styles.footerDisclaimer}>
             O2Plus is a clinical decision support system for licensed medical practitioners. In emergencies, patients must call emergency services (112) or visit the nearest hospital.

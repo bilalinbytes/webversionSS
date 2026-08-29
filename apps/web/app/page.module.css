@@ -789,6 +789,73 @@
   transition: color 130ms ease;
 }
 .footerLink:hover { color: rgba(255,255,255,0.75); }
+
+/* - FOOTER CREDITS - */
+.footerCreditsRow {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem) 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 1.25rem;
+}
+
+.footerCreditCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.creditRoleLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.creditName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.creditTitle {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+/* - REGISTER PERKS LIST - */
+.registerPerksList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.registerPerkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #334155;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.perkIcon {
+  color: #0284c7;
+  flex-shrink: 0;
+}
+
 .footerBottom {
   max-width: 1180px;
   margin: 0 auto;
