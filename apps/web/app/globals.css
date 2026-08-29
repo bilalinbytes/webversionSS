@@ -6,18 +6,18 @@
   --font-dm-sans: var(--font-dm-sans);
   
   /* Brand Navy & Blue Tokens */
-  --color-navy-dark: #0a192f;
-  --color-navy: #0f2b48;
-  --color-navy-hover: #164e77;
+  --color-navy-dark: #07192b;
+  --color-navy: #0a2238;
+  --color-navy-hover: #0f2b48;
   --color-blue-primary: #1e6091;
-  --color-blue-focus: #2a75d3;
+  --color-blue-focus: #0284c7;
   --color-blue-light: #e8f1f8;
-  --color-blue-surface: #f4f8fb;
-  --color-cyan-accent: #4895ef;
+  --color-blue-surface: #f0f7fc;
+  --color-cyan-accent: #38bdf8;
   
   /* Legacy token compatibility */
-  --color-teal-accent: #4895ef;
-  --color-panel-dark: #0f2b48;
+  --color-teal-accent: #38bdf8;
+  --color-panel-dark: #07192b;
   --color-panel-light: #f8fafc;
   --color-muted: #64748b;
   --color-border: #e2e8f0;
@@ -32,15 +32,16 @@
   --background: #f8fafc;
   --foreground: #0f172a;
   
-  /* Semantic Tokens for Hospital Workstation */
-  --med-navy-900: #0a192f;
-  --med-navy-800: #0f2b48;
-  --med-blue-700: #1a4971;
+  /* Semantic Tokens for Hospital Workstation & Portals */
+  --med-navy-900: #07192b;
+  --med-navy-800: #0a2238;
+  --med-navy-700: #0f2b48;
+  --med-blue-700: #164e77;
   --med-blue-600: #1e6091;
-  --med-blue-500: #2a75d3;
-  --med-blue-400: #4895ef;
+  --med-blue-500: #0284c7;
+  --med-blue-400: #38bdf8;
   --med-blue-100: #e8f1f8;
-  --med-blue-50: #f4f8fb;
+  --med-blue-50: #f0f7fc;
   
   --med-bg-canvas: #f8fafc;
   --med-surface-card: #ffffff;

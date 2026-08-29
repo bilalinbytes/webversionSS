@@ -2,22 +2,22 @@
 /* Tokens: navy #0a192f, blue #1e6091, cyan #4895ef, text #ffffff                */
 
 .sidebar {
-  width: 64px;
-  background: var(--med-navy-900, #0a192f);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  width: 72px;
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 100%);
+  border-right: 1px solid rgba(56, 189, 248, 0.14);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
-  box-shadow: 2px 0 8px rgba(10, 25, 47, 0.15);
+  box-shadow: 4px 0 20px rgba(4, 16, 33, 0.35);
   z-index: 40;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  padding: 12px 0;
-  gap: 4px;
+  padding: 16px 0;
+  gap: 6px;
   flex: 1;
 }
 
@@ -26,11 +26,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
   padding: 10px 4px;
   border: none;
-  background: none;
+  background: transparent;
   cursor: pointer;
   border-radius: 0;
   transition: background 140ms ease;
@@ -38,22 +38,23 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navItemActive {
-  background: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.02) 100%);
 }
 
 .navItemActive::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 18%;
-  bottom: 18%;
+  top: 14%;
+  bottom: 14%;
   width: 3.5px;
-  background: var(--med-blue-400, #4895ef);
-  border-radius: 0 3px 3px 0;
+  background: #38bdf8;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px #38bdf8;
 }
 
 .iconWrap {

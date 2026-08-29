@@ -6,12 +6,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 56px;
-  background: var(--med-navy-900, #0a192f);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 60px;
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 100%);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
   flex-shrink: 0;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(10, 25, 47, 0.2);
+  box-shadow: 0 4px 20px rgba(4, 16, 33, 0.4);
   position: relative;
   z-index: 50;
 }
@@ -19,10 +19,10 @@
 /* Hamburger — hidden on desktop, shown on mobile */
 .hamburgerBtn {
   display: none;
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
@@ -50,9 +50,9 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(42, 117, 211, 0.25);
-  color: var(--med-blue-400, #4895ef);
-  border: 1px solid rgba(72, 149, 239, 0.35);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.28);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.72rem;
   font-weight: 700;

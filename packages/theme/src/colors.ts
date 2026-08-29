@@ -8,15 +8,15 @@
 export const colors = {
   // Brand & Medical Blue Palette
   brand: {
-    navyDark: "#0a192f",      // Deepest navy for high-security headers & page footers
-    navy: "#0f2b48",          // Primary doctor workstation navigation & clinical headers
-    navyLight: "#1a4971",     // Secondary clinical accents
+    navyDark: "#07192b",      // Deepest navy for high-security headers & page footers
+    navy: "#0a2238",          // Primary doctor workstation navigation & clinical headers
+    navyLight: "#0f2b48",     // Secondary clinical accents
     primary: "#1e6091",       // Primary medical brand blue
     primaryHover: "#164e77",  // Button hover state
     primaryLight: "#e8f1f8",  // Active tab background / Subtle badge fill
-    primarySurface: "#f4f8fb",// Soft blue tinted canvas
-    accentCyan: "#4895ef",    // Active navigation indicator & focus highlights
-    primaryDark: "#0f2b48",   // Legacy alias
+    primarySurface: "#f0f7fc",// Soft blue tinted canvas
+    accentCyan: "#38bdf8",    // Active navigation indicator & focus highlights
+    primaryDark: "#07192b",   // Legacy alias
   },
 
   // Risk levels (Scoring engine indicator colors — Ground Truth Preserved)

@@ -11,7 +11,7 @@
 .tealPanel {
   position: absolute;
   inset: 0 0 0 43%;
-  background: linear-gradient(180deg, #0a192f 0%, #0f2b48 56%, #164e77 100%);
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 56%, #0f2b48 100%);
   clip-path: ellipse(92% 124% at 100% 50%);
   z-index: 0;
 }
@@ -21,11 +21,11 @@
   inset: -1.5rem 0 -1.5rem calc(43% - 4.5rem);
   background: linear-gradient(
     90deg,
-    rgba(42, 90, 106, 0) 0%,
-    rgba(42, 90, 106, 0.24) 8%,
-    rgba(42, 90, 106, 0.16) 13%,
-    rgba(42, 90, 106, 0.08) 18%,
-    rgba(42, 90, 106, 0) 28%
+    rgba(56, 189, 248, 0) 0%,
+    rgba(56, 189, 248, 0.24) 8%,
+    rgba(56, 189, 248, 0.16) 13%,
+    rgba(56, 189, 248, 0.08) 18%,
+    rgba(56, 189, 248, 0) 28%
   );
   clip-path: ellipse(92% 124% at 100% 50%);
   filter: blur(18px);
@@ -90,7 +90,7 @@
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: #132d36;
+  color: var(--med-navy-800, #0f2b48);
 }
 
 .brandTagline {
@@ -99,7 +99,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   line-height: 1.35;
-  color: #496977;
+  color: #475569;
 }
 
 .brandSubtitle {
@@ -109,7 +109,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8c9fa8;
+  color: #64748b;
 }
 
 .formShell {
@@ -128,7 +128,7 @@
   font-weight: 500;
   line-height: 1.02;
   letter-spacing: 0;
-  color: #132d36;
+  color: var(--med-navy-800, #0f2b48);
   text-wrap: balance;
 }
 
@@ -137,7 +137,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.94rem;
   line-height: 1.45;
-  color: #627b89;
+  color: #64748b;
 }
 
 .portalSwitch {
@@ -146,9 +146,9 @@
   gap: 0.35rem;
   margin-top: 0.7rem;
   padding: 0.28rem;
-  border: 1px solid rgba(19, 45, 54, 0.14);
+  border: 1px solid rgba(30, 96, 145, 0.16);
   border-radius: 0.95rem;
-  background: #eef6f8;
+  background: #e8f1f8;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -162,7 +162,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.84rem;
   font-weight: 700;
-  color: #54717e;
+  color: #475569;
   text-decoration: none;
   transition:
     background-color 180ms ease,
@@ -173,13 +173,13 @@
 
 .portalOption:hover,
 .portalOption:focus-visible {
-  color: #132d36;
+  color: #0f2b48;
   background: rgba(255, 255, 255, 0.62);
   outline: none;
 }
 
 .portalOptionActive {
-  background: #1e6091;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(30, 96, 145, 0.25);
 }
@@ -187,7 +187,7 @@
 .portalOptionActive:hover,
 .portalOptionActive:focus-visible {
   color: #ffffff;
-  background: #164e77;
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
   transform: translateY(-1px);
 }
 
@@ -233,8 +233,8 @@
 
 .input:focus {
   outline: none;
-  border-color: rgba(42, 90, 106, 0.54);
-  box-shadow: 0 0 0 4px rgba(42, 90, 106, 0.12);
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
 }
 
 .inputError {
@@ -272,7 +272,7 @@
 
 .passwordToggle:hover,
 .passwordToggle:focus-visible {
-  color: #3f6671;
+  color: #1e6091;
   outline: none;
 }
 
@@ -312,12 +312,12 @@
 }
 
 .tabActive {
-  color: #132d36;
-  border-bottom-color: #132d36;
+  color: #1e6091;
+  border-bottom-color: #1e6091;
 }
 
 .tab:not(.tabActive):hover {
-  color: #173d45;
+  color: #0f2b48;
 }
 
 .phoneInputWrapper {
@@ -329,7 +329,7 @@
 .phonePrefix {
   position: absolute;
   left: 1rem;
-  color: #132d36;
+  color: #0f2b48;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.96rem;
@@ -349,67 +349,76 @@
 
 .otpInput {
   width: 3.2rem;
-  height: 3.8rem;
-  text-align: center;
-  font-size: 1.25rem;
-  border: 1px solid rgba(19, 45, 54, 0.16);
+  height: 3.6rem;
+  border: 1.5px solid rgba(30, 96, 145, 0.25);
   border-radius: 0.85rem;
+  text-align: center;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  color: #173540;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f2b48;
   background: #ffffff;
   transition: all 180ms ease;
 }
 
 .otpInput:focus {
   outline: none;
-  border-color: rgba(42, 90, 106, 0.54);
-  box-shadow: 0 0 0 4px rgba(42, 90, 106, 0.12);
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
 }
 
-.resendContainer {
+.resendRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: 0.83rem;
-  color: #6d8794;
+  font-size: 0.84rem;
 }
 
-.resendLink {
-  color: #255669;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
+.resendBtn {
   background: none;
   border: none;
+  color: #1e6091;
+  font-weight: 600;
+  cursor: pointer;
   padding: 0;
+  font-size: 0.84rem;
+  transition: color 160ms ease;
 }
 
-.resendLink[disabled] {
-  color: #87a0ae;
+.resendBtn:hover:not(:disabled) {
+  color: #0f2b48;
+  text-decoration: underline;
+}
+
+.resendBtn:disabled {
+  color: #8c9fa8;
   cursor: not-allowed;
+}
+
+.timer {
+  color: #64748b;
 }
 
 .readOnlyPhone {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: rgba(19, 45, 54, 0.03);
+  padding: 0.75rem 1rem;
+  background: rgba(30, 96, 145, 0.05);
   border-radius: 0.85rem;
 }
 
 .readOnlyNumber {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-weight: 600;
-  color: #132d36;
+  color: #0f2b48;
   font-size: 0.95rem;
 }
 
 .changeLink {
-  color: #255669;
+  color: #1e6091;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -422,13 +431,13 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.83rem;
   font-weight: 500;
-  color: #255669;
+  color: #1e6091;
   transition: color 160ms ease;
 }
 
 .forgotPassword:hover,
 .forgotPassword:focus-visible {
-  color: #173d45;
+  color: #0f2b48;
   text-decoration: underline;
   outline: none;
 }
@@ -443,7 +452,7 @@
   margin-top: 0.75rem;
   border: 0;
   border-radius: 0.85rem;
-  background: #1e6091;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
   box-shadow: 0 4px 14px rgba(30, 96, 145, 0.25);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.97rem;
@@ -459,7 +468,7 @@
 
 .submitButton:hover:not(:disabled),
 .submitButton:focus-visible:not(:disabled) {
-  background: #164e77;
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
   box-shadow: 0 6px 18px rgba(30, 96, 145, 0.32);
   transform: translateY(-1px);
   outline: none;

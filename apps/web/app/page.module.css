@@ -63,7 +63,7 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #0f2b48, #1e6091);
+  background: linear-gradient(135deg, #07192b, #1e6091);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,12 +116,12 @@
   font-weight: 600;
   color: #fff;
   text-decoration: none;
-  background: #1e6091;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
   box-shadow: 0 2px 8px rgba(30,96,145,0.22);
   transition: all 150ms ease;
 }
 .navBtnFill:hover {
-  background: #164e77;
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(30,96,145,0.3);
 }
@@ -137,7 +137,7 @@
 .heroBg {
   position: absolute;
   inset: 0 0 0 38%;
-  background: linear-gradient(180deg, #0a192f 0%, #0f2b48 56%, #164e77 100%);
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 56%, #0f2b48 100%);
   clip-path: ellipse(98% 135% at 100% 50%);
   z-index: 0;
 }
@@ -212,12 +212,12 @@
   font-weight: 600;
   color: #fff;
   text-decoration: none;
-  background: #1e6091;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
   box-shadow: 0 4px 14px rgba(30,96,145,0.25);
   transition: all 160ms ease;
 }
 .ctaFill:hover {
-  background: #164e77;
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(30,96,145,0.32);
 }
@@ -724,20 +724,20 @@
   font-weight: 600;
   color: #fff;
   text-decoration: none;
-  background: #1e6091;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
   box-shadow: 0 4px 14px rgba(30,96,145,0.25);
   transition: all 160ms ease;
   margin-top: 0.25rem;
 }
 .contactCta:hover {
-  background: #164e77;
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(30,96,145,0.32);
 }
 
 /* - FOOTER - */
 .footer {
-  background: #0a192f;
+  background: #07192b;
   color: rgba(255,255,255,0.45);
   border-top: 1px solid rgba(255,255,255,0.06);
   padding: 2.5rem 0 1.5rem;

@@ -11,7 +11,7 @@
 .tealPanel {
   position: absolute;
   inset: 0 0 0 43%;
-  background: linear-gradient(180deg, #173d45 0%, #132d36 56%, #112931 100%);
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 56%, #0f2b48 100%);
   clip-path: ellipse(92% 124% at 100% 50%);
   z-index: 0;
 }
@@ -21,11 +21,11 @@
   inset: -1.5rem 0 -1.5rem calc(43% - 4.5rem);
   background: linear-gradient(
     90deg,
-    rgba(42, 90, 106, 0) 0%,
-    rgba(42, 90, 106, 0.24) 8%,
-    rgba(42, 90, 106, 0.16) 13%,
-    rgba(42, 90, 106, 0.08) 18%,
-    rgba(42, 90, 106, 0) 28%
+    rgba(56, 189, 248, 0) 0%,
+    rgba(56, 189, 248, 0.24) 8%,
+    rgba(56, 189, 248, 0.16) 13%,
+    rgba(56, 189, 248, 0.08) 18%,
+    rgba(56, 189, 248, 0) 28%
   );
   clip-path: ellipse(92% 124% at 100% 50%);
   filter: blur(18px);
@@ -66,7 +66,7 @@
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: #132d36;
+  color: var(--med-navy-800, #0f2b48);
 }
 
 .brandTagline {
@@ -75,7 +75,7 @@
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.35;
-  color: #496977;
+  color: #475569;
 }
 
 .brandSubtitle {
@@ -85,7 +85,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8c9fa8;
+  color: #64748b;
 }
 
 .formShell {
@@ -104,7 +104,7 @@
   font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #132d36;
+  color: var(--med-navy-800, #0f2b48);
   text-wrap: balance;
 }
 
@@ -113,7 +113,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.65;
-  color: #627b89;
+  color: #64748b;
 }
 
 .form {
@@ -132,19 +132,19 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6d8794;
+  color: #64748b;
 }
 
 .input {
   width: 100%;
   height: 2.75rem;
-  border: 1px solid rgba(19, 45, 54, 0.16);
+  border: 1px solid rgba(30, 96, 145, 0.18);
   border-radius: 0.75rem;
   background: #ffffff;
   padding: 0 0.9rem;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: 0.9rem;
-  color: #173540;
+  color: #0f2b48;
   box-shadow: 0 1px 0 rgba(19, 45, 54, 0.02);
   transition:
     border-color 180ms ease,
@@ -158,8 +158,8 @@
 
 .input:focus {
   outline: none;
-  border-color: rgba(42, 90, 106, 0.54);
-  box-shadow: 0 0 0 4px rgba(42, 90, 106, 0.12);
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
 }
 
 .inputError {
@@ -170,6 +170,38 @@
 .inputError:focus {
   border-color: rgba(201, 77, 73, 0.75);
   box-shadow: 0 0 0 4px rgba(201, 77, 73, 0.12);
+}
+
+.submitButton {
+  display: inline-flex;
+  width: 100%;
+  height: 2.9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #1e6091 0%, #0284c7 100%);
+  box-shadow: 0 4px 14px rgba(30, 96, 145, 0.25);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.submitButton:hover:not(:disabled),
+.submitButton:focus-visible:not(:disabled) {
+  background: linear-gradient(135deg, #164e77 0%, #0369a1 100%);
+  box-shadow: 0 6px 18px rgba(30, 96, 145, 0.32);
+  transform: translateY(-1px);
+  outline: none;
 }
 
 .passwordWrap {
