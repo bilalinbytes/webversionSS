@@ -147,13 +147,22 @@ export function CommonDailyLogView({
   const [emergencyStatus, setEmergencyStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [emergencyError, setEmergencyError] = useState<string | null>(null);
   const [messageToastVisible, setMessageToastVisible] = useState(false);
-  const [alreadyLoggedToday, setAlreadyLoggedToday] = useState<{
+  interface AlreadyLoggedTodayData {
     id: string;
     logged_at: string;
     spo2_rest: number | null;
     spo2_exertion: number | null;
     mmrc_today: number | null;
-  } | null>(null);
+    vas_symptoms?: Record<string, unknown> | null;
+    aqi_value?: number | null;
+    medication_compliance?: Record<string, boolean> | null;
+    disease_specific_data?: Record<string, unknown> | null;
+    side_effects?: unknown | null;
+    pedal_edema?: boolean | null;
+    oxygen_change_litres?: number | null;
+  }
+
+  const [alreadyLoggedToday, setAlreadyLoggedToday] = useState<AlreadyLoggedTodayData | null>(null);
   const [isEditingExistingLog, setIsEditingExistingLog] = useState(false);
 
   useEffect(() => {
@@ -164,7 +173,7 @@ export function CommonDailyLogView({
 
     supabase
       .from("daily_logs")
-      .select("id, logged_at, spo2_rest, spo2_exertion, mmrc_today")
+      .select("id, logged_at, spo2_rest, spo2_exertion, mmrc_today, vas_symptoms, aqi_value, medication_compliance, disease_specific_data, side_effects, pedal_edema, oxygen_change_litres")
       .eq("patient_id", patientId)
       .gte("logged_at", `${today}T00:00:00`)
       .lte("logged_at", `${today}T23:59:59`)
@@ -173,13 +182,33 @@ export function CommonDailyLogView({
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled || !data) return;
-        setAlreadyLoggedToday(data);
+        setAlreadyLoggedToday(data as AlreadyLoggedTodayData);
       });
 
     return () => {
       cancelled = true;
     };
   }, [patientId, submitState]);
+
+  const handleStartEditTodayLog = useCallback(() => {
+    reset();
+    setIsEditingExistingLog(true);
+    if (alreadyLoggedToday) {
+      if (alreadyLoggedToday.spo2_rest !== null) setSpo2(String(alreadyLoggedToday.spo2_rest));
+      if (alreadyLoggedToday.spo2_exertion !== null) setSpo2Exertion(String(alreadyLoggedToday.spo2_exertion));
+      if (alreadyLoggedToday.mmrc_today !== null) setMmrc(alreadyLoggedToday.mmrc_today);
+      const diseaseRecord = alreadyLoggedToday.disease_specific_data as Record<string, unknown> | undefined;
+      if (diseaseRecord && diseaseRecord.heart_rate !== undefined && diseaseRecord.heart_rate !== null) {
+        setHeartRate(String(diseaseRecord.heart_rate));
+      }
+      if (alreadyLoggedToday.medication_compliance && typeof alreadyLoggedToday.medication_compliance === "object") {
+        setMedsTaken(alreadyLoggedToday.medication_compliance);
+      }
+      if (alreadyLoggedToday.disease_specific_data && typeof alreadyLoggedToday.disease_specific_data === "object") {
+        setDiseaseSpecificData(alreadyLoggedToday.disease_specific_data as Partial<DailyLogPayload>);
+      }
+    }
+  }, [alreadyLoggedToday, reset]);
 
   useEffect(() => {
     setMedsTaken((current) => Object.fromEntries(meds.map((m) => [m.id, current[m.id] ?? false])));
@@ -309,7 +338,10 @@ export function CommonDailyLogView({
     } as DailyLogPayload;
 
     const ok = await submitLog(payload);
-    if (ok) onSuccess?.();
+    if (ok) {
+      setIsEditingExistingLog(false);
+      onSuccess?.();
+    }
   }, [
     aqi,
     breathlessness,
@@ -371,7 +403,7 @@ export function CommonDailyLogView({
     }
   }, [emergencyMessage, emergencyStatus]);
 
-  if (submitState === "success" || (alreadyLoggedToday && !isEditingExistingLog)) {
+  if ((submitState === "success" || alreadyLoggedToday) && !isEditingExistingLog) {
     const displayTime = alreadyLoggedToday?.logged_at
       ? new Date(alreadyLoggedToday.logged_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
       : new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
@@ -447,7 +479,7 @@ export function CommonDailyLogView({
               <button
                 type="button"
                 className={dStyles.btnOutline}
-                onClick={() => setIsEditingExistingLog(true)}
+                onClick={handleStartEditTodayLog}
               >
                 Update / Edit Today&apos;s Entry
               </button>
@@ -483,6 +515,45 @@ export function CommonDailyLogView({
       </div>
 
       <div className={dStyles.body}>
+        {isEditingExistingLog && (
+          <div style={{
+            padding: "12px 16px",
+            marginBottom: 16,
+            borderRadius: 10,
+            background: "#eff6ff",
+            border: "1.5px solid #bfdbfe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}>
+            <div>
+              <strong style={{ color: "#1e40af", fontSize: 13, display: "block" }}>
+                ✏️ Editing Today&apos;s Health Entry ({new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })})
+              </strong>
+              <span style={{ color: "#2563eb", fontSize: 11.5 }}>
+                You can update today&apos;s vitals and symptoms anytime before midnight. Edits lock permanently after one day.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEditingExistingLog(false)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #bfdbfe",
+                background: "#ffffff",
+                color: "#1e40af",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Cancel Edit
+            </button>
+          </div>
+        )}
         <div className={dStyles.card}>
           <p className={dStyles.cardTitle}>Common Vitals · सामान्य स्वास्थ्य जांच</p>
           <AQIDisplay aqi={aqi} />
@@ -643,9 +714,9 @@ export function CommonDailyLogView({
             onClick={handleSubmit}
           >
             {isSubmitting ? (
-              <><Loader2 size={15} className={dStyles.spinner} /> Submitting... · जमा हो रहा है...</>
+              <><Loader2 size={15} className={dStyles.spinner} /> {isEditingExistingLog ? "Saving updates... · अपडेट हो रहा है..." : "Submitting... · जमा हो रहा है..."}</>
             ) : (
-              <>Submit Daily Log · दैनिक लॉग जमा करें</>
+              <>{isEditingExistingLog ? "Save Updated Log · अपडेटेड लॉग सेव करें" : "Submit Daily Log · दैनिक लॉग जमा करें"}</>
             )}
           </button>
         </div>

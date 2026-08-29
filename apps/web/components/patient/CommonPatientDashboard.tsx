@@ -28,6 +28,7 @@ export interface CommonDashboardProps {
   onLogToday: () => void;
   accentColor?: string;
   diseaseLabel?: string;
+  onViewHistory?: () => void;
   /** Optional today's medications list for taken/not taken */
   todayMedications?: Array<{
     id: string;
@@ -96,6 +97,7 @@ export function CommonPatientDashboard({
   vasTrend,
   latestPft,
   onLogToday,
+  onViewHistory,
   todayMedications,
   onMedicationToggle,
 }: CommonDashboardProps) {
@@ -127,20 +129,76 @@ export function CommonPatientDashboard({
             </div>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {hasTodayLog ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 999, background: "#f0fdf4", color: "#166534", fontSize: 12.5, fontWeight: 700, border: "1.5px solid #bbf7d0" }}>
-              <CheckCircle2 size={16} color="#16a34a" /> Today&apos;s Log Completed
-            </span>
+            <>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, background: "#f0fdf4", color: "#166534", fontSize: 12.5, fontWeight: 700, border: "1.5px solid #bbf7d0" }}>
+                <CheckCircle2 size={16} color="#16a34a" /> Today&apos;s Log Completed
+              </span>
+              <button
+                type="button"
+                onClick={onLogToday}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  color: "var(--med-navy-800, #0f2b48)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Update Entry
+              </button>
+              {onViewHistory && (
+                <button
+                  type="button"
+                  onClick={onViewHistory}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    border: "1px solid var(--med-blue-600, #1e6091)",
+                    background: "var(--med-blue-50, #f4f8fb)",
+                    color: "var(--med-blue-600, #1e6091)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  View Logs History →
+                </button>
+              )}
+            </>
           ) : (
-            <button
-              type="button"
-              onClick={onLogToday}
-              className={dStyles.submitBtn}
-              style={{ padding: "10px 22px", fontSize: 13, borderRadius: 10, minHeight: 44, fontWeight: 700 }}
-            >
-              Log Today&apos;s Health
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onLogToday}
+                className={dStyles.submitBtn}
+                style={{ padding: "10px 22px", fontSize: 13, borderRadius: 10, minHeight: 44, fontWeight: 700 }}
+              >
+                Log Today&apos;s Health
+              </button>
+              {onViewHistory && (
+                <button
+                  type="button"
+                  onClick={onViewHistory}
+                  style={{
+                    padding: "10px 16px",
+                    borderRadius: 10,
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "var(--med-navy-800, #0f2b48)",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Logs History
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

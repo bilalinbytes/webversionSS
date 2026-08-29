@@ -253,31 +253,35 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
   diseaseSpecificFields.effective_dashboard = payload.effective_dashboard;
 
-  // Patient can submit at most two logs per day. Extra updates must go through the emergency note path.
-  const dayStart = `${payload.log_date}T00:00:00`;
-  const dayEnd   = `${payload.log_date}T23:59:59`;
-  const { count: todayCount } = await admin
-    .from("daily_logs")
-    .select("id", { count: "exact", head: true })
-    .eq("patient_id", payload.patient_id)
-    .gte("logged_at", dayStart)
-    .lte("logged_at", dayEnd);
-
-  if ((todayCount ?? 0) >= 2) {
+  // Enforce 1-day edit window: patient can only create or update logs for the current day
+  const todayDateString = new Date().toISOString().split("T")[0]!;
+  if (payload.log_date !== todayDateString) {
     return NextResponse.json(
       {
-        error: "Daily logs finished. You can submit up to 2 logs per day.",
-        code: "daily_log_limit_reached",
+        error: "Edits are only permitted on today's health log. Past days are locked permanent clinical records.",
+        code: "edit_window_closed",
       },
-      { status: 429 }
+      { status: 400 }
     );
   }
 
-  // ── Insert daily log ────────────────────────────────────────────────────────
+  const dayStart = `${payload.log_date}T00:00:00`;
+  const dayEnd   = `${payload.log_date}T23:59:59`;
+  const { data: existingTodayLogs } = await admin
+    .from("daily_logs")
+    .select("id, logged_at")
+    .eq("patient_id", payload.patient_id)
+    .gte("logged_at", dayStart)
+    .lte("logged_at", dayEnd)
+    .order("logged_at", { ascending: false });
+
+  const existingLog = existingTodayLogs?.[0];
   const submittedAt = new Date().toISOString();
-  const logInsert = {
+
+  // ── Daily log data payload ──────────────────────────────────────────────────
+  const logData = {
     patient_id: payload.patient_id,
-    logged_at: submittedAt,
+    logged_at: existingLog?.logged_at ?? submittedAt,
     submitted_at: submittedAt,
     spo2_rest: payload.spo2_rest,
     spo2_exertion: payload.spo2_exertion,
@@ -294,12 +298,32 @@ export async function POST(request: Request): Promise<NextResponse> {
     disease_specific_data: diseaseSpecificFields as unknown as Json,
   } as unknown as Database["public"]["Tables"]["daily_logs"]["Insert"];
 
-  const logInsertId = crypto.randomUUID();
-  const { data: inserted } = await admin.from("daily_logs").insert({ id: logInsertId, ...logInsert }).select("id").single();
-  const logId = inserted?.id ?? logInsertId;
+  let logId: string;
 
-  if (!logId) {
-    return NextResponse.json({ error: "Failed to save log" }, { status: 500 });
+  if (existingLog) {
+    // In-place update of today's existing daily log
+    logId = existingLog.id;
+    const { error: updateError } = await admin
+      .from("daily_logs")
+      .update(logData)
+      .eq("id", logId);
+
+    if (updateError) {
+      return NextResponse.json({ error: "Failed to update daily log" }, { status: 500 });
+    }
+  } else {
+    // Insert new daily log for today
+    const logInsertId = crypto.randomUUID();
+    const { data: inserted, error: insertError } = await admin
+      .from("daily_logs")
+      .insert({ id: logInsertId, ...logData })
+      .select("id")
+      .single();
+
+    if (insertError || !inserted) {
+      return NextResponse.json({ error: "Failed to save daily log" }, { status: 500 });
+    }
+    logId = inserted.id;
   }
 
   // ── DQI + FI (signal quality) ───────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { PatientProvider, usePatient } from "@/contexts/PatientContext";
 import { PatientTopNav } from "@/components/patient/PatientTopNav";
 import { PatientSidebar } from "@/components/patient/PatientSidebar";
 import { LogTodayView } from "@/components/patient/LogTodayView";
+import { HistoryView } from "@/components/patient/HistoryView";
 import { PatientAnalyticsView } from "@/components/patient/PatientAnalyticsView";
 import { BookAppointmentView } from "@/components/patient/BookAppointmentView";
 import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashboard";
@@ -14,7 +15,7 @@ import { usePatientHomeData } from "@/hooks/usePatientHomeData";
 import { formatDiagnosisDisplay } from "@o2plus/core";
 import styles from "./page.module.css";
 
-type View = "home" | "log" | "analytics" | "appointments";
+type View = "home" | "log" | "history" | "analytics" | "appointments";
 
 function PatientDashboardPageInner() {
   const { patient, loading, refetchPatient } = usePatient();
@@ -68,6 +69,7 @@ function PatientDashboardPageInner() {
               latestPft={homeData.latestPft}
               todayMedications={homeData.todayMedications}
               onLogToday={() => setView("log")}
+              onViewHistory={() => setView("history")}
             />
           )}
 
@@ -80,6 +82,7 @@ function PatientDashboardPageInner() {
             </div>
           )}
           {view === "log" && <LogTodayView onLogSubmitted={() => setHomeRefreshKey((key) => key + 1)} />}
+          {view === "history" && <HistoryView patientId={patient.id} />}
           {view === "analytics" && <PatientAnalyticsView patientId={patient.id} />}
           {view === "appointments" && <BookAppointmentView />}
         </main>

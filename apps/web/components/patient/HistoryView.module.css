@@ -1,66 +1,329 @@
-.view { display: flex; flex-direction: column; flex: 1; overflow: hidden; background: #fafaf9; }
+.view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background: var(--med-bg, #f8fafc);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
 
-.header { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.07); padding: 14px 28px; flex-shrink: 0; }
-.title  { font-size: 17px; font-weight: 600; color: #1a1a18; font-family: var(--font-lora), Georgia, serif; }
-.sub    { font-size: 11px; color: #888680; margin-top: 2px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.header {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 18px 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
-.body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 28px; display: flex; flex-direction: column; gap: 14px; }
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-.chartsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.titleHi {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.sub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.rangeSelector {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  gap: 2px;
+}
+
+.rangeBtn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rangeBtn:hover {
+  color: var(--med-navy-800, #0f2b48);
+}
+
+.rangeBtnActive {
+  background: #ffffff;
+  color: var(--med-blue-600, #1e6091);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
 
 .chartCard {
-  background: #ffffff; border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.07); padding: 16px 18px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.chartHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.chartTitle  { font-size: 13px; font-weight: 600; color: #1a1a18; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.chartRange  { font-size: 11px; font-weight: 600; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-
-.sparkWrap { height: 40px; background: #f8f7f5; border-radius: 6px; overflow: hidden; padding: 2px 6px; margin-bottom: 4px; }
-
-.sparkDates { display: flex; justify-content: space-between; }
-.sparkDate  { font-size: 9px; color: #aaa9a6; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-
-.logsCard { background: #ffffff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07); padding: 20px 22px; }
-
-.sectionTitle { font-size: 14px; font-weight: 600; color: #1a1a18; font-family: var(--font-lora), Georgia, serif; margin-bottom: 14px; }
-
-.logItem {
-  padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.06);
-  display: flex; flex-direction: column; gap: 8px;
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
-.logItem:last-child { border-bottom: none; }
 
-.logDate { font-size: 13px; font-weight: 600; color: #132d36; font-family: var(--font-lora), Georgia, serif; letter-spacing: -0.01em; }
+.chartTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 0;
+}
 
-.logVitals { display: flex; gap: 20px; }
+.chartRange {
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 
-.logVital { display: flex; flex-direction: column; align-items: center; }
+.sparkWrap {
+  height: 42px;
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 2px 8px;
+  margin-bottom: 6px;
+  border: 1px solid #f1f5f9;
+}
 
-.logVal { font-size: 18px; font-weight: 700; color: #1a1a18; font-family: var(--font-lora), Georgia, serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.logWarn { color: #e24b4a; }
-.logLbl  { font-size: 9px; color: #aaa9a6; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.sparkDates {
+  display: flex;
+  justify-content: space-between;
+}
 
-.logMeds { display: flex; flex-wrap: wrap; gap: 6px; }
+.sparkDate {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
 
-.medTaken  { font-size: 11px; font-weight: 500; color: #126969; background: rgba(18,105,105,0.08); padding: 2px 9px; border-radius: 999px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
-.medMissed { font-size: 11px; font-weight: 500; color: #c94d49; background: #fdecea; padding: 2px 9px; border-radius: 999px; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.logsCard {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
 
-.logNotes { font-size: 12px; color: #888680; font-style: italic; font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 0;
+}
+
+.noDataBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+}
+
+.noDataTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 12px 0 4px;
+}
+
+.noDataSub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  max-width: 380px;
+}
+
+.logCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.logCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.logCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.logDateBadge {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--med-navy-800, #0f2b48);
+}
+
+.logTime {
+  font-size: 11.5px;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+.logVitalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.vitalItem {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vitalLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.vitalValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--med-navy-800, #0f2b48);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.vitalWarn {
+  color: #dc2626;
+}
+
+.vitalSub {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.diseaseExtraRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.diseasePill {
+  font-size: 11.5px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.logMedsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.medTakenPill {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.medMissedPill {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
 
 @media (max-width: 980px) {
   .chartsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .view {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   .header {
     padding: 14px 16px;
   }
@@ -73,14 +336,11 @@
     grid-template-columns: 1fr;
   }
 
-  .logsCard,
-  .chartCard {
-    padding: 14px;
+  .logsCard {
+    padding: 16px 14px;
   }
 
-  .logVitals {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+  .logVitalsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

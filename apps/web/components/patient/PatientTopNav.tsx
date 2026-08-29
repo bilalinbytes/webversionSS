@@ -11,7 +11,7 @@ import { formatDiagnosisDisplay } from "@o2plus/core";
 import { checkAndPlayNotificationAlert, playNotificationChime } from "@/lib/client/notification-sound";
 import styles from "./PatientTopNav.module.css";
 
-type View = "home" | "log" | "analytics" | "appointments";
+type View = "home" | "log" | "history" | "analytics" | "appointments";
 
 interface PatientTopNavProps {
   activeView: View;
@@ -21,6 +21,7 @@ interface PatientTopNavProps {
 const TABS: { id: View; label: string; labelHi: string }[] = [
   { id: "home", label: "My Health", labelHi: "मेरा स्वास्थ्य" },
   { id: "log", label: "Log Today", labelHi: "आज लॉग करें" },
+  { id: "history", label: "Daily Logs", labelHi: "दैनिक लॉग इतिहास" },
   { id: "analytics", label: "Analytics", labelHi: "विश्लेषण" },
   { id: "appointments", label: "Book Appointment", labelHi: "अपॉइंटमेंट" },
 ];
