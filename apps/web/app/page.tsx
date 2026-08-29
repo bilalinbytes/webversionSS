@@ -322,7 +322,7 @@ export default function Home() {
           <div className={styles.footerCreditCard}>
             <span className={styles.creditRoleLabel}>Software Architecture &amp; End-to-End Development by</span>
             <strong className={styles.creditName}>Mohammed Bilal</strong>
-            <span className={styles.creditTitle}>AI &amp; Software Developer</span>
+            <span className={styles.creditTitle}>Computer Science Student, PES University</span>
           </div>
         </div>
 
