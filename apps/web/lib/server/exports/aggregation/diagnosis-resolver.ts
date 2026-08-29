@@ -48,7 +48,7 @@ export function resolveCompleteDiagnosis(
 
   const completeLower = completeDiag.toLowerCase();
   if (completeLower.includes("bronchiolitis")) {
-    completeDiag = "Bronchiolitis Obliterans";
+    completeDiag = "OAD / Bronchiolitis Obliterans";
   } else if (
     completeLower.includes("overlap") ||
     completeLower.includes("aco") ||

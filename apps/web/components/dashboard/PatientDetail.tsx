@@ -404,7 +404,7 @@ export function PatientDetail({
     const raw = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "-";
     if (!raw || raw === "-") return "-";
     const lower = raw.toLowerCase();
-    if (lower.includes("bronchiolitis")) return "Bronchiolitis Obliterans";
+    if (lower.includes("bronchiolitis")) return "OAD / Bronchiolitis Obliterans";
     if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
       return "OAD / Asthma COPD overlap";
     }

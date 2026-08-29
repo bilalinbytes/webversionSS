@@ -37,12 +37,12 @@ describe("formatDiagnosisDisplay", () => {
     expect(formatDiagnosisDisplay("Asthma-COPD Overlap (ACO)")).toBe("OAD / Asthma COPD overlap");
   });
 
-  it("formats Bronchiolitis variations to exact 'Bronchiolitis Obliterans'", () => {
-    expect(formatDiagnosisDisplay("OAD / Bronchiolitis")).toBe("Bronchiolitis Obliterans");
-    expect(formatDiagnosisDisplay("OAD / Bronchiolitis Obliterans")).toBe("Bronchiolitis Obliterans");
-    expect(formatDiagnosisDisplay("OAD / bronchiolitis")).toBe("Bronchiolitis Obliterans");
-    expect(formatDiagnosisDisplay("Bronchiolitis")).toBe("Bronchiolitis Obliterans");
-    expect(formatDiagnosisDisplay("Bronchiolitis Obliterans")).toBe("Bronchiolitis Obliterans");
+  it("formats Bronchiolitis variations to exact 'OAD / Bronchiolitis Obliterans'", () => {
+    expect(formatDiagnosisDisplay("OAD / Bronchiolitis")).toBe("OAD / Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("OAD / Bronchiolitis Obliterans")).toBe("OAD / Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("OAD / bronchiolitis")).toBe("OAD / Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("Bronchiolitis")).toBe("OAD / Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("Bronchiolitis Obliterans")).toBe("OAD / Bronchiolitis Obliterans");
   });
 
   it("formats other diagnoses appropriately", () => {

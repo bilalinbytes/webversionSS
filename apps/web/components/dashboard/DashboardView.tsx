@@ -100,7 +100,7 @@ function formatDiagnosisLine(patient: SupabasePatient): string {
 
   const lower = rawDiagnosis.toLowerCase();
   if (lower.includes("bronchiolitis")) {
-    return "Bronchiolitis Obliterans";
+    return "OAD / Bronchiolitis Obliterans";
   }
   if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
     return "OAD / Asthma COPD overlap";

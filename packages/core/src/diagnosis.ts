@@ -78,9 +78,9 @@ export function formatDiagnosisDisplay(primaryDiagnosis: string | null | undefin
   const trimmed = primaryDiagnosis.trim();
   const lower = trimmed.toLowerCase();
 
-  // OAD / Bronchiolitis (and variations) → "Bronchiolitis Obliterans"
+  // OAD / Bronchiolitis (and variations) → "OAD / Bronchiolitis Obliterans"
   if (lower.includes("bronchiolitis")) {
-    return "Bronchiolitis Obliterans";
+    return "OAD / Bronchiolitis Obliterans";
   }
 
   // OAD / Asthma COPD overlap (and variations) → "OAD / Asthma COPD overlap"
