@@ -992,4 +992,133 @@
   color: #ffffff !important;
 }
 
+/* ── Medication List & Table (Step 5) ────────────────────────────────────────── */
+.emptyMedState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  background: var(--med-surface-alt, #f8fafc);
+  border: 1.5px dashed var(--med-border-strong, #cbd5e1);
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.emptyMedIcon {
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.emptyMedTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin: 0 0 4px;
+}
+
+.emptyMedSub {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.medTableWrap {
+  margin-top: 14px;
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 10px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.medTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  background: #ffffff;
+}
+
+.medTable th {
+  background: #f8fafc;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.medTable td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.medTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.medTable tbody tr:hover {
+  background: #f8fafc;
+}
+
+.routeBadge {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #dbeafe;
+}
+
+.medDrugName {
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+}
+
+.freqBadge {
+  display: inline-flex;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.medDateText {
+  color: #64748b;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.removeMedBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.removeMedBtn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
 

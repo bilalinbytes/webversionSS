@@ -93,25 +93,20 @@ function formatDashboardLabel(value: string | null | undefined): string {
   }
 }
 
-function diagnosisAlreadyNamesDashboard(diagnosis: string, dashboard: string): boolean {
-  const normalizedDiagnosis = diagnosis.toLowerCase();
-  const normalizedDashboard = dashboard.toLowerCase();
-  if (!dashboard) return true;
-  if (normalizedDashboard === "post icu") {
-    return normalizedDiagnosis.includes("post icu") || normalizedDiagnosis.includes("post-icu");
-  }
-  return normalizedDiagnosis.includes(normalizedDashboard);
-}
-
 function formatDiagnosisLine(patient: SupabasePatient): string {
   const diagnosisRow = patient.patient_diagnoses?.[0];
-  const diagnosis = diagnosisRow?.primary_diagnosis?.trim() ?? "";
-  const dashboard = formatDashboardLabel(diagnosisRow?.effective_dashboard);
-  const dashboardPart = diagnosis && diagnosisAlreadyNamesDashboard(diagnosis, dashboard) ? "" : dashboard;
-  const parts = [diagnosis, dashboardPart]
-    .filter((part): part is string => part.trim().length > 0);
+  const rawDiagnosis = diagnosisRow?.primary_diagnosis?.trim() ?? "";
+  if (!rawDiagnosis) return "No diagnosis recorded";
 
-  return parts.length > 0 ? parts.join(" / ") : "No diagnosis recorded";
+  const lower = rawDiagnosis.toLowerCase();
+  if (lower.includes("bronchiolitis")) {
+    return "Bronchiolitis Obliterans";
+  }
+  if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
+    return "OAD / Asthma COPD overlap";
+  }
+
+  return rawDiagnosis;
 }
 
 function formatComorbidityLine(patient: SupabasePatient): string {

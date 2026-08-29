@@ -28,21 +28,21 @@ describe("normalizeDashboard", () => {
 });
 
 describe("formatDiagnosisDisplay", () => {
-  it("formats Asthma-COPD overlap variations to exact 'Asthma-COPD Overlap'", () => {
-    expect(formatDiagnosisDisplay("OAD / Asthma-COPD overlap")).toBe("Asthma-COPD Overlap");
-    expect(formatDiagnosisDisplay("OAD / Asthma-COPD Overlap")).toBe("Asthma-COPD Overlap");
-    expect(formatDiagnosisDisplay("OAD / asthma-copd overlap")).toBe("Asthma-COPD Overlap");
-    expect(formatDiagnosisDisplay("OAD / Asthma-COPD Overlap (ACO)")).toBe("Asthma-COPD Overlap");
-    expect(formatDiagnosisDisplay("Asthma-COPD overlap")).toBe("Asthma-COPD Overlap");
-    expect(formatDiagnosisDisplay("Asthma-COPD Overlap (ACO)")).toBe("Asthma-COPD Overlap");
+  it("formats Asthma-COPD overlap variations to exact 'OAD / Asthma COPD overlap'", () => {
+    expect(formatDiagnosisDisplay("OAD / Asthma-COPD overlap")).toBe("OAD / Asthma COPD overlap");
+    expect(formatDiagnosisDisplay("OAD / Asthma-COPD Overlap")).toBe("OAD / Asthma COPD overlap");
+    expect(formatDiagnosisDisplay("OAD / asthma-copd overlap")).toBe("OAD / Asthma COPD overlap");
+    expect(formatDiagnosisDisplay("OAD / Asthma-COPD Overlap (ACO)")).toBe("OAD / Asthma COPD overlap");
+    expect(formatDiagnosisDisplay("Asthma-COPD overlap")).toBe("OAD / Asthma COPD overlap");
+    expect(formatDiagnosisDisplay("Asthma-COPD Overlap (ACO)")).toBe("OAD / Asthma COPD overlap");
   });
 
-  it("formats Bronchiolitis variations to exact 'Bronchiolitis'", () => {
-    expect(formatDiagnosisDisplay("OAD / Bronchiolitis")).toBe("Bronchiolitis");
-    expect(formatDiagnosisDisplay("OAD / Bronchiolitis Obliterans")).toBe("Bronchiolitis");
-    expect(formatDiagnosisDisplay("OAD / bronchiolitis")).toBe("Bronchiolitis");
-    expect(formatDiagnosisDisplay("Bronchiolitis")).toBe("Bronchiolitis");
-    expect(formatDiagnosisDisplay("Bronchiolitis Obliterans")).toBe("Bronchiolitis");
+  it("formats Bronchiolitis variations to exact 'Bronchiolitis Obliterans'", () => {
+    expect(formatDiagnosisDisplay("OAD / Bronchiolitis")).toBe("Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("OAD / Bronchiolitis Obliterans")).toBe("Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("OAD / bronchiolitis")).toBe("Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("Bronchiolitis")).toBe("Bronchiolitis Obliterans");
+    expect(formatDiagnosisDisplay("Bronchiolitis Obliterans")).toBe("Bronchiolitis Obliterans");
   });
 
   it("formats other diagnoses appropriately", () => {

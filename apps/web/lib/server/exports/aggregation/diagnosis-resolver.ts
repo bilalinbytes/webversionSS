@@ -46,6 +46,17 @@ export function resolveCompleteDiagnosis(
     histopath = primary;
   }
 
+  const completeLower = completeDiag.toLowerCase();
+  if (completeLower.includes("bronchiolitis")) {
+    completeDiag = "Bronchiolitis Obliterans";
+  } else if (
+    completeLower.includes("overlap") ||
+    completeLower.includes("aco") ||
+    (completeLower.includes("asthma") && completeLower.includes("copd"))
+  ) {
+    completeDiag = "OAD / Asthma COPD overlap";
+  }
+
   // Format co-morbidities
   const rawComorbid = diagnosis.comorbidities;
   let comorbidities = "None recorded";

@@ -1139,28 +1139,53 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
           </div>
         )}
 
-        <div className={styles.medList}>
-          <div className={styles.medHeader}>
-            <span className={styles.medHeaderCell}>Medication Type</span>
-            <span className={styles.medHeaderCell}>Name</span>
-            <span className={styles.medHeaderCell}>Dose</span>
-            <span className={styles.medHeaderCell}>Frequency</span>
-            <span className={styles.medHeaderCell}>Start</span>
-            <span className={styles.medHeaderCell}>End</span>
-            <span className={styles.medHeaderCell}></span>
+        {data.medications.length === 0 ? (
+          <div className={styles.emptyMedState}>
+            <Pill size={24} className={styles.emptyMedIcon} />
+            <p className={styles.emptyMedTitle}>No active prescriptions added yet</p>
+            <p className={styles.emptyMedSub}>Click &quot;+ Add Medication&quot; above to prescribe medications for this patient.</p>
           </div>
-          {data.medications.map((m) => (
-            <div key={m._clientId} className={styles.medRow}>
-              <span className={styles.medCell}>{RTE_OPTS.find(r => r.v === m.route)?.l}</span>
-              <span className={`${styles.medCell} ${styles.medName}`}>{m.drug_name}</span>
-              <span className={styles.medCell}>{m.dose} {m.dose_unit}</span>
-              <span className={styles.medCell}>{m.frequency}</span>
-              <span className={`${styles.medCell} ${styles.medMuted}`}>{m.start_date}</span>
-              <span className={`${styles.medCell} ${styles.medMuted}`}>{m.end_date || "Ongoing"}</span>
-              <span className={styles.medCell}><button type="button" className={styles.removeBtn} onClick={() => removeMed(m._clientId)}>-</button></span>
-            </div>
-          ))}
-        </div>
+        ) : (
+          <div className={styles.medTableWrap}>
+            <table className={styles.medTable}>
+              <thead>
+                <tr>
+                  <th>Medication Type</th>
+                  <th>Drug Name</th>
+                  <th>Dose</th>
+                  <th>Frequency</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th style={{ width: 44, textAlign: "center" }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.medications.map((m) => (
+                  <tr key={m._clientId}>
+                    <td>
+                      <span className={styles.routeBadge}>{RTE_OPTS.find(r => r.v === m.route)?.l ?? m.route}</span>
+                    </td>
+                    <td className={styles.medDrugName}>{m.drug_name}</td>
+                    <td>{m.dose !== null ? `${m.dose} ${m.dose_unit || ""}` : "—"}</td>
+                    <td><span className={styles.freqBadge}>{m.frequency}</span></td>
+                    <td className={styles.medDateText}>{m.start_date}</td>
+                    <td className={styles.medDateText}>{m.end_date || "Ongoing"}</td>
+                    <td style={{ textAlign: "center" }}>
+                      <button
+                        type="button"
+                        className={styles.removeMedBtn}
+                        onClick={() => removeMed(m._clientId)}
+                        title="Remove medication"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

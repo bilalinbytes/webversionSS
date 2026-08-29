@@ -78,18 +78,18 @@ export function formatDiagnosisDisplay(primaryDiagnosis: string | null | undefin
   const trimmed = primaryDiagnosis.trim();
   const lower = trimmed.toLowerCase();
 
-  // OAD / Asthma-COPD overlap (and variations) → "Asthma-COPD Overlap"
+  // OAD / Bronchiolitis (and variations) → "Bronchiolitis Obliterans"
+  if (lower.includes("bronchiolitis")) {
+    return "Bronchiolitis Obliterans";
+  }
+
+  // OAD / Asthma COPD overlap (and variations) → "OAD / Asthma COPD overlap"
   if (
     lower.includes("overlap") ||
     lower.includes("aco") ||
     (lower.includes("asthma") && lower.includes("copd"))
   ) {
-    return "Asthma-COPD Overlap";
-  }
-
-  // OAD / Bronchiolitis (and variations like Bronchiolitis Obliterans) → "Bronchiolitis"
-  if (lower.includes("bronchiolitis")) {
-    return "Bronchiolitis";
+    return "OAD / Asthma COPD overlap";
   }
 
   const parts = trimmed.split("/");

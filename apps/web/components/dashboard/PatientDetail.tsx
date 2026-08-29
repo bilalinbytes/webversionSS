@@ -400,7 +400,16 @@ export function PatientDetail({
   const displayInitials = displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   const displayAge = patientInfo?.date_of_birth ? computeAge(patientInfo.date_of_birth) : legacyPatient?.age ?? "-";
   const displayGender = patientInfo?.gender ?? (legacyPatient?.gender === "M" ? "Male" : legacyPatient?.gender === "F" ? "Female" : "-");
-  const displayCondition = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "-";
+  const displayCondition = (() => {
+    const raw = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "-";
+    if (!raw || raw === "-") return "-";
+    const lower = raw.toLowerCase();
+    if (lower.includes("bronchiolitis")) return "Bronchiolitis Obliterans";
+    if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
+      return "OAD / Asthma COPD overlap";
+    }
+    return raw;
+  })();
   const displayComorbidities = formatComorbidities(
     diagnosis?.comorbidities,
     diagnosis?.comorbidities_other_text,
