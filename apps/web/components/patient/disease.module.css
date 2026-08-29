@@ -966,3 +966,54 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .pageHeader {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .body {
+    padding: 14px 12px calc(72px + env(safe-area-inset-bottom, 0px));
+    gap: 12px;
+  }
+
+  .card {
+    padding: 14px 12px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .metricCard {
+    padding: 12px 10px;
+  }
+
+  .pathwayStepsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .pftGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .doctorCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .successGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}

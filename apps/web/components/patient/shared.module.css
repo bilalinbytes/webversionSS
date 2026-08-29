@@ -508,3 +508,30 @@
   line-height: 1.5;
   margin: 0;
 }
+
+@media (max-width: 640px) {
+  .aqiBox {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .scale10 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .scale10::-webkit-scrollbar {
+    display: none;
+  }
+
+  .seGrid {
+    gap: 6px;
+  }
+
+  .seChip {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
