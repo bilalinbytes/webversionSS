@@ -1485,9 +1485,9 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                       key={med._key}
                       style={{
                         display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS,
-                        gap: 8, alignItems: "center", padding: "8px",
-                        background: isStopped ? "#fdecea" : "white",
-                        borderRadius: 8, border: `1px solid ${isStopped ? "#fca5a5" : "rgba(0,0,0,0.07)"}`,
+                        gap: 8, alignItems: "center", padding: "8px 6px",
+                        background: isStopped ? "#fdecea" : "transparent",
+                        borderBottom: `1px solid ${isStopped ? "#fca5a5" : "var(--med-border-subtle, #e2e8f0)"}`,
                         opacity: isStopped ? 0.7 : 1,
                       }}
                     >
@@ -1844,16 +1844,17 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             if (!openPrescriptionDates.has(group.date)) return null;
             const today = new Date().toISOString().split("T")[0]!;
             return (
-              <div key={`content-${group.date}`} style={{ background: "#fafafa", borderRadius: 8, overflow: "hidden", border: "1px solid #93c5fd", marginTop: 16 }}>
-                <div style={{ padding: "12px 14px", borderBottom: "1px solid #93c5fd", background: "linear-gradient(90deg, #1a56b0 0%, #2563eb 100%)" }}>
-                  <h3 style={{ margin: 0, fontSize: 14, color: "#fff", fontWeight: 700 }}>Prescription: {fmtDate(group.date)}</h3>
+              <div key={`content-${group.date}`} style={{ background: "#ffffff", borderRadius: 8, overflow: "hidden", border: "1px solid var(--med-border-subtle, #e2e8f0)", marginTop: 16 }}>
+                <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--med-border-subtle, #e2e8f0)", background: "var(--med-navy-800, #0f2b48)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <h3 style={{ margin: 0, fontSize: 13, color: "#ffffff", fontWeight: 700, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>Consultation: {fmtDate(group.date)}</h3>
+                  <span style={{ fontSize: 11, color: "var(--med-blue-400, #4895ef)", fontWeight: 600 }}>{group.medications.length} Prescribed</span>
                 </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ minWidth: 840, width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     <thead>
-                      <tr style={{ background: "linear-gradient(90deg, #1a56b0 0%, #2563eb 100%)", borderBottom: "1px solid #1d4ed8" }}>
+                      <tr style={{ background: "var(--med-surface-alt, #f8fafc)", borderBottom: "1px solid var(--med-border-subtle, #e2e8f0)" }}>
                         {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "Start Date", "End Date"].map((header) => (
-                          <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.9)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
+                          <th key={header} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "var(--med-text-muted, #64748b)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{header}</th>
                         ))}
                       </tr>
                     </thead>

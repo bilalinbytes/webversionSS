@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingDown, TrendingUp, AlertTriangle, Calendar, User } from "lucide-react";
+import { TrendingDown, TrendingUp, AlertTriangle, Calendar, User, CheckCircle2 } from "lucide-react";
 import { PATIENT_PROFILE, SPO2_TREND, VAS_TREND, DAYS_14 } from "@/lib/mock-data";
 import { usePatient } from "@/contexts/PatientContext";
 import { DoctorNoteCard } from "./shared";
@@ -104,6 +104,9 @@ export function HomeView({
   const oxygenStatus = currentSpo2 < 88 ? "Low — Oxygen needed" :
                       currentSpo2 < 92 ? "Borderline" : "Normal";
 
+  const todayStr = new Date().toISOString().split("T")[0]!;
+  const isLoggedToday = lastLogDate ? lastLogDate.startsWith(todayStr) : false;
+
   return (
     <div className={styles.view}>
       {/* ── Header bar ── */}
@@ -113,12 +116,25 @@ export function HomeView({
             <span className={styles.titleEn}>Good afternoon, {patientName}</span>
             <span className={styles.titleHi}>नमस्ते, {patientName}</span>
           </h1>
-          <p className={styles.sub}>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · Last logged {lastLogDate ? new Date(lastLogDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "No logs yet"}</p>
+          <p className={styles.sub}>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {isLoggedToday ? "Today's log completed" : `Last logged ${lastLogDate ? new Date(lastLogDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "No logs yet"}`}</p>
         </div>
-        <button type="button" className={styles.btnPrimary} onClick={onLogToday}>
-          <span className={styles.btnEn}>+ Log Today&apos;s Health</span>
-          <span className={styles.btnHi}>+ आज का लॉग भरें</span>
-        </button>
+        {isLoggedToday ? (
+          <div className={styles.completedHeaderBadge}>
+            <CheckCircle2 size={18} className={styles.completedIcon} />
+            <div className={styles.completedContent}>
+              <span className={styles.completedTitle}>✓ Today&apos;s Health Log Recorded</span>
+              <span className={styles.completedSub}>No further action required today</span>
+            </div>
+            <button type="button" className={styles.btnSecondarySmall} onClick={onLogToday}>
+              Update
+            </button>
+          </div>
+        ) : (
+          <button type="button" className={styles.btnPrimary} onClick={onLogToday}>
+            <span className={styles.btnEn}>+ Log Today&apos;s Health</span>
+            <span className={styles.btnHi}>+ आज का लॉग भरें</span>
+          </button>
+        )}
       </div>
 
       <div className={styles.body}>

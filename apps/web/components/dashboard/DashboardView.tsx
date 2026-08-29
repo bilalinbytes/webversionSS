@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Activity, Search, Bell, Download, Users, Trash2, FolderOpen } from "lucide-react";
 import { PatientDetail } from "./PatientDetail";
 import { ImportPatientModal } from "./ImportPatientModal";
@@ -647,6 +647,21 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     return left.name.localeCompare(right.name);
   });
 
+  const diseaseCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: patients.length };
+    for (const p of patients) {
+      const diagnosisRow = p.patient_diagnoses?.[0];
+      const eff = (diagnosisRow?.effective_dashboard ?? "").toLowerCase();
+      const diag = (diagnosisRow?.primary_diagnosis ?? "").toLowerCase();
+      if (eff === "asthma") counts["Asthma"] = (counts["Asthma"] || 0) + 1;
+      else if (eff === "copd") counts["COPD"] = (counts["COPD"] || 0) + 1;
+      else if (eff === "ild") counts["ILD"] = (counts["ILD"] || 0) + 1;
+      else if (eff === "bronchiectasis") counts["Bronchiectasis"] = (counts["Bronchiectasis"] || 0) + 1;
+      else if (eff === "post_icu" || diag.includes("post icu") || diag.includes("post-icu")) counts["Post ICU"] = (counts["Post ICU"] || 0) + 1;
+    }
+    return counts;
+  }, [patients]);
+
   const handleFilterChange = useCallback((f: DiagnosisFilter) => {
     setFilter(f);
     setFilterKey((k) => k + 1);
@@ -940,16 +955,21 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                 onChange={(e) => { setSearch(e.target.value); setFilterKey((k) => k + 1); }}
               />
             </div>
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                className={`${styles.chip} ${filter === f ? styles.chipActive : ""}`}
-                onClick={() => handleFilterChange(f)}
-              >
-                {f}
-              </button>
-            ))}
+            <div className={styles.segmentedGroup} role="tablist" aria-label="Filter patients by respiratory disease">
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === f}
+                  className={`${styles.segmentedTab} ${filter === f ? styles.segmentedTabActive : ""}`}
+                  onClick={() => handleFilterChange(f)}
+                >
+                  <span>{f}</span>
+                  <span className={styles.segmentedCount}>{diseaseCounts[f] ?? 0}</span>
+                </button>
+              ))}
+            </div>
             <label className={styles.sortWrap}>
               <span>Sort by</span>
               <select

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -76,8 +76,9 @@ export function AdminOverviewView({ onViewChange }: AdminOverviewViewProps) {
       value: stats?.openAlerts ?? 0,
       sub: "Unacknowledged",
       icon: Bell,
-      color: "#c94d49",
-      bg: "#fee2e2",
+      color: (stats?.openAlerts ?? 0) > 0 ? "#c2410c" : "var(--med-text-muted)",
+      bg: (stats?.openAlerts ?? 0) > 0 ? "#ffedd5" : "var(--med-blue-50)",
+      isAlert: (stats?.openAlerts ?? 0) > 0,
       action: null,
     },
   ];
@@ -102,7 +103,7 @@ export function AdminOverviewView({ onViewChange }: AdminOverviewViewProps) {
           return (
             <div
               key={card.label}
-              className={`${styles.statCard} ${card.action ? styles.statCardClickable : ""}`}
+              className={`${styles.statCard} ${card.action ? styles.statCardClickable : ""} ${card.isAlert ? styles.statCardAlert : ""}`}
               onClick={card.action ?? undefined}
               role={card.action ? "button" : undefined}
               tabIndex={card.action ? 0 : undefined}
@@ -123,8 +124,8 @@ export function AdminOverviewView({ onViewChange }: AdminOverviewViewProps) {
               <div className={styles.statBody}>
                 <p className={styles.statLabel}>{card.label}</p>
                 <p
-                  className={styles.statValue}
-                  style={{ color: loading ? "#bec9c8" : card.color }}
+                  className={`${styles.statValue} ${card.isAlert ? styles.statValAlert : ""}`}
+                  style={loading ? { color: "#bec9c8" } : undefined}
                 >
                   {loading ? "-" : card.value.toLocaleString()}
                 </p>
