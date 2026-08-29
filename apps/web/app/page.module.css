@@ -149,7 +149,7 @@
   margin: 0 auto;
   padding: clamp(2.5rem, 6vh, 4.5rem) clamp(1.25rem, 3.5vw, 3rem);
   display: grid;
-  grid-template-columns: minmax(380px, 460px) 1fr;
+  grid-template-columns: minmax(min(100%, 380px), 460px) 1fr;
   gap: 2.5rem;
   align-items: center;
 }
@@ -835,9 +835,19 @@
 }
 .pathwayGrid {
   display: grid;
-  grid-template-columns: minmax(340px, 460px) 1fr;
+  grid-template-columns: minmax(min(100%, 340px), 460px) 1fr;
   gap: 3rem;
   align-items: stretch;
+}
+.pathwayVisualWrap {
+  min-height: 480px;
+  display: flex;
+  width: 100%;
+}
+@media (max-width: 640px) {
+  .pathwayVisualWrap {
+    min-height: 400px;
+  }
 }
 .pathwayCards {
   display: flex;
@@ -937,21 +947,177 @@
 @media (max-width: 900px) {
   .heroInner {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2.5rem;
   }
   .heroBg { display: none; }
-  .heroRight { justify-content: flex-start; }
+  .heroRight { justify-content: center; width: 100%; }
   .pulmonaryWidget { width: 100%; }
-  .aboutGrid { grid-template-columns: 1fr; }
+  .aboutGrid { grid-template-columns: 1fr; gap: 1.25rem; }
   .pathwayGrid { grid-template-columns: 1fr; gap: 2rem; }
-  .contactInner { grid-template-columns: 1fr; gap: 3rem; }
+  .contactInner { grid-template-columns: 1fr; gap: 2.5rem; }
   .navCenter { display: none; }
 }
+
 @media (max-width: 640px) {
-  .heroHeading { font-size: clamp(2.2rem, 9vw, 3rem); }
-  .sectionHeading { font-size: clamp(1.8rem, 7vw, 2.4rem); }
-  .heroCtas { flex-direction: column; align-items: flex-start; }
-  .milestoneCard { flex-direction: column; gap: 0.85rem; }
-  .footerInner { flex-direction: column; align-items: flex-start; }
-  .footerNav { gap: 1rem; }
+  .nav {
+    height: 56px;
+  }
+  .navInner {
+    padding: 0 1rem;
+  }
+  .navBrandName {
+    font-size: 1.05rem;
+  }
+  .navBtnOutline,
+  .navBtnFill {
+    padding: 6px 11px;
+    font-size: 0.78rem;
+    border-radius: 7px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 1rem 0 2rem;
+  }
+  .heroInner {
+    padding: 1.5rem 1rem;
+    gap: 1.75rem;
+  }
+  .heroHeading {
+    font-size: clamp(2rem, 8.5vw, 2.75rem);
+    line-height: 1.12;
+  }
+  .heroBody {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .heroCtas {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+  .ctaFill,
+  .ctaOutline {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+  .heroRegister {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .pathwaySection {
+    padding: 3.5rem 0;
+  }
+  .pathwayInner {
+    padding: 0 1rem;
+    gap: 2rem;
+  }
+  .sectionHeading {
+    font-size: clamp(1.65rem, 7vw, 2.2rem);
+    line-height: 1.2;
+  }
+  .sectionBody {
+    font-size: 0.9rem;
+  }
+  .milestoneCard {
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.2rem 1.2rem;
+  }
+
+  .about {
+    padding: 3.5rem 0;
+  }
+  .aboutInner {
+    padding: 0 1rem;
+  }
+  .aboutCard {
+    padding: 1.4rem 1.2rem;
+  }
+  .conditionsStrip {
+    padding: 1.2rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .conditionsTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .conditionTag {
+    font-size: 0.76rem;
+    padding: 4px 10px;
+  }
+
+  .testimonialSection {
+    padding: 3.5rem 0;
+  }
+  .testimonialInner {
+    padding: 0 1rem;
+  }
+  .testimonialCard {
+    padding: 1.6rem 1.2rem;
+  }
+  .testimonialQuote {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .doctorBioRow {
+    gap: 10px;
+  }
+
+  .contact {
+    padding: 3.5rem 0;
+  }
+  .contactInner {
+    padding: 0 1rem;
+    gap: 2rem;
+  }
+  .contactCard {
+    padding: 1.5rem 1.2rem;
+  }
+  .contactCta {
+    min-height: 48px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .footer {
+    padding: 2.5rem 0 1.5rem;
+  }
+  .footerInner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 1rem;
+    gap: 1.5rem;
+  }
+  .footerNav {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .footerBottom {
+    padding: 1.25rem 1rem 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .navRight {
+    gap: 5px;
+  }
+  .navBtnOutline,
+  .navBtnFill {
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+  .heroBadge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
 }

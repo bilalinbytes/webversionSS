@@ -56,11 +56,12 @@ export function Pathway3DVisual() {
 
   return (
     <div
+      className="pathway3DCard"
       style={{
         position: "relative",
         width: "100%",
         height: "100%",
-        minHeight: 520,
+        minHeight: 480,
         borderRadius: "1.5rem",
         overflow: "hidden",
         background: "radial-gradient(circle at 65% 45%, #0d2e53 0%, #081d35 45%, #041021 100%)",
@@ -72,8 +73,23 @@ export function Pathway3DVisual() {
         userSelect: "none",
       }}
     >
+      <style>{`
+        @media (max-width: 640px) {
+          .pathway3DCard {
+            min-height: 400px !important;
+            border-radius: 1.1rem !important;
+          }
+          .pathway3DHeader {
+            padding: 10px 14px !important;
+          }
+          .pathway3DBottom {
+            padding: 12px 14px !important;
+          }
+        }
+      `}</style>
       {/* Top Telemetry Header */}
       <div
+        className="pathway3DHeader"
         style={{
           display: "flex",
           alignItems: "center",
@@ -534,6 +550,7 @@ export function Pathway3DVisual() {
 
       {/* Bottom Information & Interactive Progress Indicators */}
       <div
+        className="pathway3DBottom"
         style={{
           padding: "16px 20px",
           background: "linear-gradient(180deg, rgba(4, 16, 33, 0.75) 0%, rgba(2, 8, 18, 0.95) 100%)",

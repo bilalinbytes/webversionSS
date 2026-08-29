@@ -110,7 +110,7 @@ export default function Home() {
 
           <div className={styles.pathwayGrid}>
             {/* Left: 3D Vector SVG Pathway Graphic */}
-            <div style={{ minHeight: 480, display: "flex" }}>
+            <div className={styles.pathwayVisualWrap}>
               <Pathway3DVisual />
             </div>
 

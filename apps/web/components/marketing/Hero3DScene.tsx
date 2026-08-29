@@ -27,6 +27,7 @@ export function Hero3DScene() {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      className="hero3DWrapper"
       style={{
         position: "relative",
         width: "100%",
@@ -65,10 +66,61 @@ export function Hero3DScene() {
           0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
           50% { opacity: 0.4; box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
         }
+
+        @media (max-width: 900px) {
+          .hero3DWrapper {
+            min-height: 480px !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+          }
+          .hero3DCanvas {
+            transform: scale(0.9) !important;
+            transform-origin: top center !important;
+            height: 480px !important;
+            margin-bottom: -40px !important;
+          }
+        }
+
+        @media (max-width: 680px) {
+          .hero3DWrapper {
+            min-height: 420px !important;
+          }
+          .hero3DCanvas {
+            transform: scale(0.78) !important;
+            transform-origin: top center !important;
+            height: 420px !important;
+            margin-bottom: -80px !important;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .hero3DWrapper {
+            min-height: 350px !important;
+          }
+          .hero3DCanvas {
+            transform: scale(0.64) !important;
+            transform-origin: top center !important;
+            height: 350px !important;
+            margin-bottom: -140px !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .hero3DWrapper {
+            min-height: 300px !important;
+          }
+          .hero3DCanvas {
+            transform: scale(0.52) !important;
+            transform-origin: top center !important;
+            height: 300px !important;
+            margin-bottom: -190px !important;
+          }
+        }
       `}</style>
 
       {/* 3D Rotational Canvas Container */}
       <div
+        className="hero3DCanvas"
         style={{
           position: "relative",
           width: "100%",
