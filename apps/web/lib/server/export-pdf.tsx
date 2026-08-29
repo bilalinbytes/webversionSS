@@ -72,53 +72,51 @@ const AMBER     = "#ea580c"; // Warning Amber
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const S = StyleSheet.create({
-  page:         { padding: 28, fontSize: 8.5, color: "#0f172a", fontFamily: "Helvetica", backgroundColor: WHITE },
+  page:         { padding: "22 24 30 24", fontSize: 8, color: "#0f172a", fontFamily: "Helvetica", backgroundColor: WHITE },
   // Executive Navy Header Band
-  headerBand:   { backgroundColor: BRAND, padding: "12 20", marginBottom: 14, borderRadius: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerLeft:   { flexDirection: "row", alignItems: "center", gap: 10 },
-  logoBadge:    { backgroundColor: ACCENT, padding: "4 8", borderRadius: 4, border: `1 solid ${CYAN}` },
-  logoText:     { fontSize: 13, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.8 },
-  headerTitle:  { fontSize: 14, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.3 },
-  headerSub:    { fontSize: 8, color: "#93c5fd", marginTop: 2 },
+  headerBand:   { backgroundColor: BRAND, padding: "8 14", marginBottom: 8, borderRadius: 5, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerLeft:   { flexDirection: "row", alignItems: "center", gap: 8 },
+  logoBadge:    { backgroundColor: ACCENT, padding: "3 6", borderRadius: 3, border: `1 solid ${CYAN}` },
+  logoText:     { fontSize: 11, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.6 },
+  headerTitle:  { fontSize: 12, fontFamily: "Helvetica-Bold", color: WHITE, letterSpacing: 0.2 },
+  headerSub:    { fontSize: 7.5, color: "#93c5fd", marginTop: 1 },
   headerRight:  { alignItems: "flex-end" },
-  headerMeta:   { fontSize: 7.5, color: "#cbd5e1" },
+  headerMeta:   { fontSize: 7, color: "#cbd5e1" },
   
   // Section
-  section:      { marginTop: 10, marginBottom: 4 },
-  sectionHead:  { flexDirection: "row", alignItems: "center", marginBottom: 5, paddingBottom: 3, borderBottom: `1.5 solid ${ACCENT}` },
-  sectionBar:   { width: 4, height: 11, backgroundColor: ACCENT, borderRadius: 2, marginRight: 6 },
-  sectionTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.2, textTransform: "uppercase" },
+  section:      { marginTop: 6, marginBottom: 2 },
+  sectionHead:  { flexDirection: "row", alignItems: "center", marginBottom: 3, paddingBottom: 2, borderBottom: `1.5 solid ${ACCENT}` },
+  sectionBar:   { width: 3, height: 9, backgroundColor: ACCENT, borderRadius: 1.5, marginRight: 5 },
+  sectionTitle: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.2, textTransform: "uppercase" },
 
-  // KV grid
-  kvGrid:       { flexDirection: "row", flexWrap: "wrap", gap: 5 },
-  kvItem:       { width: "32%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
-  kvItemWide:   { width: "49%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
-  kvItemFull:   { width: "100%", backgroundColor: LIGHT, borderRadius: 4, border: `1 solid ${BORDER}`, padding: "5 7" },
-  kvLabel:      { fontSize: 6.5, color: MUTED, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 1 },
-  kvValue:      { fontSize: 8.5, color: BRAND, lineHeight: 1.3 },
+  // KV grid & items
+  rowFlex:      { flexDirection: "row", gap: 5, marginBottom: 3 },
+  kvBox:        { flex: 1, backgroundColor: LIGHT, borderRadius: 3, border: `1 solid ${BORDER}`, padding: "3.5 5" },
+  kvLabel:      { fontSize: 6, color: MUTED, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 1 },
+  kvValue:      { fontSize: 8, color: BRAND, lineHeight: 1.2 },
 
   // Table
-  table:        { border: `1 solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginTop: 4 },
+  table:        { border: `1 solid ${BORDER}`, borderRadius: 3, overflow: "hidden", marginTop: 3 },
   tHead:        { flexDirection: "row", backgroundColor: "#e8f1f8", borderBottom: `1.5 solid ${ACCENT}` },
   tRow:         { flexDirection: "row", borderBottom: `1 solid ${BORDER}` },
   tRowAlt:      { flexDirection: "row", borderBottom: `1 solid ${BORDER}`, backgroundColor: LIGHT },
-  tCell:        { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.25, borderRight: `1 solid ${BORDER}` },
-  tCellLast:    { flex: 1, padding: "5 6", fontSize: 8, lineHeight: 1.25 },
-  tHeadCell:    { flex: 1, padding: "5 6", fontSize: 7.5, fontFamily: "Helvetica-Bold", color: BRAND, borderRight: `1 solid ${BORDER}` },
-  tHeadLast:    { flex: 1, padding: "5 6", fontSize: 7.5, fontFamily: "Helvetica-Bold", color: BRAND },
+  tCell:        { flex: 1, padding: "3.5 5", fontSize: 7.5, lineHeight: 1.2, borderRight: `1 solid ${BORDER}` },
+  tCellLast:    { flex: 1, padding: "3.5 5", fontSize: 7.5, lineHeight: 1.2 },
+  tHeadCell:    { flex: 1, padding: "3.5 5", fontSize: 7, fontFamily: "Helvetica-Bold", color: BRAND, borderRight: `1 solid ${BORDER}` },
+  tHeadLast:    { flex: 1, padding: "3.5 5", fontSize: 7, fontFamily: "Helvetica-Bold", color: BRAND },
 
   // Badges
-  badgeGreen:   { backgroundColor: "#dcfce7", color: GREEN, fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #bbf7d0` },
-  badgeRed:     { backgroundColor: "#fee2e2", color: RED,   fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #fca5a5` },
-  badgeAmber:   { backgroundColor: "#ffedd5", color: AMBER, fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #fed7aa` },
-  badgeBlue:    { backgroundColor: "#e0f2fe", color: ACCENT,fontSize: 7.5, fontFamily: "Helvetica-Bold", padding: "2 6", borderRadius: 3, border: `1 solid #bae6fd` },
+  badgeGreen:   { backgroundColor: "#dcfce7", color: GREEN, fontSize: 7, fontFamily: "Helvetica-Bold", padding: "1.5 5", borderRadius: 3, border: `1 solid #bbf7d0` },
+  badgeRed:     { backgroundColor: "#fee2e2", color: RED,   fontSize: 7, fontFamily: "Helvetica-Bold", padding: "1.5 5", borderRadius: 3, border: `1 solid #fca5a5` },
+  badgeAmber:   { backgroundColor: "#ffedd5", color: AMBER, fontSize: 7, fontFamily: "Helvetica-Bold", padding: "1.5 5", borderRadius: 3, border: `1 solid #fed7aa` },
+  badgeBlue:    { backgroundColor: "#e0f2fe", color: ACCENT,fontSize: 7, fontFamily: "Helvetica-Bold", padding: "1.5 5", borderRadius: 3, border: `1 solid #bae6fd` },
 
   // Footer & Sign off
-  footer:       { position: "absolute", bottom: 16, left: 28, fontSize: 7.5, color: MUTED },
-  pageNumber:   { position: "absolute", bottom: 16, right: 28, fontSize: 7.5, color: MUTED },
-  sigBox:       { marginTop: 16, borderTop: `1.5 solid ${BORDER}`, paddingTop: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
-  sigLine:      { width: 140, borderBottom: `1 solid ${BRAND}`, marginBottom: 4 },
-  sigLabel:     { fontSize: 7, color: MUTED },
+  footer:       { position: "absolute", bottom: 12, left: 24, fontSize: 7, color: MUTED },
+  pageNumber:   { position: "absolute", bottom: 12, right: 24, fontSize: 7, color: MUTED },
+  sigBox:       { marginTop: 14, borderTop: `1.5 solid ${BORDER}`, paddingTop: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  sigLine:      { width: 130, borderBottom: `1 solid ${BRAND}`, marginBottom: 3 },
+  sigLabel:     { fontSize: 6.5, color: MUTED },
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -171,10 +169,10 @@ function SpO2TrendChart({ logRows }: { logRows: string[][] }) {
 
   if (pointsData.length < 2) return null;
 
-  const svgW = 538;
-  const svgH = 55;
+  const svgW = 546;
+  const svgH = 50;
   const padX = 24;
-  const padY = 12;
+  const padY = 10;
   const chartW = svgW - padX * 2;
   const chartH = svgH - padY * 2;
 
@@ -194,13 +192,13 @@ function SpO2TrendChart({ logRows }: { logRows: string[][] }) {
   const y90 = svgH - padY - ((90 - minVal) / (maxVal - minVal)) * chartH;
 
   return (
-    <View style={{ marginTop: 8, marginBottom: 4, border: `1 solid ${BORDER}`, borderRadius: 5, padding: 6, backgroundColor: LIGHT }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-        <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: BRAND }}>
+    <View style={{ marginTop: 4, marginBottom: 2, border: `1 solid ${BORDER}`, borderRadius: 4, padding: "4 6", backgroundColor: LIGHT }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 3 }}>
+        <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: BRAND }}>
           SpO₂ Resting Trend Graph (%) — Last {pointsData.length} Recorded Logs
         </Text>
-        <Text style={{ fontSize: 7, color: MUTED }}>
-          Target Threshold: ≥ 90% (Normal) | &lt; 88% (Desaturation Warning)
+        <Text style={{ fontSize: 6.5, color: MUTED }}>
+          Target: ≥ 90% (Normal) | &lt; 88% (Desaturation Warning)
         </Text>
       </View>
       <Svg width={svgW} height={svgH}>
@@ -221,7 +219,7 @@ function SpO2TrendChart({ logRows }: { logRows: string[][] }) {
           const color = c.val < 88 ? RED : c.val < 90 ? AMBER : ACCENT;
           return (
             <React.Fragment key={i}>
-              <Circle cx={c.x} cy={c.y} r={2.8} fill={color} stroke="#ffffff" strokeWidth={0.8} />
+              <Circle cx={c.x} cy={c.y} r={2.5} fill={color} stroke="#ffffff" strokeWidth={0.8} />
             </React.Fragment>
           );
         })}
@@ -266,9 +264,9 @@ function ExecutiveHeader({
   );
 }
 
-// ─── Single Patient Executive 3-Page Dossier Document ───────────────────────
+// ─── Single Patient Executive 3-Page Dossier Fragment ─────────────────────────
 
-function SinglePatientDossierDocument({
+function SinglePatientDossierPages({
   patient,
   doctorName,
   generatedAt,
@@ -284,7 +282,7 @@ function SinglePatientDossierDocument({
   const dashboard = resolveEffectiveDashboard(patient.diagnosis);
 
   return (
-    <Document>
+    <React.Fragment>
 
       {/* ── PAGE 1: Executive Patient Profile & Baseline PFT ────────────────── */}
       <Page size="A4" style={S.page}>
@@ -303,36 +301,43 @@ function SinglePatientDossierDocument({
             <View style={S.sectionBar} />
             <Text style={S.sectionTitle}>1. Patient Demographics &amp; Background</Text>
           </View>
-          <View style={S.kvGrid}>
-            <View style={S.kvItem}>
+          
+          <View style={S.rowFlex}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Patient Full Name</Text>
               <Text style={[S.kvValue, { fontFamily: "Helvetica-Bold" }]}>{patient.patientName}</Text>
             </View>
-            <View style={S.kvItem}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>UHID / Patient ID</Text>
               <Text style={S.kvValue}>{dem["UHID"] || "P-E01E2C"}</Text>
             </View>
-            <View style={S.kvItem}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Hospital File No.</Text>
               <Text style={S.kvValue}>{dem["File No"] || "001/2026"}</Text>
             </View>
-            <View style={S.kvItem}>
+          </View>
+
+          <View style={S.rowFlex}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Age &amp; Sex</Text>
               <Text style={S.kvValue}>{dem["Age"] ? `${dem["Age"]} yrs` : "—"} / {dem["Sex"] || "—"}</Text>
             </View>
-            <View style={S.kvItem}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Mobile Contact</Text>
               <Text style={S.kvValue}>{dem["Mobile"] || "—"}</Text>
             </View>
-            <View style={S.kvItem}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Occupation</Text>
               <Text style={S.kvValue}>{dem["Occupation"] || "Not recorded"}</Text>
             </View>
-            <View style={S.kvItemWide}>
+          </View>
+
+          <View style={S.rowFlex}>
+            <View style={[S.kvBox, { flex: 1.2 }]}>
               <Text style={S.kvLabel}>Smoking &amp; Exposure History</Text>
               <Text style={S.kvValue}>{dem["Smoking Status"] || "Non-smoker / No biomass exposure"}</Text>
             </View>
-            <View style={S.kvItemWide}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>O2Plus Enrollment Date</Text>
               <Text style={S.kvValue}>{dem["Enrollment Date"] || generatedAt}</Text>
             </View>
@@ -345,26 +350,33 @@ function SinglePatientDossierDocument({
             <View style={S.sectionBar} />
             <Text style={S.sectionTitle}>2. Complete Primary Diagnosis &amp; Clinical Profile</Text>
           </View>
-          <View style={S.kvGrid}>
-            <View style={S.kvItemWide}>
+          
+          <View style={S.rowFlex}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Primary Pulmonology Diagnosis</Text>
               <Text style={[S.kvValue, { color: ACCENT, fontFamily: "Helvetica-Bold" }]}>
                 {diag["Primary Diagnosis"] || diag["Effective dashboard"] || "OAD / Respiratory Disease"}
               </Text>
             </View>
-            <View style={S.kvItemWide}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Histopathology / Subtype</Text>
               <Text style={S.kvValue}>{diag["Histopathology"] || "Standard Clinical Subtype"}</Text>
             </View>
-            <View style={S.kvItemWide}>
+          </View>
+
+          <View style={S.rowFlex}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Connective Tissue Disease (CTD)</Text>
               <Text style={S.kvValue}>{diag["Connective Tissue Disease"] || "None recorded (NA)"}</Text>
             </View>
-            <View style={S.kvItemWide}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Associated Co-Morbidities</Text>
               <Text style={S.kvValue}>{diag["Co-morbidities"] || "None recorded"}</Text>
             </View>
-            <View style={S.kvItemFull}>
+          </View>
+
+          <View style={S.rowFlex}>
+            <View style={S.kvBox}>
               <Text style={S.kvLabel}>Baseline Respiratory Support</Text>
               <Text style={S.kvValue}>{diag["Respiratory Support"] || "Ambient Air (No LTOT / BiPAP required)"}</Text>
             </View>
@@ -391,7 +403,7 @@ function SinglePatientDossierDocument({
                 <Text style={[S.tCellLast, { color: MUTED }]}>No baseline PFT tests recorded.</Text>
               </View>
             ) : (
-              patient.pftRows.map((row, i) => (
+              patient.pftRows.slice(0, 4).map((row, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
                   <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
                   <Text style={[S.tCell, { flex: 1 }]}>{row[1] || "—"}</Text>
@@ -439,12 +451,12 @@ function SinglePatientDossierDocument({
           </View>
           <View style={S.table}>
             <View style={S.tHead}>
-              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Log Date</Text>
+              <Text style={[S.tHeadCell, { flex: 1.1 }]}>Log Date</Text>
               <Text style={[S.tHeadCell, { flex: 1 }]}>SpO₂ Rest (%)</Text>
               <Text style={[S.tHeadCell, { flex: 1 }]}>SpO₂ Walk (%)</Text>
-              <Text style={[S.tHeadCell, { flex: 1 }]}>mMRC Score</Text>
-              <Text style={[S.tHeadCell, { flex: 1 }]}>AQI Exposure</Text>
-              <Text style={[S.tHeadCell, { flex: 1.2 }]}>Risk Score</Text>
+              <Text style={[S.tHeadCell, { flex: 0.9 }]}>mMRC</Text>
+              <Text style={[S.tHeadCell, { flex: 0.9 }]}>AQI</Text>
+              <Text style={[S.tHeadCell, { flex: 1.1 }]}>Risk Score</Text>
               <Text style={[S.tHeadLast, { flex: 1.8 }]}>Symptoms &amp; Notes</Text>
             </View>
             {patient.logRows.length === 0 ? (
@@ -452,16 +464,16 @@ function SinglePatientDossierDocument({
                 <Text style={[S.tCellLast, { color: MUTED }]}>No daily clinical logs recorded for this period.</Text>
               </View>
             ) : (
-              patient.logRows.slice(0, 12).map((row, i) => (
+              patient.logRows.slice(0, 10).map((row, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
-                  <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1.1 }]}>{row[0] || "—"}</Text>
                   <Text style={[S.tCell, { flex: 1, color: parseFloat(row[1] ?? "0") < 88 ? RED : parseFloat(row[1] ?? "0") < 90 ? AMBER : BRAND, fontFamily: "Helvetica-Bold" }]}>
                     {row[1] ? `${row[1]}%` : "—"}
                   </Text>
                   <Text style={[S.tCell, { flex: 1 }]}>{row[2] ? `${row[2]}%` : "—"}</Text>
-                  <Text style={[S.tCell, { flex: 1 }]}>{row[3] || "—"}</Text>
-                  <Text style={[S.tCell, { flex: 1 }]}>{row[4] || "—"}</Text>
-                  <Text style={[S.tCell, { flex: 1.2, color: parseFloat(row[5] ?? "0") >= 7 ? RED : parseFloat(row[5] ?? "0") >= 4 ? AMBER : GREEN, fontFamily: "Helvetica-Bold" }]}>
+                  <Text style={[S.tCell, { flex: 0.9 }]}>{row[3] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 0.9 }]}>{row[4] || "—"}</Text>
+                  <Text style={[S.tCell, { flex: 1.1, color: parseFloat(row[5] ?? "0") >= 7 ? RED : parseFloat(row[5] ?? "0") >= 4 ? AMBER : GREEN, fontFamily: "Helvetica-Bold" }]}>
                     {row[5] ? `${row[5]} / 10` : "—"}
                   </Text>
                   <Text style={[S.tCellLast, { flex: 1.8 }]}>{row[3] ? `mMRC Grade ${row[3]}` : "Stable"}</Text>
@@ -491,7 +503,7 @@ function SinglePatientDossierDocument({
                 </Text>
               </View>
             ) : (
-              patient.alertRows.map((row, i) => (
+              patient.alertRows.slice(0, 5).map((row, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
                   <Text style={[S.tCell, { flex: 1.2 }]}>{row[0] || "—"}</Text>
                   <Text style={[S.tCell, { flex: 1.2 }]}>{row[1] || "Desaturation Alert"}</Text>
@@ -539,7 +551,7 @@ function SinglePatientDossierDocument({
                 <Text style={[S.tCellLast, { color: MUTED }]}>No active prescriptions recorded.</Text>
               </View>
             ) : (
-              patient.medicationRows.map((row, i) => (
+              patient.medicationRows.slice(0, 8).map((row, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
                   <Text style={[S.tCell, { flex: 0.4, fontFamily: "Helvetica-Bold" }]}>{i + 1}.</Text>
                   <Text style={[S.tCell, { flex: 2.2, fontFamily: "Helvetica-Bold", color: ACCENT }]}>{row[0] || "—"}</Text>
@@ -560,15 +572,15 @@ function SinglePatientDossierDocument({
             <View style={S.sectionBar} />
             <Text style={S.sectionTitle}>8. Chronological Doctor Instructions &amp; Action Plan</Text>
           </View>
-          <View style={{ border: `1 solid ${BORDER}`, borderRadius: 5, padding: 8, backgroundColor: LIGHT, minHeight: 60 }}>
+          <View style={{ border: `1 solid ${BORDER}`, borderRadius: 4, padding: 6, backgroundColor: LIGHT, minHeight: 50 }}>
             {patient.instructionRows.length === 0 ? (
-              <Text style={{ fontSize: 8, color: MUTED, lineHeight: 1.4 }}>
+              <Text style={{ fontSize: 7.5, color: MUTED, lineHeight: 1.35 }}>
                 • Maintain prescribed daily inhaler compliance. Monitor resting SpO₂ twice daily.
                 {"\n"}• If resting SpO₂ drops below 88% or mMRC dyspnea increases, use rescue inhaler and notify your doctor immediately.
               </Text>
             ) : (
-              patient.instructionRows.map((row, i) => (
-                <Text key={i} style={{ fontSize: 8, color: BRAND, lineHeight: 1.4, marginBottom: 3 }}>
+              patient.instructionRows.slice(0, 5).map((row, i) => (
+                <Text key={i} style={{ fontSize: 7.5, color: BRAND, lineHeight: 1.35, marginBottom: 2 }}>
                   • [{row[0] || generatedAt}] {row[1] || row[0] || "—"}
                 </Text>
               ))
@@ -577,7 +589,7 @@ function SinglePatientDossierDocument({
         </View>
 
         {/* Attending Pulmonologist Sign-Off Box */}
-        <View style={[S.sigBox, { marginTop: 30 }]}>
+        <View style={[S.sigBox, { marginTop: 18 }]}>
           <View>
             <View style={S.sigLine} />
             <Text style={S.sigLabel}>Patient / Guardian Signature</Text>
@@ -587,15 +599,15 @@ function SinglePatientDossierDocument({
             <Text style={[S.sigLabel, { fontFamily: "Helvetica-Bold", color: BRAND }]}>
               Dr. {doctorName} — Attending Pulmonologist
             </Text>
-            <Text style={[S.sigLabel, { marginTop: 2 }]}>AIIMS New Delhi / Clinical Specialist</Text>
-            <Text style={[S.sigLabel, { marginTop: 2, color: ACCENT }]}>
+            <Text style={[S.sigLabel, { marginTop: 1.5 }]}>AIIMS New Delhi / Clinical Specialist</Text>
+            <Text style={[S.sigLabel, { marginTop: 1.5, color: ACCENT }]}>
               O2Plus Precision Tele-Pulmonology Platform
             </Text>
           </View>
         </View>
 
-        <View style={{ marginTop: 12, padding: 6, backgroundColor: "#e8f1f8", borderRadius: 4 }}>
-          <Text style={{ fontSize: 6.8, color: MUTED, textAlign: "center" }}>
+        <View style={{ marginTop: 8, padding: 5, backgroundColor: "#e8f1f8", borderRadius: 3 }}>
+          <Text style={{ fontSize: 6.5, color: MUTED, textAlign: "center" }}>
             Disclaimer: This document is a confidential medical record generated via O2Plus Tele-Pulmonology Platform. Compliant with GINA, GOLD, and ATS/ERS clinical guidelines.
           </Text>
         </View>
@@ -604,7 +616,7 @@ function SinglePatientDossierDocument({
         <Text style={S.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} fixed />
       </Page>
 
-    </Document>
+    </React.Fragment>
   );
 }
 
@@ -646,7 +658,6 @@ function CohortSummaryPage({
   patientNames,
   summaryRows,
   medicationRows,
-  notes,
 }: Omit<ExportPdfProps, "patientDetails">) {
   return (
     <Page size="A4" style={S.page}>
@@ -662,12 +673,12 @@ function CohortSummaryPage({
           <View style={S.sectionBar} />
           <Text style={S.sectionTitle}>Cohort Patient Coverage</Text>
         </View>
-        <View style={S.kvGrid}>
-          <View style={S.kvItemWide}>
+        <View style={S.rowFlex}>
+          <View style={S.kvBox}>
             <Text style={S.kvLabel}>Total Cohort Patients</Text>
             <Text style={[S.kvValue, { fontFamily: "Helvetica-Bold", color: ACCENT }]}>{patientNames.length}</Text>
           </View>
-          <View style={S.kvItemWide}>
+          <View style={S.kvBox}>
             <Text style={S.kvLabel}>Reporting Period</Text>
             <Text style={S.kvValue}>{dateRangeLabel}</Text>
           </View>
@@ -731,12 +742,14 @@ export function ExportPdfDocument({
 
   if (isSinglePatient && patientDetails.length > 0) {
     return (
-      <SinglePatientDossierDocument
-        patient={patientDetails[0]!}
-        doctorName={doctorName}
-        generatedAt={generatedAt}
-        dateRangeLabel={dateRangeLabel}
-      />
+      <Document>
+        <SinglePatientDossierPages
+          patient={patientDetails[0]!}
+          doctorName={doctorName}
+          generatedAt={generatedAt}
+          dateRangeLabel={dateRangeLabel}
+        />
+      </Document>
     );
   }
 
@@ -753,7 +766,7 @@ export function ExportPdfDocument({
         notes={notes}
       />
       {patientDetails.map((patient) => (
-        <SinglePatientDossierDocument
+        <SinglePatientDossierPages
           key={patient.patientName}
           patient={patient}
           doctorName={doctorName}
