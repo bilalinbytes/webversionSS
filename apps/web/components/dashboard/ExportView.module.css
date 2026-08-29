@@ -795,3 +795,57 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .layout {
+    padding: 12px 14px 84px;
+    gap: 14px;
+  }
+
+  .card {
+    padding: 14px 16px;
+  }
+
+  .scopeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .trendGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .formatGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dateGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .btnSecondary {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .summaryStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .btnPrimary {
+    min-height: 48px;
+    width: 100%;
+  }
+}

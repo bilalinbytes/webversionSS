@@ -431,10 +431,24 @@ export function DiseaseHero3DVisual({
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
         }
+        @media (max-width: 640px) {
+          .diseaseHeroGrid {
+            grid-template-columns: 1fr !important;
+            padding: 16px 14px !important;
+            gap: 16px !important;
+          }
+          .diseaseHeroHeadline {
+            font-size: 1.35rem !important;
+          }
+          .diseaseHeroHeader {
+            padding: 10px 14px !important;
+          }
+        }
       `}</style>
 
       {/* Top Header Strip */}
       <div
+        className="diseaseHeroHeader"
         style={{
           display: "flex",
           alignItems: "center",
@@ -492,9 +506,10 @@ export function DiseaseHero3DVisual({
 
       {/* Main 3-Column Educational Banner Grid */}
       <div
+        className="diseaseHeroGrid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
           gap: 20,
           padding: "20px 24px",
           alignItems: "center",

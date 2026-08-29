@@ -153,3 +153,30 @@
   background: var(--med-blue-100, #e8f1f8);
   border-color: var(--med-blue-600, #1e6091);
 }
+
+@media (max-width: 768px) {
+  .header {
+    padding: 16px 14px 0;
+  }
+
+  .filterBar {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchWrap {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .resultCount {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+
+  .tableWrap {
+    padding: 0 14px 84px;
+    -webkit-overflow-scrolling: touch;
+  }
+}

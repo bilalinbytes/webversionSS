@@ -175,3 +175,20 @@
   color: var(--med-text-muted, #64748b);
   margin: 4px 0 0 0;
 }
+
+@media (max-width: 768px) {
+  .view {
+    padding: 16px 14px 84px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .actionsGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

@@ -1331,7 +1331,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           Daily Longitudinal Vitals &amp; Symptoms · दैनिक लक्षण एवं वाइटल्स
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
           <ChartBlock title="SpO2 Trends · ऑक्सीजन ट्रेंड" subtitle="Resting and after-walking oxygen saturation · आराम और चलने के बाद ऑक्सीजन">
             <MetricLineChart
               data={dailySeries}
@@ -1551,7 +1551,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
         <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           Disease-Specific Analytics · रोग-विशिष्ट विश्लेषण: {diagnosisLabel(diseaseKind)}
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
           {diseaseCharts[diseaseKind] ?? (
             <ChartBlock title="Disease-Specific Analytics · रोग-विशिष्ट विश्लेषण" subtitle="Diagnosis-specific graphs appear after disease-specific logs are available. · रोग-विशिष्ट लॉग के बाद चार्ट दिखेंगे।">
               <EmptyChart label="No disease-specific chart for this diagnosis yet. · अभी इस निदान का चार्ट नहीं है।" />
@@ -1561,8 +1561,8 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
       </section>
 
       {/* Historical Data Table with Color-Coded Symptoms */}
-      <section style={{ border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", padding: 18, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <section style={{ border: "1px solid #e2e8f0", borderRadius: 12, background: "#fff", padding: "16px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
           <div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a" }}>Historical Clinical Logs</p>
             <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748b" }}>Detailed chronological log records with color-coded symptom tags</p>
@@ -1572,7 +1572,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           </span>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0" }}>
