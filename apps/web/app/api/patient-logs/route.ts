@@ -312,7 +312,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: "Failed to update daily log" }, { status: 500 });
     }
   } else {
-    // Insert new daily log for today
+    // Insert new daily log for today with race-condition safety
     const logInsertId = crypto.randomUUID();
     const { data: inserted, error: insertError } = await admin
       .from("daily_logs")
@@ -321,9 +321,32 @@ export async function POST(request: Request): Promise<NextResponse> {
       .single();
 
     if (insertError || !inserted) {
-      return NextResponse.json({ error: "Failed to save daily log" }, { status: 500 });
+      // Handle concurrent insert race condition / unique constraint collision gracefully
+      const { data: retryCheck } = await admin
+        .from("daily_logs")
+        .select("id")
+        .eq("patient_id", payload.patient_id)
+        .gte("logged_at", dayStart)
+        .lte("logged_at", dayEnd)
+        .order("logged_at", { ascending: false })
+        .limit(1);
+
+      if (retryCheck?.[0]) {
+        logId = retryCheck[0].id;
+        const { error: retryUpdateError } = await admin
+          .from("daily_logs")
+          .update(logData)
+          .eq("id", logId);
+
+        if (retryUpdateError) {
+          return NextResponse.json({ error: "Failed to update concurrent daily log" }, { status: 500 });
+        }
+      } else {
+        return NextResponse.json({ error: "Failed to save daily log" }, { status: 500 });
+      }
+    } else {
+      logId = inserted.id;
     }
-    logId = inserted.id;
   }
 
   // ── DQI + FI (signal quality) ───────────────────────────────────────────────

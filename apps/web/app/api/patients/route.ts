@@ -935,5 +935,15 @@ export async function DELETE(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
 
+  // Record audit trail event
+  const admin = createAdminClient();
+  await admin.from("audit_logs").insert({
+    action: "patient_deleted_by_doctor",
+    actor_id: user.id,
+    actor_role: "doctor",
+    target_patient_id: patientId,
+    metadata: { deleted_at: new Date().toISOString() },
+  });
+
   return NextResponse.json({ ok: true });
 }

@@ -92,10 +92,18 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const backendPepper = process.env.BACKEND_PEPPER || "SaansSyncPepper2026_SecurePepperValue";
+  const backendPepper = process.env.BACKEND_PEPPER;
+  if (!backendPepper && process.env.NODE_ENV === "production") {
+    console.error("CRITICAL CONFIGURATION ERROR: BACKEND_PEPPER environment variable is missing in production.");
+    return NextResponse.json(
+      { error: "Server authentication configuration error" },
+      { status: 500 }
+    );
+  }
+  const effectivePepper = backendPepper || "SaansSyncPepper_DevFallbackOnly_2026";
   const computedPinHash = crypto
     .createHash("sha256")
-    .update(pin + pin_salt + backendPepper)
+    .update(pin + pin_salt + effectivePepper)
     .digest("hex");
 
   // 5. Verify PIN against our DB hash first
@@ -131,51 +139,22 @@ export async function POST(request: Request): Promise<NextResponse> {
   // 6. PIN is correct — sync auth password and sign in
   const authPassword = "A!" + computedPinHash + "Z_1";
 
-  // Search for the auth user by phone — try both +91XXXXXXXXXX and 91XXXXXXXXXX formats
-  const phoneVariants = [
-    primary_mobile_number,
-    primary_mobile_number.replace(/^\+/, ""),   // strip leading +
-    primary_mobile_number.startsWith("+") ? primary_mobile_number : `+${primary_mobile_number}`, // ensure +
-  ];
+  // Direct O(1) indexed lookup by user ID (patient_id)
+  const { data: userRecord } = await admin.auth.admin.getUserById(patient_id);
 
-  let authUserId: string | null = null;
-  let page = 1;
-  while (true) {
-    const { data: listData } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    const users = listData?.users ?? [];
-    const match = users.find((u) => u.phone && phoneVariants.includes(u.phone));
-    if (match) { authUserId = match.id; break; }
-    if (users.length < 1000) break;
-    page++;
-  }
-
-  if (authUserId) {
-    if (authUserId !== patient_id) {
-      // Wrong UUID — delete and recreate with correct patient_id
-      await admin.auth.admin.deleteUser(authUserId);
-      const { error: recreateError } = await admin.auth.admin.createUser({
-        id: patient_id,
-        phone: primary_mobile_number,
-        phone_confirm: true,
-        password: authPassword,
-        user_metadata: { role: "patient" },
-      });
-      if (recreateError) {
-        console.error("Failed to recreate auth user with correct UUID:", recreateError);
-        return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
-      }
-    } else {
-      // Correct UUID — just update the password
-      const { error: updateError } = await admin.auth.admin.updateUserById(patient_id, {
-        password: authPassword,
-      });
-      if (updateError) {
-        console.error("Failed to update auth password:", updateError);
-        return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
-      }
+  if (userRecord?.user) {
+    // Auth user exists with matching patient_id UUID - update password & phone confirmation
+    const { error: updateError } = await admin.auth.admin.updateUserById(patient_id, {
+      password: authPassword,
+      phone: primary_mobile_number,
+      phone_confirm: true,
+    });
+    if (updateError) {
+      console.error("Failed to update auth password:", updateError);
+      return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
     }
   } else {
-    // No auth user found at all — create fresh
+    // Create new auth user directly with id = patient_id
     const { error: createError } = await admin.auth.admin.createUser({
       id: patient_id,
       phone: primary_mobile_number,
@@ -184,13 +163,16 @@ export async function POST(request: Request): Promise<NextResponse> {
       user_metadata: { role: "patient" },
     });
     if (createError) {
-      // Last resort: the phone exists but we can't find it — log all phones for debugging
-      const { data: allUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const phonesInAuth = allUsers?.users?.map((u) => u.phone).filter(Boolean);
-      console.error("Failed to create auth user on login:", createError.message);
-      console.error("primary_mobile_number we searched for:", primary_mobile_number);
-      console.error("phones in auth:", phonesInAuth);
-      return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
+      // If user creation failed (e.g. phone already linked in auth), update by patient_id
+      const { error: fallbackUpdateError } = await admin.auth.admin.updateUserById(patient_id, {
+        password: authPassword,
+        phone: primary_mobile_number,
+        phone_confirm: true,
+      });
+      if (fallbackUpdateError) {
+        console.error("Failed to provision auth user on login:", createError.message, fallbackUpdateError.message);
+        return NextResponse.json({ message: "Login failed. Please try again." }, { status: 500 });
+      }
     }
   }
 

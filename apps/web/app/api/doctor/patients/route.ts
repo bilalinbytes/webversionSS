@@ -13,7 +13,7 @@ type PatientDiagnosisSummary = {
   comorbidities_other_text: string | null;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,6 +29,15 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden - not a doctor" }, { status: 403 });
   }
 
+  const url = new URL(request.url);
+  const pageParam = url.searchParams.get("page");
+  const limitParam = url.searchParams.get("limit");
+  const searchParam = url.searchParams.get("search")?.trim().toLowerCase();
+
+  const isPaginated = Boolean(pageParam || limitParam);
+  const page = Math.max(1, parseInt(pageParam || "1", 10) || 1);
+  const limit = Math.min(Math.max(1, parseInt(limitParam || "50", 10) || 50), 250);
+
   const { data: accessLogs } = await admin
     .from("audit_logs")
     .select("target_patient_id")
@@ -39,7 +48,7 @@ export async function GET() {
     .map((row) => row.target_patient_id)
     .filter((id): id is string => Boolean(id));
 
-  const { data, error } = await admin
+  let query = admin
     .from("patients")
     .select(`
       id,
@@ -66,15 +75,29 @@ export async function GET() {
         acknowledged_by_doctor,
         is_suppressed
       )
-    `)
+    `, { count: "exact" })
     .or(`doctor_id.eq.${user.id}${importedIds.length > 0 ? `,id.in.(${importedIds.join(",")})` : ""}`)
     .order("created_at", { ascending: false });
+
+  if (searchParam) {
+    query = query.or(`name.ilike.%${searchParam}%,mobile_number.ilike.%${searchParam}%`);
+  }
+
+  if (isPaginated) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+  }
+
+  const { data, error, count } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   const patients = data ?? [];
+  const totalCount = count ?? patients.length;
+  const totalPages = isPaginated ? Math.ceil(totalCount / limit) : 1;
   const patientIds = patients.map((patient) => patient.id);
 
   let diagnosisByPatient = new Map<string, PatientDiagnosisSummary>();
@@ -109,5 +132,13 @@ export async function GET() {
       : patient;
   });
 
-  return NextResponse.json({ patients: normalizedPatients });
+  return NextResponse.json({
+    patients: normalizedPatients,
+    pagination: {
+      total: totalCount,
+      page: isPaginated ? page : 1,
+      limit: isPaginated ? limit : totalCount,
+      totalPages,
+    },
+  });
 }

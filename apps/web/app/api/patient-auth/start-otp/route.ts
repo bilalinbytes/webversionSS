@@ -76,8 +76,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   const rawOtp = generateOtp();
   const hashedOtp = hashOtp(rawOtp);
 
-  // 5. Expiration set to 30 days
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  // 5. Expiration set to 10 minutes (600 seconds) for healthcare security
+  const OTP_VALIDITY_MS = 10 * 60 * 1000;
+  const expiresAt = new Date(Date.now() + OTP_VALIDITY_MS).toISOString();
 
   // 6. Store/upsert OTP session (Scenario A: overwrites previous sessions cleanly)
   const admin = createAdminClient();
@@ -125,7 +126,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         body: new URLSearchParams({
           To: primary_mobile_number,
           From: fromNumber,
-          Body: `Your O2Plus verification code is ${rawOtp}. Valid for 30 days.`,
+          Body: `Your O2Plus verification code is ${rawOtp}. Valid for 10 minutes.`,
         }),
       });
 
@@ -146,7 +147,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.log("\n==================================================");
     console.log(`[SMS PROVIDER MOCK] Sending Onboarding SMS via Gateway...`);
     console.log(`[SMS PROVIDER MOCK] Destination: ${primary_mobile_number}`);
-    console.log(`[SMS PROVIDER MOCK] Message: Your O2Plus verification code is ${rawOtp}. Valid for 30 days.`);
+    console.log(`[SMS PROVIDER MOCK] Message: Your O2Plus verification code is ${rawOtp}. Valid for 10 minutes.`);
     console.log("==================================================\n");
   }
 

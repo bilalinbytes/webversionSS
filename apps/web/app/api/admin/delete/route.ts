@@ -37,7 +37,7 @@ export async function DELETE(request: Request): Promise<NextResponse> {
 
   // ── Delete patient ──────────────────────────────────────────────────────────
   if (type === "patient") {
-    // Delete related rows first (cascade may not cover auth.users)
+    // Delete related clinical records first (preserve audit_logs for compliance)
     await Promise.all([
       admin.from("daily_logs").delete().eq("patient_id", id),
       admin.from("disease_alerts").delete().eq("patient_id", id),
@@ -47,7 +47,8 @@ export async function DELETE(request: Request): Promise<NextResponse> {
       admin.from("respiratory_support").delete().eq("patient_id", id),
       admin.from("doctor_instructions").delete().eq("patient_id", id),
       admin.from("patient_diagnoses").delete().eq("patient_id", id),
-      admin.from("audit_logs").delete().eq("target_patient_id", id),
+      admin.from("patient_login_security").delete().eq("patient_id", id),
+      admin.from("otp_sessions").delete().eq("patient_id", id),
     ]);
 
     const { error } = await admin.from("patients").delete().eq("id", id);
@@ -55,8 +56,21 @@ export async function DELETE(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Also delete from Supabase Auth
-    await admin.auth.admin.deleteUser(id);
+    // Also delete from Supabase Auth if user exists
+    try {
+      await admin.auth.admin.deleteUser(id);
+    } catch {
+      // Non-fatal if auth user was already removed
+    }
+
+    // Record immutable audit trail event
+    await admin.from("audit_logs").insert({
+      action: "patient_purged_by_admin",
+      actor_id: "admin",
+      actor_role: "admin",
+      target_patient_id: id,
+      metadata: { purged_at: new Date().toISOString() },
+    });
 
     return NextResponse.json({ ok: true });
   }
@@ -72,7 +86,6 @@ export async function DELETE(request: Request): Promise<NextResponse> {
     await Promise.all([
       admin.from("doctor_instructions").delete().eq("doctor_id", id),
       admin.from("export_records").delete().eq("doctor_id", id),
-      admin.from("audit_logs").delete().eq("actor_id", id),
     ]);
 
     const { error } = await admin.from("doctors").delete().eq("id", id);
@@ -80,8 +93,20 @@ export async function DELETE(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Also delete from Supabase Auth
-    await admin.auth.admin.deleteUser(id);
+    // Also delete from Supabase Auth if user exists
+    try {
+      await admin.auth.admin.deleteUser(id);
+    } catch {
+      // Non-fatal if auth user was already removed
+    }
+
+    // Record immutable audit trail event
+    await admin.from("audit_logs").insert({
+      action: "doctor_deleted_by_admin",
+      actor_id: "admin",
+      actor_role: "admin",
+      metadata: { doctor_id: id, deleted_at: new Date().toISOString() },
+    });
 
     return NextResponse.json({ ok: true });
   }

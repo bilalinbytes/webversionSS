@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  ADMIN_EMAIL,
-  ADMIN_PASSWORD,
+  getAdminEmail,
+  verifyAdminCredentials,
   ADMIN_NAME,
   ADMIN_COOKIE,
   buildAdminToken,
@@ -21,23 +21,19 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const { email, password } = body as { email?: string; password?: string };
 
-  if (
-    typeof email    !== "string" ||
-    typeof password !== "string" ||
-    email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase() ||
-    password !== ADMIN_PASSWORD
-  ) {
+  if (!verifyAdminCredentials(email, password)) {
     return NextResponse.json(
       { error: "Invalid credentials. Please check your email and password." },
       { status: 401 },
     );
   }
 
-  const token = buildAdminToken();
+  const adminEmail = getAdminEmail();
+  const token = buildAdminToken(adminEmail);
 
   const response = NextResponse.json({
     ok: true,
-    admin: { email: ADMIN_EMAIL, name: ADMIN_NAME },
+    admin: { email: adminEmail, name: ADMIN_NAME },
   });
 
   response.cookies.set(ADMIN_COOKIE, token, {
