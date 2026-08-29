@@ -33,6 +33,20 @@ import {
 import { calculateRiskCategory } from "./aggregation/risk-level";
 import { calculateAdherencePercentage, formatActiveMedications } from "./aggregation/medication-adherence";
 import { resolveCompleteDiagnosis, formatRespiratorySupport } from "./aggregation/diagnosis-resolver";
+import {
+  processIldLogEntry,
+  processAsthmaLogEntry,
+  processCopdLogEntry,
+  processBronchLogEntry,
+  processPostIcuLogEntry,
+} from "./aggregation/disease-score-calculator";
+import type {
+  IldTrackRecord,
+  AsthmaTrackRecord,
+  CopdTrackRecord,
+  BronchTrackRecord,
+  PostIcuTrackRecord,
+} from "./export.types";
 
 import { renderExcelRegistry } from "./renderers/excel.renderer";
 import { renderCsvRegistry } from "./renderers/csv.renderer";
@@ -357,6 +371,8 @@ export async function executeExport(
       dateOfEnroll: formatDateDDMMYYYY(patient.created_at),
       histopathology: diagDetails.histopathology,
       completeDiag: diagDetails.completeDiag,
+      primaryDiagnosis: diag?.primary_diagnosis || diagDetails.completeDiag || "Respiratory Condition",
+      effectiveDashboard: (diag?.effective_dashboard || "ild").toLowerCase() as any,
       typeOfConnective: diagDetails.connective,
       comorbidities: diagDetails.comorbidities,
       sixMwd: safeValue(pftOther["six_mwd"] ?? patExt["six_mwd"]),
@@ -379,6 +395,66 @@ export async function executeExport(
       respiratorySupport: respSupport,
       dailyLogs: formattedDailyLogs,
     };
+  });
+
+  // 6.5 Build Disease-Track Specific Collections with Individual Responses, Calculated Scores & Interpretations
+  const ildTrackRecords: IldTrackRecord[] = [];
+  const asthmaTrackRecords: AsthmaTrackRecord[] = [];
+  const copdTrackRecords: CopdTrackRecord[] = [];
+  const bronchTrackRecords: BronchTrackRecord[] = [];
+  const postIcuTrackRecords: PostIcuTrackRecord[] = [];
+
+  records.forEach((record) => {
+    const patientObj = patients.find((p) => record.uhid === `P-${p.id.slice(0, 8).toUpperCase()}`);
+    const patientId = patientObj?.id;
+    const rawLogsForPatient = [...(logsByPatient.get(patientId ?? "") ?? [])].sort(
+      (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
+    );
+
+    const eff = (record.effectiveDashboard || "").toLowerCase();
+    const primary = (record.primaryDiagnosis || record.completeDiag || "").toLowerCase();
+
+    // Map each daily log entry to its disease track
+    if (rawLogsForPatient.length > 0) {
+      rawLogsForPatient.forEach((rawLog) => {
+        const rawObj = rawLog as Record<string, unknown>;
+        const ds = (rawObj["disease_specific_data"] ?? {}) as Record<string, unknown>;
+        const logEff = String(ds["effective_dashboard"] ?? eff).toLowerCase();
+
+        if (logEff.includes("ild") || primary.includes("ild") || primary.includes("fibrosis") || primary.includes("nsip") || primary.includes("uip") || primary.includes("hp") || primary.includes("sarcoidosis")) {
+          ildTrackRecords.push(processIldLogEntry(record, rawObj, ildTrackRecords.length + 1));
+        } else if (logEff.includes("asthma") || primary.includes("asthma")) {
+          asthmaTrackRecords.push(processAsthmaLogEntry(record, rawObj, asthmaTrackRecords.length + 1));
+        } else if (logEff.includes("copd") || primary.includes("copd") || primary.includes("emphysema") || primary.includes("chronic bronchitis")) {
+          copdTrackRecords.push(processCopdLogEntry(record, rawObj, copdTrackRecords.length + 1));
+        } else if (logEff.includes("bronch") || primary.includes("bronch") || primary.includes("cylindrical") || primary.includes("cystic")) {
+          bronchTrackRecords.push(processBronchLogEntry(record, rawObj, bronchTrackRecords.length + 1));
+        } else if (logEff.includes("post_icu") || logEff.includes("icu") || primary.includes("icu") || primary.includes("post-icu") || primary.includes("pics") || primary.includes("ards")) {
+          postIcuTrackRecords.push(processPostIcuLogEntry(record, rawObj, postIcuTrackRecords.length + 1));
+        } else {
+          // Default fallback
+          if (eff === "asthma") asthmaTrackRecords.push(processAsthmaLogEntry(record, rawObj, asthmaTrackRecords.length + 1));
+          else if (eff === "copd") copdTrackRecords.push(processCopdLogEntry(record, rawObj, copdTrackRecords.length + 1));
+          else if (eff === "bronchiectasis") bronchTrackRecords.push(processBronchLogEntry(record, rawObj, bronchTrackRecords.length + 1));
+          else if (eff === "post_icu") postIcuTrackRecords.push(processPostIcuLogEntry(record, rawObj, postIcuTrackRecords.length + 1));
+          else ildTrackRecords.push(processIldLogEntry(record, rawObj, ildTrackRecords.length + 1));
+        }
+      });
+    } else {
+      // If patient has zero logs yet, generate a baseline track record so doctor sees the registered patient in the track sheet
+      const dummyLog = { logged_at: patientObj?.created_at || new Date().toISOString() };
+      if (eff.includes("asthma") || primary.includes("asthma")) {
+        asthmaTrackRecords.push(processAsthmaLogEntry(record, dummyLog, asthmaTrackRecords.length + 1));
+      } else if (eff.includes("copd") || primary.includes("copd")) {
+        copdTrackRecords.push(processCopdLogEntry(record, dummyLog, copdTrackRecords.length + 1));
+      } else if (eff.includes("bronch") || primary.includes("bronch")) {
+        bronchTrackRecords.push(processBronchLogEntry(record, dummyLog, bronchTrackRecords.length + 1));
+      } else if (eff.includes("post_icu") || primary.includes("icu")) {
+        postIcuTrackRecords.push(processPostIcuLogEntry(record, dummyLog, postIcuTrackRecords.length + 1));
+      } else {
+        ildTrackRecords.push(processIldLogEntry(record, dummyLog, ildTrackRecords.length + 1));
+      }
+    }
   });
 
   // 7. For Single Patient mode: Build multi-sheet detailed data
@@ -529,6 +605,11 @@ export async function executeExport(
     diseaseFilter: payload.disease_filter,
     startDate: payload.start_date,
     endDate: payload.end_date,
+    ildTrackRecords,
+    asthmaTrackRecords,
+    copdTrackRecords,
+    bronchTrackRecords,
+    postIcuTrackRecords,
     singlePatientLogs,
     singlePatientAlerts,
     singlePatientMeds,

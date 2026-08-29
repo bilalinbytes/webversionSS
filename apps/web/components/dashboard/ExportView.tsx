@@ -553,10 +553,10 @@ export function ExportView({ onBack }: ExportViewProps) {
                 <ShieldCheck size={20} className={styles.infoIcon} />
                 <div>
                   <p className={styles.infoTitle}>
-                    {scope === "All Patients" ? "Clinical Patient Registry" : `${scope} Cohort Trends`}
+                    {scope === "All Patients" ? "Clinical Patient Registry & Disease Tracks" : `${scope} Cohort Trends`}
                   </p>
                   <p className={styles.infoText}>
-                    Generates <strong>ONE FLAT TABLE</strong> on the <strong>Patient Registry</strong> sheet with the <strong>standard clinical registry</strong> and longitudinal daily logs (1 row per patient). No separate multi-sections, no raw JSON.
+                    Generates the <strong>Master Patient Registry</strong> along with dedicated <strong>Disease-Specific Tracks (ILD, Asthma, COPD, Bronchiectasis, Post-ICU)</strong> containing every individual response, calculated score/sub-score, and clinical interpretation.
                   </p>
                 </div>
               </div>
@@ -706,30 +706,28 @@ export function ExportView({ onBack }: ExportViewProps) {
             <div className={styles.formatGrid}>
               <button
                 type="button"
-                className={`${styles.formatCard} ${format === "excel" ? styles.formatCardActive : ""} ${scope === "Single Patient" ? styles.formatCardDisabled : ""}`}
-                onClick={() => scope !== "Single Patient" && setFormat("excel")}
-                disabled={scope === "Single Patient"}
+                className={`${styles.formatCard} ${format === "excel" ? styles.formatCardActive : ""}`}
+                onClick={() => setFormat("excel")}
               >
                 <FileSpreadsheet size={20} className={format === "excel" ? styles.formatIconActive : styles.formatIcon} />
                 <div>
                   <p className={styles.formatTitle}>Excel (.xlsx)</p>
                   <p className={styles.formatSub}>
-                    {scope === "Single Patient" ? "Available for Cohort exports" : "Standard clinical registry"}
+                    Multi-sheet workbook: Master Registry + Disease Tracks (ILD, Asthma, COPD, Bronchiectasis, Post-ICU)
                   </p>
                 </div>
               </button>
 
               <button
                 type="button"
-                className={`${styles.formatCard} ${format === "csv" ? styles.formatCardActive : ""} ${scope === "Single Patient" ? styles.formatCardDisabled : ""}`}
-                onClick={() => scope !== "Single Patient" && setFormat("csv")}
-                disabled={scope === "Single Patient"}
+                className={`${styles.formatCard} ${format === "csv" ? styles.formatCardActive : ""}`}
+                onClick={() => setFormat("csv")}
               >
                 <FileCode size={20} className={format === "csv" ? styles.formatIconActive : styles.formatIcon} />
                 <div>
                   <p className={styles.formatTitle}>CSV (.csv)</p>
                   <p className={styles.formatSub}>
-                    {scope === "Single Patient" ? "Available for Cohort exports" : "UTF-8 delimited data table"}
+                    Standard UTF-8 delimited clinical data table
                   </p>
                 </div>
               </button>

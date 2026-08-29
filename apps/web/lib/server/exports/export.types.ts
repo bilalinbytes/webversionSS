@@ -52,6 +52,8 @@ export interface PatientExportRecord {
   dateOfEnroll: string;
   histopathology: string;
   completeDiag: string;
+  primaryDiagnosis: string;
+  effectiveDashboard: "ild" | "asthma" | "copd" | "bronchiectasis" | "post_icu" | "general" | string;
   typeOfConnective: string;
   comorbidities: string;
   sixMwd: string;
@@ -120,6 +122,174 @@ export interface DetailedPftRecord {
   baselineHr: string;
 }
 
+// ── Track-Specific Specialized Data Structures ─────────────────────────────
+
+export interface IldTrackRecord {
+  sno: number;
+  uhid: string;
+  name: string;
+  age: number | string;
+  sex: string;
+  ildSubtype: string;
+  logDate: string;
+  spo2Rest: number | string;
+  spo2Exertion: number | string;
+  heartRate: number | string;
+  mmrc: number | string;
+  aqi: number | string;
+  medicationAdherence: string;
+  // 15 Individual KBILD Question Responses
+  kbildQ1_breathlessStairs: string;
+  kbildQ2_chestTight: string;
+  kbildQ3_worryComplaint: string;
+  kbildQ4_avoidBreathless: string;
+  kbildQ5_inControl: string;
+  kbildQ6_feelingDown: string;
+  kbildQ7_airHunger: string;
+  kbildQ8_anxious: string;
+  kbildQ9_wheeze: string;
+  kbildQ10_gettingWorse: string;
+  kbildQ11_interferedTasks: string;
+  kbildQ12_expectWorse: string;
+  kbildQ13_carryGroceries: string;
+  kbildQ14_endOfLife: string;
+  kbildQ15_financial: string;
+  // Calculated Scores
+  kbildTotalScore: number | string;
+  kbildPsychologicalSubscore: number | string;
+  kbildBreathlessSubscore: number | string;
+  kbildChestSubscore: number | string;
+  // Clinical Interpretation
+  kbildInterpretation: string;
+  clinicalRiskLevel: string;
+  alertFlag: string;
+}
+
+export interface AsthmaTrackRecord {
+  sno: number;
+  uhid: string;
+  name: string;
+  age: number | string;
+  sex: string;
+  logDate: string;
+  spo2Rest: number | string;
+  heartRate: number | string;
+  mmrc: number | string;
+  aqi: number | string;
+  medicationAdherence: string;
+  // Individual Assessment Responses
+  daytimeSymptoms: string;
+  nightWaking: string;
+  relieverUse: string;
+  activityLimitation: string;
+  rescuePuffsCount: number | string;
+  pefrReading: number | string;
+  pefrPctPersonalBest: string;
+  inhalerAdherence: string;
+  triggersReported: string;
+  // Calculated Score
+  asthmaControlScore: number | string;
+  // Clinical Interpretation
+  ginaClassification: string;
+  clinicalRiskLevel: string;
+  actionRecommendation: string;
+}
+
+export interface CopdTrackRecord {
+  sno: number;
+  uhid: string;
+  name: string;
+  age: number | string;
+  sex: string;
+  copdStage: string;
+  logDate: string;
+  spo2Rest: number | string;
+  spo2Exertion: number | string;
+  heartRate: number | string;
+  mmrc: number | string;
+  aqi: number | string;
+  medicationAdherence: string;
+  // Individual Assessment Responses
+  sputumVolume: string;
+  sputumColour: string;
+  sputumPurulence: string;
+  hemoptysisPresent: string;
+  hemoptysisVolume: string;
+  rescueInhalerPuffs: number | string;
+  energyLevel: number | string;
+  dyspneaExertion: number | string;
+  feverRecorded: string;
+  // Calculated Score
+  cardinalSymptomsCount: number | string;
+  // Clinical Interpretation
+  copdExacerbationType: string;
+  clinicalRiskLevel: string;
+  actionRecommendation: string;
+}
+
+export interface BronchTrackRecord {
+  sno: number;
+  uhid: string;
+  name: string;
+  age: number | string;
+  sex: string;
+  etiology: string;
+  logDate: string;
+  spo2Rest: number | string;
+  heartRate: number | string;
+  mmrc: number | string;
+  aqi: number | string;
+  medicationAdherence: string;
+  // Individual Assessment Responses
+  airwayClearanceDone: string;
+  clearanceTechnique: string;
+  easeOfClearance: number | string;
+  sputumVolume: string;
+  sputumColour: string;
+  hemoptysisPresent: string;
+  hemoptysisSeverity: string;
+  antibioticCourseActive: string;
+  temperatureF: string;
+  // Calculated Score
+  flareSeverityIndex: number | string;
+  // Clinical Interpretation
+  flareRiskStatus: string;
+  clinicalRiskLevel: string;
+  actionRecommendation: string;
+}
+
+export interface PostIcuTrackRecord {
+  sno: number;
+  uhid: string;
+  name: string;
+  age: number | string;
+  sex: string;
+  icuDischargeDate: string;
+  logDate: string;
+  spo2Rest: number | string;
+  spo2Exertion: number | string;
+  heartRate: number | string;
+  mmrc: number | string;
+  aqi: number | string;
+  medicationAdherence: string;
+  // Individual Assessment Responses
+  functionalMobilityLevel: string;
+  walkDistanceMeters: number | string;
+  icuMuscleWeakness: number | string;
+  fatigueVas: number | string;
+  dyspneaExertion: number | string;
+  sleepQuality: number | string;
+  nutritionIntake: string;
+  mentalClarity: string;
+  // Calculated Scores
+  functionalRecoveryIndex: number | string;
+  sarcopeniaFatigueScore: number | string;
+  // Clinical Interpretation
+  picsRecoveryTrajectory: string;
+  clinicalRiskLevel: string;
+  actionRecommendation: string;
+}
+
 export interface ExportDataBundle {
   records: PatientExportRecord[];
   scope: ExportScope | string;
@@ -129,6 +299,14 @@ export interface ExportDataBundle {
   diseaseFilter?: string;
   startDate?: string;
   endDate?: string;
+
+  // Track-Specific Populated Collections
+  ildTrackRecords?: IldTrackRecord[];
+  asthmaTrackRecords?: AsthmaTrackRecord[];
+  copdTrackRecords?: CopdTrackRecord[];
+  bronchTrackRecords?: BronchTrackRecord[];
+  postIcuTrackRecords?: PostIcuTrackRecord[];
+
   // Single Patient detailed data for multi-sheet workbook
   singlePatientLogs?: DetailedLogRecord[];
   singlePatientAlerts?: DetailedAlertRecord[];
