@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PatientAnalyticsView } from "@/components/patient/PatientAnalyticsView";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { useToast } from "@/components/ui/Toast";
+import { MedicationAutocompleteInput } from "@/components/clinical/MedicationAutocompleteInput";
 import styles from "./PatientDetail.module.css";
 
 // Legacy Patient type (used as optional fallback prop)
@@ -1472,12 +1473,18 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                   >
                     {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
                   </select>
-                  <input
-                    type="text"
+                  <MedicationAutocompleteInput
                     value={med.drug_name}
                     disabled={isStopped}
-                    placeholder="Drug name"
-                    onChange={e => updateDraft(med._key, { drug_name: e.target.value })}
+                    placeholder="e.g. Foracort, Budecort"
+                    onChange={(val) => updateDraft(med._key, { drug_name: val })}
+                    onSelectPreset={(preset) => {
+                      const updates: Partial<typeof med> = { drug_name: preset.name };
+                      if (ROUTE_OPTS.includes(preset.defaultRoute)) {
+                        updates.route = preset.defaultRoute;
+                      }
+                      updateDraft(med._key, updates);
+                    }}
                     style={{
                       padding: "5px 8px", border: "1px solid #d4cfc7", borderRadius: 6,
                       fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif",

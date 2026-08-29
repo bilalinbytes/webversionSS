@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Check, AlertCircle, ChevronRight, Loader2, User, Stethoscope, Wind, Activity, Pill } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { MedicationAutocompleteInput } from "@/components/clinical/MedicationAutocompleteInput";
 import styles from "./CreatePatientView.module.css";
 // import { z } from "zod"; // Not needed directly here if not validating client-side
 
@@ -1062,7 +1063,19 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
                 </select>
               </Field>
               <Field label="Drug Name" required>
-                <input className={styles.input} value={draft.name} onChange={e => setDraft({...draft, name: e.target.value})} />
+                <MedicationAutocompleteInput
+                  value={draft.name}
+                  placeholder="e.g. Foracort, Budecort"
+                  className={styles.input}
+                  onChange={(val) => setDraft({ ...draft, name: val })}
+                  onSelectPreset={(preset) => {
+                    const updates: Partial<typeof draft> = { name: preset.name };
+                    if (RTE_OPTS.some(o => o.v === preset.defaultRoute)) {
+                      updates.route = preset.defaultRoute;
+                    }
+                    setDraft({ ...draft, ...updates });
+                  }}
+                />
               </Field>
               <Field label="Dose">
                 <input type="number" step="0.1" className={styles.input} value={draft.dose} onChange={e => setDraft({...draft, dose: e.target.value})} />
@@ -1627,27 +1640,29 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
         // After creating the patient record, provision their Supabase Auth account
         // so they can log in via OTP. Skip for edits.
         if (!editPatientId && resBody.patientId) {
-          const authRes = await fetch("/api/patients/provision-auth", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              patientId: resBody.patientId,
-              mobile_number: data.mobile_number,
-            }),
-          });
-          if (!authRes.ok) {
-            // Non-fatal: patient record exists, auth provisioning failed.
-            // Show a warning but still proceed.
-            const authBody = await authRes.json().catch(() => ({})) as { error?: string };
-            setSubmitError(
-              `Patient created, but login setup failed: ${authBody.error ?? "unknown error"}. ` +
-              `The patient may not be able to log in. Please contact support.`
-            );
-            // Still call onDone so the patient appears in the list
+          try {
+            const authRes = await fetch("/api/patients/provision-auth", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                patientId: resBody.patientId,
+                mobile_number: data.mobile_number,
+              }),
+            });
+            if (!authRes.ok) {
+              const authBody = await authRes.json().catch(() => ({})) as { error?: string };
+              toast.error(
+                `Patient registered, but login activation encountered an issue: ${authBody.error ?? "Failed to provision login credentials"}`
+              );
+            } else {
+              toast.success("Patient registered & login access activated");
+            }
+          } catch {
+            toast.error("Patient registered, but login provisioning network request failed.");
           }
+        } else {
+          toast.success("Saved");
         }
-
-        toast.success(editPatientId ? "Saved" : "Patient added");
         onDone();
       } else if (res.status === 400) {
         const body = await res.json() as { error?: string; field_errors?: Record<string, string[]> };

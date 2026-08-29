@@ -534,47 +534,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<SupabasePatient | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [fixingLogins, setFixingLogins] = useState(false);
-  const [fixResult, setFixResult] = useState<string | null>(null);
   const [showAlertsPanel, setShowAlertsPanel] = useState(false);
-
-  const handleFixLogins = useCallback(async () => {
-    setFixingLogins(true);
-    setFixResult(null);
-    try {
-      const res = await fetch("/api/patients/provision-auth-bulk", { method: "POST" });
-      const body = await res.json() as {
-        ok?: boolean;
-        created?: number;
-        fixed?: number;
-        relinked?: number;
-        already_existed?: number;
-        skipped?: number;
-        errors?: number;
-        error_details?: { id: string; phone: string; error?: string }[];
-        error?: string;
-      };
-      if (res.ok) {
-        const parts: string[] = [];
-        if ((body.created ?? 0) > 0) parts.push(`${body.created} patient(s) can now log in`);
-        if ((body.fixed ?? 0) > 0) parts.push(`${body.fixed} patient(s) login fixed`);
-        if ((body.relinked ?? 0) > 0) parts.push(`${body.relinked} re-linked`);
-        if ((body.already_existed ?? 0) > 0) parts.push(`${body.already_existed} already had access`);
-        if ((body.skipped ?? 0) > 0) parts.push(`${body.skipped} skipped (invalid phone)`);
-        if ((body.errors ?? 0) > 0) {
-          const detail = body.error_details?.map(e => `${e.phone}: ${e.error}`).join("; ") ?? "";
-          parts.push(`${body.errors} failed${detail ? ` - ${detail}` : ""}`);
-        }
-        setFixResult(parts.length > 0 ? parts.join(" - ") : "Nothing to fix - all patients already have login access.");
-      } else {
-        setFixResult(`Failed: ${body.error ?? "unknown error"}`);
-      }
-    } catch {
-      setFixResult("Network error - please try again.");
-    } finally {
-      setFixingLogins(false);
-    }
-  }, []);
 
   const loadPatients = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -737,30 +697,94 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     }
   }, []);
 
+  // C2: Synchronize URL with selected patient
   const openPatient = useCallback((patient: SupabasePatient, tab: string = "Overview") => {
     setSelectedInitialTab(tab);
     setSelectedPatient(patient);
     void acknowledgePatientAlerts(patient);
     if (typeof window !== "undefined") {
-      window.history.pushState({ patientModal: true, patientId: patient.id }, "");
+      const url = new URL(window.location.href);
+      url.searchParams.set("patientId", patient.id);
+      if (tab && tab !== "Overview") {
+        url.searchParams.set("tab", tab);
+      } else {
+        url.searchParams.delete("tab");
+      }
+      window.history.pushState({ patientModal: true, patientId: patient.id }, "", url.pathname + url.search);
     }
   }, [acknowledgePatientAlerts]);
 
   const closePatient = useCallback(() => {
-    if (typeof window !== "undefined" && window.history.state?.patientModal) {
-      window.history.back();
-    } else {
-      setSelectedPatient(null);
+    setSelectedPatient(null);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("patientId");
+      url.searchParams.delete("tab");
+      window.history.pushState(null, "", url.pathname + (url.search ? url.search : ""));
     }
   }, []);
 
+  // Listen to popstate for browser Back / Forward
   useEffect(() => {
     const handlePopState = () => {
-      setSelectedPatient(null);
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const pId = params.get("patientId");
+        const tab = params.get("tab") || "Overview";
+        if (pId) {
+          const match = patients.find(p => p.id === pId);
+          if (match) {
+            setSelectedPatient(match);
+            setSelectedInitialTab(tab);
+          } else {
+            setSelectedPatient({
+              id: pId,
+              name: "Patient Record",
+              date_of_birth: null,
+              mobile_number: null,
+              created_at: null,
+              patient_diagnoses: null,
+              red_flag_scores: null,
+              disease_alerts: null,
+            });
+            setSelectedInitialTab(tab);
+          }
+        } else {
+          setSelectedPatient(null);
+        }
+      }
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [patients]);
+
+  // Check URL on initial mount or when patients list loads
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pId = params.get("patientId");
+      const tab = params.get("tab") || "Overview";
+      if (pId && !selectedPatient) {
+        const match = patients.find(p => p.id === pId);
+        if (match) {
+          setSelectedPatient(match);
+          setSelectedInitialTab(tab);
+        } else if (!loading) {
+          setSelectedPatient({
+            id: pId,
+            name: "Patient Record",
+            date_of_birth: null,
+            mobile_number: null,
+            created_at: null,
+            patient_diagnoses: null,
+            red_flag_scores: null,
+            disease_alerts: null,
+          });
+          setSelectedInitialTab(tab);
+        }
+      }
+    }
+  }, [patients, loading, selectedPatient]);
 
   // Today's date - computed client-side only to avoid SSR hydration mismatch
   const [today, setToday] = useState("");
@@ -805,16 +829,6 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           <button type="button" className={styles.btnGhost} onClick={() => onViewChange("export")}>
             Export
           </button>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            onClick={handleFixLogins}
-            disabled={fixingLogins}
-            title="Activate login access for all patients who can't log in yet"
-            style={{ color: fixingLogins ? "#888" : "#126969", borderColor: "rgba(18,105,105,0.3)" }}
-          >
-            {fixingLogins ? "Fixing Logins..." : "Fix Patient Logins"}
-          </button>
           <button type="button" className={styles.btnImport} onClick={() => setShowImport(true)}>
             <Download size={13} strokeWidth={2} />
             Import
@@ -824,33 +838,6 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
           </button>
         </div>
       </div>
-
-      {/* Fix logins result toast */}
-      {fixResult && (
-        <div style={{
-          margin: "0 24px",
-          padding: "10px 16px",
-          borderRadius: 8,
-          background: fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#fdecea" : "#e8f5f1",
-          border: `1px solid ${fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#fca5a5" : "#a7d7c5"}`,
-          fontSize: 13,
-          color: fixResult.startsWith("Failed") || fixResult.startsWith("Network") ? "#c94d49" : "var(--med-blue-600)",
-          fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexShrink: 0,
-        }}>
-          <span>{fixResult}</span>
-          <button
-            type="button"
-            onClick={() => setFixResult(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1, color: "inherit", padding: 0 }}
-            aria-label="Dismiss message"
-          >✕</button>
-        </div>
-      )}
 
       {/* -- Body -- */}
       <div className={styles.splitLayout}>
