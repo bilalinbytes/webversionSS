@@ -1,98 +1,145 @@
-/* -- Patient Portal TopNav (Blue Healthcare Companion) ------------------------- */
-/* Tokens: navy #0f2b48, blue #1e6091, cyan #4895ef, surface #ffffff, slate #f8fafc */
+/* ── Patient Portal Top Navigation (Dark Medical Workstation) ────────────── */
 
 .nav {
-  background: linear-gradient(175deg, #0f2b48 0%, #164e77 60%, #1a4971 100%);
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 100%);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  height: 56px;
-  gap: 16px;
+  padding: 0 24px;
+  height: 60px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.12);
+  box-shadow: 0 4px 20px rgba(4, 16, 33, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
-  z-index: 50;
+  z-index: 60;
+  user-select: none;
 }
 
+/* ── Brand ── */
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 8px;
+  transition: background 140ms ease;
+}
+
+.brand:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .brandIcon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.3));
 }
 
 .brandName {
   font-family: var(--font-lora), Georgia, serif;
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.1;
   letter-spacing: -0.015em;
 }
 
-.brandSub {
+.brandBadge {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: 0.68rem;
-  color: var(--med-blue-400, #4895ef);
-  letter-spacing: 0.04em;
-  margin-top: 1px;
-  font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
+.brandSub {
+  margin: 1px 0 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+/* ── Tabs ── */
 .tabs {
   display: flex;
-  gap: 4px;
-  margin-left: 24px;
+  align-items: center;
+  gap: 6px;
+  margin-left: 32px;
+  height: 100%;
 }
 
 .tab {
-  display: flex;
-  flex-direction: column;
+  height: 42px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 6px 14px;
+  gap: 8px;
+  padding: 0 12px;
   border-radius: 8px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.72);
-  border: none;
-  background: none;
-  transition: background 140ms ease, color 140ms ease;
-  min-height: 44px;
+  color: #cbd5e1;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all 140ms ease;
+  white-space: nowrap;
 }
 
-.tabEn {
-  font-size: 13px;
-  font-weight: 600;
+.tabText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   line-height: 1.1;
 }
 
+.tabEn {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
 .tabHi {
-  font-size: 10.5px;
-  font-weight: 400;
-  line-height: 1;
-  opacity: 0.85;
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .tab:hover {
-  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.tab:hover .tabHi {
+  color: #cbd5e1;
 }
 
 .tabActive {
-  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
-  border-bottom: 2px solid var(--med-blue-400, #4895ef);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(2, 132, 199, 0.22) 100%);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.15);
+}
+
+.tabActive .tabEn {
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .tabActive .tabHi {
-  opacity: 1;
+  color: #38bdf8;
+  font-weight: 600;
 }
 
+/* ── Right Utility Strip ── */
 .right {
   margin-left: auto;
   display: flex;
@@ -100,348 +147,268 @@
   gap: 12px;
 }
 
+/* Notification & Prescription Bell */
 .notificationWrap {
   position: relative;
 }
 
-.notifBtn {
+.iconBtn {
   position: relative;
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  transition: background 140ms ease;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
-.notifBtn:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.notifBtn:focus-visible,
-.notifAttachment:focus-visible,
-.notifViewLink:focus-visible,
-.notifPdfLink:focus-visible {
-  outline: 3px solid var(--med-blue-400, #4895ef);
-  outline-offset: 3px;
+.iconBtnActive {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
 
 .notifBadge {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--color-error, #dc2626);
-  color: white;
-  font-size: 9.5px;
-  font-weight: 800;
   min-width: 17px;
   height: 17px;
+  padding: 0 4px;
   border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  border: 1.5px solid #164e77;
+  border: 2px solid #07192b;
 }
 
+/* Notification Panel */
 .notifPanel {
   position: absolute;
-  top: 52px;
+  top: 48px;
   right: 0;
-  width: min(420px, calc(100vw - 24px));
-  background: var(--med-surface-card, #ffffff);
-  border: 1px solid var(--med-border-subtle, #e2e8f0);
-  border-radius: 12px;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(580px, calc(100vh - 80px));
+  overflow-y: auto;
+  background: #0c1e33;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 16px 40px rgba(15, 43, 72, 0.18);
-  z-index: 70;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.2);
+  z-index: 80;
+  animation: dropdownIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .notifPanelHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
 }
 
-.notifEyebrow {
-  margin: 0;
-  color: var(--med-blue-600, #1e6091);
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+.headerIcon {
+  color: #38bdf8;
 }
 
 .notifHeading {
-  margin: 3px 0 0;
-  color: var(--med-text-primary, #0f172a);
-  font-size: 17px;
+  margin: 0;
+  font-size: 13.5px;
   font-weight: 700;
-  line-height: 1.2;
-  font-family: var(--font-lora), Georgia, serif;
-}
-
-.notifUnreadPill,
-.notifPrimaryBadge {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  color: var(--med-blue-600, #1e6091);
-  background: var(--med-blue-100, #e8f1f8);
-  border: 1px solid rgba(30, 96, 145, 0.2);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 6px 10px;
+  color: #ffffff;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.notifPrimaryBadge {
-  color: #ffffff;
-  background: var(--med-blue-600, #1e6091);
-  border-color: var(--med-blue-600, #1e6091);
+.notifUnreadPill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .notifFeed {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-top: 14px;
-  max-height: 480px;
-  overflow-y: auto;
-}
-
-.notifFeed::before {
-  content: "";
-  position: absolute;
-  top: 28px;
-  bottom: 18px;
-  left: 18px;
-  width: 2px;
-  background: var(--med-border-subtle, #e2e8f0);
+  gap: 10px;
 }
 
 .notifItem {
-  position: relative;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.notifItemPrimary {
+  background: rgba(56, 189, 248, 0.04);
+  border-color: rgba(56, 189, 248, 0.2);
 }
 
 .notifMarker {
-  position: relative;
-  z-index: 1;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--med-blue-600, #1e6091);
-  background: var(--med-blue-100, #e8f1f8);
-  border: 1px solid rgba(30, 96, 145, 0.2);
-}
-
-.notifItemPrimary .notifMarker {
-  color: #ffffff;
-  background: var(--med-blue-600, #1e6091);
-  border-color: var(--med-blue-600, #1e6091);
 }
 
 .notifContent {
-  min-width: 0;
-  padding: 14px;
-  border-radius: 10px;
-  border: 1px solid var(--med-border-subtle, #e2e8f0);
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(15, 43, 72, 0.05);
-}
-
-.notifItemPrimary .notifContent {
-  border-color: rgba(30, 96, 145, 0.25);
-  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .notifItemHeader {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
   align-items: flex-start;
 }
 
 .notifStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   margin: 0;
-  color: var(--med-blue-600, #1e6091);
-  font-size: 11.5px;
+  font-size: 10.5px;
   font-weight: 700;
-  line-height: 1.2;
+  text-transform: uppercase;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.notifStatus::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--med-blue-500, #2a75d3);
-}
-
-.notifEmpty {
-  padding: 24px 0;
-  text-align: center;
-  color: var(--med-text-muted, #64748b);
+.notifTitle {
+  margin: 2px 0 0;
   font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.notifPrimaryBadge {
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #0284c7;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .notifTime {
-  display: block;
-  font-size: 11px;
-  color: var(--med-text-muted, #64748b);
-  margin-top: 4px;
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .notifMessage {
-  font-size: 13px;
-  color: var(--med-text-primary, #0f172a);
-  margin: 8px 0;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #cbd5e1;
   line-height: 1.4;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .notifMetaRow {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #94a3b8;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--med-text-secondary, #475569);
-}
-
-.notifAttachment {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 6px;
-  background: var(--med-bg-canvas, #f8fafc);
-  border: 1px solid var(--med-border-subtle, #e2e8f0);
-  text-decoration: none;
-  color: inherit;
-  transition: background 140ms ease;
-}
-
-.notifAttachment:hover {
-  background: #f1f5f9;
-}
-
-.notifAttachmentTitle {
-  margin: 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--med-navy-800, #0f2b48);
-}
-
-.notifAttachmentMeta {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: var(--med-text-muted, #64748b);
+  gap: 5px;
 }
 
 .notifActions {
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
-.notifPdfLink,
-.notifViewLink {
+.notifViewLink,
+.notifPdfLink {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 12.5px;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
   font-weight: 700;
   text-decoration: none;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   transition: all 140ms ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .notifViewLink {
-  color: #ffffff;
-  background: #059669;
-  border: 1px solid #059669;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
 }
 
 .notifViewLink:hover {
-  background: #047857;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.28);
+  background: #10b981;
+  color: #ffffff;
 }
 
 .notifPdfLink {
-  color: #ffffff;
-  background: #1e6091;
-  border: 1px solid #1e6091;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
 }
 
 .notifPdfLink:hover {
-  background: #164e77;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(30, 96, 145, 0.28);
-}
-
-.doctorChip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0284c7;
   color: #ffffff;
-  font-size: 12px;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.doctorAvatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--med-blue-400, #4895ef);
-  color: #ffffff;
+.notifEmpty {
+  padding: 28px 16px;
+  text-align: center;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12.5px;
 }
 
+/* Clinical Report Button */
 .reportBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 13px;
-  height: 36px;
-  border-radius: 8px;
+  padding: 0 13px;
+  height: 38px;
+  border-radius: 9px;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.35);
@@ -453,65 +420,16 @@
 
 .reportBtn:hover {
   background: rgba(56, 189, 248, 0.22);
-  border-color: rgba(56, 189, 248, 0.6);
+  border-color: #38bdf8;
   color: #ffffff;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
 }
 
 .reportBtnText {
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.logoutBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  height: 36px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: all 140ms ease;
-  white-space: nowrap;
-}
-
-.logoutBtn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-.logoutEn {
-  font-weight: 600;
-}
-
-.logoutHi {
-  font-size: 11px;
-  opacity: 0.75;
-}
-
-.signOutBtn {
-  min-height: 38px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: background 140ms ease, color 140ms ease;
-}
-
-.signOutBtn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-
+/* ── Patient Profile Dropdown ── */
 .profileWrap {
   position: relative;
 }
@@ -519,57 +437,87 @@
 .patientPill {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
-  height: 36px;
+  gap: 9px;
+  padding: 4px 12px 4px 5px;
+  height: 38px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #ffffff;
   cursor: pointer;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: background 140ms ease;
-  white-space: nowrap;
+  transition: all 140ms ease;
 }
 
 .patientPill:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.patientPillActive {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: #38bdf8;
 }
 
 .patientAvatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: #38bdf8;
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
   flex-shrink: 0;
+}
+
+.patientPillText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
 }
 
 .patientName {
   font-size: 12.5px;
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
-.profilePanel {
+.patientStatusPill {
+  font-size: 9.5px;
+  color: #38bdf8;
+  font-weight: 600;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevronIcon {
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+/* Patient Profile Modal */
+.profileModal {
   position: absolute;
-  top: 52px;
+  top: 48px;
   right: 0;
-  width: min(360px, calc(100vw - 24px));
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  width: min(350px, calc(100vw - 32px));
+  background: #0c1e33;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 14px;
   padding: 18px;
-  box-shadow: 0 16px 40px rgba(15, 43, 72, 0.18);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.2);
   z-index: 80;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  animation: dropdownIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .profileHeader {
@@ -577,120 +525,67 @@
   align-items: center;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.profileAvatar {
-  width: 44px;
-  height: 44px;
+.profileAvatarLarge {
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1e6091, #38bdf8);
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
 }
 
-.profileTitle {
-  margin: 0;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #1e6091;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-}
-
-.profileName {
-  margin: 2px 0 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f2b48;
-  font-family: var(--font-lora), Georgia, serif;
-}
-
-.profileSub {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: #64748b;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-}
-
-.profileGrid {
+.profileHeaderInfo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 3px;
+  min-width: 0;
 }
 
-.profileInfoBox {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.profileInfoBoxAccent {
-  background: #e8f1f8;
-  border: 1px solid rgba(30, 96, 145, 0.2);
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.profileLabelIcon {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #1e6091;
-}
-
-.profileLabel {
+.profileFullName {
   margin: 0;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
+  color: #ffffff;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.profileValue {
-  margin: 2px 0 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #0f172a;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-}
-
-.profileMuted {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: #64748b;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+.profileBadgeRow {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
 .profileTag {
   display: inline-flex;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 999px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  font-size: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 10px;
   font-weight: 600;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .profileTagAccent {
-  display: inline-flex;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #e8f1f8;
-  border: 1px solid rgba(30, 96, 145, 0.25);
-  color: #1e6091;
-  font-size: 11px;
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 10.5px;
   font-weight: 700;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  margin-top: 2px;
 }
 
 .profileSection {
@@ -701,10 +596,10 @@
 
 .profileSectionTitle {
   margin: 0;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #64748b;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
@@ -715,77 +610,123 @@
   gap: 8px;
 }
 
+.profileInfoBox {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profileLabelIcon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #38bdf8;
+}
+
+.profileLabel {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.profileValue {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.profileMuted {
+  margin: 1px 0 0;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
 .profileDoctorCard {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
+  background: rgba(56, 189, 248, 0.05);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .doctorAvatarSmall {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #1e6091;
-  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
   flex-shrink: 0;
 }
 
 .profileDoctorName {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: #0f2b48;
+  color: #f8fafc;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 .profileDoctorSpecialty {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: #1e6091;
-  font-weight: 600;
+  margin: 1px 0 0;
+  font-size: 10px;
+  color: #38bdf8;
 }
 
 .profileDoctorHospital {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: #64748b;
+  margin: 1px 0 0;
+  font-size: 10px;
+  color: #94a3b8;
 }
 
-@media (max-width: 860px) {
+.signOutAction {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: all 140ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.signOutAction:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
   .tabs {
     display: none;
   }
-
   .nav {
     padding: 0 14px;
-    gap: 10px;
     height: 56px;
   }
-
-  .right {
-    gap: 8px;
-  }
-
-  .doctorChip span {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
   .brandSub {
     display: none;
   }
-
-  .reportBtnText {
+  .patientStatusPill {
     display: none;
-  }
-
-  .reportBtn {
-    padding: 7px 10px;
   }
 }

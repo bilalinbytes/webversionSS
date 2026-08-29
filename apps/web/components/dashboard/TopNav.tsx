@@ -1,14 +1,27 @@
 "use client";
 
-import { Bell, CalendarClock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Users,
+  UserPlus,
+  CalendarClock,
+  FileSpreadsheet,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  LogOut,
+  ChevronDown,
+  ShieldCheck,
+  Building2,
+  Stethoscope,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { checkAndPlayNotificationAlert } from "@/lib/client/notification-sound";
 import styles from "./TopNav.module.css";
 
-type View = "dashboard" | "create" | "export" | "appointments";
+export type DoctorView = "dashboard" | "create" | "export" | "appointments";
 
 interface AppointmentMeta {
   reason?: string;
@@ -28,27 +41,30 @@ interface DoctorAppointment {
 }
 
 interface TopNavProps {
-  activeView: View;
-  onViewChange: (view: View) => void;
+  activeView: DoctorView;
+  onViewChange: (view: DoctorView) => void;
 }
 
-const TABS: { id: View; label: string }[] = [
-  { id: "dashboard", label: "Patients" },
-  { id: "create",    label: "Add Patient" },
-  { id: "appointments", label: "Appointments" },
-  { id: "export",    label: "Export Data" },
+const TABS: { id: DoctorView; label: string; icon: React.ElementType }[] = [
+  { id: "dashboard", label: "Patients", icon: Users },
+  { id: "create", label: "Add Patient", icon: UserPlus },
+  { id: "appointments", label: "Appointments", icon: CalendarClock },
+  { id: "export", label: "Export Data", icon: FileSpreadsheet },
 ];
 
 export function TopNav({ activeView, onViewChange }: TopNavProps) {
   const router = useRouter();
   const [doctorName, setDoctorName] = useState("Doctor");
   const [initials, setInitials] = useState("DR");
-  // SRS -2.1 - real unacknowledged alert count
+  const [hospital, setHospital] = useState("Pulmonology Specialty Clinic");
   const [alertCount, setAlertCount] = useState(0);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
   const [actionDrafts, setActionDrafts] = useState<Record<string, { date: string; time: string; remarks: string }>>({});
+
+  const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   function appointmentMeta(notes: string | null): AppointmentMeta {
     if (!notes) return {};
@@ -72,15 +88,16 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
 
   async function loadAppointments() {
     const response = await fetch("/api/appointments", { credentials: "include" });
-    const body = await response.json().catch(() => null) as { appointments?: DoctorAppointment[] } | null;
+    const body = (await response.json().catch(() => null)) as { appointments?: DoctorAppointment[] } | null;
     if (response.ok) setAppointments(body?.appointments ?? []);
   }
 
   async function updateAppointment(id: string, status: "approved" | "rejected" | "reschedule_suggested") {
     const draft = actionDrafts[id] ?? { date: "", time: "", remarks: "" };
-    const scheduled_at = status === "reschedule_suggested" && draft.date && draft.time
-      ? `${draft.date}T${draft.time}:00+05:30`
-      : undefined;
+    const scheduled_at =
+      status === "reschedule_suggested" && draft.date && draft.time
+        ? `${draft.date}T${draft.time}:00+05:30`
+        : undefined;
 
     if (status === "reschedule_suggested" && !scheduled_at) return;
 
@@ -97,6 +114,20 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
     });
     if (response.ok) await loadAppointments();
   }
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setAppointmentOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -115,21 +146,25 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
       if (!user) return;
       const { data } = await supabase
         .from("doctors")
-        .select("name")
+        .select("name, hospital")
         .eq("id", user.id)
         .single();
       if (data?.name) {
-        setDoctorName(`Dr. ${data.name.split(" ")[0]}`);
+        setDoctorName(`Dr. ${data.name.replace(/^dr\.?\s*/i, "")}`);
         const parts = data.name.trim().split(" ");
-        const ini = parts.length >= 2
-          ? `${parts[0]![0]}${parts[parts.length - 1]![0]}`
-          : parts[0]!.slice(0, 2);
+        const ini =
+          parts.length >= 2
+            ? `${parts[0]![0]}${parts[parts.length - 1]![0]}`
+            : parts[0]!.slice(0, 2);
         setInitials(ini.toUpperCase());
+      }
+      if (data?.hospital) {
+        setHospital(data.hospital);
       }
 
       const refreshAlerts = async () => {
         const response = await fetch("/api/doctor/patients", { credentials: "include" });
-        const body = await response.json().catch(() => null) as {
+        const body = (await response.json().catch(() => null)) as {
           patients?: Array<{
             disease_alerts?: Array<{
               alert_type: string;
@@ -169,9 +204,10 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
     router.push("/");
   }
 
-  const appointmentNotifications = appointments.filter((appointment) =>
-    appointmentMeta(appointment.notes).workflow_status === "requested" ||
-    appointmentMeta(appointment.notes).workflow_status === "patient_requested_another"
+  const appointmentNotifications = appointments.filter(
+    (appointment) =>
+      appointmentMeta(appointment.notes).workflow_status === "requested" ||
+      appointmentMeta(appointment.notes).workflow_status === "patient_requested_another",
   );
 
   useEffect(() => {
@@ -184,105 +220,178 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
 
   return (
     <nav className={styles.nav}>
-      <div className={styles.brand}>
+      {/* ── Brand & Platform Identity ── */}
+      <div className={styles.brand} onClick={() => onViewChange("dashboard")}>
         <SaansBrandIcon className={styles.brandIcon} />
         <div>
-          <p className={styles.brandName}>O2Plus</p>
-          <p className={styles.brandSub}>Respiratory Care Platform</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <span className={styles.brandName}>O2Plus</span>
+            <span className={styles.brandBadge}>Clinical Suite</span>
+          </div>
+          <p className={styles.brandSub}>Respiratory Intelligence Platform</p>
         </div>
       </div>
 
+      {/* ── Navigation Tabs ── */}
       <div className={styles.tabs}>
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`${styles.tab} ${activeView === tab.id ? styles.tabActive : ""}`}
-            onClick={() => onViewChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeView === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
+              onClick={() => onViewChange(tab.id)}
+            >
+              <Icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
+              <span>{tab.label}</span>
+              {tab.id === "appointments" && appointmentNotifications.length > 0 && (
+                <span className={styles.tabBadge}>{appointmentNotifications.length}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
+      {/* ── Right Utility Strip ── */}
       <div className={styles.right}>
-        <button
-          type="button"
-          className={styles.signOutBtn}
-          onClick={handleLogout}
-        >
-          Sign Out
-        </button>
-        <div className={styles.appointmentWrap}>
+        {/* Live System Status Pill */}
+        <div className={styles.livePill}>
+          <span className={styles.liveDot} />
+          <span className={styles.liveText}>Live EHR Connected</span>
+        </div>
+
+        {/* Appointment Requests Dropdown */}
+        <div className={styles.appointmentWrap} ref={notifRef}>
           <button
             type="button"
-            className={styles.notifBtn}
-            aria-label="Appointment notifications"
+            className={`${styles.iconBtn} ${appointmentOpen ? styles.iconBtnActive : ""}`}
+            aria-label="Appointment requests"
             aria-expanded={appointmentOpen}
-            onClick={() => setAppointmentOpen((open) => !open)}
+            onClick={() => {
+              setAppointmentOpen((open) => !open);
+              setProfileOpen(false);
+            }}
           >
-            <CalendarClock size={16} strokeWidth={1.5} />
-            {appointmentNotifications.length > 0 && <span className={styles.notifBadge}>{appointmentNotifications.length}</span>}
+            <CalendarClock size={17} strokeWidth={1.8} />
+            {appointmentNotifications.length > 0 && (
+              <span className={styles.notifBadge}>{appointmentNotifications.length}</span>
+            )}
           </button>
+
           {appointmentOpen && (
-            <div className={styles.appointmentPanel}>
-              <p className={styles.appointmentPanelTitle}>Appointment Requests</p>
+            <div className={styles.dropdownPanel}>
+              <div className={styles.panelHeader}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CalendarClock size={16} className={styles.headerIcon} />
+                  <h3 className={styles.panelTitle}>Appointment Requests</h3>
+                </div>
+                {appointmentNotifications.length > 0 && (
+                  <span className={styles.panelBadge}>{appointmentNotifications.length} Action Needed</span>
+                )}
+              </div>
+
               {appointmentNotifications.length === 0 ? (
-                <p className={styles.appointmentEmpty}>No appointment requests.</p>
+                <div className={styles.emptyState}>
+                  <CheckCircle2 size={24} className={styles.emptyIcon} />
+                  <p className={styles.emptyTitle}>All caught up</p>
+                  <p className={styles.emptySub}>No pending appointment requests from patients.</p>
+                </div>
               ) : (
                 <div className={styles.appointmentList}>
                   {appointmentNotifications.map((appointment) => {
                     const meta = appointmentMeta(appointment.notes);
                     const draft = actionDrafts[appointment.id] ?? { date: "", time: "", remarks: "" };
+                    const isCounterOffer = meta.workflow_status === "patient_requested_another";
+
                     return (
-                      <div key={appointment.id} className={styles.appointmentItem}>
-                        <div className={styles.appointmentItemTop}>
+                      <div key={appointment.id} className={styles.appointmentCard}>
+                        <div className={styles.cardTop}>
                           <div>
-                            <p className={styles.appointmentPatient}>{appointment.patients?.name ?? "Patient"}</p>
-                            <p className={styles.appointmentTime}>{formatAppointmentDate(appointment.scheduled_at)}</p>
+                            <p className={styles.patientName}>{appointment.patients?.name ?? "Patient"}</p>
+                            <p className={styles.scheduledTime}>
+                              <Clock size={12} />
+                              {formatAppointmentDate(appointment.scheduled_at)}
+                            </p>
                           </div>
-                          <span className={styles.appointmentStatus}>
-                          {appointmentMeta(appointment.notes).workflow_status === "patient_requested_another" ? "Patient response" : "New request"}
+                          <span className={isCounterOffer ? styles.tagCounter : styles.tagNew}>
+                            {isCounterOffer ? "Patient Reschedule" : "New Request"}
                           </span>
                         </div>
-                        <p className={styles.appointmentMeta}>
-                          {meta.mode ?? "Clinic"}{meta.reason ? ` - ${meta.reason}` : ""}
-                        </p>
+
+                        {meta.reason && (
+                          <div className={styles.reasonBox}>
+                            <strong>Reason:</strong> {meta.reason} {meta.mode ? `(${meta.mode})` : ""}
+                          </div>
+                        )}
+
                         <textarea
-                          className={styles.appointmentTextarea}
+                          className={styles.remarksInput}
                           rows={2}
-                          placeholder="Remarks optional"
+                          placeholder="Add clinical remarks or instructions (optional)..."
                           value={draft.remarks}
-                          onChange={(event) => setActionDrafts((current) => ({
-                            ...current,
-                            [appointment.id]: { ...draft, remarks: event.target.value },
-                          }))}
+                          onChange={(e) =>
+                            setActionDrafts((curr) => ({
+                              ...curr,
+                              [appointment.id]: { ...draft, remarks: e.target.value },
+                            }))
+                          }
                         />
-                        <div className={styles.appointmentActions}>
-                          <button type="button" className={styles.approveBtn} onClick={() => updateAppointment(appointment.id, "approved")}>Approve</button>
-                          <button type="button" className={styles.rejectBtn} onClick={() => updateAppointment(appointment.id, "rejected")}>Reject</button>
+
+                        <div className={styles.actionButtons}>
+                          <button
+                            type="button"
+                            className={styles.approveBtn}
+                            onClick={() => updateAppointment(appointment.id, "approved")}
+                          >
+                            <CheckCircle2 size={13} />
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.rejectBtn}
+                            onClick={() => updateAppointment(appointment.id, "rejected")}
+                          >
+                            <XCircle size={13} />
+                            Decline
+                          </button>
                         </div>
-                        <div className={styles.rescheduleGrid}>
-                          <input
-                            type="date"
-                            value={draft.date}
-                            onChange={(event) => setActionDrafts((current) => ({
-                              ...current,
-                              [appointment.id]: { ...draft, date: event.target.value },
-                            }))}
-                          />
-                          <input
-                            type="time"
-                            value={draft.time}
-                            onChange={(event) => setActionDrafts((current) => ({
-                              ...current,
-                              [appointment.id]: { ...draft, time: event.target.value },
-                            }))}
-                          />
+
+                        <div className={styles.rescheduleSection}>
+                          <p className={styles.rescheduleLabel}>Or Propose New Schedule:</p>
+                          <div className={styles.rescheduleInputs}>
+                            <input
+                              type="date"
+                              className={styles.dateInput}
+                              value={draft.date}
+                              onChange={(e) =>
+                                setActionDrafts((curr) => ({
+                                  ...curr,
+                                  [appointment.id]: { ...draft, date: e.target.value },
+                                }))
+                              }
+                            />
+                            <input
+                              type="time"
+                              className={styles.timeInput}
+                              value={draft.time}
+                              onChange={(e) =>
+                                setActionDrafts((curr) => ({
+                                  ...curr,
+                                  [appointment.id]: { ...draft, time: e.target.value },
+                                }))
+                              }
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.suggestBtn}
+                            onClick={() => updateAppointment(appointment.id, "reschedule_suggested")}
+                          >
+                            Send Schedule Proposal
+                          </button>
                         </div>
-                        <button type="button" className={styles.rescheduleBtn} onClick={() => updateAppointment(appointment.id, "reschedule_suggested")}>
-                          Suggest New Date/Time
-                        </button>
                       </div>
                     );
                   })}
@@ -291,45 +400,69 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
             </div>
           )}
         </div>
-        <div className={styles.profileWrap}>
+
+        {/* Doctor Clinical Profile Dropdown (Replaces raw sign out button) */}
+        <div className={styles.profileWrap} ref={profileRef}>
           <button
             type="button"
-            className={styles.doctorPill}
-            aria-label="View doctor profile"
+            className={`${styles.doctorPill} ${profileOpen ? styles.doctorPillActive : ""}`}
+            aria-label="View doctor profile menu"
             onClick={() => {
               setProfileOpen((open) => !open);
               setAppointmentOpen(false);
             }}
           >
             <div className={styles.doctorAvatar}>{initials}</div>
-            <span className={styles.doctorName}>{doctorName}</span>
+            <div className={styles.doctorPillText}>
+              <span className={styles.doctorName}>{doctorName}</span>
+              <span className={styles.doctorRole}>Pulmonologist</span>
+            </div>
+            <ChevronDown size={14} className={styles.chevronIcon} />
           </button>
+
           {profileOpen && (
-            <div className={styles.profilePanel}>
+            <div className={styles.profileModal}>
+              {/* Doctor Card Header */}
               <div className={styles.profileHeader}>
                 <div className={styles.profileAvatarLarge}>{initials}</div>
-                <div>
-                  <p className={styles.profileTitle}>Doctor Profile</p>
-                  <p className={styles.profileName}>{doctorName}</p>
-                  <p className={styles.profileSub}>Specialty: <strong>Pulmonology &amp; Critical Care</strong></p>
+                <div className={styles.profileHeaderInfo}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <h4 className={styles.profileFullName}>{doctorName}</h4>
+                    <span title="Verified Clinical Practitioner" style={{ display: "inline-flex" }}>
+                      <ShieldCheck size={16} className={styles.verifiedIcon} />
+                    </span>
+                  </div>
+                  <p className={styles.profileSpecialty}>
+                    <Stethoscope size={12} />
+                    Pulmonology &amp; Respiratory Care
+                  </p>
+                  <p className={styles.profileHospital}>
+                    <Building2 size={12} />
+                    {hospital}
+                  </p>
                 </div>
               </div>
-              <div className={styles.profileGrid}>
-                <div className={styles.profileInfoBox}>
-                  <p className={styles.profileLabel}>Role</p>
-                  <p className={styles.profileValue}>Attending Pulmonologist</p>
+
+              {/* Status & Scope Chips */}
+              <div className={styles.profileStatsGrid}>
+                <div className={styles.statBox}>
+                  <span className={styles.statLabel}>Access Level</span>
+                  <span className={styles.statVal}>Attending Doctor</span>
                 </div>
-                <div className={styles.profileInfoBox}>
-                  <p className={styles.profileLabel}>Platform Status</p>
-                  <p className={styles.profileValue} style={{ color: "var(--med-blue-600)" }}>Verified Clinical Practitioner</p>
+                <div className={styles.statBox}>
+                  <span className={styles.statLabel}>Clinical Status</span>
+                  <span className={styles.statVal} style={{ color: "#38bdf8" }}>Active Practice</span>
                 </div>
               </div>
+
+              {/* Professional Sign Out Action */}
               <button
                 type="button"
-                className={styles.profileSignOutBtn}
+                className={styles.signOutAction}
                 onClick={handleLogout}
               >
-                Sign Out
+                <LogOut size={15} />
+                <span>Sign Out of Workstation</span>
               </button>
             </div>
           )}

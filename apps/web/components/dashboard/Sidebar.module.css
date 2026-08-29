@@ -1,23 +1,24 @@
-/* ── Blue Healthcare Doctor Sidebar ───────────────────────────────────────── */
-/* Tokens: navy #0f2b48, blue #1e6091, cyan #4895ef, surface #ffffff           */
+/* ── Doctor Portal Left Sidebar (Dark Medical Workstation) ─────────────── */
 
 .sidebar {
-  width: 64px;
-  background: var(--med-navy-800, #0f2b48);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  width: 72px;
+  background: linear-gradient(180deg, #07192b 0%, #0a2238 100%);
+  border-right: 1px solid rgba(56, 189, 248, 0.14);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   flex-shrink: 0;
   overflow: hidden;
-  box-shadow: 2px 0 8px rgba(15, 43, 72, 0.08);
-  z-index: 40;
+  box-shadow: 4px 0 20px rgba(4, 16, 33, 0.35);
+  z-index: 50;
+  user-select: none;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  padding: 12px 0;
-  gap: 4px;
+  padding: 16px 0;
+  gap: 8px;
   flex: 1;
 }
 
@@ -26,93 +27,168 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
   padding: 10px 4px;
   border: none;
-  background: none;
+  background: transparent;
   cursor: pointer;
-  border-radius: 0;
-  transition: background 140ms ease;
   position: relative;
+  transition: all 140ms ease;
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navItemActive {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.02) 100%);
 }
 
 .navItemActive::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 18%;
-  bottom: 18%;
+  top: 14%;
+  bottom: 14%;
   width: 3.5px;
-  background: var(--med-blue-400, #4895ef);
-  border-radius: 0 3px 3px 0;
+  background: #38bdf8;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px #38bdf8;
 }
 
 .iconWrap {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
-  transition: color 140ms ease;
-}
-
-.navItemActive .iconWrap {
-  color: var(--med-blue-400, #4895ef);
+  color: #94a3b8;
+  transition: color 140ms ease, transform 140ms ease;
 }
 
 .navItem:hover .iconWrap {
   color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.navItemActive .iconWrap {
+  color: #38bdf8;
+}
+
+.badgeDot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  border: 1.5px solid #07192b;
 }
 
 .navLabel {
-  font-size: 8.5px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #94a3b8;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.1;
   transition: color 140ms ease;
-}
-
-.navItemActive .navLabel {
-  color: #ffffff;
-  font-weight: 700;
 }
 
 .navItem:hover .navLabel {
   color: #ffffff;
 }
 
-@media (max-width: 760px) {
+.navItemActive .navLabel {
+  color: #f0f9ff;
+  font-weight: 700;
+}
+
+/* ── Sidebar Footer ── */
+.sidebarFooter {
+  padding: 14px 0 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.alertIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 999px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.alertIndicator:hover {
+  background: rgba(239, 68, 68, 0.28);
+  transform: scale(1.05);
+}
+
+.alertIcon {
+  color: #f87171;
+}
+
+.alertNum {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.clinicLogoBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+/* ── Mobile Layout ── */
+@media (max-width: 768px) {
   .sidebar {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
-    height: 56px;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     border-right: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    z-index: 60;
+    border-top: 1px solid rgba(56, 189, 248, 0.18);
+    flex-direction: row;
+    box-shadow: 0 -8px 24px rgba(4, 16, 33, 0.5);
   }
 
   .nav {
     flex-direction: row;
     justify-content: space-around;
-    padding: 0 8px;
+    padding: 0 6px;
     align-items: center;
+    height: 56px;
   }
 
   .navItem {
@@ -129,5 +205,9 @@
     width: auto;
     height: 3px;
     border-radius: 0 0 3px 3px;
+  }
+
+  .sidebarFooter {
+    display: none;
   }
 }

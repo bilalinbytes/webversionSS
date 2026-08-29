@@ -1,14 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Calendar, Download, Eye, FileText, Pill } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  Download,
+  Eye,
+  FileText,
+  Pill,
+  HeartPulse,
+  ClipboardList,
+  History,
+  Activity,
+  CalendarClock,
+  LogOut,
+  ChevronDown,
+  User,
+  Phone,
+  Stethoscope,
+  Building2,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
 import { formatDiagnosisDisplay } from "@o2plus/core";
-import { checkAndPlayNotificationAlert, playNotificationChime } from "@/lib/client/notification-sound";
+import { checkAndPlayNotificationAlert } from "@/lib/client/notification-sound";
 import styles from "./PatientTopNav.module.css";
 
 type View = "home" | "log" | "history" | "analytics" | "appointments";
@@ -18,12 +36,12 @@ interface PatientTopNavProps {
   onViewChange: (v: View) => void;
 }
 
-const TABS: { id: View; label: string; labelHi: string }[] = [
-  { id: "home", label: "My Health", labelHi: "मेरा स्वास्थ्य" },
-  { id: "log", label: "Log Today", labelHi: "आज लॉग करें" },
-  { id: "history", label: "Daily Logs", labelHi: "दैनिक लॉग इतिहास" },
-  { id: "analytics", label: "Analytics", labelHi: "विश्लेषण" },
-  { id: "appointments", label: "Book Appointment", labelHi: "अपॉइंटमेंट" },
+const TABS: { id: View; label: string; labelHi: string; icon: React.ElementType }[] = [
+  { id: "home", label: "My Health", labelHi: "मेरा स्वास्थ्य", icon: HeartPulse },
+  { id: "log", label: "Log Today", labelHi: "आज लॉग करें", icon: ClipboardList },
+  { id: "history", label: "Daily Logs", labelHi: "दैनिक लॉग", icon: History },
+  { id: "analytics", label: "Analytics", labelHi: "विश्लेषण", icon: Activity },
+  { id: "appointments", label: "Appointments", labelHi: "अपॉइंटमेंट", icon: CalendarClock },
 ];
 
 interface PrescriptionNotificationMed {
@@ -133,12 +151,6 @@ function getPrescriptionNotificationKey(
   return `${prescription.date}:${prescription.created_at ?? ""}:${medicationParts}:${instructionPart}`;
 }
 
-function getLegacyPrescriptionNotificationKey(prescription: PrescriptionNotification | null) {
-  if (!prescription) return null;
-  const medicationIds = prescription.medications.map((medication) => medication.id).sort().join(",");
-  return `${prescription.date}:${prescription.created_at ?? ""}:${medicationIds}`;
-}
-
 function getAppointmentNotificationKey(appointment: AppointmentNotification | null) {
   if (!appointment) return null;
   const status = appointment.meta?.workflow_status ?? appointment.status;
@@ -158,11 +170,28 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [doctorAcceptsAppointments, setDoctorAcceptsAppointments] = useState<boolean | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
-    doctorName: "Assigned doctor",
+    doctorName: "Assigned Pulmonologist",
     doctorHospital: "",
-    diagnosis: "Not recorded",
+    diagnosis: "Respiratory Care Plan",
     nextAppointment: "Not scheduled",
   });
+
+  const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -347,7 +376,11 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   }, [appointmentNotification, patient?.id]);
 
   const patientName = patient?.name || "Patient";
-  const initials = patientName.split(" ").map((n: string) => n[0] ?? "").join("").toUpperCase();
+  const nameParts = patientName.trim().split(" ");
+  const initials = nameParts.length >= 2
+    ? `${nameParts[0]![0]}${nameParts[nameParts.length - 1]![0]}`.toUpperCase()
+    : patientName.slice(0, 2).toUpperCase();
+
   const latestPrescriptionSummary = latestPrescription
     ? latestPrescription.medications
         .slice(0, 3)
@@ -356,18 +389,16 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
           return `${medication.drug_name}${dose}`;
         })
         .join(", ") + (latestPrescription.medications.length > 3 ? ` +${latestPrescription.medications.length - 3} more` : "")
-    : "No prescription yet";
+    : "No prescription recorded";
+
   const prescriptionNotificationKey = getPrescriptionNotificationKey(latestPrescription, latestInstruction);
-  const legacyPrescriptionNotificationKey = getLegacyPrescriptionNotificationKey(latestPrescription);
   const latestPrescriptionAt = latestPrescription?.created_at ?? latestPrescription?.date ?? null;
   const latestInstructionAt = latestInstruction?.created_at ?? null;
   const latestEmergencyAt =
     latestPrescriptionAt && latestInstructionAt
       ? (new Date(latestInstructionAt).getTime() > new Date(latestPrescriptionAt).getTime() ? latestInstructionAt : latestPrescriptionAt)
       : latestInstructionAt ?? latestPrescriptionAt;
-  const prescriptionSeen =
-    prescriptionNotificationKey !== null &&
-    (prescriptionNotificationKey === seenPrescriptionKey || legacyPrescriptionNotificationKey === seenPrescriptionKey);
+  const prescriptionSeen = prescriptionNotificationKey !== null && prescriptionNotificationKey === seenPrescriptionKey;
   const prescriptionInstructionUnread = Boolean(latestInstruction?.instruction_text && !latestInstruction.read_by_patient_at);
   const prescriptionUnread = Boolean(prescriptionNotificationKey && !prescriptionSeen);
   const showPrescriptionBadge = prescriptionNotificationKey
@@ -415,52 +446,67 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
   return (
     <nav className={styles.nav}>
-      <div className={styles.brand}>
+      {/* ── Brand ── */}
+      <div className={styles.brand} onClick={() => onViewChange("home")}>
         <SaansBrandIcon className={styles.brandIcon} />
         <div>
-          <p className={styles.brandName}>O2Plus</p>
-          <p className={styles.brandSub}>Respiratory Care Platform</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <span className={styles.brandName}>O2Plus</span>
+            <span className={styles.brandBadge}>Patient Portal</span>
+          </div>
+          <p className={styles.brandSub}>Respiratory Care Companion</p>
         </div>
       </div>
 
+      {/* ── Navigation Tabs ── */}
       <div className={styles.tabs}>
         {TABS.filter((tab) => {
           if (tab.id === "appointments" && doctorAcceptsAppointments === false) return false;
           return true;
-        }).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`${styles.tab} ${activeView === tab.id ? styles.tabActive : ""}`}
-            onClick={() => onViewChange(tab.id)}
-          >
-            <span className={styles.tabEn}>{tab.label}</span>
-            <span className={styles.tabHi}>{tab.labelHi}</span>
-          </button>
-        ))}
+        }).map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeView === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`${styles.tab} ${isActive ? styles.tabActive : ""}`}
+              onClick={() => onViewChange(tab.id)}
+            >
+              <Icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
+              <div className={styles.tabText}>
+                <span className={styles.tabEn}>{tab.label}</span>
+                <span className={styles.tabHi}>{tab.labelHi}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
+      {/* ── Right Utility Strip ── */}
       <div className={styles.right}>
-        <div className={styles.notificationWrap}>
+        {/* Notifications Center */}
+        <div className={styles.notificationWrap} ref={notifRef}>
           <button
             type="button"
-            className={styles.notifBtn}
+            className={`${styles.iconBtn} ${notificationsOpen ? styles.iconBtnActive : ""}`}
             aria-label="Notifications"
             aria-expanded={notificationsOpen}
             onClick={handleNotificationToggle}
           >
-            <Bell size={15} strokeWidth={1.7} />
+            <Bell size={16} strokeWidth={1.8} />
             {notificationCount > 0 && <span className={styles.notifBadge}>{notificationCount}</span>}
           </button>
+
           {notificationsOpen && (
             <div className={styles.notifPanel} role="region" aria-label="Patient notifications">
               <div className={styles.notifPanelHeader}>
-                <div>
-                  <p className={styles.notifEyebrow}>Patient updates</p>
-                  <h2 className={styles.notifHeading}>Notifications</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Bell size={16} className={styles.headerIcon} />
+                  <h3 className={styles.notifHeading}>Care Notifications</h3>
                 </div>
                 {notificationCount > 0 && (
-                  <span className={styles.notifUnreadPill}>{notificationCount} new</span>
+                  <span className={styles.notifUnreadPill}>{notificationCount} New</span>
                 )}
               </div>
 
@@ -474,14 +520,14 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                       <div className={styles.notifItemHeader}>
                         <div>
                           <p className={styles.notifStatus}>
-                            {latestPrescription ? "Prescription ready" : "Doctor instruction"}
+                            {latestPrescription ? "Prescription Ready" : "Doctor Note"}
                           </p>
-                          <h3 className={styles.notifTitle}>
-                            {latestPrescription ? "Prescription PDF is ready" : "New doctor instruction"}
-                          </h3>
+                          <h4 className={styles.notifTitle}>
+                            {latestPrescription ? "New Prescription Issued" : "New Care Instruction"}
+                          </h4>
                         </div>
                         {latestPrescription && (
-                          <span className={styles.notifPrimaryBadge}>Primary</span>
+                          <span className={styles.notifPrimaryBadge}>Active Regimen</span>
                         )}
                       </div>
                       <time className={styles.notifTime} dateTime={latestEmergencyAt ?? undefined}>
@@ -498,43 +544,25 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                               {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""}
                             </span>
                           </div>
-                          <a
-                            className={styles.notifAttachment}
-                            href={`${latestPrescriptionPdfUrl}&disposition=inline`}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={markPrescriptionSeen}
-                            aria-label={`View ${latestPrescriptionFilename}`}
-                          >
-                            <FileText size={18} strokeWidth={1.9} />
-                            <div>
-                              <p className={styles.notifAttachmentTitle}>{latestPrescriptionFilename}</p>
-                              <p className={styles.notifAttachmentMeta}>
-                                PDF attachment | {latestPrescription.medications.length} medication{latestPrescription.medications.length !== 1 ? "s" : ""} | Ready to view
-                              </p>
-                            </div>
-                          </a>
                           <div className={styles.notifActions}>
-                            <a
-                              className={styles.notifPdfLink}
-                              href={latestPrescriptionPdfUrl}
-                              download
-                              onClick={markPrescriptionSeen}
-                              aria-label={`Download ${latestPrescriptionFilename}`}
-                            >
-                              <Download size={14} strokeWidth={1.8} />
-                              <span>Download PDF</span>
-                            </a>
                             <a
                               className={styles.notifViewLink}
                               href={`${latestPrescriptionPdfUrl}&disposition=inline`}
                               target="_blank"
                               rel="noreferrer"
                               onClick={markPrescriptionSeen}
-                              aria-label={`View ${latestPrescriptionFilename}`}
                             >
-                              <Eye size={14} strokeWidth={1.8} />
+                              <Eye size={13} strokeWidth={2} />
                               <span>View PDF</span>
+                            </a>
+                            <a
+                              className={styles.notifPdfLink}
+                              href={latestPrescriptionPdfUrl}
+                              download
+                              onClick={markPrescriptionSeen}
+                            >
+                              <Download size={13} strokeWidth={2} />
+                              <span>Download</span>
                             </a>
                           </div>
                         </>
@@ -553,18 +581,18 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                         <div>
                           <p className={styles.notifStatus}>
                             {appointmentStatus === "approved"
-                              ? "Appointment approved"
+                              ? "Appointment Confirmed"
                               : appointmentStatus === "rejected"
-                                ? "Appointment update"
-                                : "Reschedule suggested"}
+                                ? "Schedule Update"
+                                : "Reschedule Suggested"}
                           </p>
-                          <h3 className={styles.notifTitle}>
+                          <h4 className={styles.notifTitle}>
                             {appointmentStatus === "approved"
-                              ? "Appointment confirmed"
+                              ? "Appointment Approved"
                               : appointmentStatus === "rejected"
-                                ? "Appointment request declined"
-                                : "Appointment rescheduled"}
-                          </h3>
+                                ? "Appointment Request Declined"
+                                : "Doctor Suggested New Time"}
+                          </h4>
                         </div>
                       </div>
                       <time className={styles.notifTime} dateTime={appointmentNotification.scheduled_at}>
@@ -579,27 +607,24 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
                 {!appointmentNotification && !showPrescriptionNotification && (
                   <div className={styles.notifEmpty}>
-                    <Bell size={18} strokeWidth={1.8} />
-                    <p>No patient notifications yet.</p>
+                    <Bell size={20} strokeWidth={1.8} />
+                    <p>No new care notifications today.</p>
                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Clinical Report Action Button */}
         <button
           type="button"
           className={styles.reportBtn}
           onClick={() => setReportModalOpen(true)}
-          title="Download My Clinical Report (PDF)"
+          title="Download My Clinical Health Report (PDF)"
         >
           <FileText size={15} />
           <span className={styles.reportBtnText}>My Report</span>
-        </button>
-
-        <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
-          <span className={styles.logoutEn}>Sign Out</span>
-          <span className={styles.logoutHi}>साइन आउट</span>
         </button>
 
         <PatientReportModal
@@ -607,11 +632,13 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
           onClose={() => setReportModalOpen(false)}
           patientName={patientName}
         />
-        <div className={styles.profileWrap}>
+
+        {/* Patient Identity Profile Dropdown (Replaces raw sign out button) */}
+        <div className={styles.profileWrap} ref={profileRef}>
           <button
             type="button"
-            className={styles.patientPill}
-            aria-label="View profile"
+            className={`${styles.patientPill} ${profileOpen ? styles.patientPillActive : ""}`}
+            aria-label="View patient health profile"
             aria-expanded={profileOpen}
             onClick={() => {
               setProfileOpen((open) => !open);
@@ -619,42 +646,38 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             }}
           >
             <div className={styles.patientAvatar}>{initials}</div>
-            <span className={styles.patientName}>{patientName.split(" ")[0]}</span>
+            <div className={styles.patientPillText}>
+              <span className={styles.patientName}>{nameParts[0]}</span>
+              <span className={styles.patientStatusPill}>{profileMeta.diagnosis.split("/")[0]?.trim()}</span>
+            </div>
+            <ChevronDown size={14} className={styles.chevronIcon} />
           </button>
+
           {profileOpen && (
-            <div className={styles.profilePanel}>
-              {/* Header */}
+            <div className={styles.profileModal}>
+              {/* Profile Card Header */}
               <div className={styles.profileHeader}>
-                <div className={styles.profileAvatar}>{initials || "PT"}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className={styles.profileTitle}>Patient Profile</p>
-                  <p className={styles.profileName}>{patientName}</p>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                    {profileMeta.age && (
-                      <span className={styles.profileTag}>{profileMeta.age} yrs</span>
-                    )}
-                    {profileMeta.gender && (
-                      <span className={styles.profileTag}>{profileMeta.gender}</span>
-                    )}
-                    <span className={styles.profileTagAccent}>{profileMeta.diagnosis}</span>
+                <div className={styles.profileAvatarLarge}>{initials}</div>
+                <div className={styles.profileHeaderInfo}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <h4 className={styles.profileFullName}>{patientName}</h4>
                   </div>
+                  <div className={styles.profileBadgeRow}>
+                    {profileMeta.age && <span className={styles.profileTag}>{profileMeta.age} yrs</span>}
+                    {profileMeta.gender && <span className={styles.profileTag}>{profileMeta.gender}</span>}
+                  </div>
+                  <span className={styles.profileTagAccent}>{profileMeta.diagnosis}</span>
                 </div>
               </div>
 
-              {/* Section 1: Patient Contacts & Registration */}
+              {/* Patient Contact Details */}
               <div className={styles.profileSection}>
-                <p className={styles.profileSectionTitle}>Patient Details &amp; Contacts</p>
+                <p className={styles.profileSectionTitle}>Patient Contacts</p>
                 <div className={styles.profileGrid2}>
                   <div className={styles.profileInfoBox}>
                     <p className={styles.profileLabel}>Registered Phone</p>
                     <p className={styles.profileValue}>{profileMeta.phone || "Not recorded"}</p>
                   </div>
-                  {profileMeta.alternatePhone && (
-                    <div className={styles.profileInfoBox}>
-                      <p className={styles.profileLabel}>Alternate Contact</p>
-                      <p className={styles.profileValue}>{profileMeta.alternatePhone}</p>
-                    </div>
-                  )}
                   {profileMeta.emergencyName && (
                     <div className={styles.profileInfoBox}>
                       <p className={styles.profileLabel}>Emergency Contact</p>
@@ -664,24 +687,20 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                       )}
                     </div>
                   )}
-                  {profileMeta.enrolledDate && (
-                    <div className={styles.profileInfoBox}>
-                      <p className={styles.profileLabel}>Care Plan Enrolled</p>
-                      <p className={styles.profileValue}>{profileMeta.enrolledDate}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Section 2: Assigned Doctor Info */}
+              {/* Assigned Pulmonologist */}
               <div className={styles.profileSection}>
                 <p className={styles.profileSectionTitle}>Assigned Pulmonologist</p>
                 <div className={styles.profileDoctorCard}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div className={styles.doctorAvatarSmall}>DR</div>
+                    <div className={styles.doctorAvatarSmall}>
+                      <Stethoscope size={16} />
+                    </div>
                     <div>
                       <p className={styles.profileDoctorName}>{profileMeta.doctorName}</p>
-                      <p className={styles.profileDoctorSpecialty}>Specialist in Respiratory Care</p>
+                      <p className={styles.profileDoctorSpecialty}>Pulmonology Specialist</p>
                       {profileMeta.doctorHospital && (
                         <p className={styles.profileDoctorHospital}>{profileMeta.doctorHospital}</p>
                       )}
@@ -690,23 +709,32 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                 </div>
               </div>
 
-              {/* Section 3: Next Appointment & Prescription */}
-              <div className={styles.profileGrid}>
+              {/* Next Appointment & Last Prescription */}
+              <div className={styles.profileGrid2}>
                 <div className={styles.profileInfoBox}>
                   <div className={styles.profileLabelIcon}>
-                    <Calendar size={13} />
-                    <p className={styles.profileLabel}>Next Appointment</p>
+                    <Calendar size={12} />
+                    <p className={styles.profileLabel}>Next Visit</p>
                   </div>
                   <p className={styles.profileValue}>{profileMeta.nextAppointment}</p>
                 </div>
-                <div className={styles.profileInfoBoxAccent}>
-                  <p className={styles.profileLabel}>Last Prescribed Regimen</p>
+                <div className={styles.profileInfoBox}>
+                  <p className={styles.profileLabel}>Last Prescription</p>
                   <p className={styles.profileValue}>
-                    {latestPrescription ? formatDate(latestPrescription.created_at ?? latestPrescription.date) : "No prescription yet"}
+                    {latestPrescription ? formatDate(latestPrescription.created_at ?? latestPrescription.date) : "None"}
                   </p>
-                  <p className={styles.profileMuted}>{latestPrescriptionSummary}</p>
                 </div>
               </div>
+
+              {/* Clean Professional Sign Out Action */}
+              <button
+                type="button"
+                className={styles.signOutAction}
+                onClick={handleLogout}
+              >
+                <LogOut size={15} />
+                <span>Sign Out · साइन आउट</span>
+              </button>
             </div>
           )}
         </div>
