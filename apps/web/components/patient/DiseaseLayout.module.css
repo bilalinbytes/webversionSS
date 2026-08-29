@@ -297,3 +297,10 @@
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 760px) {
+  .content {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
+}

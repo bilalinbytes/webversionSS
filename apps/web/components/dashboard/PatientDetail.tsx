@@ -1438,110 +1438,267 @@ function TreatmentTab({ patientId }: { patientId: string }) {
           </div>
 
           {/* Drug list */}
-          <div style={{ overflowX: "auto", marginBottom: 12 }}>
-          <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
-              {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date"].map(h => (
-                <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
-              ))}
-            </div>
+          {/* Desktop Multi-Column Table (Hidden on mobile) */}
+          <div className={styles.rxDesktopTable}>
+            <div style={{ overflowX: "auto", marginBottom: 12 }}>
+              <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Header row */}
+                <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
+                  {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date"].map(h => (
+                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
+                  ))}
+                </div>
 
+                {draftMeds.map((med, index) => {
+                  const isStopped = med.status === "stopped";
+
+                  return (
+                    <div
+                      key={med._key}
+                      style={{
+                        display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS,
+                        gap: 8, alignItems: "center", padding: "8px",
+                        background: isStopped ? "#fdecea" : "white",
+                        borderRadius: 8, border: `1px solid ${isStopped ? "#fca5a5" : "rgba(0,0,0,0.07)"}`,
+                        opacity: isStopped ? 0.7 : 1,
+                      }}
+                    >
+                      <span style={{ width: 26, height: 26, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e8f5f1", color: isStopped ? "#c94d49" : "var(--med-blue-600, #1e6091)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                        {index + 1}
+                      </span>
+                      <select
+                        value={med.route}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { route: e.target.value })}
+                        title="Medication Type"
+                        style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white", cursor: isStopped ? "not-allowed" : "pointer" }}
+                      >
+                        {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
+                      </select>
+                      <MedicationAutocompleteInput
+                        value={med.drug_name}
+                        disabled={isStopped}
+                        placeholder="e.g. Foracort, Budecort"
+                        onChange={(val) => updateDraft(med._key, { drug_name: val })}
+                        onSelectPreset={(preset) => {
+                          const updates: Partial<typeof med> = { drug_name: preset.name };
+                          if (ROUTE_OPTS.includes(preset.defaultRoute)) {
+                            updates.route = preset.defaultRoute;
+                          }
+                          updateDraft(med._key, updates);
+                        }}
+                        style={{
+                          padding: "5px 8px", border: "1px solid #d4cfc7", borderRadius: 6,
+                          fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                          background: isStopped ? "#fdecea" : "white",
+                          textDecoration: isStopped ? "line-through" : "none",
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={med.dose}
+                        disabled={isStopped}
+                        placeholder="-"
+                        onChange={e => updateDraft(med._key, { dose: e.target.value })}
+                        style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                      />
+                      <select
+                        value={med.dose_unit}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { dose_unit: e.target.value })}
+                        style={{ padding: "5px 4px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                      >
+                        {UNIT_OPTS.map(u => <option key={u}>{u}</option>)}
+                      </select>
+                      <select
+                        value={med.frequency}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { frequency: e.target.value })}
+                        style={{ padding: "5px 4px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                      >
+                        {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 30"
+                        value={med.durationDays ?? ""}
+                        disabled={isStopped}
+                        onChange={e => handleDurationChange(med._key, e.target.value)}
+                        style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                      />
+                      <input
+                        type="date"
+                        value={prescriptionDate}
+                        disabled
+                        style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, color: "#496977", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: "#f5f3ee" }}
+                      />
+                      <input
+                        type="date"
+                        value={med.end_date}
+                        disabled={isStopped}
+                        onChange={e => handleEndDateChange(med._key, e.target.value)}
+                        style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Stacked Medication Cards (Shown on mobile screens <= 760px) */}
+          <div className={styles.rxMobileCards}>
             {draftMeds.map((med, index) => {
               const isStopped = med.status === "stopped";
 
               return (
-                <div
-                  key={med._key}
-                  style={{
-                    display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS,
-                    gap: 8, alignItems: "center", padding: "8px",
-                    background: isStopped ? "#fdecea" : "white",
-                    borderRadius: 8, border: `1px solid ${isStopped ? "#fca5a5" : "rgba(0,0,0,0.07)"}`,
-                    opacity: isStopped ? 0.7 : 1,
-                  }}
-                >
-                  <span style={{ width: 26, height: 26, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e8f5f1", color: isStopped ? "#c94d49" : "var(--med-blue-600, #1e6091)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                    {index + 1}
-                  </span>
-                  <select
-                    value={med.route}
-                    disabled={isStopped}
-                    onChange={e => updateDraft(med._key, { route: e.target.value })}
-                    title="Medication Type"
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white", cursor: isStopped ? "not-allowed" : "pointer" }}
-                  >
-                    {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
-                  </select>
-                  <MedicationAutocompleteInput
-                    value={med.drug_name}
-                    disabled={isStopped}
-                    placeholder="e.g. Foracort, Budecort"
-                    onChange={(val) => updateDraft(med._key, { drug_name: val })}
-                    onSelectPreset={(preset) => {
-                      const updates: Partial<typeof med> = { drug_name: preset.name };
-                      if (ROUTE_OPTS.includes(preset.defaultRoute)) {
-                        updates.route = preset.defaultRoute;
-                      }
-                      updateDraft(med._key, updates);
-                    }}
-                    style={{
-                      padding: "5px 8px", border: "1px solid #d4cfc7", borderRadius: 6,
-                      fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-                      background: isStopped ? "#fdecea" : "white",
-                      textDecoration: isStopped ? "line-through" : "none",
-                    }}
-                  />
-                  <input
-                    type="number"
-                    value={med.dose}
-                    disabled={isStopped}
-                    placeholder="-"
-                    onChange={e => updateDraft(med._key, { dose: e.target.value })}
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  />
-                  <select
-                    value={med.dose_unit}
-                    disabled={isStopped}
-                    onChange={e => updateDraft(med._key, { dose_unit: e.target.value })}
-                    style={{ padding: "5px 4px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  >
-                    {UNIT_OPTS.map(u => <option key={u}>{u}</option>)}
-                  </select>
-                  <select
-                    value={med.frequency}
-                    disabled={isStopped}
-                    onChange={e => updateDraft(med._key, { frequency: e.target.value })}
-                    style={{ padding: "5px 4px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  >
-                    {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
-                  </select>
-                  <input
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 30"
-                    value={med.durationDays ?? ""}
-                    disabled={isStopped}
-                    onChange={e => handleDurationChange(med._key, e.target.value)}
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  />
-                  <input
-                    type="date"
-                    value={prescriptionDate}
-                    disabled
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, color: "#496977", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: "#f5f3ee" }}
-                  />
-                  <input
-                    type="date"
-                    value={med.end_date}
-                    disabled={isStopped}
-                    onChange={e => handleEndDateChange(med._key, e.target.value)}
-                    style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
-                  />
+                <div key={med._key} className={styles.rxMobileCard} style={{ background: isStopped ? "#fdecea" : "#ffffff", opacity: isStopped ? 0.75 : 1 }}>
+                  <div className={styles.rxMobileCardHeader}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 24, height: 24, borderRadius: 6, background: isStopped ? "#f8d6d6" : "#e0f2fe", color: isStopped ? "#c94d49" : "#0369a1", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>
+                        {index + 1}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#0f2b48" }}>
+                        {med.drug_name || `Medicine #${index + 1}`}
+                      </span>
+                    </div>
+                    {med.source_id ? (
+                      <button
+                        type="button"
+                        onClick={() => isStopped ? restoreDraft(med._key) : removeDraft(med._key)}
+                        style={{
+                          background: isStopped ? "#0284c7" : "#ef4444",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {isStopped ? "Resume" : "Discontinue"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removeDraft(med._key)}
+                        style={{
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={styles.rxMobileField}>
+                    <label className={styles.rxMobileLabel}>Drug Name</label>
+                    <MedicationAutocompleteInput
+                      value={med.drug_name}
+                      disabled={isStopped}
+                      placeholder="e.g. Foracort, Budecort"
+                      onChange={(val) => updateDraft(med._key, { drug_name: val })}
+                      onSelectPreset={(preset) => {
+                        const updates: Partial<typeof med> = { drug_name: preset.name };
+                        if (ROUTE_OPTS.includes(preset.defaultRoute)) {
+                          updates.route = preset.defaultRoute;
+                        }
+                        updateDraft(med._key, updates);
+                      }}
+                      style={{
+                        padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8,
+                        fontSize: 14, fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                        background: isStopped ? "#fdecea" : "white",
+                      }}
+                    />
+                  </div>
+
+                  <div className={styles.rxMobileRow2}>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>Medication Type</label>
+                      <select
+                        value={med.route}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { route: e.target.value })}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      >
+                        {ROUTE_OPTS.map(r => <option key={r}>{r}</option>)}
+                      </select>
+                    </div>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>Frequency</label>
+                      <select
+                        value={med.frequency}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { frequency: e.target.value })}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      >
+                        {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className={styles.rxMobileRow2}>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>Dose</label>
+                      <input
+                        type="number"
+                        value={med.dose}
+                        disabled={isStopped}
+                        placeholder="e.g. 200"
+                        onChange={e => updateDraft(med._key, { dose: e.target.value })}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      />
+                    </div>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>Unit</label>
+                      <select
+                        value={med.dose_unit}
+                        disabled={isStopped}
+                        onChange={e => updateDraft(med._key, { dose_unit: e.target.value })}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      >
+                        {UNIT_OPTS.map(u => <option key={u}>{u}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className={styles.rxMobileRow2}>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>Duration (Days)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 30"
+                        value={med.durationDays ?? ""}
+                        disabled={isStopped}
+                        onChange={e => handleDurationChange(med._key, e.target.value)}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      />
+                    </div>
+                    <div className={styles.rxMobileField}>
+                      <label className={styles.rxMobileLabel}>End Date</label>
+                      <input
+                        type="date"
+                        value={med.end_date}
+                        disabled={isStopped}
+                        onChange={e => handleEndDateChange(med._key, e.target.value)}
+                        style={{ padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, background: isStopped ? "#fdecea" : "white" }}
+                      />
+                    </div>
+                  </div>
                 </div>
               );
             })}
-          </div>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>

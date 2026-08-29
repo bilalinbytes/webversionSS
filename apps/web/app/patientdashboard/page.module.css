@@ -54,7 +54,7 @@
   }
 
   .content {
-    padding-bottom: 68px;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     overflow: visible;
   }
 

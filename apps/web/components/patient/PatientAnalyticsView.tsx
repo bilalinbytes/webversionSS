@@ -1255,19 +1255,29 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
           <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Pulmonary Function Tests · फेफड़े के कार्य परीक्षण
           </p>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div style={{
+            display: "flex",
+            gap: 6,
+            overflowX: "auto",
+            maxWidth: "100%",
+            paddingBottom: 4,
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
+          }}>
             {PFT_METRICS.map((metric) => (
               <button
                 key={metric.key}
                 type="button"
                 onClick={() => setSelectedPftMetric(metric.key)}
                 style={{
-                  padding: "4px 10px", borderRadius: 999, border: "1px solid",
+                  padding: "5px 12px", borderRadius: 999, border: "1px solid",
                   borderColor: selectedPftMetric === metric.key ? metric.color : "#cbd5e1",
                   background: selectedPftMetric === metric.key ? metric.color : "#ffffff",
                   color: selectedPftMetric === metric.key ? "#ffffff" : "#475569",
-                  fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  fontSize: 11.5, fontWeight: 600, cursor: "pointer",
                   transition: "all 120ms ease",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                 }}
               >
                 {metric.label}
