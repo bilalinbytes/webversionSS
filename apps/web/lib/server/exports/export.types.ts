@@ -22,6 +22,22 @@ export interface ExportRequestPayload {
   end_date?: string;
 }
 
+export interface FormattedDailyLogColumnSet {
+  logDate: string;
+  aqi: number | string;
+  spo2Rest: number | string;
+  spo2Exertion: number | string;
+  heartRate: number | string;
+  medicationAdherence: string;
+  mmrc: number | string;
+  symptomsVas: string;
+  sideEffects: string;
+  kbild: string;
+  asthmaControl: string;
+  sputumHemoptysis: string;
+  diseaseSpecific: string;
+}
+
 export interface PatientExportRecord {
   sno: number;
   fileNo: string;
@@ -56,6 +72,7 @@ export interface PatientExportRecord {
   adherencePct: string;
   currentMeds: string;
   respiratorySupport: string;
+  dailyLogs?: FormattedDailyLogColumnSet[];
 }
 
 export interface DetailedLogRecord {

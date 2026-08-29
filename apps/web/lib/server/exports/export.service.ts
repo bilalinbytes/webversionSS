@@ -227,6 +227,122 @@ export async function executeExport(
     const riskScoreVal = score?.global_score ?? null;
     const riskLevel = calculateRiskCategory(riskScoreVal);
 
+    const formattedDailyLogs = patLogs
+      .slice()
+      .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
+      .map((log) => {
+        const raw = log as Record<string, unknown>;
+        const logDate = formatDateDDMMYYYY(log.logged_at);
+        const aqi = safeValue(log.aqi_value);
+        const spo2Rest = safeValue(log.spo2_rest);
+        const spo2Exertion = safeValue(log.spo2_exertion);
+        const heartRate = safeValue(raw["heart_rate"] ?? (log as { heart_rate?: unknown }).heart_rate);
+        const mmrc = safeValue(log.mmrc_today);
+
+        // Medication adherence
+        let medicationAdherence = "—";
+        if (log.medication_compliance && typeof log.medication_compliance === "object") {
+          const entries = Object.entries(log.medication_compliance as Record<string, boolean>);
+          if (entries.length > 0) {
+            const taken = entries.filter(([, v]) => v === true).length;
+            const total = entries.length;
+            medicationAdherence = `${taken}/${total} Taken (${Math.round((taken / total) * 100)}%)`;
+          }
+        }
+
+        // Symptoms VAS
+        let symptomsVas = "—";
+        if (log.vas_symptoms && typeof log.vas_symptoms === "object") {
+          const entries = Object.entries(log.vas_symptoms as Record<string, number | string>);
+          if (entries.length > 0) {
+            symptomsVas = entries
+              .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}/10`)
+              .join(", ");
+          }
+        }
+
+        // Drug Side Effects
+        let sideEffects = "None";
+        const seRaw = raw["side_effects"];
+        if (Array.isArray(seRaw) && seRaw.length > 0) {
+          sideEffects = seRaw.map((s) => toTitleCase(String(s))).join(", ");
+        } else if (typeof seRaw === "string" && seRaw.trim()) {
+          sideEffects = seRaw;
+        }
+
+        // K-BILD Score
+        let kbild = "—";
+        const kScore = raw["kbild_score"];
+        const kAnswered = raw["kbild_answered_count"];
+        if (kScore !== null && kScore !== undefined) {
+          kbild = `${kScore}/100${kAnswered ? ` (${kAnswered}/15 Qs)` : ""}`;
+        }
+
+        // Asthma Control Score
+        let asthmaControl = "—";
+        const acStatus = raw["asthma_control_status"];
+        const acYesCount = raw["asthma_control_yes_count"];
+        if (acStatus || (acYesCount !== null && acYesCount !== undefined)) {
+          const statusLabel = acStatus ? String(acStatus).replace(/_/g, " ") : "";
+          asthmaControl = `${toTitleCase(statusLabel)}${acYesCount !== null && acYesCount !== undefined ? ` (${acYesCount}/4 Yes)` : ""}`.trim() || "—";
+        }
+
+        // Sputum & Hemoptysis
+        const sputumParts: string[] = [];
+        if (raw["sputum_volume"]) sputumParts.push(`Vol: ${toTitleCase(String(raw["sputum_volume"]))}`);
+        if (raw["sputum_colour"]) sputumParts.push(`Colour: ${toTitleCase(String(raw["sputum_colour"]))}`);
+        if (raw["haemoptysis"] === true || raw["haemoptysis_volume"]) {
+          sputumParts.push(`Haemoptysis: ${toTitleCase(String(raw["haemoptysis_volume"] ?? "Present"))}`);
+        }
+        const sputumHemoptysis = sputumParts.length > 0 ? sputumParts.join(", ") : "None / Normal";
+
+        // Disease Specific Fields
+        const dsParts: string[] = [];
+        if (raw["pefr_lpm"] || raw["pefr_reading"]) {
+          dsParts.push(`PEFR: ${raw["pefr_lpm"] ?? raw["pefr_reading"]} L/min`);
+        }
+        if (raw["rescue_inhaler_puffs"]) {
+          dsParts.push(`Rescue Puffs: ${raw["rescue_inhaler_puffs"]}`);
+        }
+        if (raw["ease_of_clearance"] || raw["ease_of_sputum_clearance"]) {
+          dsParts.push(`Clearance Ease: ${raw["ease_of_clearance"] ?? raw["ease_of_sputum_clearance"]}/5`);
+        }
+        if (raw["recorded_temperature_f"] || raw["temperature_f"]) {
+          dsParts.push(`Temp: ${raw["recorded_temperature_f"] ?? raw["temperature_f"]}°F`);
+        }
+        if (raw["energy_level"] !== null && raw["energy_level"] !== undefined) {
+          dsParts.push(`Energy: ${raw["energy_level"]}/10`);
+        }
+        if (raw["chest_heaviness"] !== null && raw["chest_heaviness"] !== undefined) {
+          dsParts.push(`Chest Heaviness: ${raw["chest_heaviness"]}/10`);
+        }
+        if (raw["cough_frequency"] !== null && raw["cough_frequency"] !== undefined) {
+          dsParts.push(`Cough Freq: ${raw["cough_frequency"]}/4`);
+        }
+        if (raw["night_waking"] === true) dsParts.push(`Night Waking: Yes`);
+        if (raw["wheezing"] === true) dsParts.push(`Wheezing: Yes`);
+        if (raw["malaise"] === true) dsParts.push(`Malaise: Yes`);
+        if (raw["sleep_disturbed"] === true) dsParts.push(`Sleep Disturbed: Yes`);
+
+        const diseaseSpecific = dsParts.length > 0 ? dsParts.join("; ") : "—";
+
+        return {
+          logDate,
+          aqi,
+          spo2Rest,
+          spo2Exertion,
+          heartRate,
+          medicationAdherence,
+          mmrc,
+          symptomsVas,
+          sideEffects,
+          kbild,
+          asthmaControl,
+          sputumHemoptysis,
+          diseaseSpecific,
+        };
+      });
+
     return {
       sno: idx + 1,
       fileNo,
@@ -261,6 +377,7 @@ export async function executeExport(
       adherencePct: adherence,
       currentMeds,
       respiratorySupport: respSupport,
+      dailyLogs: formattedDailyLogs,
     };
   });
 

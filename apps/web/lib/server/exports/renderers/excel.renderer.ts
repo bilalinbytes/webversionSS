@@ -1,8 +1,8 @@
-﻿import ExcelJS from "exceljs";
-import type { ExportDataBundle, PatientExportRecord } from "../export.types";
+import ExcelJS from "exceljs";
+import type { ExportDataBundle, FormattedDailyLogColumnSet, PatientExportRecord } from "../export.types";
 import { getRiskColorStyles } from "../aggregation/risk-level";
 
-interface ColumnDef {
+interface FixedColumnDef {
   header: string;
   key: keyof PatientExportRecord;
   width: number;
@@ -10,7 +10,7 @@ interface ColumnDef {
   wrapText?: boolean;
 }
 
-const REGISTRY_COLUMNS: ColumnDef[] = [
+const FIXED_REGISTRY_COLUMNS: FixedColumnDef[] = [
   { header: "S No.",               key: "sno",               width: 7,   align: "center" },
   { header: "File No.",            key: "fileNo",            width: 13,  align: "center" },
   { header: "UHID",                key: "uhid",              width: 15,  align: "center" },
@@ -46,10 +46,98 @@ const REGISTRY_COLUMNS: ColumnDef[] = [
   { header: "Respiratory Support", key: "respiratorySupport",width: 22,  align: "left"   },
 ];
 
-function applyMainHeaderStyles(row: ExcelJS.Row, columnCount: number) {
-  row.height = 30;
-  for (let i = 1; i <= columnCount; i++) {
-    const cell = row.getCell(i);
+interface DailyFieldDef {
+  suffix: string;
+  width: number;
+  align: "left" | "center" | "right";
+  wrapText?: boolean;
+  getter: (d: FormattedDailyLogColumnSet) => string | number;
+}
+
+const DAILY_FIELD_TEMPLATES: DailyFieldDef[] = [
+  { suffix: "Date",                   width: 14, align: "center", getter: (d) => d.logDate },
+  { suffix: "AQI",                    width: 10, align: "right",  getter: (d) => d.aqi },
+  { suffix: "SpO2 Rest (%)",          width: 15, align: "right",  getter: (d) => d.spo2Rest },
+  { suffix: "SpO2 Exertion (%)",      width: 17, align: "right",  getter: (d) => d.spo2Exertion },
+  { suffix: "Heart Rate (bpm)",       width: 16, align: "right",  getter: (d) => d.heartRate },
+  { suffix: "Medication Adherence",   width: 24, align: "left",   getter: (d) => d.medicationAdherence },
+  { suffix: "mMRC (0-4)",             width: 12, align: "center", getter: (d) => d.mmrc },
+  { suffix: "Symptoms Severity",      width: 28, align: "left",   getter: (d) => d.symptomsVas, wrapText: true },
+  { suffix: "Drug Side Effects",      width: 22, align: "left",   getter: (d) => d.sideEffects, wrapText: true },
+  { suffix: "K-BILD Score",           width: 16, align: "center", getter: (d) => d.kbild },
+  { suffix: "Asthma Control Score",   width: 24, align: "left",   getter: (d) => d.asthmaControl },
+  { suffix: "Sputum / Hemoptysis",    width: 28, align: "left",   getter: (d) => d.sputumHemoptysis, wrapText: true },
+  { suffix: "Disease Specific Data",  width: 32, align: "left",   getter: (d) => d.diseaseSpecific, wrapText: true },
+];
+
+export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "O2Plus Clinical Platform";
+  wb.created = new Date();
+  wb.modified = new Date();
+
+  // Determine maximum number of daily log entries across all patients
+  const maxLogsActual = bundle.records.reduce((max, r) => Math.max(max, r.dailyLogs?.length ?? 0), 0);
+  
+  // Excel hard maximum is 16,384 columns. 33 fixed columns + (maxLogs * 13)
+  const maxAllowedLogBlocks = Math.floor((16384 - FIXED_REGISTRY_COLUMNS.length) / DAILY_FIELD_TEMPLATES.length);
+  const maxLogBlocks = Math.min(maxLogsActual, maxAllowedLogBlocks);
+
+  // Single Flat Sheet for Patient Registry (1 Patient = 1 Row)
+  const ws = wb.addWorksheet("Patient Registry", {
+    properties: { defaultRowHeight: 22 },
+    views: [{ state: "frozen", ySplit: 1, xSplit: 5, activeCell: "F2" }],
+  });
+
+  // 1. Build dynamic columns array
+  const dynamicColumns: { header: string; key: string; width: number }[] = [];
+
+  // Add 33 Fixed columns
+  FIXED_REGISTRY_COLUMNS.forEach((col) => {
+    dynamicColumns.push({
+      header: col.header,
+      key: col.key as string,
+      width: col.width,
+    });
+  });
+
+  // Add dynamic horizontal log columns
+  for (let dayIdx = 0; dayIdx < maxLogBlocks; dayIdx++) {
+    const logNumber = dayIdx + 1;
+    DAILY_FIELD_TEMPLATES.forEach((tpl) => {
+      dynamicColumns.push({
+        header: `Log ${logNumber} - ${tpl.suffix}`,
+        key: `log_${logNumber}_${tpl.suffix.replace(/[^a-zA-Z0-9]/g, "_")}`,
+        width: tpl.width,
+      });
+    });
+  }
+
+  ws.columns = dynamicColumns.map((col) => ({
+    header: col.header,
+    key: col.key,
+    width: col.width,
+  }));
+
+  const totalCols = dynamicColumns.length;
+
+  // 2. Style Header Row
+  const headerRow = ws.getRow(1);
+  headerRow.height = 32;
+
+  for (let cIdx = 1; cIdx <= totalCols; cIdx++) {
+    const cell = headerRow.getCell(cIdx);
+    const isFixed = cIdx <= FIXED_REGISTRY_COLUMNS.length;
+    
+    // Compute day block index if it's a dynamic log column
+    let blockBg = "FF0F2B48"; // Default Navy for fixed columns
+    if (!isFixed) {
+      const dynamicColOffset = cIdx - FIXED_REGISTRY_COLUMNS.length - 1;
+      const dayBlockIndex = Math.floor(dynamicColOffset / DAILY_FIELD_TEMPLATES.length);
+      // Alternating deep clinical blue tones for consecutive day blocks
+      blockBg = dayBlockIndex % 2 === 0 ? "FF1A4971" : "FF1E6091";
+    }
+
     cell.font = {
       name: "Calibri",
       size: 11,
@@ -59,7 +147,7 @@ function applyMainHeaderStyles(row: ExcelJS.Row, columnCount: number) {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF0F2B48" }, // Navy
+      fgColor: { argb: blockBg },
     };
     cell.border = {
       top:    { style: "thin", color: { argb: "FF0A192F" } },
@@ -69,78 +157,40 @@ function applyMainHeaderStyles(row: ExcelJS.Row, columnCount: number) {
     };
     cell.alignment = {
       vertical: "middle",
-      horizontal: "left",
+      horizontal: "center",
       wrapText: false,
     };
   }
-  row.commit();
-}
+  headerRow.commit();
 
-function applySubSheetHeaderStyles(row: ExcelJS.Row, columnCount: number) {
-  row.height = 26;
-  for (let i = 1; i <= columnCount; i++) {
-    const cell = row.getCell(i);
-    cell.font = {
-      name: "Calibri",
-      size: 11,
-      bold: true,
-      color: { argb: "FFFFFFFF" },
-    };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF1E6091" }, // Azure Blue
-    };
-    cell.border = {
-      top:    { style: "thin", color: { argb: "FF1A4971" } },
-      left:   { style: "thin", color: { argb: "FF1A4971" } },
-      bottom: { style: "medium", color: { argb: "FF1A4971" } },
-      right:  { style: "thin", color: { argb: "FF1A4971" } },
-    };
-    cell.alignment = {
-      vertical: "middle",
-      horizontal: "left",
-      wrapText: false,
-    };
-  }
-  row.commit();
-}
-
-export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buffer> {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = "O2Plus Clinical Platform";
-  wb.created = new Date();
-  wb.modified = new Date();
-
-  // -- Sheet 1: Patient Registry (Single Flat Table for All Patients / Cohorts) -
-  const ws = wb.addWorksheet("Patient Registry", {
-    properties: { defaultRowHeight: 22 },
-    views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
-  });
-
-  ws.columns = REGISTRY_COLUMNS.map((col) => ({
-    header: col.header,
-    key: col.key,
-    width: col.width,
-  }));
-
-  // 1. Header Styling: Bright yellow background (#FFFF00), bold black text, Calibri 11
-  applyMainHeaderStyles(ws.getRow(1), REGISTRY_COLUMNS.length);
-
-  // 2. Enable AutoFilter across all 33 columns
+  // 3. Enable AutoFilter across all generated columns
   ws.autoFilter = {
     from: { row: 1, column: 1 },
-    to: { row: 1, column: REGISTRY_COLUMNS.length },
+    to: { row: 1, column: totalCols },
   };
 
-  // 3. Populate Data Rows (Exactly ONE row per patient)
+  // 4. Populate Data Rows (Exactly ONE row per patient)
   bundle.records.forEach((record, idx) => {
-    const row = ws.addRow(record);
-    row.height = 22;
+    // Build row data object containing fixed properties + dynamic log properties
+    const rowData: Record<string, unknown> = { ...record };
 
+    const patDailyLogs = record.dailyLogs ?? [];
+    for (let dayIdx = 0; dayIdx < maxLogBlocks; dayIdx++) {
+      const logNumber = dayIdx + 1;
+      const logEntry = patDailyLogs[dayIdx];
+
+      DAILY_FIELD_TEMPLATES.forEach((tpl) => {
+        const colKey = `log_${logNumber}_${tpl.suffix.replace(/[^a-zA-Z0-9]/g, "_")}`;
+        rowData[colKey] = logEntry ? tpl.getter(logEntry) : "—";
+      });
+    }
+
+    const row = ws.addRow(rowData);
+    row.height = 22;
     const isEven = idx % 2 === 1;
 
-    REGISTRY_COLUMNS.forEach((col, cIdx) => {
+    // Apply formatting to fixed columns
+    FIXED_REGISTRY_COLUMNS.forEach((col, cIdx) => {
       const cell = row.getCell(cIdx + 1);
       cell.font = {
         name: "Calibri",
@@ -163,12 +213,12 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFF8FAFC" }, // Very light row shading
+          fgColor: { argb: "FFF8FAFC" },
         };
       }
     });
 
-    // 4. Conditional Formatting for Risk Level (Column 28)
+    // Conditional Formatting for Risk Level (Column 28)
     const riskStyles = getRiskColorStyles(record.riskLevel);
     const riskCell = row.getCell(28);
     riskCell.fill = {
@@ -183,206 +233,44 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
       color: { argb: riskStyles.fontColor },
     };
 
+    // Apply formatting to dynamic daily log columns
+    let currentCellIndex = FIXED_REGISTRY_COLUMNS.length + 1;
+    for (let dayIdx = 0; dayIdx < maxLogBlocks; dayIdx++) {
+      const hasLog = dayIdx < patDailyLogs.length;
+
+      DAILY_FIELD_TEMPLATES.forEach((tpl) => {
+        const cell = row.getCell(currentCellIndex);
+        cell.font = {
+          name: "Calibri",
+          size: 10,
+          color: { argb: hasLog ? "FF1A2E35" : "FFA0AEC0" },
+        };
+        cell.border = {
+          top:    { style: "thin", color: { argb: "FFE2E8F0" } },
+          left:   { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right:  { style: "thin", color: { argb: "FFE2E8F0" } },
+        };
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: tpl.align,
+          wrapText: tpl.wrapText ?? false,
+        };
+
+        if (isEven) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF8FAFC" },
+          };
+        }
+
+        currentCellIndex++;
+      });
+    }
+
     row.commit();
   });
-
-  // -- MULTI-SHEET LOGIC FOR SINGLE PATIENT ONLY ------------------------------
-  if (bundle.scope === "single_patient") {
-    // Sheet 2: Daily Clinical Logs
-    if (bundle.singlePatientLogs && bundle.singlePatientLogs.length > 0) {
-      const logSheet = wb.addWorksheet("Daily Clinical Logs", {
-        properties: { defaultRowHeight: 20 },
-        views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
-      });
-
-      const LOG_COLS = [
-        { header: "Date",                   key: "date",                 width: 14, align: "center" },
-        { header: "SpO2 Rest (%)",          key: "spo2Rest",             width: 15, align: "right"  },
-        { header: "SpO2 Walk (%)",          key: "spo2Walk",             width: 15, align: "right"  },
-        { header: "mMRC Grade",             key: "mmrc",                 width: 12, align: "center" },
-        { header: "AQI Value",              key: "aqi",                  width: 12, align: "right"  },
-        { header: "VAS Symptoms",           key: "vasSymptoms",          width: 32, align: "left"   },
-        { header: "Medication Compliance",  key: "medicationCompliance", width: 28, align: "left"   },
-        { header: "Risk Score",             key: "riskScore",            width: 12, align: "center" },
-        { header: "Clinical Observations",  key: "clinicalNotes",        width: 36, align: "left"   },
-      ] as const;
-
-      logSheet.columns = LOG_COLS.map((c) => ({ header: c.header, key: c.key, width: c.width }));
-      applySubSheetHeaderStyles(logSheet.getRow(1), LOG_COLS.length);
-
-      logSheet.autoFilter = {
-        from: { row: 1, column: 1 },
-        to: { row: 1, column: LOG_COLS.length },
-      };
-
-      bundle.singlePatientLogs.forEach((l, lIdx) => {
-        const row = logSheet.addRow(l);
-        row.height = 20;
-        const isEven = lIdx % 2 === 1;
-
-        LOG_COLS.forEach((col, cIdx) => {
-          const cell = row.getCell(cIdx + 1);
-          cell.font = { name: "Calibri", size: 10, color: { argb: "FF1A2E35" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FFE2E8F0" } },
-            left: { style: "thin", color: { argb: "FFE2E8F0" } },
-            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-            right: { style: "thin", color: { argb: "FFE2E8F0" } },
-          };
-          cell.alignment = { vertical: "middle", horizontal: col.align as ExcelJS.Alignment["horizontal"] };
-          if (isEven) {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-          }
-        });
-        row.commit();
-      });
-    }
-
-    // Sheet 3: Alerts
-    if (bundle.singlePatientAlerts && bundle.singlePatientAlerts.length > 0) {
-      const alertSheet = wb.addWorksheet("Alerts", {
-        properties: { defaultRowHeight: 20 },
-        views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
-      });
-
-      const ALERT_COLS = [
-        { header: "Alert Date", key: "date", width: 16, align: "center" },
-        { header: "Alert Type", key: "alertType", width: 18, align: "left" },
-        { header: "Severity", key: "severity", width: 14, align: "center" },
-        { header: "Status", key: "status", width: 16, align: "center" },
-        { header: "Trigger Reason", key: "reason", width: 44, align: "left" },
-      ] as const;
-
-      alertSheet.columns = ALERT_COLS.map((c) => ({ header: c.header, key: c.key, width: c.width }));
-      applySubSheetHeaderStyles(alertSheet.getRow(1), ALERT_COLS.length);
-
-      alertSheet.autoFilter = {
-        from: { row: 1, column: 1 },
-        to: { row: 1, column: ALERT_COLS.length },
-      };
-
-      bundle.singlePatientAlerts.forEach((a, aIdx) => {
-        const row = alertSheet.addRow(a);
-        row.height = 20;
-        const isEven = aIdx % 2 === 1;
-
-        ALERT_COLS.forEach((col, cIdx) => {
-          const cell = row.getCell(cIdx + 1);
-          cell.font = { name: "Calibri", size: 10, color: { argb: "FF1A2E35" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FFE2E8F0" } },
-            left: { style: "thin", color: { argb: "FFE2E8F0" } },
-            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-            right: { style: "thin", color: { argb: "FFE2E8F0" } },
-          };
-          cell.alignment = { vertical: "middle", horizontal: col.align as ExcelJS.Alignment["horizontal"] };
-          if (isEven) {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-          }
-        });
-        row.commit();
-      });
-    }
-
-    // Sheet 4: Medications
-    if (bundle.singlePatientMeds && bundle.singlePatientMeds.length > 0) {
-      const medSheet = wb.addWorksheet("Medications", {
-        properties: { defaultRowHeight: 20 },
-        views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
-      });
-
-      const MED_COLS = [
-        { header: "Drug Name", key: "drugName", width: 26, align: "left" },
-        { header: "Route", key: "route", width: 14, align: "left" },
-        { header: "Dose", key: "dose", width: 14, align: "left" },
-        { header: "Frequency", key: "frequency", width: 14, align: "left" },
-        { header: "Start Date", key: "startDate", width: 14, align: "center" },
-        { header: "End Date", key: "endDate", width: 14, align: "center" },
-        { header: "Status", key: "status", width: 14, align: "center" },
-      ] as const;
-
-      medSheet.columns = MED_COLS.map((c) => ({ header: c.header, key: c.key, width: c.width }));
-      applySubSheetHeaderStyles(medSheet.getRow(1), MED_COLS.length);
-
-      medSheet.autoFilter = {
-        from: { row: 1, column: 1 },
-        to: { row: 1, column: MED_COLS.length },
-      };
-
-      bundle.singlePatientMeds.forEach((m, mIdx) => {
-        const row = medSheet.addRow(m);
-        row.height = 20;
-        const isEven = mIdx % 2 === 1;
-
-        MED_COLS.forEach((col, cIdx) => {
-          const cell = row.getCell(cIdx + 1);
-          cell.font = { name: "Calibri", size: 10, color: { argb: "FF1A2E35" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FFE2E8F0" } },
-            left: { style: "thin", color: { argb: "FFE2E8F0" } },
-            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-            right: { style: "thin", color: { argb: "FFE2E8F0" } },
-          };
-          cell.alignment = { vertical: "middle", horizontal: col.align as ExcelJS.Alignment["horizontal"] };
-          if (isEven) {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-          }
-        });
-        row.commit();
-      });
-    }
-
-    // Sheet 5: PFT History (Cleanly extracted without raw JSON)
-    if (bundle.singlePatientPfts && bundle.singlePatientPfts.length > 0) {
-      const pftSheet = wb.addWorksheet("PFT History", {
-        properties: { defaultRowHeight: 20 },
-        views: [{ state: "frozen", ySplit: 1, xSplit: 0, activeCell: "A2" }],
-      });
-
-      const PFT_COLS = [
-        { header: "Test Date", key: "testDate", width: 14, align: "center" },
-        { header: "FEV1/FVC (%)", key: "fev1FvcRatio", width: 15, align: "right" },
-        { header: "Observed FEV1 (L)", key: "observedFev", width: 16, align: "right" },
-        { header: "% Predicted FEV1", key: "pctPredictedFev1", width: 18, align: "right" },
-        { header: "Observed FVC (L)", key: "observedFvc", width: 16, align: "right" },
-        { header: "% Predicted FVC", key: "pctPredictedFvc", width: 18, align: "right" },
-        { header: "DLCO (%)", key: "dlco", width: 12, align: "right" },
-        { header: "6MWD (m)", key: "sixMwd", width: 12, align: "right" },
-        { header: "Baseline SpO2 (%)", key: "baselineSpo2", width: 18, align: "right" },
-        { header: "Baseline HR (bpm)", key: "baselineHr", width: 18, align: "right" },
-      ] as const;
-
-      pftSheet.columns = PFT_COLS.map((c) => ({ header: c.header, key: c.key, width: c.width }));
-      applySubSheetHeaderStyles(pftSheet.getRow(1), PFT_COLS.length);
-
-      pftSheet.autoFilter = {
-        from: { row: 1, column: 1 },
-        to: { row: 1, column: PFT_COLS.length },
-      };
-
-      bundle.singlePatientPfts.forEach((p, pIdx) => {
-        const row = pftSheet.addRow(p);
-        row.height = 20;
-        const isEven = pIdx % 2 === 1;
-
-        PFT_COLS.forEach((col, cIdx) => {
-          const cell = row.getCell(cIdx + 1);
-          cell.font = { name: "Calibri", size: 10, color: { argb: "FF1A2E35" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FFE2E8F0" } },
-            left: { style: "thin", color: { argb: "FFE2E8F0" } },
-            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-            right: { style: "thin", color: { argb: "FFE2E8F0" } },
-          };
-          cell.alignment = { vertical: "middle", horizontal: col.align as ExcelJS.Alignment["horizontal"] };
-          if (isEven) {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-          }
-        });
-        row.commit();
-      });
-    }
-  }
 
   const arrayBuffer = await wb.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);
