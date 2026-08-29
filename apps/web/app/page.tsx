@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { Pathway3DVisual } from "@/components/marketing/Pathway3DVisual";
+import { Hero3DScene } from "@/components/marketing/Hero3DScene";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -89,49 +90,7 @@ export default function Home() {
           </div>
 
           <div className={styles.heroRight}>
-            {/* Animated Pulmonary Oximetry & Triage Monitor Widget */}
-            <div className={styles.pulmonaryWidget}>
-              <div className={styles.widgetHeader}>
-                <div className={styles.widgetHeaderLeft}>
-                  <div className={styles.livePulseDot} />
-                  <span className={styles.widgetTitle}>SpO₂ &amp; Rhythm Monitor</span>
-                </div>
-                <span className={styles.widgetBadgeAlert}>DESATURATION ALERT</span>
-              </div>
-
-              {/* SpO2 Reading Block */}
-              <div className={styles.oximetryRow}>
-                <div className={styles.spo2Block}>
-                  <span className={styles.spo2Value}>89%</span>
-                  <span className={styles.spo2Label}>SpO₂ (Target 88-92%)</span>
-                </div>
-                <div className={styles.pulseBlock}>
-                  <span className={styles.pulseValue}>104</span>
-                  <span className={styles.pulseLabel}>BPM Pulse Rate</span>
-                </div>
-              </div>
-
-              {/* Animated Pulmonary Pulse Wave SVG */}
-              <div className={styles.waveContainer}>
-                <svg className={styles.waveSvg} viewBox="0 0 400 60" preserveAspectRatio="none">
-                  <path
-                    className={styles.wavePath}
-                    d="M 0,30 Q 20,30 30,30 T 50,30 L 60,10 L 70,50 L 80,5 L 90,45 L 100,30 L 140,30 Q 160,30 170,30 T 190,30 L 200,12 L 210,48 L 220,8 L 230,42 L 240,30 L 280,30 Q 300,30 310,30 T 330,30 L 340,10 L 350,50 L 360,5 L 370,45 L 380,30 L 400,30"
-                  />
-                </svg>
-              </div>
-
-              {/* Autonomous Triage Status Banner */}
-              <div className={styles.triageBanner}>
-                <div className={styles.triageBannerIcon}>
-                  <Zap size={16} />
-                </div>
-                <div className={styles.triageBannerText}>
-                  <strong>Autonomous Red-Flag Triage Engine</strong>
-                  <span>High Acuity Detected — Doctor Notified</span>
-                </div>
-              </div>
-            </div>
+            <Hero3DScene />
           </div>
         </div>
       </section>

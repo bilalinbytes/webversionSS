@@ -144,13 +144,13 @@
 .heroInner {
   position: relative;
   z-index: 1;
-  max-width: 1180px;
+  max-width: 1340px;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(3rem,8vh,6rem) clamp(1.25rem,4vw,3rem);
+  padding: clamp(2.5rem, 6vh, 4.5rem) clamp(1.25rem, 3.5vw, 3rem);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  grid-template-columns: minmax(380px, 460px) 1fr;
+  gap: 2.5rem;
   align-items: center;
 }
 .heroLeft {
