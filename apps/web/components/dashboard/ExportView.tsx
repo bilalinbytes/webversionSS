@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -448,7 +448,7 @@ export function ExportView({ onBack }: ExportViewProps) {
         <div>
           <h1 className={styles.title}>Export Patient Data</h1>
           <p className={styles.sub}>
-            Clinical Cohort Registry &amp; Dossiers - Standardized 33-Column .xlsx, CSV, and Clinical PDF
+            Clinical Cohort Registry &amp; Dossiers - Standard clinical registry .xlsx, CSV, and Clinical PDF
           </p>
         </div>
         <button type="button" className={styles.btnGhost} onClick={onBack}>
@@ -556,7 +556,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                     {scope === "All Patients" ? "Clinical Patient Registry" : `${scope} Cohort Trends`}
                   </p>
                   <p className={styles.infoText}>
-                    Generates <strong>ONE FLAT TABLE</strong> on the <strong>Patient Registry</strong> sheet with all <strong>33 clinical columns</strong> (1 row per patient). No separate multi-sections, no raw JSON.
+                    Generates <strong>ONE FLAT TABLE</strong> on the <strong>Patient Registry</strong> sheet with the <strong>standard clinical registry</strong> and longitudinal daily logs (1 row per patient). No separate multi-sections, no raw JSON.
                   </p>
                 </div>
               </div>
@@ -714,7 +714,7 @@ export function ExportView({ onBack }: ExportViewProps) {
                 <div>
                   <p className={styles.formatTitle}>Excel (.xlsx)</p>
                   <p className={styles.formatSub}>
-                    {scope === "Single Patient" ? "Available for Cohort exports" : "Standard 33-column clinical registry"}
+                    {scope === "Single Patient" ? "Available for Cohort exports" : "Standard clinical registry"}
                   </p>
                 </div>
               </button>
