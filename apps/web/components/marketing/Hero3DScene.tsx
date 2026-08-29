@@ -13,8 +13,8 @@ export function Hero3DScene() {
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    setRotateY((x / rect.width) * 16); // max 8 deg
-    setRotateX((-y / rect.height) * 12); // max 6 deg
+    setRotateY((x / rect.width) * 14); // max 7 deg
+    setRotateX((-y / rect.height) * 10); // max 5 deg
   };
 
   const handleMouseLeave = () => {
@@ -33,7 +33,7 @@ export function Hero3DScene() {
         minHeight: 520,
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "flex-end",
         perspective: "1200px",
         userSelect: "none",
       }}
@@ -49,17 +49,30 @@ export function Hero3DScene() {
           85% { opacity: 0.85; }
           100% { left: 105%; opacity: 0; }
         }
-        @keyframes heroPulseGlow {
-          0%, 100% { opacity: 0.55; transform: scale(1); }
-          50% { opacity: 0.95; transform: scale(1.02); }
+        @keyframes floatCard1 {
+          0%, 100% { transform: translateY(0) translateZ(30px); }
+          50% { transform: translateY(-7px) translateZ(30px); }
+        }
+        @keyframes floatCard2 {
+          0%, 100% { transform: translateY(0) translateZ(45px); }
+          50% { transform: translateY(-9px) translateZ(45px); }
+        }
+        @keyframes floatCard3 {
+          0%, 100% { transform: translateY(0) translateZ(25px); }
+          50% { transform: translateY(-6px) translateZ(25px); }
+        }
+        @keyframes liveDotBlink {
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+          50% { opacity: 0.4; box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
         }
       `}</style>
+
       {/* 3D Rotational Canvas Container */}
       <div
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 680,
+          maxWidth: 720,
           height: 520,
           transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
           transition: "transform 0.2s cubic-bezier(0.2, 0, 0, 1)",
@@ -68,7 +81,7 @@ export function Hero3DScene() {
       >
         {/* ─── BACKGROUND SVG: PEDESTAL, 3D LUNGS, LASER RIBBONS & PODIUM ─── */}
         <svg
-          viewBox="0 0 680 520"
+          viewBox="0 0 720 520"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{
@@ -137,44 +150,44 @@ export function Hero3DScene() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 1. AMBIENT BACKDROP LIGHT & NEON FLOOR RINGS */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          <ellipse cx="280" cy="390" rx="260" ry="80" fill="url(#ambientBackdrop)" />
+          <ellipse cx="230" cy="390" rx="230" ry="80" fill="url(#ambientBackdrop)" />
           
           {/* Outer Floor Radar Rings */}
-          <ellipse cx="280" cy="410" rx="240" ry="60" stroke="#0284c7" strokeWidth="1" strokeDasharray="8 6" opacity="0.35" />
-          <ellipse cx="280" cy="410" rx="200" ry="50" stroke="#38bdf8" strokeWidth="1.2" opacity="0.45" />
-          <ellipse cx="280" cy="410" rx="160" ry="40" stroke="#00f0ff" strokeWidth="1.5" opacity="0.6" filter="url(#heroGlowCyan)" />
+          <ellipse cx="230" cy="410" rx="220" ry="55" stroke="#0284c7" strokeWidth="1" strokeDasharray="8 6" opacity="0.35" />
+          <ellipse cx="230" cy="410" rx="180" ry="46" stroke="#38bdf8" strokeWidth="1.2" opacity="0.45" />
+          <ellipse cx="230" cy="410" rx="140" ry="36" stroke="#00f0ff" strokeWidth="1.5" opacity="0.6" filter="url(#heroGlowCyan)" />
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 2. MULTI-TIERED 3D METALLIC PODIUM / PEDESTAL */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* Bottom Base Tier */}
           <g filter="url(#heroDropShadow)">
-            <ellipse cx="280" cy="425" rx="130" ry="32" fill="#040e1b" />
-            <path d="M 150 425 C 150 442, 410 442, 410 425 L 410 440 C 410 457, 150 457, 150 440 Z" fill="#06192e" />
-            <ellipse cx="280" cy="420" rx="130" ry="30" fill="url(#pedestalTier1)" stroke="#38bdf8" strokeWidth="1.5" />
+            <ellipse cx="230" cy="425" rx="120" ry="30" fill="#040e1b" />
+            <path d="M 110 425 C 110 442, 350 442, 350 425 L 350 440 C 350 457, 110 457, 110 440 Z" fill="#06192e" />
+            <ellipse cx="230" cy="420" rx="120" ry="28" fill="url(#pedestalTier1)" stroke="#38bdf8" strokeWidth="1.5" />
           </g>
 
           {/* Middle Tier with Cyan LED Rim */}
           <g filter="url(#heroDropShadow)">
-            <path d="M 175 395 C 175 412, 385 412, 385 395 L 385 410 C 385 427, 175 427, 175 410 Z" fill="#0a223f" />
-            <ellipse cx="280" cy="395" rx="105" ry="24" fill="url(#pedestalTier2)" />
+            <path d="M 135 395 C 135 412, 325 412, 325 395 L 325 410 C 325 427, 135 427, 135 410 Z" fill="#0a223f" />
+            <ellipse cx="230" cy="395" rx="95" ry="22" fill="url(#pedestalTier2)" />
             {/* Glowing Neon Rim Ring */}
-            <ellipse cx="280" cy="395" rx="105" ry="24" stroke="#00f0ff" strokeWidth="3.5" fill="none" filter="url(#heroGlowCyan)" />
+            <ellipse cx="230" cy="395" rx="95" ry="22" stroke="#00f0ff" strokeWidth="3.5" fill="none" filter="url(#heroGlowCyan)" />
           </g>
 
           {/* Top Platform Disc */}
           <g filter="url(#heroDropShadow)">
-            <path d="M 195 375 C 195 388, 365 388, 365 375 L 365 385 C 365 398, 195 398, 195 385 Z" fill="#0f2e50" />
-            <ellipse cx="280" cy="375" rx="85" ry="19" fill="url(#pedestalTop)" stroke="#ffffff" strokeWidth="2" />
+            <path d="M 155 375 C 155 388, 305 388, 305 375 L 305 385 C 305 398, 155 398, 155 385 Z" fill="#0f2e50" />
+            <ellipse cx="230" cy="375" rx="75" ry="17" fill="url(#pedestalTop)" stroke="#ffffff" strokeWidth="2" />
             {/* Top Surface Glass Sheen */}
-            <ellipse cx="280" cy="373" rx="78" ry="16" fill="#f1f5f9" opacity="0.8" />
+            <ellipse cx="230" cy="373" rx="68" ry="14" fill="#f1f5f9" opacity="0.8" />
           </g>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 3. FIBER-OPTIC GLOWING ENERGY LASER RIBBONS (CONNECTING TO RIGHT HUD) */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <path
-            d="M 330 260 C 390 240, 430 280, 485 270"
+            d="M 285 260 C 345 240, 385 280, 440 270"
             stroke="#00f0ff"
             strokeWidth="5"
             strokeLinecap="round"
@@ -182,7 +195,7 @@ export function Hero3DScene() {
             filter="url(#heroGlowCyan)"
           />
           <path
-            d="M 330 285 C 395 270, 425 310, 485 295"
+            d="M 285 285 C 350 270, 380 310, 440 295"
             stroke="#00f0ff"
             strokeWidth="5"
             strokeLinecap="round"
@@ -190,7 +203,7 @@ export function Hero3DScene() {
             filter="url(#heroGlowCyan)"
           />
           <path
-            d="M 320 220 C 375 190, 435 220, 485 240"
+            d="M 275 220 C 330 190, 390 220, 440 240"
             stroke="#00f0ff"
             strokeWidth="5"
             strokeLinecap="round"
@@ -198,19 +211,19 @@ export function Hero3DScene() {
             filter="url(#heroGlowCyan)"
           />
 
-          <path d="M 330 260 C 390 240, 430 280, 485 270" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M 330 285 C 395 270, 425 310, 485 295" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M 320 220 C 375 190, 435 220, 485 240" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 285 260 C 345 240, 385 280, 440 270" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 285 285 C 350 270, 380 310, 440 295" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 275 220 C 330 190, 390 220, 440 240" stroke="url(#laserCyanStream)" strokeWidth="2.5" strokeLinecap="round" />
 
           {/* Sparkle Nodes */}
-          <circle cx="395" cy="250" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
-          <circle cx="440" cy="290" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
-          <circle cx="420" cy="205" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
+          <circle cx="345" cy="250" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
+          <circle cx="390" cy="290" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
+          <circle cx="370" cy="205" r="3" fill="#ffffff" filter="url(#heroGlowCyan)" />
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 4. 3D CRYSTAL ANATOMICAL HUMAN LUNGS (HERO CENTERPIECE) */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          <g transform="translate(205, 140)" filter="url(#heroDropShadow)">
+          <g transform="translate(155, 140)" filter="url(#heroDropShadow)">
             {/* Ambient Bioluminescent Back Aura */}
             <circle cx="75" cy="110" r="85" fill="#38bdf8" opacity="0.2" filter="url(#heroGlowCyan)" />
 
@@ -267,58 +280,60 @@ export function Hero3DScene() {
           </g>
         </svg>
 
-        {/* ─── 5. THREE FLOATING 3D GLASS TELEMETRY CARDS ─── */}
+        {/* ─── 5. THREE FLOATING 3D GLASS TELEMETRY CARDS (CLEAR & NON-OVERLAPPING) ─── */}
         {/* Card 1: SpO2 (Rest) 89% (Top Left) */}
         <div
           style={{
             position: "absolute",
             top: 75,
-            left: 120,
-            background: "rgba(255, 255, 255, 0.88)",
+            left: 20,
+            background: "rgba(255, 255, 255, 0.92)",
             backdropFilter: "blur(16px)",
             borderRadius: "1rem",
-            padding: "10px 16px",
-            border: "1px solid rgba(255, 255, 255, 0.9)",
-            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+            padding: "9px 15px",
+            border: "1px solid rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
             display: "flex",
             flexDirection: "column",
             gap: 2,
             transform: "translateZ(30px)",
-            animation: "floatWidget 4s ease-in-out infinite",
+            animation: "floatCard1 4s ease-in-out infinite",
+            zIndex: 6,
           }}
         >
-          <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>SpO₂ (Rest)</span>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>89%</span>
+          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>SpO₂ (Rest)</span>
+          <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>89%</span>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981" }} />
-            <span style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>Within Range</span>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+            <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>Within Range</span>
           </div>
         </div>
 
-        {/* Card 2: mMRC Score 1 (Top Right) */}
+        {/* Card 2: mMRC Score 1 (Top Center Above Lungs — Fully Clear of HUD) */}
         <div
           style={{
             position: "absolute",
-            top: 50,
-            left: 310,
-            background: "rgba(255, 255, 255, 0.88)",
+            top: 25,
+            left: 175,
+            background: "rgba(255, 255, 255, 0.92)",
             backdropFilter: "blur(16px)",
             borderRadius: "1rem",
-            padding: "10px 16px",
-            border: "1px solid rgba(255, 255, 255, 0.9)",
-            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+            padding: "9px 15px",
+            border: "1px solid rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
             display: "flex",
             flexDirection: "column",
             gap: 2,
             transform: "translateZ(45px)",
-            animation: "floatWidget 4.5s ease-in-out infinite 0.5s",
+            animation: "floatCard2 4.5s ease-in-out infinite 0.5s",
+            zIndex: 6,
           }}
         >
-          <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>mMRC Score</span>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>1</span>
+          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>mMRC Score</span>
+          <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>1</span>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981" }} />
-            <span style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>Mild</span>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+            <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>Mild</span>
           </div>
         </div>
 
@@ -326,41 +341,42 @@ export function Hero3DScene() {
         <div
           style={{
             position: "absolute",
-            top: 290,
-            left: 70,
-            background: "rgba(255, 255, 255, 0.88)",
+            top: 300,
+            left: 15,
+            background: "rgba(255, 255, 255, 0.92)",
             backdropFilter: "blur(16px)",
             borderRadius: "1rem",
-            padding: "10px 16px",
-            border: "1px solid rgba(255, 255, 255, 0.9)",
-            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+            padding: "9px 15px",
+            border: "1px solid rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 12px 28px rgba(15, 43, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
             display: "flex",
             flexDirection: "column",
             gap: 2,
             transform: "translateZ(25px)",
-            animation: "floatWidget 5s ease-in-out infinite 1s",
+            animation: "floatCard3 5s ease-in-out infinite 1s",
+            zIndex: 6,
           }}
         >
-          <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>AQI (Current)</span>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>68</span>
+          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>AQI (Current)</span>
+          <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0f2b48", lineHeight: 1 }}>68</span>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} />
-            <span style={{ fontSize: "0.72rem", color: "#f59e0b", fontWeight: 700 }}>Moderate</span>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b" }} />
+            <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 700 }}>Moderate</span>
           </div>
         </div>
 
-        {/* ─── 6. RIGHT MONITOR HUD WIDGET ─── */}
+        {/* ─── 6. RIGHT MONITOR HUD WIDGET (POSITIONED SAFELY ON RIGHT EDGE) ─── */}
         <div
           style={{
             position: "absolute",
             right: 0,
-            top: 95,
-            width: 290,
+            top: 75,
+            width: 295,
             background: "#ffffff",
             borderRadius: "1.25rem",
             padding: "16px 18px",
-            boxShadow: "0 20px 48px rgba(7, 22, 44, 0.16), 0 4px 12px rgba(7, 22, 44, 0.08)",
-            border: "1px solid rgba(19, 45, 54, 0.09)",
+            boxShadow: "0 24px 50px rgba(7, 22, 44, 0.2), 0 6px 16px rgba(7, 22, 44, 0.08)",
+            border: "1px solid rgba(19, 45, 54, 0.1)",
             display: "flex",
             flexDirection: "column",
             gap: 12,
@@ -377,9 +393,8 @@ export function Hero3DScene() {
                   height: 8,
                   borderRadius: "50%",
                   background: "#dc2626",
-                  boxShadow: "0 0 8px rgba(220, 38, 38, 0.7)",
                   display: "inline-block",
-                  animation: "liveBlink 1.4s infinite ease-in-out",
+                  animation: "liveDotBlink 1.4s infinite ease-in-out",
                 }}
               />
               <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0f2b48" }}>SpO₂ &amp; Rhythm Monitor</span>
@@ -529,8 +544,8 @@ export function Hero3DScene() {
         <div
           style={{
             position: "absolute",
-            bottom: 25,
-            right: 25,
+            bottom: 20,
+            right: 20,
             display: "flex",
             alignItems: "center",
             gap: 8,
