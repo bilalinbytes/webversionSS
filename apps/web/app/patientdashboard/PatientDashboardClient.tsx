@@ -54,6 +54,7 @@ function PatientDashboardPageInner() {
             <CommonPatientDashboard
               name={patient.name}
               diagnosis={diagnosis}
+              effectiveDashboard={patient.effective_dashboard}
               patientId={patient.id}
               spo2Today={homeData.spo2Today}
               mmrcToday={homeData.mmrcToday}

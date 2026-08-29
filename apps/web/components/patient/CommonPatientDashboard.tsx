@@ -2,10 +2,12 @@
 
 import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
+import { DiseaseHero3DVisual } from "./DiseaseHero3DVisual";
 
 export interface CommonDashboardProps {
   name: string;
   diagnosis: string | null;
+  effectiveDashboard?: string | null;
   patientId: string;
   spo2Today: number;
   mmrcToday: number;
@@ -84,6 +86,7 @@ const MMRC_LABELS = ["No breathlessness", "On hills/hurrying", "Slower than peer
 export function CommonPatientDashboard({
   name,
   diagnosis,
+  effectiveDashboard,
   spo2Today,
   mmrcToday,
   aqiToday,
@@ -238,6 +241,17 @@ export function CommonPatientDashboard({
           )}
         </div>
       </div>
+
+      {/* -- Dynamic 3D Disease Educational Hero Visual -- */}
+      <DiseaseHero3DVisual
+        diagnosis={diagnosis}
+        effectiveDashboard={effectiveDashboard}
+        hasTodayLog={hasTodayLog}
+        spo2Today={spo2Today}
+        mmrcToday={mmrcToday}
+        aqiToday={aqiToday}
+        onLogToday={onLogToday}
+      />
 
       {/* -- My Health Pathway (Care Journey Widget) -- */}
       <div className={dStyles.pathwayWidget}>
