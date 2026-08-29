@@ -230,9 +230,9 @@ export default function Home() {
       {/* ─── TESTIMONIAL (CLINICAL REVIEWS CAROUSEL) ─── */}
       <section id="testimonial" className={styles.testimonialSection}>
         <div className={styles.testimonialInner}>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <p className={styles.sectionEyebrow}>Clinical Reviews</p>
-            <h2 className={styles.sectionHeading} style={{ fontSize: "1.75rem" }}>
+          <div className={styles.testimonialHeader}>
+            <span className={styles.testimonialEyebrow}>Clinical Reviews</span>
+            <h2 className={styles.testimonialHeading}>
               Trusted by Leading Pulmonologists &amp; Hospitals
             </h2>
           </div>
