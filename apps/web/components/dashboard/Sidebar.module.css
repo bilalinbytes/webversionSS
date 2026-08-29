@@ -175,31 +175,44 @@
     right: 0;
     bottom: 0;
     width: 100%;
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    height: calc(58px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     border-right: none;
     border-top: 1px solid rgba(56, 189, 248, 0.18);
     flex-direction: row;
     box-shadow: 0 -8px 24px rgba(4, 16, 33, 0.5);
+    z-index: 60;
   }
 
   .nav {
     flex-direction: row;
     justify-content: space-around;
-    padding: 0 6px;
+    padding: 0 4px;
     align-items: center;
-    height: 56px;
+    height: 58px;
+    gap: 0;
   }
 
   .navItem {
     flex: 1;
     height: 100%;
-    padding: 6px 0;
+    min-height: 48px;
+    padding: 4px 2px;
+    touch-action: manipulation;
+  }
+
+  .iconWrap {
+    width: 22px;
+    height: 22px;
+  }
+
+  .navLabel {
+    font-size: 9.5px;
   }
 
   .navItemActive::before {
-    left: 20%;
-    right: 20%;
+    left: 15%;
+    right: 15%;
     top: 0;
     bottom: auto;
     width: auto;
@@ -209,5 +222,11 @@
 
   .sidebarFooter {
     display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .navLabel {
+    font-size: 8.5px;
   }
 }

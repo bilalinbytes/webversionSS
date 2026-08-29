@@ -664,12 +664,13 @@
 
 .signOutAction {
   width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.1);
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(185, 28, 28, 0.14) 100%);
   color: #fca5a5;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
@@ -678,11 +679,52 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  touch-action: manipulation;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
 
-.signOutAction:hover {
-  background: rgba(239, 68, 68, 0.22);
+.signOutAction:hover,
+.signOutAction:active {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+/* ── Mobile Backdrop & Close Utility ── */
+.dropdownBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 16, 33, 0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 75;
+  animation: backdropFade 160ms ease-out;
+}
+
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalCloseBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #cbd5e1;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 120ms ease;
+  flex-shrink: 0;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
 }
 
@@ -702,16 +744,64 @@
 
 @media (max-width: 768px) {
   .nav {
-    padding: 0 14px;
-    height: 56px;
+    padding: env(safe-area-inset-top, 0px) 14px 0;
+    height: calc(56px + env(safe-area-inset-top, 0px));
   }
+
   .tabs {
     display: none;
   }
+
   .brandSub {
     display: none;
   }
+
   .doctorRole {
     display: none;
+  }
+
+  .doctorPill {
+    padding: 3px 8px 3px 4px;
+    height: 36px;
+  }
+
+  .doctorName {
+    font-size: 11.5px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profileModal {
+    position: fixed;
+    top: calc(56px + env(safe-area-inset-top, 0px) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: 440px;
+    margin: 0 auto;
+    max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 90;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.3);
+  }
+
+  .dropdownPanel {
+    position: fixed;
+    top: calc(56px + env(safe-area-inset-top, 0px) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: 440px;
+    margin: 0 auto;
+    max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 90;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.3);
   }
 }

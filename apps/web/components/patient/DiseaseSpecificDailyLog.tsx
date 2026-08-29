@@ -241,7 +241,17 @@ function YesNoToggle({
       <button
         type="button"
         className={dStyles.yesNoBtn}
-        style={value === true ? { background: "var(--med-blue-600, #1e6091)", borderColor: "var(--med-blue-600, #1e6091)", color: "white" } : {}}
+        style={
+          value === true
+            ? {
+                background: "linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)",
+                borderColor: "#38bdf8",
+                color: "#0369a1",
+                fontWeight: 700,
+                boxShadow: "0 2px 6px rgba(56, 189, 248, 0.18)",
+              }
+            : {}
+        }
         onClick={() => onChange(true)}
       >
         <span>Yes</span>
@@ -250,7 +260,17 @@ function YesNoToggle({
       <button
         type="button"
         className={dStyles.yesNoBtn}
-        style={value === false ? { background: "#e24b4a", borderColor: "#e24b4a", color: "white" } : {}}
+        style={
+          value === false
+            ? {
+                background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                borderColor: "#94a3b8",
+                color: "#334155",
+                fontWeight: 700,
+                boxShadow: "0 2px 6px rgba(148, 163, 184, 0.15)",
+              }
+            : {}
+        }
         onClick={() => onChange(false)}
       >
         <span>No</span>

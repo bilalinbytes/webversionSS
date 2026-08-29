@@ -47,6 +47,13 @@
   background: #f3f8f8;
 }
 
+.analyticsWrapper {
+  padding: 18px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 @media (max-width: 760px) {
   .body {
     flex-direction: column;
@@ -56,6 +63,10 @@
   .content {
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     overflow: visible;
+  }
+
+  .analyticsWrapper {
+    padding: 12px 14px calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
   .viewBackBar {

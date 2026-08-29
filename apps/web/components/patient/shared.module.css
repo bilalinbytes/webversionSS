@@ -44,10 +44,11 @@
 }
 
 .vasBtnActive {
-  background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
-  border-color: #b45309 !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
 .vasHints {

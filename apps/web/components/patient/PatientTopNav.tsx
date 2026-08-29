@@ -20,6 +20,7 @@ import {
   Phone,
   Stethoscope,
   Building2,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
@@ -179,18 +180,23 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or mobile touch
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+    function handleClickOutside(e: Event) {
+      const target = e.target as Node;
+      if (notifRef.current && !notifRef.current.contains(target)) {
         setNotificationsOpen(false);
       }
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+      if (profileRef.current && !profileRef.current.contains(target)) {
         setProfileOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -505,9 +511,19 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                   <Bell size={16} className={styles.headerIcon} />
                   <h3 className={styles.notifHeading}>Care Notifications</h3>
                 </div>
-                {notificationCount > 0 && (
-                  <span className={styles.notifUnreadPill}>{notificationCount} New</span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {notificationCount > 0 && (
+                    <span className={styles.notifUnreadPill}>{notificationCount} New</span>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.modalCloseBtn}
+                    onClick={() => setNotificationsOpen(false)}
+                    aria-label="Close notifications"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
 
               <div className={styles.notifFeed}>
@@ -659,8 +675,16 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
               <div className={styles.profileHeader}>
                 <div className={styles.profileAvatarLarge}>{initials}</div>
                 <div className={styles.profileHeaderInfo}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
                     <h4 className={styles.profileFullName}>{patientName}</h4>
+                    <button
+                      type="button"
+                      className={styles.modalCloseBtn}
+                      onClick={() => setProfileOpen(false)}
+                      aria-label="Close profile modal"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
                   <div className={styles.profileBadgeRow}>
                     {profileMeta.age && <span className={styles.profileTag}>{profileMeta.age} yrs</span>}
@@ -732,13 +756,25 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                 className={styles.signOutAction}
                 onClick={handleLogout}
               >
-                <LogOut size={15} />
+                <LogOut size={16} />
                 <span>Sign Out · साइन आउट</span>
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile Modal Backdrop Overlay */}
+      {(notificationsOpen || profileOpen) && (
+        <div
+          className={styles.dropdownBackdrop}
+          onClick={() => {
+            setNotificationsOpen(false);
+            setProfileOpen(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
     </nav>
   );
 }

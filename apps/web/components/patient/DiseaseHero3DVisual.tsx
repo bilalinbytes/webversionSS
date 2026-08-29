@@ -304,12 +304,12 @@ export function DiseaseHero3DVisual({
     },
     post_icu: {
       theme: {
-        bg: "linear-gradient(135deg, #1e1308 0%, #3d240d 50%, #140d05 100%)",
-        accent: "#fbbf24",
-        glow: "rgba(251, 191, 36, 0.25)",
-        badgeBg: "rgba(251, 191, 36, 0.15)",
-        badgeBorder: "rgba(251, 191, 36, 0.35)",
-        badgeText: "#fbbf24",
+        bg: "linear-gradient(135deg, #092e3b 0%, #114b5f 50%, #0d3846 100%)",
+        accent: "#2dd4bf",
+        glow: "rgba(45, 212, 191, 0.25)",
+        badgeBg: "rgba(45, 212, 191, 0.15)",
+        badgeBorder: "rgba(45, 212, 191, 0.35)",
+        badgeText: "#2dd4bf",
         cardBg: "rgba(255, 255, 255, 0.95)",
       },
       headline: "Rebuild Strength. Restore Breathing.",
@@ -759,25 +759,25 @@ export function DiseaseHero3DVisual({
                   <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                 </filter>
                 <radialGradient id="postIcuLungFill" cx="50%" cy="40%" r="60%">
-                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.85" />
-                  <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#b45309" stopOpacity="0.15" />
+                  <stop offset="0%" stopColor="#ccfbf1" stopOpacity="0.85" />
+                  <stop offset="50%" stopColor="#2dd4bf" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#0f766e" stopOpacity="0.15" />
                 </radialGradient>
               </defs>
 
-              <circle cx="160" cy="125" r="95" fill="#d97706" opacity="0.1" filter="url(#postIcuGlow)" />
+              <circle cx="160" cy="125" r="95" fill="#0d9488" opacity="0.08" filter="url(#postIcuGlow)" />
 
               {/* Recovering Lungs with Vitality Rings */}
               <g style={{ animation: "subtleBreathingLoop 4s ease-in-out infinite", transformOrigin: "160px 125px" }}>
-                <path d="M 148 55 C 132 55, 110 75, 102 105 C 94 135, 98 170, 118 185 C 132 195, 145 185, 152 162 C 158 145, 158 95, 154 70 Z" fill="url(#postIcuLungFill)" stroke="#fbbf24" strokeWidth="2" filter="url(#postIcuGlow)" />
-                <path d="M 172 55 C 188 55, 210 75, 218 105 C 226 135, 222 170, 202 185 C 188 195, 175 185, 168 162 C 162 145, 162 95, 166 70 Z" fill="url(#postIcuLungFill)" stroke="#fbbf24" strokeWidth="2" filter="url(#postIcuGlow)" />
-                <path d="M 156 25 L 164 25 L 164 65 L 156 65 Z" fill="#ffffff" stroke="#fbbf24" strokeWidth="1.5" />
+                <path d="M 148 55 C 132 55, 110 75, 102 105 C 94 135, 98 170, 118 185 C 132 195, 145 185, 152 162 C 158 145, 158 95, 154 70 Z" fill="url(#postIcuLungFill)" stroke="#2dd4bf" strokeWidth="2" filter="url(#postIcuGlow)" />
+                <path d="M 172 55 C 188 55, 210 75, 218 105 C 226 135, 222 170, 202 185 C 188 195, 175 185, 168 162 C 162 145, 162 95, 166 70 Z" fill="url(#postIcuLungFill)" stroke="#2dd4bf" strokeWidth="2" filter="url(#postIcuGlow)" />
+                <path d="M 156 25 L 164 25 L 164 65 L 156 65 Z" fill="#ffffff" stroke="#2dd4bf" strokeWidth="1.5" />
               </g>
 
               {/* Rehabilitation Milestone Progress Ring */}
               <g transform="translate(60, 205)">
-                <rect x="0" y="0" width="200" height="30" rx="15" fill="#1e1308" stroke="#fbbf24" strokeWidth="1.2" />
-                <text x="100" y="20" fill="#fde68a" fontSize="11" fontWeight="700" textAnchor="middle">Rehab Step 2: Active Mobility</text>
+                <rect x="0" y="0" width="200" height="30" rx="15" fill="#092e3b" stroke="#2dd4bf" strokeWidth="1.2" />
+                <text x="100" y="20" fill="#99f6e4" fontSize="11" fontWeight="700" textAnchor="middle">Rehab Step 2: Active Mobility</text>
               </g>
             </svg>
           )}

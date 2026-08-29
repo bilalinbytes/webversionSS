@@ -84,7 +84,11 @@ function PatientDashboardPageInner() {
           )}
           {view === "log" && <LogTodayView onLogSubmitted={() => setHomeRefreshKey((key) => key + 1)} />}
           {view === "history" && <HistoryView patientId={patient.id} />}
-          {view === "analytics" && <PatientAnalyticsView patientId={patient.id} />}
+          {view === "analytics" && (
+            <div className={styles.analyticsWrapper}>
+              <PatientAnalyticsView patientId={patient.id} />
+            </div>
+          )}
           {view === "appointments" && <BookAppointmentView />}
         </main>
       </div>

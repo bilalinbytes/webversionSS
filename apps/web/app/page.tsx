@@ -18,6 +18,7 @@ import {
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { Pathway3DVisual } from "@/components/marketing/Pathway3DVisual";
 import { Hero3DScene } from "@/components/marketing/Hero3DScene";
+import { TestimonialCarousel } from "@/components/marketing/TestimonialCarousel";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -171,12 +172,10 @@ export default function Home() {
       {/* ─── ABOUT (ADVERTISING & CLINICAL VALUE) ─── */}
       <section id="about" className={styles.about}>
         <div className={styles.aboutInner}>
-
-          <div className={styles.aboutTop}>
-            <p className={styles.sectionEyebrow}>Clinical Excellence</p>
+          <div className={styles.aboutHeader}>
+            <p className={styles.sectionEyebrow}>Platform Capabilities</p>
             <h2 className={styles.sectionHeading}>
-              Continuous Protection.<br />
-              <span className={styles.blueHighlight}>Zero Exacerbation Blind Spots.</span>
+              Engineered for Modern Pulmonology Teams
             </h2>
             <p className={styles.sectionBody}>
               Traditional pulmonology relies on sporadic clinic visits every 3 to 6 months.
@@ -199,9 +198,9 @@ export default function Home() {
               <div className={styles.aboutCardIconWrap}>
                 <ShieldCheck size={22} />
               </div>
-              <h3 className={styles.aboutCardTitle}>GINA &amp; GOLD Protocol Engine</h3>
+              <h3 className={styles.aboutCardTitle}>International Guideline-Based Protocol Engine</h3>
               <p className={styles.aboutCardBody}>
-                Built strictly around global guidelines (GINA, GOLD, ATS/ERS). Risk levels are computed autonomously without adding doctor overhead.
+                Built strictly around international clinical guidelines and global respiratory care standards. Risk levels are computed autonomously without adding doctor overhead.
               </p>
             </div>
 
@@ -220,7 +219,7 @@ export default function Home() {
           <div className={styles.conditionsStrip}>
             <p className={styles.conditionsLabel}>Supported Clinical Tracks</p>
             <div className={styles.conditionsTags}>
-              {["Asthma Control (GINA)", "COPD Management (GOLD)", "ILD & Fibrosis (ATS/ERS)", "Bronchiectasis Surveillance", "Post-ICU Rehabilitation"].map((c, i) => (
+              {["Asthma Control Guidelines", "COPD Management Guidelines", "ILD & Fibrosis Protocol", "Bronchiectasis Surveillance", "Post-ICU Rehabilitation"].map((c, i) => (
                 <span key={i} className={styles.conditionTag}>{c}</span>
               ))}
             </div>
@@ -228,32 +227,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── TESTIMONIAL (DR. IRFAN SHEIKH) ─── */}
+      {/* ─── TESTIMONIAL (CLINICAL REVIEWS CAROUSEL) ─── */}
       <section id="testimonial" className={styles.testimonialSection}>
         <div className={styles.testimonialInner}>
-          <div className={styles.testimonialCard}>
-            <Quote size={36} className={styles.quoteIcon} />
-            <p className={styles.testimonialQuote}>
-              &ldquo;O2Plus has fundamentally changed how we monitor high-risk chronic respiratory patients. The ability to detect desaturation events and symptom flares between clinic visits allows us to intervene days before acute hospital admissions.&rdquo;
-            </p>
-            <div className={styles.doctorBioRow}>
-              <div className={styles.doctorAvatarCircle}>
-                <span>IS</span>
-              </div>
-              <div className={styles.doctorDetails}>
-                <div className={styles.doctorName}>
-                  Dr. Irfan Sheikh
-                  <Award size={16} className={styles.verifiedIcon} />
-                </div>
-                <div className={styles.doctorRole}>
-                  Faculty &amp; Specialist in Pulmonary, Critical Care &amp; Sleep Medicine
-                </div>
-                <div className={styles.doctorInstitution}>
-                  AIIMS New Delhi
-                </div>
-              </div>
-            </div>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <p className={styles.sectionEyebrow}>Clinical Reviews</p>
+            <h2 className={styles.sectionHeading} style={{ fontSize: "1.75rem" }}>
+              Trusted by Leading Pulmonologists &amp; Hospitals
+            </h2>
           </div>
+
+          <TestimonialCarousel />
         </div>
       </section>
 
@@ -287,7 +271,7 @@ export default function Home() {
               <div className={styles.contactForm}>
                 <div className={styles.contactField}>
                   <label className={styles.contactLabel}>Full Name</label>
-                  <div className={styles.contactInputMock}>Dr. Irfan Sheikh</div>
+                  <div className={styles.contactInputMock}>Dr. Mallikarjun</div>
                 </div>
                 <div className={styles.contactField}>
                   <label className={styles.contactLabel}>Work Email</label>

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Building2,
   Stethoscope,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
@@ -115,18 +116,23 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
     if (response.ok) await loadAppointments();
   }
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or mobile touch
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+    function handleClickOutside(e: Event) {
+      const target = e.target as Node;
+      if (notifRef.current && !notifRef.current.contains(target)) {
         setAppointmentOpen(false);
       }
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+      if (profileRef.current && !profileRef.current.contains(target)) {
         setProfileOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -287,9 +293,19 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
                   <CalendarClock size={16} className={styles.headerIcon} />
                   <h3 className={styles.panelTitle}>Appointment Requests</h3>
                 </div>
-                {appointmentNotifications.length > 0 && (
-                  <span className={styles.panelBadge}>{appointmentNotifications.length} Action Needed</span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {appointmentNotifications.length > 0 && (
+                    <span className={styles.panelBadge}>{appointmentNotifications.length} Action Needed</span>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.modalCloseBtn}
+                    onClick={() => setAppointmentOpen(false)}
+                    aria-label="Close appointments panel"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
 
               {appointmentNotifications.length === 0 ? (
@@ -426,11 +442,21 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
               <div className={styles.profileHeader}>
                 <div className={styles.profileAvatarLarge}>{initials}</div>
                 <div className={styles.profileHeaderInfo}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <h4 className={styles.profileFullName}>{doctorName}</h4>
-                    <span title="Verified Clinical Practitioner" style={{ display: "inline-flex" }}>
-                      <ShieldCheck size={16} className={styles.verifiedIcon} />
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <h4 className={styles.profileFullName}>{doctorName}</h4>
+                      <span title="Verified Clinical Practitioner" style={{ display: "inline-flex" }}>
+                        <ShieldCheck size={16} className={styles.verifiedIcon} />
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.modalCloseBtn}
+                      onClick={() => setProfileOpen(false)}
+                      aria-label="Close doctor profile"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
                   <p className={styles.profileSpecialty}>
                     <Stethoscope size={12} />
@@ -461,13 +487,25 @@ export function TopNav({ activeView, onViewChange }: TopNavProps) {
                 className={styles.signOutAction}
                 onClick={handleLogout}
               >
-                <LogOut size={15} />
+                <LogOut size={16} />
                 <span>Sign Out of Workstation</span>
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile Modal Backdrop Overlay */}
+      {(appointmentOpen || profileOpen) && (
+        <div
+          className={styles.dropdownBackdrop}
+          onClick={() => {
+            setAppointmentOpen(false);
+            setProfileOpen(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
     </nav>
   );
 }

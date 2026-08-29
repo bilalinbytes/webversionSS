@@ -1,0 +1,198 @@
+.carouselContainer {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  overflow: hidden;
+  padding: 10px 0 24px;
+}
+
+.viewport {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.track {
+  display: flex;
+  transition: transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 20px;
+  padding: 40px 48px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px rgba(4, 16, 33, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.quoteIcon {
+  color: #38bdf8;
+  opacity: 0.85;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.quote {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #f1f5f9;
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  margin: 0 0 28px;
+}
+
+.doctorBioRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.doctorAvatarCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+  flex-shrink: 0;
+}
+
+.doctorDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.doctorName {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.verifiedIcon {
+  color: #38bdf8;
+}
+
+.doctorRole {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.doctorInstitution {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #38bdf8;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+/* ── Carousel Controls ── */
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.arrowBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 160ms ease;
+  touch-action: manipulation;
+}
+
+.arrowBtn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  cursor: pointer;
+  transition: all 240ms ease;
+  padding: 0;
+}
+
+.dotActive {
+  width: 28px;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+
+  .quote {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .doctorAvatarCircle {
+    width: 44px;
+    height: 44px;
+    font-size: 0.95rem;
+  }
+
+  .doctorName {
+    font-size: 0.98rem;
+  }
+
+  .doctorRole {
+    font-size: 0.78rem;
+  }
+
+  .doctorInstitution {
+    font-size: 0.82rem;
+  }
+}

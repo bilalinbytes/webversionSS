@@ -50,8 +50,10 @@ export function VASPicker({ value, onChange, label = "Discomfort (0–10)", labe
           <button key={i} type="button"
             className={`${styles.vasBtn} ${value === i ? styles.vasBtnActive : ""}`}
             style={value === i ? {
-              background: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
-              borderColor: i >= 8 ? "#e24b4a" : i >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)",
+              background: i >= 8 ? "#fef2f2" : i >= 5 ? "#fffbeb" : "#e0f2fe",
+              borderColor: i >= 8 ? "#f87171" : i >= 5 ? "#f59e0b" : "#38bdf8",
+              color: i >= 8 ? "#991b1b" : i >= 5 ? "#92400e" : "#0369a1",
+              fontWeight: 800,
             } : {}}
             onClick={() => onChange(i)}
           >{i}</button>

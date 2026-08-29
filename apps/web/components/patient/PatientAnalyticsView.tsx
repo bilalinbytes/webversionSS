@@ -175,37 +175,49 @@ const COLORS = {
   indigo: "#4f46e5",   // Symptoms
 };
 
-const SYMPTOM_COLOR_MAP: Record<string, { color: string; bg: string; border: string; activeBg: string }> = {
-  [MMRC_SYMPTOM_KEY]:       { color: "#dc2626", bg: "#fef2f2", border: "#fca5a5", activeBg: "#dc2626" }, // mMRC (Red)
-  breathlessness:           { color: "#e11d48", bg: "#fff1f2", border: "#fecdd3", activeBg: "#e11d48" }, // Rose
-  cough:                    { color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", activeBg: "#ea580c" }, // Orange
-  cough_frequency:          { color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", activeBg: "#ea580c" },
-  expectoration:            { color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", activeBg: "#059669" }, // Emerald
-  sputum_volume:            { color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4", activeBg: "#0d9488" }, // Teal
-  sputum_clearance:         { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" }, // Sky
-  ease_of_clearance:        { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" },
-  ease_of_sputum_clearance: { color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", activeBg: "#0284c7" },
-  chest_pain:               { color: "#db2777", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#db2777" }, // Pink
-  chestPain:                { color: "#db2777", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#db2777" },
-  chest_heaviness:          { color: "#be185d", bg: "#fdf2f8", border: "#fbcfe8", activeBg: "#be185d" },
-  haemoptysis:              { color: "#991b1b", bg: "#fef2f2", border: "#f87171", activeBg: "#991b1b" }, // Dark Red
-  hemoptysis:               { color: "#991b1b", bg: "#fef2f2", border: "#f87171", activeBg: "#991b1b" },
-  fever:                    { color: "#c026d3", bg: "#fdf4ff", border: "#f5d0fe", activeBg: "#c026d3" }, // Fuchsia
-  cold_symptoms:            { color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", activeBg: "#0891b2" }, // Cyan
-  pedal_edema:              { color: "#4f46e5", bg: "#eef2ff", border: "#c7d2fe", activeBg: "#4f46e5" }, // Indigo
-  stridor:                  { color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", activeBg: "#7c3aed" }, // Purple
-  difficulty_lying_down:    { color: "#9333ea", bg: "#faf5ff", border: "#e9d5ff", activeBg: "#9333ea" }, // Violet
-  difficulty_swallowing:    { color: "#a855f7", bg: "#faf5ff", border: "#e9d5ff", activeBg: "#a855f7" },
-  excessive_daytime_sleep:  { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" }, // Slate
-  sleep_quality:            { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" },
-  sleep_disturbed:          { color: "#475569", bg: "#f8fafc", border: "#cbd5e1", activeBg: "#475569" },
-  energy_level:             { color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", activeBg: "#16a34a" }, // Green
-  anxiety:                  { color: "#d97706", bg: "#fffbeb", border: "#fde68a", activeBg: "#d97706" }, // Amber
-  covid:                    { color: "#ef4444", bg: "#fef2f2", border: "#fca5a5", activeBg: "#ef4444" },
+const SYMPTOM_COLOR_MAP: Record<
+  string,
+  { color: string; bg: string; border: string; activeBg: string; activeBorder: string; activeColor: string }
+> = {
+  [MMRC_SYMPTOM_KEY]:       { color: "#b91c1c", bg: "#fef2f2", border: "#fecaca", activeBg: "#fee2e2", activeBorder: "#ef4444", activeColor: "#991b1b" }, // mMRC (Soft Red)
+  breathlessness:           { color: "#be123c", bg: "#fff1f2", border: "#fecdd3", activeBg: "#ffe4e6", activeBorder: "#f43f5e", activeColor: "#9f1239" }, // Rose
+  cough:                    { color: "#c2410c", bg: "#fff7ed", border: "#ffedd5", activeBg: "#ffedd5", activeBorder: "#f97316", activeColor: "#9a3412" }, // Orange
+  cough_frequency:          { color: "#c2410c", bg: "#fff7ed", border: "#ffedd5", activeBg: "#ffedd5", activeBorder: "#f97316", activeColor: "#9a3412" },
+  expectoration:            { color: "#047857", bg: "#ecfdf5", border: "#d1fae5", activeBg: "#d1fae5", activeBorder: "#10b981", activeColor: "#065f46" }, // Emerald
+  sputum_volume:            { color: "#0f766e", bg: "#f0fdfa", border: "#ccfbf1", activeBg: "#ccfbf1", activeBorder: "#14b8a6", activeColor: "#115e59" }, // Teal
+  sputum_clearance:         { color: "#0369a1", bg: "#f0f9ff", border: "#e0f2fe", activeBg: "#e0f2fe", activeBorder: "#0ea5e9", activeColor: "#075985" }, // Sky
+  ease_of_clearance:        { color: "#0369a1", bg: "#f0f9ff", border: "#e0f2fe", activeBg: "#e0f2fe", activeBorder: "#0ea5e9", activeColor: "#075985" },
+  ease_of_sputum_clearance: { color: "#0369a1", bg: "#f0f9ff", border: "#e0f2fe", activeBg: "#e0f2fe", activeBorder: "#0ea5e9", activeColor: "#075985" },
+  chest_pain:               { color: "#be185d", bg: "#fdf2f8", border: "#fce7f3", activeBg: "#fce7f3", activeBorder: "#ec4899", activeColor: "#9d174d" }, // Pink
+  chestPain:                { color: "#be185d", bg: "#fdf2f8", border: "#fce7f3", activeBg: "#fce7f3", activeBorder: "#ec4899", activeColor: "#9d174d" },
+  chest_heaviness:          { color: "#a21caf", bg: "#fdf4ff", border: "#fae8ff", activeBg: "#fae8ff", activeBorder: "#d946ef", activeColor: "#86198f" },
+  haemoptysis:              { color: "#991b1b", bg: "#fef2f2", border: "#fee2e2", activeBg: "#fee2e2", activeBorder: "#f87171", activeColor: "#7f1d1d" }, // Dark Red
+  hemoptysis:               { color: "#991b1b", bg: "#fef2f2", border: "#fee2e2", activeBg: "#fee2e2", activeBorder: "#f87171", activeColor: "#7f1d1d" },
+  fever:                    { color: "#a21caf", bg: "#fdf4ff", border: "#f5d0fe", activeBg: "#fae8ff", activeBorder: "#d946ef", activeColor: "#86198f" }, // Fuchsia
+  cold_symptoms:            { color: "#0e7490", bg: "#ecfeff", border: "#cffafe", activeBg: "#cffafe", activeBorder: "#06b6d4", activeColor: "#155e75" }, // Cyan
+  pedal_edema:              { color: "#4338ca", bg: "#eef2ff", border: "#e0e7ff", activeBg: "#e0e7ff", activeBorder: "#6366f1", activeColor: "#3730a3" }, // Indigo
+  stridor:                  { color: "#6d28d9", bg: "#f5f3ff", border: "#ede9fe", activeBg: "#ede9fe", activeBorder: "#8b5cf6", activeColor: "#5b21b6" }, // Purple
+  difficulty_lying_down:    { color: "#7e22ce", bg: "#faf5ff", border: "#f3e8ff", activeBg: "#f3e8ff", activeBorder: "#a855f7", activeColor: "#6b21a8" }, // Violet
+  difficulty_swallowing:    { color: "#7e22ce", bg: "#faf5ff", border: "#f3e8ff", activeBg: "#f3e8ff", activeBorder: "#a855f7", activeColor: "#6b21a8" },
+  excessive_daytime_sleep:  { color: "#334155", bg: "#f8fafc", border: "#e2e8f0", activeBg: "#f1f5f9", activeBorder: "#94a3b8", activeColor: "#1e293b" }, // Slate
+  sleep_quality:            { color: "#334155", bg: "#f8fafc", border: "#e2e8f0", activeBg: "#f1f5f9", activeBorder: "#94a3b8", activeColor: "#1e293b" },
+  sleep_disturbed:          { color: "#334155", bg: "#f8fafc", border: "#e2e8f0", activeBg: "#f1f5f9", activeBorder: "#94a3b8", activeColor: "#1e293b" },
+  energy_level:             { color: "#15803d", bg: "#f0fdf4", border: "#dcfce7", activeBg: "#dcfce7", activeBorder: "#22c55e", activeColor: "#166534" }, // Green
+  anxiety:                  { color: "#b45309", bg: "#fffbeb", border: "#fef3c7", activeBg: "#fef3c7", activeBorder: "#f59e0b", activeColor: "#92400e" }, // Amber
+  covid:                    { color: "#b91c1c", bg: "#fef2f2", border: "#fecaca", activeBg: "#fee2e2", activeBorder: "#ef4444", activeColor: "#991b1b" },
 };
 
 function getSymptomColor(key: string) {
-  return SYMPTOM_COLOR_MAP[key] ?? { color: "#4f46e5", bg: "#eef2ff", border: "#c7d2fe", activeBg: "#4f46e5" };
+  return (
+    SYMPTOM_COLOR_MAP[key] ?? {
+      color: "#4338ca",
+      bg: "#eef2ff",
+      border: "#e0e7ff",
+      activeBg: "#e0e7ff",
+      activeBorder: "#6366f1",
+      activeColor: "#3730a3",
+    }
+  );
 }
 
 const ASTHMA_CONTROL_LEVELS: Record<string, { value: number; label: string }> = {
@@ -1400,16 +1412,16 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 6,
-                            padding: "5px 11px",
+                            padding: "5px 12px",
                             borderRadius: 999,
-                            border: `1.5px solid ${isSelected ? sc.color : sc.border}`,
+                            border: `1.5px solid ${isSelected ? sc.activeBorder : sc.border}`,
                             background: isSelected ? sc.activeBg : sc.bg,
-                            color: isSelected ? "#ffffff" : sc.color,
+                            color: isSelected ? sc.activeColor : sc.color,
                             fontSize: 11.5,
-                            fontWeight: 700,
+                            fontWeight: isSelected ? 800 : 600,
                             cursor: "pointer",
-                            boxShadow: isSelected ? `0 2px 8px ${sc.color}40` : "none",
-                            transition: "all 120ms ease",
+                            boxShadow: isSelected ? `0 2px 8px rgba(0,0,0,0.06)` : "none",
+                            transition: "all 140ms ease",
                           }}
                         >
                           <span
@@ -1417,7 +1429,7 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                               width: 7,
                               height: 7,
                               borderRadius: "50%",
-                              background: isSelected ? "#ffffff" : sc.color,
+                              background: isSelected ? sc.activeColor : sc.color,
                               flexShrink: 0,
                             }}
                           />
@@ -1428,8 +1440,9 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                                 fontSize: 10,
                                 padding: "1px 5px",
                                 borderRadius: 999,
-                                background: isSelected ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.06)",
-                                color: isSelected ? "#ffffff" : sc.color,
+                                background: isSelected ? "rgba(0,0,0,0.06)" : "rgba(0,0,0,0.04)",
+                                color: isSelected ? sc.activeColor : sc.color,
+                                fontWeight: 700,
                               }}
                             >
                               {stat.daysReported}d
@@ -1447,27 +1460,27 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    background: activeSymptomColor.bg,
+                    padding: "9px 13px",
+                    borderRadius: 9,
+                    background: activeSymptomColor.activeBg || "#f8fafc",
                     border: `1px solid ${activeSymptomColor.border}`,
-                    marginBottom: 10,
+                    marginBottom: 12,
                     fontSize: 11.5,
                     flexWrap: "wrap",
                     gap: 8,
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ width: 9, height: 9, borderRadius: "50%", background: activeSymptomColor.color }} />
-                    <span style={{ fontWeight: 800, color: activeSymptomColor.color }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: activeSymptomColor.activeColor || activeSymptomColor.color }} />
+                    <span style={{ fontWeight: 800, color: activeSymptomColor.activeColor || activeSymptomColor.color }}>
                       {formatMetricName(selectedSymptom)}
                     </span>
                     {selectedSymptomIsMmrc && (
-                      <span style={{ fontSize: 10, color: activeSymptomColor.color, opacity: 0.8 }}>(0–4 Grade)</span>
+                      <span style={{ fontSize: 10, color: activeSymptomColor.activeColor || activeSymptomColor.color, opacity: 0.8 }}>(0–4 Grade)</span>
                     )}
                   </div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <span style={{ color: activeSymptomColor.color, fontWeight: 700 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <span style={{ color: activeSymptomColor.activeColor || activeSymptomColor.color, fontWeight: 700 }}>
                       Reported: {selectedSymptomSeries.filter((r) => (r.value ?? 0) > 0).length} days
                     </span>
                     <span style={{ color: "#059669", fontWeight: 700 }}>
