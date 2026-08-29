@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Activity, Wind, Sparkles, HeartPulse } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
@@ -510,8 +510,22 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
         </div>
       )}
 
-      <div className={dStyles.card}>
-        <p className={dStyles.cardTitle}><BilingualTitle en="My Asthma Control" hi="मेरा अस्थमा नियंत्रण" /></p>
+      <div className={`${dStyles.card} ${dStyles.diseaseCard}`}>
+        <div className={dStyles.sectionHeaderRow}>
+          <div className={dStyles.sectionHeaderLeft}>
+            <div className={dStyles.sectionIconRoundel} style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+              <Activity size={18} />
+            </div>
+            <div>
+              <h2 className={dStyles.sectionTitle}>Asthma Control</h2>
+              <p className={dStyles.sectionSub}>मेरा अस्थमा नियंत्रण (पिछले 4 सप्ताह)</p>
+            </div>
+          </div>
+          <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+            Asthma Action
+          </span>
+        </div>
+
         <p className={dStyles.cardSub}>
           Over the last 4 weeks, have you had:
           <span className={dStyles.fieldLabelHi}>पिछले 4 सप्ताह में क्या आपको हुआ है:</span>
@@ -544,8 +558,21 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
         </div>
       </div>
 
-      <div className={dStyles.card}>
-        <p className={dStyles.cardTitle}><BilingualTitle en="Daily Tracking" hi="दैनिक ट्रैकिंग" /></p>
+      <div className={`${dStyles.card} ${dStyles.diseaseCard}`}>
+        <div className={dStyles.sectionHeaderRow}>
+          <div className={dStyles.sectionHeaderLeft}>
+            <div className={dStyles.sectionIconRoundel} style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+              <Wind size={18} />
+            </div>
+            <div>
+              <h2 className={dStyles.sectionTitle}>Daily Asthma Tracking</h2>
+              <p className={dStyles.sectionSub}>दैनिक पीक फ्लो एवं रेस्क्यू पफ</p>
+            </div>
+          </div>
+          <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+            Peak Flow
+          </span>
+        </div>
         <div className={dStyles.grid2}>
           <NumberField
             label="Rescue Puffs"
@@ -625,8 +652,22 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
   }, [chest, colour, cough, energy, exercise, haemoptysisVolume, onChange, sleep, volume]);
 
   return (
-    <div className={dStyles.card}>
-      <p className={dStyles.cardTitle}><BilingualTitle en="COPD Impact" hi="COPD प्रभाव" /></p>
+    <div className={`${dStyles.card} ${dStyles.diseaseCard}`}>
+      <div className={dStyles.sectionHeaderRow}>
+        <div className={dStyles.sectionHeaderLeft}>
+          <div className={dStyles.sectionIconRoundel} style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+            <Activity size={18} />
+          </div>
+          <div>
+            <h2 className={dStyles.sectionTitle}>COPD Impact & Sputum</h2>
+            <p className={dStyles.sectionSub}>COPD प्रभाव एवं बलगम मॉनिटरिंग</p>
+          </div>
+        </div>
+        <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+          COPD Actions
+        </span>
+      </div>
+
       <p className={dStyles.cardSub}>Symptom Impact Weekly<span className={dStyles.fieldLabelHi}>साप्ताहिक लक्षण प्रभाव</span></p>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={boxStyle}>
@@ -698,13 +739,26 @@ function BronchLikeSecondHalf({ dashboard, onChange }: { dashboard: DashboardTyp
   const isPostIcu = dashboard === "post_icu";
 
   return (
-    <div className={dStyles.card}>
-      <p className={dStyles.cardTitle}>
-        <BilingualTitle
-          en={isPostIcu ? "Post ICU Sputum and Flare Log" : "Bronchiectasis Log"}
-          hi={isPostIcu ? "पोस्ट ICU बलगम और फ्लेयर लॉग" : "ब्रोंकिइक्टेसिस लॉग"}
-        />
-      </p>
+    <div className={`${dStyles.card} ${dStyles.diseaseCard}`}>
+      <div className={dStyles.sectionHeaderRow}>
+        <div className={dStyles.sectionHeaderLeft}>
+          <div className={dStyles.sectionIconRoundel} style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+            <Activity size={18} />
+          </div>
+          <div>
+            <h2 className={dStyles.sectionTitle}>
+              {isPostIcu ? "Post ICU Sputum & Flare Log" : "Bronchiectasis Sputum Log"}
+            </h2>
+            <p className={dStyles.sectionSub}>
+              {isPostIcu ? "पोस्ट ICU बलगम और फ्लेयर लॉग" : "ब्रोंकिइक्टेसिस बलगम लॉग"}
+            </p>
+          </div>
+        </div>
+        <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+          Sputum & Flare
+        </span>
+      </div>
+
       <p className={dStyles.cardSub}>Sputum and Flare Tracker Daily<span className={dStyles.fieldLabelHi}>दैनिक बलगम और फ्लेयर ट्रैकर</span></p>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={boxStyle}>
@@ -769,8 +823,22 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
   const progressText = useMemo(() => `${answeredCount}/15 answered`, [answeredCount]);
 
   return (
-    <div className={dStyles.card}>
-      <p className={dStyles.cardTitle}><BilingualTitle en="K-BILD Questionnaire" hi="K-BILD प्रश्नावली" /></p>
+    <div className={`${dStyles.card} ${dStyles.diseaseCard}`}>
+      <div className={dStyles.sectionHeaderRow}>
+        <div className={dStyles.sectionHeaderLeft}>
+          <div className={dStyles.sectionIconRoundel} style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+            <Activity size={18} />
+          </div>
+          <div>
+            <h2 className={dStyles.sectionTitle}>K-BILD Quality of Life</h2>
+            <p className={dStyles.sectionSub}>K-BILD प्रश्नावली (जीवन की गुणवत्ता)</p>
+          </div>
+        </div>
+        <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+          ILD Assessment
+        </span>
+      </div>
+
       <p className={dStyles.cardSub}>
         The King&apos;s Brief Interstitial Lung Disease Questionnaire for quality of life assessment in ILD patients.
         <span className={dStyles.fieldLabelHi}>ILD मरीजों में जीवन की गुणवत्ता के आकलन के लिए K-BILD प्रश्नावली।</span>

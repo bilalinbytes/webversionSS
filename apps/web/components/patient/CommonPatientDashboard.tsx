@@ -207,10 +207,10 @@ export function CommonPatientDashboard({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14 }}>
 
         {/* SpO2 */}
-        <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className={`${dStyles.metricCard} ${dStyles.metricCardVitals}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Heart size={16} color={spo2.color} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700 }}>SpO₂ (Oxygen)</span>
+            <Heart size={16} color="#0284c7" strokeWidth={2} />
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0369a1" }}>SpO₂ (Oxygen)</span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: spo2.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {spo2Today > 0 ? `${spo2Today}%` : "--"}
@@ -220,10 +220,10 @@ export function CommonPatientDashboard({
         </div>
 
         {/* mMRC */}
-        <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className={`${dStyles.metricCard} ${dStyles.metricCardSymptoms}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wind size={16} color="var(--med-blue-600)" strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700 }}>Breathlessness</span>
+            <Wind size={16} color="#d97706" strokeWidth={2} />
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#b45309" }}>Breathlessness</span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {mmrcToday}
@@ -232,10 +232,10 @@ export function CommonPatientDashboard({
         </div>
 
         {/* AQI */}
-        <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className={`${dStyles.metricCard} ${dStyles.metricCardAqi}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Activity size={16} color={aqiToday > 0 ? aqi.color : "#64748b"} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700 }}>Air Quality (AQI)</span>
+            <Activity size={16} color={aqiToday > 0 ? "#0d9488" : "#64748b"} strokeWidth={2} />
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0f766e" }}>Air Quality (AQI)</span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: aqiToday > 0 ? aqi.color : "#64748b", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {aqiToday > 0 ? aqiToday : "--"}
@@ -246,10 +246,10 @@ export function CommonPatientDashboard({
         </div>
 
         {/* Risk Score */}
-        <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className={`${dStyles.metricCard} ${dStyles.metricCardAppointment}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <AlertCircle size={16} color={risk.color} strokeWidth={2} />
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700 }}>Clinical Risk Score</span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#4338ca" }}>Clinical Risk Score</span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: risk.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1 }}>
             {riskScore > 0 ? riskScore : "--"}
@@ -261,7 +261,7 @@ export function CommonPatientDashboard({
       </div>
 
       {/* -- Symptoms Analytics & mMRC -- */}
-      <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className={`${dStyles.card} ${dStyles.symptomsCard}`} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
             <p className={dStyles.cardTitle} style={{ margin: 0 }}>
@@ -274,8 +274,9 @@ export function CommonPatientDashboard({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
               padding: "4px 10px", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
-              background: mmrcToday >= 3 ? "rgba(201,77,73,0.12)" : "rgba(15,110,86,0.12)",
-              color: mmrcToday >= 3 ? "#c94d49" : "var(--med-blue-600)",
+              background: mmrcToday >= 3 ? "#fef2f2" : "#f0f9ff",
+              color: mmrcToday >= 3 ? "#dc2626" : "#0284c7",
+              border: `1px solid ${mmrcToday >= 3 ? "#fecaca" : "#bae6fd"}`,
               fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
             }}>
               mMRC Grade: {mmrcToday} / 4
@@ -283,7 +284,8 @@ export function CommonPatientDashboard({
             {mmrcTrend && mmrcTrend.length > 0 && (
               <span style={{
                 padding: "4px 10px", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
-                background: "rgba(19,45,54,0.08)", color: "var(--med-navy-800)",
+                background: "#f8fafc", color: "var(--med-navy-800)",
+                border: "1px solid #e2e8f0",
                 fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
               }}>
                 Worst mMRC (Period): Grade {Math.max(...mmrcTrend, mmrcToday)}
@@ -295,15 +297,15 @@ export function CommonPatientDashboard({
         {/* Side-by-side Symptoms List and mMRC Score breakdown */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
           {/* mMRC Breathlessness Level Card */}
-          <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ padding: "12px 14px", background: "#ffffff", borderRadius: 10, border: "1px solid #fed7aa", display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Breathlessness Scale (mMRC)
             </span>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               <span style={{ fontSize: 24, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif" }}>
                 Grade {mmrcToday}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#c94d49" : "var(--med-blue-600)" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#dc2626" : "#0284c7" }}>
                 {mmrcText}
               </span>
             </div>
@@ -317,8 +319,8 @@ export function CommonPatientDashboard({
           </div>
 
           {/* Core Symptoms Monitoring List */}
-          <div style={{ padding: "12px 14px", background: "#f8f7f5", borderRadius: 10, border: "1px solid rgba(19,45,54,0.08)", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ padding: "12px 14px", background: "#ffffff", borderRadius: 10, border: "1px solid #fed7aa", display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Key Respiratory Indicators
             </span>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
@@ -344,7 +346,7 @@ export function CommonPatientDashboard({
       </div>
 
       {/* -- Today's Medications -- */}
-      <div className={dStyles.card} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className={`${dStyles.card} ${dStyles.medsCard}`} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <p className={dStyles.cardTitle} style={{ margin: 0 }}>
             Today&apos;s Prescribed Medications
@@ -383,14 +385,14 @@ export function CommonPatientDashboard({
                   gap: 12,
                   padding: "12px 14px",
                   borderRadius: 10,
-                  border: `1.5px solid ${med.taken === true ? "rgba(15,110,86,0.3)" : med.taken === false ? "rgba(201,77,73,0.25)" : "rgba(0,0,0,0.1)"}`,
-                  background: med.taken === true ? "rgba(15,110,86,0.05)" : med.taken === false ? "rgba(201,77,73,0.05)" : "#fafaf9",
+                  border: `1.5px solid ${med.taken === true ? "#a7f3d0" : med.taken === false ? "#fecaca" : "#e2e8f0"}`,
+                  background: med.taken === true ? "#f0fdf4" : med.taken === false ? "#fef2f2" : "#ffffff",
                 }}
               >
                 <div style={{
                   width: 26, height: 26, borderRadius: "50%",
-                  border: `2px solid ${med.taken === true ? "var(--med-blue-600)" : med.taken === false ? "#c94d49" : "rgba(0,0,0,0.18)"}`,
-                  background: med.taken === true ? "var(--med-blue-600)" : "white",
+                  border: `2px solid ${med.taken === true ? "#059669" : med.taken === false ? "#dc2626" : "#cbd5e1"}`,
+                  background: med.taken === true ? "#059669" : "white",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, color: "white", fontSize: 13,
                 }}>
@@ -400,7 +402,7 @@ export function CommonPatientDashboard({
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--med-navy-800)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
                     {med.name}{med.dose ? ` - ${med.dose}` : ""}
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 11, color: med.taken === true ? "var(--med-blue-600)" : med.taken === false ? "#c94d49" : "#888680" }}>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: med.taken === true ? "#059669" : med.taken === false ? "#dc2626" : "#888680" }}>
                     {med.taken === true ? "Taken" : med.taken === false ? "Not taken" : "Not marked yet"}
                   </p>
                 </div>
@@ -411,8 +413,8 @@ export function CommonPatientDashboard({
                       onClick={() => onMedicationToggle(med.id, true)}
                       style={{
                         minHeight: 40, minWidth: 64, padding: "6px 12px", borderRadius: 8, border: "none",
-                        background: med.taken === true ? "var(--med-blue-600)" : "var(--med-blue-50)",
-                        color: med.taken === true ? "white" : "var(--med-blue-600)",
+                        background: med.taken === true ? "#059669" : "#ecfdf5",
+                        color: med.taken === true ? "white" : "#047857",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
                         fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
                       }}
@@ -424,8 +426,8 @@ export function CommonPatientDashboard({
                       onClick={() => onMedicationToggle(med.id, false)}
                       style={{
                         minHeight: 40, minWidth: 64, padding: "6px 12px", borderRadius: 8, border: "none",
-                        background: med.taken === false ? "#c94d49" : "rgba(201,77,73,0.1)",
-                        color: med.taken === false ? "white" : "#c94d49",
+                        background: med.taken === false ? "#dc2626" : "#fef2f2",
+                        color: med.taken === false ? "white" : "#dc2626",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
                         fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
                       }}
@@ -442,7 +444,7 @@ export function CommonPatientDashboard({
 
       {/* -- PFT Summary (if available) -- */}
       {latestPft && (latestPft.fev1_fvc_ratio !== null || latestPft.fev1 !== null) && (
-        <div className={dStyles.card}>
+        <div className={`${dStyles.card} ${dStyles.vitalsCard}`}>
           <p className={dStyles.cardTitle}>
             Latest PFT Results
             {latestPft.test_date && (
@@ -456,8 +458,8 @@ export function CommonPatientDashboard({
               { label: "FVC", value: latestPft.fvc !== null ? `${latestPft.fvc} L` : null },
               { label: "DLCO", value: latestPft.dlco !== null ? `${latestPft.dlco}%` : null },
             ].filter((item) => item.value !== null).map((item) => (
-              <div key={item.label} style={{ padding: "10px 12px", background: "#f8f7f5", borderRadius: 8, border: "1px solid rgba(19,45,54,0.07)" }}>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{item.label}</p>
+              <div key={item.label} style={{ padding: "10px 12px", background: "#f0f9ff", borderRadius: 8, border: "1px solid #bae6fd" }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{item.label}</p>
                 <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif" }}>{item.value}</p>
               </div>
             ))}
@@ -466,10 +468,10 @@ export function CommonPatientDashboard({
       )}
 
       {/* -- Doctor & Appointment -- */}
-      <div className={dStyles.card}>
+      <div className={`${dStyles.card} ${dStyles.appointmentCard}`}>
         <p className={dStyles.cardTitle}>My Care Team &amp; Doctor</p>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--med-blue-600)", color: "var(--med-blue-100)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#4f46e5", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
             {doctor ? doctor.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "Dr"}
           </div>
           <div style={{ flex: 1 }}>
@@ -481,11 +483,11 @@ export function CommonPatientDashboard({
             )}
           </div>
           {nextAppointment && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--med-blue-50)", border: "1px solid var(--med-border-subtle)" }}>
-              <CalendarClock size={16} color="var(--med-blue-600)" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#eef2ff", border: "1px solid #c7d2fe" }}>
+              <CalendarClock size={16} color="#4f46e5" />
               <div>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "var(--med-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Next Appt</p>
-                <p style={{ margin: "1px 0 0", fontSize: 13, fontWeight: 600, color: "var(--med-blue-600)" }}>{nextAppointment}</p>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#4338ca", textTransform: "uppercase", letterSpacing: "0.05em" }}>Next Appt</p>
+                <p style={{ margin: "1px 0 0", fontSize: 13, fontWeight: 600, color: "#4f46e5" }}>{nextAppointment}</p>
               </div>
             </div>
           )}

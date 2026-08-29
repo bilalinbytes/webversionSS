@@ -148,12 +148,39 @@
   gap: 14px;
 }
 
-/* Card base */
+/* Card base with subtle clinical color coding */
 .vitalsCard, .medCard, .trendCard, .doctorCard, .actionsCard {
   background: #ffffff;
   border-radius: 14px;
-  border: 1px solid rgba(0,0,0,0.07);
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
   padding: 20px;
+  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vitalsCard {
+  border-left: 4px solid #0284c7;
+}
+
+.trendCard {
+  border-left: 4px solid #0284c7;
+}
+
+.medCard {
+  border-left: 4px solid #059669;
+}
+
+.doctorCard {
+  border-left: 4px solid #4f46e5;
+}
+
+.actionsCard {
+  border-left: 4px solid #7c3aed;
+}
+
+.vitalsCard:hover, .medCard:hover, .trendCard:hover, .doctorCard:hover, .actionsCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 43, 72, 0.06);
 }
 
 .cardHeader {

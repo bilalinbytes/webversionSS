@@ -1,4 +1,4 @@
-/* -- Patient Disease Layout Tokens ------------------------------------------ */
+/* ── Patient Disease Layout Tokens ────────────────────────────────────────── */
 /* Tokens: navy #0f2b48, blue #1e6091, focus #2a75d3, canvas #f8fafc, card #ffffff */
 
 .view {
@@ -18,7 +18,7 @@
   justify-content: space-between;
   flex-shrink: 0;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.04); transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.04);
 }
 
 .pageTitle {
@@ -48,26 +48,130 @@
   margin: 0;
 }
 
+/* ── Base Card ───────────────────────────────────────────────────────────── */
 .card {
   background: var(--med-surface-card, #ffffff);
-  border-radius: 10px;
   border: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 12px;
   padding: 18px 20px;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.04); transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
 
-.cardTitle {
-  font-size: 14px;
+.card:hover, .metricCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 43, 72, 0.06);
+}
+
+/* ── Section Color-Coding (Subtle & Clinical) ────────────────────────────────── */
+.vitalsCard {
+  border-left: 4px solid #0284c7 !important;
+  background: #ffffff;
+}
+
+.medsCard {
+  border-left: 4px solid #059669 !important;
+  background: #ffffff;
+}
+
+.symptomsCard {
+  border-left: 4px solid #d97706 !important;
+  background: #ffffff;
+}
+
+.diseaseCard {
+  border-left: 4px solid #7c3aed !important;
+  background: #ffffff;
+}
+
+.aqiCard {
+  border-left: 4px solid #0d9488 !important;
+  background: #ffffff;
+}
+
+.appointmentCard {
+  border-left: 4px solid #4f46e5 !important;
+  background: #ffffff;
+}
+
+.alertCard {
+  border-left: 4px solid #dc2626 !important;
+  background: #fffafa;
+}
+
+/* Section Header Rows & Badges */
+.sectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionIconRoundel {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--med-navy-800, #0f2b48);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  margin-bottom: 3px;
+  margin: 0;
+}
+
+.sectionSub {
+  font-size: 11.5px;
+  color: var(--med-text-muted, #64748b);
+  margin: 2px 0 0;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cardTitleHi {
+  font-size: 0.8rem;
+  color: var(--med-text-muted, #64748b);
+  margin-left: 8px;
+  font-weight: 400;
 }
 
 .cardSub {
-  font-size: 12px;
+  font-size: 0.82rem;
   color: var(--med-text-muted, #64748b);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
   margin-bottom: 14px;
 }
 
@@ -101,7 +205,38 @@
   border: 1px solid var(--med-border-subtle, #e2e8f0);
   border-radius: 10px;
   padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.04); transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.metricCardVitals {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+  border-color: #bae6fd;
+}
+
+.metricCardSymptoms {
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+  border-color: #fde68a;
+}
+
+.metricCardMeds {
+  background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
+  border-color: #a7f3d0;
+}
+
+.metricCardAqi {
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  border-color: #99f6e4;
+}
+
+.metricCardAppointment {
+  background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+  border-color: #c7d2fe;
+}
+
+.metricCardDisease {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  border-color: #ddd6fe;
 }
 
 .metricLabel {
@@ -156,137 +291,7 @@
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.symptomList,
-.medicationList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.symptomList {
-  margin-top: 12px;
-}
-
-.medicationList {
-  margin-top: 12px;
-}
-
-.submitBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 22px;
-  border-radius: 8px;
-  border: none;
-  background: var(--med-blue-600, #1e6091);
-  color: #ffffff;
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: background 140ms ease;
-  box-shadow: 0 1px 3px rgba(30, 96, 145, 0.25);
-}
-
-.submitBtn:hover {
-  background: var(--color-navy-hover, #164e77);
-}
-
-/* -- CommonDailyLogView inputs & elements --------------------------------- */
-.fieldLabel {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--med-navy-800, #0f2b48);
-  margin-bottom: 6px;
-}
-
-.fieldLabelHi {
-  display: block;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--med-text-muted, #64748b);
-  margin-top: 2px;
-}
-
-.numInput {
-  width: 100%;
-  max-width: 180px;
-  padding: 10px 12px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
-  border-radius: 8px;
-  font-size: 15px;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  transition: all 140ms ease;
-  background: #ffffff;
-}
-
-.numInput:focus {
-  outline: none;
-  border-color: var(--med-blue-400, #4895ef);
-  box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.15);
-}
-
-.supportSummary {
-  font-size: 12.5px;
-  color: var(--med-text-secondary, #475569);
-  margin: 0;
-}
-
-.textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 12px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  resize: vertical;
-}
-
-@media (max-width: 900px) {
-  .summaryGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .dashboardGrid {
-    grid-template-columns: 1fr;
-  }
-}
-.card:hover, .metricCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(15, 43, 72, 0.08);
-}
-
-/* -- Form Inputs & Cards reconstructed --------------------------------------- */
-
-.card {
-  background: var(--med-surface-card, #ffffff);
-  border: 1px solid var(--med-border-subtle, #e2e8f0);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: 0 2px 4px rgba(15, 43, 72, 0.02);
-}
-
-.cardTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--med-navy-800, #0f2b48);
-  margin-bottom: 4px;
-}
-
-.cardTitleHi {
-  font-size: 0.8rem;
-  color: var(--med-text-muted, #64748b);
-  margin-left: 8px;
-}
-
-.cardSub {
-  font-size: 0.8rem;
-  color: var(--med-text-muted, #64748b);
-  margin-bottom: 12px;
-}
-
+/* ── Form Inputs ──────────────────────────────────────────────────────────── */
 .fieldLabel {
   display: block;
   font-size: 0.85rem;
@@ -303,6 +308,47 @@
   margin-top: 2px;
 }
 
+.numInput {
+  width: 100%;
+  max-width: 180px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
+  font-size: 1rem;
+  outline: none;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.numInput:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.textarea:focus {
+  border-color: var(--med-blue-500, #2a75d3);
+  box-shadow: 0 0 0 3px rgba(42, 117, 211, 0.15);
+}
+
+.supportSummary {
+  font-size: 12.5px;
+  color: var(--med-text-secondary, #475569);
+  margin: 0;
+}
+
 .yesNoRow {
   display: flex;
   gap: 8px;
@@ -312,7 +358,7 @@
   flex: 1;
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
   background: #ffffff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -339,7 +385,7 @@
   justify-content: center;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
   background: #ffffff;
   font-size: 0.9rem;
   font-weight: 600;
@@ -358,27 +404,6 @@
   background: var(--med-blue-600, #1e6091) !important;
   color: #ffffff !important;
   border-color: var(--med-blue-600, #1e6091) !important;
-}
-
-.numInput {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.numInput:focus {
-  border-color: var(--med-blue-500, #2a75d3);
-  box-shadow: 0 0 0 3px rgba(42, 117, 211, 0.15);
-}
-
-.grid2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
 }
 
 .warningBanner {
@@ -431,7 +456,7 @@
   justify-content: center;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
   background: #ffffff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -450,17 +475,25 @@
 
 .symptomBtn:hover {
   background: var(--med-surface-alt, #f8fafc);
-  border-color: var(--med-blue-400, #60a5fa);
+  border-color: #d97706;
 }
 
 .symptomBtnActive {
-  background: var(--med-blue-50, #f0f9ff);
-  border-color: var(--med-blue-600, #1e6091);
-  color: var(--med-blue-800, #075985);
+  background: #fffbeb;
+  border-color: #d97706;
+  color: #92400e;
 }
 
 .symptomBtnActive .symptomBtnHi {
-  color: var(--med-blue-600, #1e6091);
+  color: #b45309;
+}
+
+.symptomList,
+.medicationList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .submitBtn {
@@ -500,24 +533,6 @@
   font-size: 0.8rem;
   color: #64748b;
   text-align: center;
-}
-
-.textarea {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--med-border-strong, #cbd5e1);
-  font-size: 0.95rem;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 80px;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.textarea:focus {
-  border-color: var(--med-blue-500, #2a75d3);
-  box-shadow: 0 0 0 3px rgba(42, 117, 211, 0.15);
 }
 
 .limitPanel {
@@ -736,3 +751,11 @@
   background: #f0f7fc;
 }
 
+@media (max-width: 900px) {
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}

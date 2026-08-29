@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Activity, Pill, Wind, Flame } from "lucide-react";
 import {
   AQIDisplay,
   MMRCPicker,
@@ -554,10 +554,24 @@ export function CommonDailyLogView({
             </button>
           </div>
         )}
-        <div className={dStyles.card}>
-          <p className={dStyles.cardTitle}>Common Vitals · सामान्य स्वास्थ्य जांच</p>
+        <div className={`${dStyles.card} ${dStyles.vitalsCard}`}>
+          <div className={dStyles.sectionHeaderRow}>
+            <div className={dStyles.sectionHeaderLeft}>
+              <div className={dStyles.sectionIconRoundel} style={{ background: "#e0f2fe", color: "#0284c7" }}>
+                <Activity size={18} />
+              </div>
+              <div>
+                <h2 className={dStyles.sectionTitle}>Common Vitals</h2>
+                <p className={dStyles.sectionSub}>सामान्य स्वास्थ्य जांच</p>
+              </div>
+            </div>
+            <span className={dStyles.sectionBadge} style={{ background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd" }}>
+              Oxygen & Pulse
+            </span>
+          </div>
+
           <AQIDisplay aqi={aqi} />
-          <p className={dStyles.supportSummary}>{supportSummary}</p>
+          <p className={dStyles.supportSummary} style={{ marginTop: 12 }}>{supportSummary}</p>
           <div style={{ display: "grid", gap: 14, marginTop: 16, maxWidth: 720 }}>
             <SpO2Input
               value={spo2}
@@ -615,18 +629,42 @@ export function CommonDailyLogView({
           </div>
         </div>
 
-        <div className={dStyles.card}>
-          <p className={dStyles.cardTitle}>
-            Breathlessness (mMRC Grade) · सांस फूलना
-            <span style={{ marginLeft: 8, fontSize: 11, color: "#888680", fontWeight: 400 }}>
-              (Previous day · कल: {previousMmrcLabel})
+        <div className={`${dStyles.card} ${dStyles.vitalsCard}`}>
+          <div className={dStyles.sectionHeaderRow}>
+            <div className={dStyles.sectionHeaderLeft}>
+              <div className={dStyles.sectionIconRoundel} style={{ background: "#e0f2fe", color: "#0284c7" }}>
+                <Wind size={18} />
+              </div>
+              <div>
+                <h2 className={dStyles.sectionTitle}>Breathlessness (mMRC Grade)</h2>
+                <p className={dStyles.sectionSub}>
+                  सांस फूलना {previousMmrcLabel ? `· Previous day कल: ${previousMmrcLabel}` : ""}
+                </p>
+              </div>
+            </div>
+            <span className={dStyles.sectionBadge} style={{ background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd" }}>
+              mMRC Scale
             </span>
-          </p>
+          </div>
           <MMRCPicker value={mmrc} onChange={setMmrc} />
         </div>
 
-        <div className={dStyles.card}>
-          <p className={dStyles.cardTitle}>Medicines Taken and Side Effects · दवाएं और दुष्प्रभाव</p>
+        <div className={`${dStyles.card} ${dStyles.medsCard}`}>
+          <div className={dStyles.sectionHeaderRow}>
+            <div className={dStyles.sectionHeaderLeft}>
+              <div className={dStyles.sectionIconRoundel} style={{ background: "#d1fae5", color: "#059669" }}>
+                <Pill size={18} />
+              </div>
+              <div>
+                <h2 className={dStyles.sectionTitle}>Medicines & Side Effects</h2>
+                <p className={dStyles.sectionSub}>दवाएं और दुष्प्रभाव</p>
+              </div>
+            </div>
+            <span className={dStyles.sectionBadge} style={{ background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
+              Prescriptions
+            </span>
+          </div>
+
           {meds.length > 0 ? (
             <MedChecklist meds={meds} taken={medsTaken} onToggle={toggleMed} />
           ) : (
@@ -642,8 +680,22 @@ export function CommonDailyLogView({
           </div>
         </div>
 
-        <div className={dStyles.card}>
-          <p className={dStyles.cardTitle}>Symptoms Severity (0-10) · लक्षणों की तीव्रता</p>
+        <div className={`${dStyles.card} ${dStyles.symptomsCard}`}>
+          <div className={dStyles.sectionHeaderRow}>
+            <div className={dStyles.sectionHeaderLeft}>
+              <div className={dStyles.sectionIconRoundel} style={{ background: "#fef3c7", color: "#d97706" }}>
+                <Flame size={18} />
+              </div>
+              <div>
+                <h2 className={dStyles.sectionTitle}>Symptoms Severity (0-10)</h2>
+                <p className={dStyles.sectionSub}>लक्षणों की तीव्रता</p>
+              </div>
+            </div>
+            <span className={dStyles.sectionBadge} style={{ background: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}>
+              VAS Severity
+            </span>
+          </div>
+
           <SymptomsTracker
             data={symptomsData}
             onChange={setSymptomsData}
