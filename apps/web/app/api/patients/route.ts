@@ -210,7 +210,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [patientRes, diagnosisRes, supportRes, pftRes, medsRes] = await Promise.all([
+  const [patientRes, diagnosisRes, supportRes, pftRes, medsRes, baselineRes] = await Promise.all([
     admin
       .from("patients")
       .select("id,name,date_of_birth,mobile_number,alternate_mobile_number,gender,emergency_contact_name,emergency_contact_phone")
@@ -240,6 +240,11 @@ export async function GET(request: Request): Promise<NextResponse> {
       .select("id,route,drug_name,dose,dose_unit,frequency,start_date,end_date,serial_number")
       .eq("patient_id", patientId)
       .order("start_date", { ascending: true }),
+    admin
+      .from("patient_baselines")
+      .select("*")
+      .eq("patient_id", patientId)
+      .maybeSingle(),
   ]);
 
   if (patientRes.error || !patientRes.data) {
@@ -248,6 +253,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const parsedDiagnosis = parseDiagnosisLabel(diagnosisRes.data?.primary_diagnosis ?? null);
   const support = supportRes.data;
+
+  // Resolve baseline vitals from patient_baselines table or previous PFT other_fields
+  const lastPftRecord = pftRes.data && pftRes.data.length > 0 ? pftRes.data[pftRes.data.length - 1] : null;
+  const lastPftOther = (lastPftRecord?.other_fields as Record<string, string | null>) ?? {};
+  const resolvedBaselineSpo2 = baselineRes.data?.baseline_spo2
+    ? String(baselineRes.data.baseline_spo2)
+    : (lastPftOther.baseline_spo2 ?? "");
+  const resolvedBaselineHeartRate = lastPftOther.baseline_heart_rate ?? "";
 
   const formData = {
     name: patientRes.data.name ?? "",
@@ -293,8 +306,8 @@ export async function GET(request: Request): Promise<NextResponse> {
       trach_vent_tidal_volume: support?.trach_vent_tidal_volume ?? null,
       trach_vent_fio2_percent: support?.trach_vent_fio2_percent ?? null,
     },
-    baseline_spo2: (pftRes.data && pftRes.data.length > 0) ? ((pftRes.data[pftRes.data.length - 1]!.other_fields as Record<string, string | null>)?.baseline_spo2 ?? "") : "",
-    baseline_heart_rate: (pftRes.data && pftRes.data.length > 0) ? ((pftRes.data[pftRes.data.length - 1]!.other_fields as Record<string, string | null>)?.baseline_heart_rate ?? "") : "",
+    baseline_spo2: resolvedBaselineSpo2,
+    baseline_heart_rate: resolvedBaselineHeartRate,
     pft_records: (pftRes.data ?? []).map((row) => {
       const other = (row.other_fields ?? {}) as Record<string, string | null>;
       return {
@@ -566,6 +579,18 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to save PFT records" }, { status: 500 });
       }
     }
+
+    const baselineSpo2Str = pftRows?.find(r => r.baseline_spo2)?.baseline_spo2 || pftRows?.[0]?.baseline_spo2;
+    if (baselineSpo2Str) {
+      const rawSpo2 = parseFloat(baselineSpo2Str);
+      if (!isNaN(rawSpo2)) {
+        await supabase.from("patient_baselines").upsert({
+          patient_id: patientId,
+          baseline_spo2: rawSpo2,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
   }
 
   // 5. Insert medications
@@ -794,6 +819,18 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (pftInserts.length > 0) {
       const { error: pftError } = await admin.from("pft_records").insert(pftInserts);
       if (pftError) return NextResponse.json({ error: pftError.message }, { status: 500 });
+    }
+
+    const baselineSpo2Str = pftRows?.find(r => r.baseline_spo2)?.baseline_spo2 || pftRows?.[0]?.baseline_spo2;
+    if (baselineSpo2Str) {
+      const rawSpo2 = parseFloat(baselineSpo2Str);
+      if (!isNaN(rawSpo2)) {
+        await admin.from("patient_baselines").upsert({
+          patient_id: patientId,
+          baseline_spo2: rawSpo2,
+          updated_at: new Date().toISOString(),
+        });
+      }
     }
   }
 

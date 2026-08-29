@@ -670,7 +670,7 @@ function flag(val: number | null, threshold: number) {
   return val !== null && val < threshold;
 }
 
-function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial<FormData>) => void; errors: Record<string, string> }) {
+function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d: Partial<FormData>) => void; errors: Record<string, string>; isEdit?: boolean }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({
     date: "", fvc: "", fev1: "", ratio: "", dlco: "",
@@ -827,28 +827,37 @@ function StepPFT({ data, update, errors }: { data: FormData; update: (d: Partial
         </div>
 
         <div className={styles.baselineVitalsSection}>
-          <p className={styles.addRowTitle}>Baseline Vitals <span style={{ color: "#c94d49", fontSize: 11 }}>* Required</span></p>
+          <p className={styles.addRowTitle}>
+            Baseline Vitals{" "}
+            {isEdit ? (
+              <span style={{ color: "#64748b", fontSize: 11, fontWeight: 500 }}>
+                (Optional — existing values are preserved; edit only if needed)
+              </span>
+            ) : (
+              <span style={{ color: "#c94d49", fontSize: 11 }}>* Required for new enrolment</span>
+            )}
+          </p>
           <div className={styles.baselineVitalsGrid}>
-            <Field label="Baseline SpO2" required error={errors["baseline_spo2"]}>
+            <Field label="Baseline SpO2 (%)" required={!isEdit} error={errors["baseline_spo2"]}>
               <input
                 type="number"
                 min="0"
                 max="100"
                 step="0.1"
                 className={`${styles.input} ${errors["baseline_spo2"] ? styles.inputError : data.baseline_spo2 ? styles.inputValid : ""}`}
-                placeholder="-"
+                placeholder={isEdit ? (data.baseline_spo2 ? data.baseline_spo2 : "Leave unchanged") : "e.g. 96"}
                 value={data.baseline_spo2}
                 onChange={(e) => update({ baseline_spo2: e.target.value })}
               />
             </Field>
-            <Field label="Baseline Heart Rate" required error={errors["baseline_heart_rate"]}>
+            <Field label="Baseline Heart Rate (bpm)" required={!isEdit} error={errors["baseline_heart_rate"]}>
               <input
                 type="number"
                 min="20"
                 max="250"
                 step="1"
                 className={`${styles.input} ${errors["baseline_heart_rate"] ? styles.inputError : data.baseline_heart_rate ? styles.inputValid : ""}`}
-                placeholder="-"
+                placeholder={isEdit ? (data.baseline_heart_rate ? data.baseline_heart_rate : "Leave unchanged") : "e.g. 78"}
                 value={data.baseline_heart_rate}
                 onChange={(e) => update({ baseline_heart_rate: e.target.value })}
               />
@@ -1563,8 +1572,10 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
     if (!data.gender) finalErrors["gender"] = "Please select a sex";
     if (!data.age) finalErrors["age"] = "Age is required";
     if (!data.disease_category) finalErrors["primary_diagnosis"] = "Please select a disease category";
-    if (!data.baseline_spo2) finalErrors["baseline_spo2"] = "Baseline SpO2 is required";
-    if (!data.baseline_heart_rate) finalErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
+    if (!editPatientId) {
+      if (!data.baseline_spo2) finalErrors["baseline_spo2"] = "Baseline SpO2 is required";
+      if (!data.baseline_heart_rate) finalErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
+    }
     if (Object.keys(finalErrors).length > 0) {
       setErrors(finalErrors);
       setStep(Object.keys(finalErrors).some(k => ["baseline_spo2", "baseline_heart_rate"].includes(k)) ? 4 : 1);
@@ -1742,12 +1753,14 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       if (!data.disease_category) {
         newErrors["primary_diagnosis"] = "Please select a disease category";
       }
-    } else if (stepNum === 5) {
-      if (!data.baseline_spo2) {
-        newErrors["baseline_spo2"] = "Baseline SpO2 is required";
-      }
-      if (!data.baseline_heart_rate) {
-        newErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
+    } else if (stepNum === 4) {
+      if (!editPatientId) {
+        if (!data.baseline_spo2) {
+          newErrors["baseline_spo2"] = "Baseline SpO2 is required";
+        }
+        if (!data.baseline_heart_rate) {
+          newErrors["baseline_heart_rate"] = "Baseline Heart Rate is required";
+        }
       }
     }
     return newErrors;
@@ -1849,7 +1862,7 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           {step === 1 && <StepBasicInfo data={data} update={update} errors={errors} isEdit={!!editPatientId} />}
           {step === 2 && <StepDiagnosis data={data} update={update} errors={errors} />}
           {step === 3 && <StepComorbidities data={data} update={update} />}
-          {step === 4 && <StepPFT data={data} update={update} errors={errors} />}
+          {step === 4 && <StepPFT data={data} update={update} errors={errors} isEdit={!!editPatientId} />}
           {step === 5 && <StepRespSupport data={data} update={update} />}
           {step === 6 && <StepMedications data={data} update={update} />}
           {step === 7 && <StepReview data={data} isEdit={!!editPatientId} onJumpToStep={setStep} />}
