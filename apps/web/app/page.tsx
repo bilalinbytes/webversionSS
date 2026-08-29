@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
+import { Pathway3DVisual } from "@/components/marketing/Pathway3DVisual";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -139,7 +140,7 @@ export default function Home() {
       <section id="pathway" className={styles.pathwaySection}>
         <div className={styles.pathwayInner}>
           <div className={styles.pathwayHeader}>
-            <p className={styles.sectionEyebrow}>Respiratory Care Journey · श्वसन स्वास्थ्य यात्रा</p>
+            <p className={styles.sectionEyebrow}>Respiratory Care Journey</p>
             <h2 className={styles.sectionHeading}>
               The Pathway to Healthy Lungs &amp; <span className={styles.blueHighlight}>Continuous Protection</span>
             </h2>
@@ -149,25 +150,12 @@ export default function Home() {
           </div>
 
           <div className={styles.pathwayGrid}>
-            {/* Left: 3D Visual Artwork Card */}
-            <div className={styles.pathwayVisualCard}>
-              <div className={styles.pathwayImageWrap}>
-                <Image
-                  src="/images/journey-pathway.png"
-                  alt="O2Plus Respiratory Care Pathway - Early Detection, Active Protection, and Stability"
-                  width={420}
-                  height={560}
-                  className={styles.pathwayImage}
-                  priority
-                />
-              </div>
-              <div className={styles.pathwayImageCaption}>
-                <p className={styles.captionEn}>Regular monitoring helps you stay ahead.</p>
-                <p className={styles.captionHi}>नियमित निगरानी आपको एक कदम आगे रखती है।</p>
-              </div>
+            {/* Left: 3D Vector SVG Pathway Graphic */}
+            <div style={{ minHeight: 480, display: "flex" }}>
+              <Pathway3DVisual />
             </div>
 
-            {/* Right: Milestone Storytelling Cards */}
+            {/* Right: Milestone Storytelling Cards (Clean English Only) */}
             <div className={styles.pathwayCards}>
               {/* Milestone 1: Early Detection */}
               <div className={`${styles.milestoneCard} ${styles.milestoneCardStep1}`}>
@@ -176,14 +164,11 @@ export default function Home() {
                 </div>
                 <div className={styles.milestoneBody}>
                   <div className={styles.milestoneHeaderRow}>
-                    <h3 className={styles.milestoneTitle}>1. Early Detection · प्रारंभिक पहचान</h3>
+                    <h3 className={styles.milestoneTitle}>1. Early Detection</h3>
                     <span className={`${styles.milestoneBadge} ${styles.badgeStep1}`}>Daily Vitals &amp; Check-in</span>
                   </div>
                   <p className={styles.milestoneDesc}>
                     Continuous tracking of SpO₂, heart rate, breathlessness (mMRC grade), and VAS symptom severity detects subtle drops days before clinical deterioration.
-                  </p>
-                  <p className={styles.milestoneDescHi}>
-                    ऑक्सीजन स्तर और सांस फूलने की नियमित जांच से स्थिति बिगड़ने से पहले पहचान होती है।
                   </p>
                 </div>
               </div>
@@ -195,14 +180,11 @@ export default function Home() {
                 </div>
                 <div className={styles.milestoneBody}>
                   <div className={styles.milestoneHeaderRow}>
-                    <h3 className={styles.milestoneTitle}>2. Active Protection · सक्रिय सुरक्षा</h3>
+                    <h3 className={styles.milestoneTitle}>2. Active Protection</h3>
                     <span className={`${styles.milestoneBadge} ${styles.badgeStep2}`}>Rx Adherence &amp; AQI Defense</span>
                   </div>
                   <p className={styles.milestoneDesc}>
                     Daily prescription checklists combined with automated air quality alerts shield patients against environmental pollution triggers and medication lapses.
-                  </p>
-                  <p className={styles.milestoneDescHi}>
-                    दवाओं का समय पर सेवन और वायु प्रदूषण (AQI) से बचाव श्वसन तंत्र को सुरक्षित रखता है।
                   </p>
                 </div>
               </div>
@@ -214,14 +196,11 @@ export default function Home() {
                 </div>
                 <div className={styles.milestoneBody}>
                   <div className={styles.milestoneHeaderRow}>
-                    <h3 className={styles.milestoneTitle}>3. Stability &amp; Recovery · दीर्घकालिक स्थिरता</h3>
+                    <h3 className={styles.milestoneTitle}>3. Stability &amp; Recovery</h3>
                     <span className={`${styles.milestoneBadge} ${styles.badgeStep3}`}>Proactive Triage &amp; Peace of Mind</span>
                   </div>
                   <p className={styles.milestoneDesc}>
                     Autonomous red-flag triage ensures immediate pulmonologist review during critical desaturations, preventing emergency hospital admissions.
-                  </p>
-                  <p className={styles.milestoneDescHi}>
-                    डॉक्टर की निरंतर देखरेख और समय पर उपचार से आपातकालीन अस्पताल भर्ती से बचाव होता है।
                   </p>
                 </div>
               </div>

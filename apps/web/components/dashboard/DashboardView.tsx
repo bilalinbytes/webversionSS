@@ -862,7 +862,7 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
                 Respiratory Care Pathway — Cohort Overview
               </p>
               <p className={styles.pathwayCohortSub}>
-                नियमित निगरानी आपको एक कदम आगे रखती है। · Regular monitoring helps you stay ahead.
+                Continuous outpatient cohort tracking &amp; intelligent clinical triage.
               </p>
             </div>
           </div>

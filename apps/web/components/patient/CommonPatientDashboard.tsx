@@ -252,10 +252,10 @@ export function CommonPatientDashboard({
             </div>
             <div>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--med-navy-800, #0f2b48)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                My Daily Health Pathway · दैनिक स्वास्थ्य यात्रा
+                My Daily Health Pathway
               </p>
               <p style={{ margin: 0, fontSize: 11.5, color: "var(--med-text-muted, #64748b)" }}>
-                Three steps to protect your breathing and stay ahead every day
+                Three daily steps to protect your lung capacity and stay ahead
               </p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export function CommonPatientDashboard({
           {/* Step 1: Daily Check-in */}
           <div className={`${dStyles.pathwayStepCard} ${dStyles.pathwayStep1}`}>
             <div className={dStyles.pathwayStepHeader}>
-              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum1}`}>Step 1 · जांच</span>
+              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum1}`}>Step 1 · Check-in</span>
               <span className={`${dStyles.pathwayStepStatus} ${hasTodayLog ? dStyles.statusDone : dStyles.statusPending}`}>
                 {hasTodayLog ? "Completed" : "Action Needed"}
               </span>
@@ -287,7 +287,7 @@ export function CommonPatientDashboard({
           {/* Step 2: Medication Routine */}
           <div className={`${dStyles.pathwayStepCard} ${dStyles.pathwayStep2}`}>
             <div className={dStyles.pathwayStepHeader}>
-              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum2}`}>Step 2 · सुरक्षा</span>
+              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum2}`}>Step 2 · Protection</span>
               <span className={`${dStyles.pathwayStepStatus} ${todayMedications && todayMedications.length > 0 ? (todayMedications.every(m => m.taken) ? dStyles.statusDone : dStyles.statusActive) : dStyles.statusDone}`}>
                 {todayMedications && todayMedications.length > 0
                   ? `${todayMedications.filter(m => m.taken).length}/${todayMedications.length} Taken`
@@ -305,7 +305,7 @@ export function CommonPatientDashboard({
           {/* Step 3: Care Team Supervision */}
           <div className={`${dStyles.pathwayStepCard} ${dStyles.pathwayStep3}`}>
             <div className={dStyles.pathwayStepHeader}>
-              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum3}`}>Step 3 · स्थिरता</span>
+              <span className={`${dStyles.pathwayStepNum} ${dStyles.pathwayStepNum3}`}>Step 3 · Supervision</span>
               <span className={`${dStyles.pathwayStepStatus} ${dStyles.statusActive}`}>
                 Active Care
               </span>
@@ -320,7 +320,9 @@ export function CommonPatientDashboard({
         <div className={dStyles.pathwayFooterBanner}>
           <div className={dStyles.pathwayFooterText}>
             <p className={dStyles.pathwayFooterEn}>Regular monitoring helps you stay ahead.</p>
-            <p className={dStyles.pathwayFooterHi}>नियमित निगरानी आपको एक कदम आगे रखती है।</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255, 255, 255, 0.75)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              Continuous telemetry and proactive triage protect your lung health.
+            </p>
           </div>
         </div>
       </div>

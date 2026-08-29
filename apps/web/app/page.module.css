@@ -835,63 +835,15 @@
 }
 .pathwayGrid {
   display: grid;
-  grid-template-columns: minmax(320px, 420px) 1fr;
+  grid-template-columns: minmax(340px, 460px) 1fr;
   gap: 3rem;
-  align-items: center;
-}
-.pathwayVisualCard {
-  background: #0f2b48;
-  border-radius: 1.25rem;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(15, 43, 72, 0.2), 0 4px 12px rgba(15, 43, 72, 0.1);
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.pathwayVisualCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 26px 60px rgba(15, 43, 72, 0.28);
-}
-.pathwayImageWrap {
-  position: relative;
-  background: #081d33;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.pathwayImage {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  max-height: 490px;
-}
-.pathwayImageCaption {
-  padding: 14px 20px;
-  background: linear-gradient(180deg, rgba(15, 43, 72, 0.95), #0a1c30);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-}
-.captionEn {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 3px;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  letter-spacing: -0.01em;
-}
-.captionHi {
-  font-size: 0.85rem;
-  color: #93c5fd;
-  margin: 0;
-  font-weight: 500;
+  align-items: stretch;
 }
 .pathwayCards {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  justify-content: center;
 }
 .milestoneCard {
   display: flex;
