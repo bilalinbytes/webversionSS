@@ -757,6 +757,38 @@
 }
 
 /* ── Responsive ── */
+.directSignOutBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  height: 36px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: all 140ms ease;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+
+.directSignOutBtn:hover,
+.directSignOutBtn:active {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+}
+
+.directSignOutText {
+  font-weight: 700;
+}
+
+/* ── Responsive ── */
 @media (max-width: 960px) {
   .tabs {
     display: none;
@@ -765,11 +797,46 @@
 
 @media (max-width: 768px) {
   .nav {
-    padding: env(safe-area-inset-top, 0px) 14px 0;
+    padding: env(safe-area-inset-top, 0px) 10px 0;
     height: calc(56px + env(safe-area-inset-top, 0px));
+    gap: 6px;
+  }
+
+  .brandBadge {
+    display: none;
   }
 
   .brandSub {
+    display: none;
+  }
+
+  .right {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .reportBtn {
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .reportBtnText {
+    display: none;
+  }
+
+  .directSignOutBtn {
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .directSignOutText {
     display: none;
   }
 
@@ -778,13 +845,21 @@
   }
 
   .patientPill {
-    padding: 3px 8px 3px 4px;
-    height: 36px;
+    padding: 2px 6px 2px 3px;
+    height: 34px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .patientAvatar {
+    width: 26px;
+    height: 26px;
+    font-size: 10.5px;
   }
 
   .patientName {
-    font-size: 11.5px;
-    max-width: 75px;
+    font-size: 11px;
+    max-width: 48px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

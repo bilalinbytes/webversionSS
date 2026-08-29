@@ -649,7 +649,19 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
           patientName={patientName}
         />
 
-        {/* Patient Identity Profile Dropdown (Replaces raw sign out button) */}
+        {/* Dedicated 1-Tap Sign Out Action (Instantly visible on both mobile & desktop) */}
+        <button
+          type="button"
+          className={styles.directSignOutBtn}
+          onClick={handleLogout}
+          aria-label="Sign out of patient portal"
+          title="Sign Out · साइन आउट"
+        >
+          <LogOut size={15} />
+          <span className={styles.directSignOutText}>Sign Out</span>
+        </button>
+
+        {/* Patient Identity Profile Dropdown */}
         <div className={styles.profileWrap} ref={profileRef}>
           <button
             type="button"
