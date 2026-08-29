@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, CheckCircle, FileText, X } from "lucide-react";
+import { Activity, ArrowLeft, CheckCircle, CloudSun, FileText, Wind, X } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -590,29 +590,57 @@ function OverviewTab({
         {[
           {
             label: "SpO₂ Rest",
-            val: displaySpo2 !== null ? `${displaySpo2}%` : "-",
-            change: displaySpo2 !== null && displaySpo2 < 93 ? "Below target" : "Normal range",
+            icon: Activity,
+            val: displaySpo2 !== null ? `${displaySpo2}%` : "--",
+            status: displaySpo2 !== null ? (displaySpo2 < 90 ? "Critical (<90%)" : displaySpo2 < 93 ? "Below target" : "Normal (≥93%)") : "No entry",
             warn: displaySpo2 !== null && displaySpo2 < 93,
+            accent: displaySpo2 !== null && displaySpo2 < 93 ? "#dc2626" : "#1e6091",
+            bg: displaySpo2 !== null && displaySpo2 < 93 ? "rgba(220, 38, 38, 0.08)" : "rgba(30, 96, 145, 0.08)",
           },
           {
             label: "Breathing (mMRC)",
-            val: displayMmrc !== null ? String(displayMmrc) : "-",
-            change: displayMmrc !== null && displayMmrc >= 3 ? "Severe breathlessness" : "Moderate or less",
+            icon: Wind,
+            val: displayMmrc !== null ? `Grade ${displayMmrc}` : "--",
+            status: displayMmrc !== null ? (displayMmrc >= 3 ? "Severe breathlessness" : displayMmrc >= 2 ? "Moderate limitation" : "Mild / Normal") : "No entry",
             warn: displayMmrc !== null && displayMmrc >= 3,
+            accent: displayMmrc !== null && displayMmrc >= 3 ? "#d97706" : "#059669",
+            bg: displayMmrc !== null && displayMmrc >= 3 ? "rgba(217, 119, 6, 0.08)" : "rgba(5, 150, 105, 0.08)",
           },
           {
             label: "Air Quality (AQI)",
-            val: displayAqi !== null ? String(displayAqi) : "-",
-            change: typeof displayAqi === "number" && displayAqi > 150 ? "Unhealthy" : "Acceptable",
+            icon: CloudSun,
+            val: displayAqi !== null ? String(displayAqi) : "--",
+            status: typeof displayAqi === "number" ? (displayAqi > 200 ? "Severe (>200)" : displayAqi > 150 ? "Unhealthy (>150)" : displayAqi > 100 ? "Moderate" : "Good") : "Not available",
             warn: typeof displayAqi === "number" && displayAqi > 150,
+            accent: typeof displayAqi === "number" && displayAqi > 150 ? "#dc2626" : "#475569",
+            bg: typeof displayAqi === "number" && displayAqi > 150 ? "rgba(220, 38, 38, 0.08)" : "rgba(71, 85, 105, 0.08)",
           },
-        ].map((t) => (
-          <div key={t.label} className={styles.trendBox}>
-            <p className={styles.trendLbl}>{t.label}</p>
-            <p className={`${styles.trendVal} ${t.warn ? styles.trendWarn : ""}`}>{t.val}</p>
-            <p className={styles.trendChange}>{t.change}</p>
-          </div>
-        ))}
+        ].map((t) => {
+          const Icon = t.icon;
+          return (
+            <div key={t.label} className={styles.trendBox} style={{ borderTop: `3px solid ${t.accent}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span className={styles.trendLbl}>{t.label}</span>
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: t.bg, display: "flex", alignItems: "center", justifyContent: "center", color: t.accent }}>
+                  <Icon size={15} strokeWidth={2.2} />
+                </div>
+              </div>
+              <p className={`${styles.trendVal} ${t.warn ? styles.trendWarn : ""}`}>{t.val}</p>
+              <div style={{ marginTop: 4, display: "flex", alignItems: "center" }}>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "3px 8px",
+                  borderRadius: 6,
+                  background: t.bg,
+                  color: t.accent,
+                }}>
+                  {t.status}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Previous prescriptions */}
