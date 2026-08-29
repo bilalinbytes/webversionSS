@@ -1,10 +1,79 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronLeft, ChevronRight, Activity, ShieldAlert, Wind, Pill, TrendingUp, Stethoscope } from "lucide-react";
 
 export function Pathway3DVisual() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const totalSlides = 6;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
+
+  useEffect(() => {
+    if (isHovered) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      nextSlide();
+    }, 3000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isHovered, nextSlide]);
+
+  const slidesData = [
+    {
+      badge: "Vitals & Telemetry",
+      title: "Daily Symptoms & Lung Telemetry",
+      subtitle: "Log daily SpO₂, pulse rate, breathlessness & cough with instant synchronization.",
+      icon: Activity,
+    },
+    {
+      badge: "Autonomous Triage",
+      title: "Red-Flag Clinical Triage Engine",
+      subtitle: "Silent baseline drops trigger immediate high-acuity alerts for pulmonologist review.",
+      icon: ShieldAlert,
+    },
+    {
+      badge: "Environmental Defense",
+      title: "Smart AQI & Pollution Defense",
+      subtitle: "Real-time PM2.5 / PM10 monitoring warns patients before air pollution peaks.",
+      icon: Wind,
+    },
+    {
+      badge: "Medication Adherence",
+      title: "Smart Prescription Checklist",
+      subtitle: "Time-locked medication doses and inhaler tracking ensure zero missed treatments.",
+      icon: Pill,
+    },
+    {
+      badge: "Spirometry & PFT",
+      title: "Longitudinal Lung Capacity Analytics",
+      subtitle: "Continuous tracking of FEV1, FVC, and DLCO spirometry trends over time.",
+      icon: TrendingUp,
+    },
+    {
+      badge: "Doctor Care Loop",
+      title: "Direct Pulmonologist Supervision",
+      subtitle: "Digital prescriptions, treatment folders, and direct patient instructions.",
+      icon: Stethoscope,
+    },
+  ];
+
   return (
     <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         position: "relative",
         width: "100%",
@@ -18,6 +87,7 @@ export function Pathway3DVisual() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        userSelect: "none",
       }}
     >
       {/* Top Telemetry Header */}
@@ -26,11 +96,11 @@ export function Pathway3DVisual() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 22px",
-          background: "rgba(4, 16, 33, 0.65)",
+          padding: "14px 20px",
+          background: "rgba(4, 16, 33, 0.7)",
           backdropFilter: "blur(14px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-          zIndex: 3,
+          zIndex: 4,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -54,26 +124,29 @@ export function Pathway3DVisual() {
               fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
             }}
           >
-            Digital Telemetry &amp; Vitals
+            {slidesData[currentSlide]?.badge}
           </span>
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "#38bdf8",
-            background: "rgba(56, 189, 248, 0.15)",
-            border: "1px solid rgba(56, 189, 248, 0.35)",
-            padding: "3px 10px",
-            borderRadius: 999,
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-          }}
-        >
-          Live Telemetry Hub
-        </span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#38bdf8",
+              background: "rgba(56, 189, 248, 0.15)",
+              border: "1px solid rgba(56, 189, 248, 0.35)",
+              padding: "2px 9px",
+              borderRadius: 999,
+              fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            }}
+          >
+            Feature {currentSlide + 1} of {totalSlides}
+          </span>
+        </div>
       </div>
 
-      {/* Main 3D Vector SVG Composition */}
+      {/* Main 3D Vector SVG Slides Stage */}
       <div
         style={{
           flex: 1,
@@ -81,385 +154,555 @@ export function Pathway3DVisual() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "12px",
+          padding: "10px",
+          overflow: "hidden",
         }}
       >
-        <svg
-          viewBox="0 0 460 420"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+        {/* Navigation Arrow Left */}
+        <button
+          type="button"
+          onClick={prevSlide}
+          aria-label="Previous Slide"
           style={{
-            width: "100%",
-            height: "100%",
-            maxHeight: 440,
-            overflow: "visible",
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 5,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(15, 43, 72, 0.8)",
+            border: "1px solid rgba(56, 189, 248, 0.35)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            backdropFilter: "blur(8px)",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(56, 189, 248, 0.3)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(15, 43, 72, 0.8)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
           }}
         >
-          <defs>
-            {/* Glow Filters */}
-            <filter id="laserGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur1" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur2" />
-                <feMergeNode in="blur1" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+          <ChevronLeft size={20} />
+        </button>
 
-            <filter id="orbGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Navigation Arrow Right */}
+        <button
+          type="button"
+          onClick={nextSlide}
+          aria-label="Next Slide"
+          style={{
+            position: "absolute",
+            right: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 5,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(15, 43, 72, 0.8)",
+            border: "1px solid rgba(56, 189, 248, 0.35)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            backdropFilter: "blur(8px)",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(56, 189, 248, 0.3)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(15, 43, 72, 0.8)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+          }}
+        >
+          <ChevronRight size={20} />
+        </button>
 
-            <filter id="softDropShadow" x="-20%" y="-20%" width="150%" height="150%">
-              <feDropShadow dx="0" dy="12" stdDeviation="10" floodColor="#020b18" floodOpacity="0.65" />
-            </filter>
+        {/* ─── SLIDE 1: DAILY VITALS & LUNG TELEMETRY ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 0 ? 1 : 0,
+            transform: `scale(${currentSlide === 0 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 0 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glow1" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+              <radialGradient id="lungBg1" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#0e3a64" stopOpacity="0.9" />
+                <stop offset="70%" stopColor="#08213d" stopOpacity="0.75" />
+                <stop offset="100%" stopColor="#041426" stopOpacity="0.4" />
+              </radialGradient>
+              <linearGradient id="phoneGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" /><stop offset="100%" stopColor="#020617" />
+              </linearGradient>
+            </defs>
 
-            <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#0a2540" floodOpacity="0.25" />
-            </filter>
+            {/* Ambient Back Glow */}
+            <circle cx="300" cy="190" r="120" fill="#0284c7" opacity="0.18" filter="url(#glow1)" />
 
-            {/* Linear Gradients */}
-            <linearGradient id="phoneBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
+            {/* Energy Laser Lines */}
+            <path d="M 125 125 C 175 125, 205 165, 240 175" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" filter="url(#glow1)" />
+            <path d="M 125 185 C 165 185, 185 190, 235 190" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" filter="url(#glow1)" />
+            <path d="M 125 245 C 175 245, 205 210, 240 205" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" filter="url(#glow1)" />
+            <path d="M 300 110 L 300 70" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" filter="url(#glow1)" />
+            <path d="M 300 270 L 300 310" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" filter="url(#glow1)" />
 
-            <linearGradient id="phoneBezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
+            {/* Smartphone */}
+            <rect x="25" y="45" width="105" height="270" rx="22" fill="#334155" />
+            <rect x="28" y="48" width="99" height="264" rx="19" fill="url(#phoneGrad1)" />
+            <rect x="33" y="53" width="89" height="254" rx="16" fill="#e2e8f0" />
+            <rect x="60" y="58" width="35" height="4" rx="2" fill="#475569" />
 
-            <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e2e8f0" />
-              <stop offset="100%" stopColor="#cbd5e1" />
-            </linearGradient>
+            {/* Tactile Cards */}
+            <rect x="40" y="85" width="75" height="45" rx="9" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))" />
+            <path d="M 50 102 C 55 102, 59 99, 63 99 C 65 99, 66 102, 65 104" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
+            <path d="M 48 107 C 53 107, 59 107, 63 107" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
+            <rect x="70" y="105" width="36" height="4" rx="2" fill="#94a3b8" />
 
-            <linearGradient id="glassCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#e2e8f0" />
-            </linearGradient>
+            <rect x="40" y="145" width="75" height="45" rx="9" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))" />
+            <circle cx="56" cy="162" r="5" stroke="#0284c7" strokeWidth="2" fill="none" />
+            <circle cx="64" cy="162" r="1.5" fill="#0284c7" />
+            <rect x="70" y="165" width="36" height="4" rx="2" fill="#94a3b8" />
 
-            <linearGradient id="laserStreamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#00f0ff" stopOpacity="1" />
-              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
-            </linearGradient>
+            <rect x="40" y="205" width="75" height="45" rx="9" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))" />
+            <circle cx="56" cy="222" r="4.5" fill="#0284c7" />
+            <path d="M 50 234 C 50 230, 53 228, 56 228 C 59 228, 62 230, 62 234" fill="#0284c7" />
+            <rect x="70" y="225" width="36" height="4" rx="2" fill="#94a3b8" />
 
-            <radialGradient id="centralPodBg" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#0e3a64" stopOpacity="0.9" />
-              <stop offset="60%" stopColor="#08213d" stopOpacity="0.75" />
-              <stop offset="100%" stopColor="#041426" stopOpacity="0.4" />
-            </radialGradient>
+            {/* Top & Bottom Badges */}
+            <circle cx="300" cy="48" r="26" fill="#ffffff" stroke="#38bdf8" strokeWidth="2" />
+            <path d="M 292 46 C 296 46, 301 44, 305 44" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
+            <path d="M 290 51 C 295 51, 303 51, 307 51" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
 
-            <radialGradient id="lungTissueGrad" cx="45%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.85" />
-              <stop offset="40%" stopColor="#7dd3fc" stopOpacity="0.6" />
-              <stop offset="80%" stopColor="#0284c7" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.1" />
-            </radialGradient>
+            <circle cx="300" cy="332" r="26" fill="#ffffff" stroke="#38bdf8" strokeWidth="2" />
+            <circle cx="300" cy="326" r="5" fill="#0284c7" />
+            <path d="M 293 340 C 293 336, 296 333, 300 333 C 304 333, 307 336, 307 340" fill="#0284c7" />
 
-            <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#e0f2fe" />
-            </linearGradient>
-          </defs>
+            {/* Central Holographic Lungs Pod */}
+            <circle cx="300" cy="190" r="76" stroke="#38bdf8" strokeWidth="2" strokeDasharray="6 4" opacity="0.6" />
+            <circle cx="300" cy="190" r="70" fill="url(#lungBg1)" stroke="#ffffff" strokeWidth="2.5" />
+            <circle cx="300" cy="190" r="66" stroke="#00f0ff" strokeWidth="1.5" opacity="0.75" />
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 1. BACKGROUND GLOW & AMBIENT RAYS */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          <circle cx="300" cy="190" r="140" fill="#0284c7" opacity="0.16" filter="url(#orbGlow)" />
-          <circle cx="300" cy="190" r="95" fill="#38bdf8" opacity="0.12" filter="url(#laserGlow)" />
+            {/* Translucent Lungs */}
+            <g transform="translate(254, 142)">
+              <path d="M 38 18 C 28 18, 16 30, 12 48 C 8 64, 10 82, 22 92 C 30 98, 38 92, 44 80 C 48 70, 48 40, 46 25 Z" fill="#7dd3fc" fillOpacity="0.5" stroke="#38bdf8" strokeWidth="1.6" filter="url(#glow1)" />
+              <path d="M 58 18 C 68 18, 80 30, 84 48 C 88 64, 86 82, 74 92 C 66 98, 58 92, 52 80 C 48 70, 48 40, 50 25 Z" fill="#7dd3fc" fillOpacity="0.5" stroke="#38bdf8" strokeWidth="1.6" filter="url(#glow1)" />
+              <path d="M 46 2 L 50 2 L 50 28 L 46 28 Z" fill="#ffffff" />
+              <path d="M 48 30 C 42 34, 32 44, 26 56" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M 50 30 C 56 34, 66 44, 72 56" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
+            </g>
+          </svg>
+        </div>
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 2. GLOWING ENERGY LASER PIPES / CABLES */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* Glow backdrop paths */}
-          <path
-            d="M 125 125 C 175 125, 205 165, 240 175"
-            stroke="#00f0ff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            opacity="0.3"
-            filter="url(#laserGlow)"
-          />
-          <path
-            d="M 125 185 C 165 185, 185 190, 235 190"
-            stroke="#00f0ff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            opacity="0.3"
-            filter="url(#laserGlow)"
-          />
-          <path
-            d="M 125 245 C 175 245, 205 210, 240 205"
-            stroke="#00f0ff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            opacity="0.3"
-            filter="url(#laserGlow)"
-          />
-          <path
-            d="M 300 110 L 300 70"
-            stroke="#00f0ff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            opacity="0.3"
-            filter="url(#laserGlow)"
-          />
-          <path
-            d="M 300 270 L 300 310"
-            stroke="#00f0ff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            opacity="0.3"
-            filter="url(#laserGlow)"
-          />
+        {/* ─── SLIDE 2: AUTONOMOUS RED-FLAG TRIAGE ENGINE ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 1 ? 1 : 0,
+            transform: `scale(${currentSlide === 1 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 1 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glowRed" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+              <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
+                <stop offset="50%" stopColor="#dc2626" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#041426" stopOpacity="0" />
+              </radialGradient>
+            </defs>
 
-          {/* Sharp laser lines */}
-          <path
-            d="M 125 125 C 175 125, 205 165, 240 175"
-            stroke="url(#laserStreamGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 125 185 C 165 185, 185 190, 235 190"
-            stroke="url(#laserStreamGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 125 245 C 175 245, 205 210, 240 205"
-            stroke="url(#laserStreamGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 300 110 L 300 70"
-            stroke="url(#laserStreamGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 300 270 L 300 310"
-            stroke="url(#laserStreamGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
+            {/* Radar Sweep Circles */}
+            <circle cx="230" cy="180" r="150" stroke="rgba(239, 68, 68, 0.2)" strokeWidth="1.5" strokeDasharray="8 6" />
+            <circle cx="230" cy="180" r="110" stroke="rgba(239, 68, 68, 0.35)" strokeWidth="1.5" />
+            <circle cx="230" cy="180" r="70" fill="url(#radarGrad)" stroke="#ef4444" strokeWidth="2" />
 
-          {/* Laser connection dots on phone */}
-          <circle cx="125" cy="125" r="4.5" fill="#ffffff" filter="url(#orbGlow)" />
-          <circle cx="125" cy="185" r="4.5" fill="#ffffff" filter="url(#orbGlow)" />
-          <circle cx="125" cy="245" r="4.5" fill="#ffffff" filter="url(#orbGlow)" />
-
-          {/* Sparkle star / node on center edge */}
-          <circle cx="395" cy="180" r="3.5" fill="#ffffff" filter="url(#orbGlow)" />
-          <path d="M 395 174 L 395 186 M 389 180 L 401 180" stroke="#ffffff" strokeWidth="1.5" opacity="0.9" />
-
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 3. 3D SMARTPHONE (LEFT SIDE) */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          <g filter="url(#softDropShadow)">
-            {/* Phone outer bevel casing */}
-            <rect x="25" y="45" width="112" height="280" rx="24" fill="url(#phoneBezelGrad)" />
-            {/* Phone dark metallic inner frame */}
-            <rect x="28" y="48" width="106" height="274" rx="21" fill="url(#phoneBodyGrad)" />
-            {/* Screen glass */}
-            <rect x="33" y="53" width="96" height="264" rx="17" fill="url(#screenGrad)" />
-
-            {/* Top speaker notch */}
-            <rect x="66" y="58" width="30" height="4" rx="2" fill="#334155" />
-
-            {/* Screen Tactile Card 1: Airflow / SpO2 */}
-            <g filter="url(#cardShadow)">
-              <rect x="40" y="85" width="82" height="48" rx="10" fill="url(#glassCardGrad)" />
-              {/* Wind / Airflow Icon */}
-              <g transform="translate(48, 97)">
-                <path d="M 3 5 C 7 5, 10 3, 14 3 C 16 3, 17 5, 16 7 C 15 8.5, 12 8.5, 12 8.5" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
-                <path d="M 1 10 C 6 10, 12 10, 16 10 C 18.5 10, 19.5 12, 18.5 14 C 17.5 15.5, 15 15.5, 15 15.5" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
-                <path d="M 3 15 C 6 15, 9 16.5, 12 16.5 C 13.5 16.5, 14.5 18, 13.5 19 C 12.5 20, 11 20, 11 20" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
-              </g>
-              {/* Indicator bar */}
-              <rect x="75" y="106" width="38" height="5" rx="2.5" fill="#94a3b8" opacity="0.6" />
+            {/* Central Triage Shield */}
+            <g transform="translate(195, 140)" filter="url(#glowRed)">
+              <path d="M 35 5 L 65 18 C 65 52, 45 72, 35 78 C 25 72, 5 52, 5 18 Z" fill="#ef4444" stroke="#ffffff" strokeWidth="2.5" />
+              <path d="M 35 25 L 35 48" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="35" cy="58" r="2.5" fill="#ffffff" />
             </g>
 
-            {/* Screen Tactile Card 2: Cough / Respiratory Symptoms */}
-            <g filter="url(#cardShadow)">
-              <rect x="40" y="145" width="82" height="48" rx="10" fill="url(#glassCardGrad)" />
-              {/* Cough Symptom Icon */}
-              <g transform="translate(48, 157)">
-                <circle cx="10" cy="8" r="5.5" stroke="#0284c7" strokeWidth="2" fill="none" />
-                <path d="M 10 13.5 C 6 13.5, 3 16, 3 19.5 L 17 19.5 C 17 16, 14 13.5, 10 13.5 Z" stroke="#0284c7" strokeWidth="2" fill="none" />
-                <circle cx="19" cy="8" r="1.2" fill="#0284c7" />
-                <circle cx="21.5" cy="11" r="1.2" fill="#0284c7" />
-              </g>
-              {/* Indicator bar */}
-              <rect x="75" y="166" width="38" height="5" rx="2.5" fill="#94a3b8" opacity="0.6" />
+            {/* Floating Telemetry Alert Badges */}
+            {/* Alert 1: SpO2 Drop */}
+            <g transform="translate(45, 90)">
+              <rect x="0" y="0" width="135" height="52" rx="12" fill="#0f2b48" stroke="#ef4444" strokeWidth="1.5" filter="drop-shadow(0 8px 16px rgba(0,0,0,0.4))" />
+              <circle cx="22" cy="26" r="6" fill="#ef4444" filter="url(#glowRed)" />
+              <text x="36" y="24" fill="#ffffff" fontSize="12" fontWeight="700" fontFamily="system-ui">SpO₂: 87% (Drop)</text>
+              <text x="36" y="38" fill="#fca5a5" fontSize="10" fontWeight="500" fontFamily="system-ui">Baseline Delta &gt; 3%</text>
             </g>
 
-            {/* Screen Tactile Card 3: Patient Profile Check-in */}
-            <g filter="url(#cardShadow)">
-              <rect x="40" y="205" width="82" height="48" rx="10" fill="url(#glassCardGrad)" />
-              {/* Profile Icon */}
-              <g transform="translate(48, 217)">
-                <circle cx="10" cy="7" r="4.5" fill="#0284c7" />
-                <path d="M 4 19 C 4 15, 7 13, 10 13 C 13 13, 16 15, 16 19" fill="#0284c7" />
-              </g>
-              {/* Indicator bar */}
-              <rect x="75" y="226" width="38" height="5" rx="2.5" fill="#94a3b8" opacity="0.6" />
+            {/* Alert 2: Acuity Score */}
+            <g transform="translate(280, 80)">
+              <rect x="0" y="0" width="140" height="52" rx="12" fill="#0f2b48" stroke="#f59e0b" strokeWidth="1.5" filter="drop-shadow(0 8px 16px rgba(0,0,0,0.4))" />
+              <circle cx="22" cy="26" r="6" fill="#f59e0b" filter="url(#glowRed)" />
+              <text x="36" y="24" fill="#ffffff" fontSize="12" fontWeight="700" fontFamily="system-ui">Risk Score: 11 / 15</text>
+              <text x="36" y="38" fill="#fde68a" fontSize="10" fontWeight="500" fontFamily="system-ui">High Acuity Priority</text>
             </g>
-          </g>
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 4. TOP BADGE POD (AIRFLOW / AQI) */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          <g filter="url(#softDropShadow)">
-            {/* 3D Base ring */}
-            <circle cx="300" cy="50" r="32" fill="#0f2b48" opacity="0.5" />
-            <circle cx="300" cy="48" r="30" fill="url(#badgeGrad)" stroke="#38bdf8" strokeWidth="2.5" />
-            <circle cx="300" cy="48" r="23" fill="#f8fafc" />
-            {/* Airflow Icon */}
-            <g transform="translate(286, 36)">
-              <path d="M 5 8 C 10 8, 17 5, 22 5 C 25.5 5, 27 8, 25.5 11 C 24 13.5, 19.5 13.5, 19.5 13.5" stroke="#0284c7" strokeWidth="2.6" strokeLinecap="round" />
-              <path d="M 2 15 C 9 15, 19 15, 25 15 C 28.5 15, 30 18, 28.5 21 C 27 23.5, 23 23.5, 23 23.5" stroke="#0284c7" strokeWidth="2.6" strokeLinecap="round" />
-              <path d="M 5 22 C 9 22, 14 24, 18 24 C 20.5 24, 22 26.5, 20.5 28 C 19 29.5, 17 29.5, 17 29.5" stroke="#0284c7" strokeWidth="2.6" strokeLinecap="round" />
+            {/* Alert 3: Doctor Notification */}
+            <g transform="translate(130, 290)">
+              <rect x="0" y="0" width="200" height="48" rx="24" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.5" filter="url(#glowRed)" />
+              <text x="100" y="29" fill="#ffffff" fontSize="13" fontWeight="700" textAnchor="middle" fontFamily="system-ui">⚡ Pulmonologist Escalated</text>
             </g>
-          </g>
+          </svg>
+        </div>
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 5. BOTTOM BADGE POD (PATIENT CHECK-IN) */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          <g filter="url(#softDropShadow)">
-            {/* 3D Base ring */}
-            <circle cx="300" cy="330" r="32" fill="#0f2b48" opacity="0.5" />
-            <circle cx="300" cy="328" r="30" fill="url(#badgeGrad)" stroke="#38bdf8" strokeWidth="2.5" />
-            <circle cx="300" cy="328" r="23" fill="#f8fafc" />
-            {/* User Icon */}
-            <g transform="translate(287, 314)">
-              <circle cx="13" cy="10" r="6.5" fill="#0284c7" />
-              <path d="M 4 27 C 4 21, 8 18, 13 18 C 18 18, 22 21, 22 27 Z" fill="#0284c7" />
+        {/* ─── SLIDE 3: SMART AQI & POLLUTION DEFENSE ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 2 ? 1 : 0,
+            transform: `scale(${currentSlide === 2 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 2 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glowGreen" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+              <radialGradient id="aqiDome" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                <stop offset="60%" stopColor="#059669" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#041426" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Environmental Dome */}
+            <circle cx="230" cy="185" r="145" fill="url(#aqiDome)" stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" />
+            <circle cx="230" cy="185" r="105" stroke="#10b981" strokeWidth="2" opacity="0.6" />
+
+            {/* Center Dial: AQI Gauge */}
+            <g transform="translate(160, 115)" filter="url(#glowGreen)">
+              <circle cx="70" cy="70" r="62" fill="#0f2b48" stroke="#10b981" strokeWidth="4" />
+              <text x="70" y="55" fill="#a7f3d0" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">AIR QUALITY</text>
+              <text x="70" y="85" fill="#ffffff" fontSize="28" fontWeight="800" textAnchor="middle" fontFamily="system-ui">42</text>
+              <text x="70" y="105" fill="#34d399" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="system-ui">GOOD (SAFE)</text>
             </g>
-          </g>
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 6. CENTRAL HOLOGRAPHIC 3D LUNGS POD */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          <g filter="url(#softDropShadow)">
-            {/* Outer Cyan Pulse Ring */}
-            <circle cx="300" cy="190" r="78" stroke="#38bdf8" strokeWidth="2" strokeDasharray="6 4" opacity="0.6" />
-            {/* Glass capsule outer border */}
-            <circle cx="300" cy="190" r="72" fill="url(#centralPodBg)" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="3" />
-            {/* Inner neon border */}
-            <circle cx="300" cy="190" r="68" stroke="#00f0ff" strokeWidth="1.5" opacity="0.75" />
+            {/* Particle Pods */}
+            <g transform="translate(50, 160)">
+              <rect x="0" y="0" width="95" height="50" rx="12" fill="#061e38" stroke="#38bdf8" strokeWidth="1.5" />
+              <text x="47" y="24" fill="#93c5fd" fontSize="11" fontWeight="600" textAnchor="middle" fontFamily="system-ui">PM 2.5</text>
+              <text x="47" y="42" fill="#ffffff" fontSize="14" fontWeight="800" textAnchor="middle" fontFamily="system-ui">14 µg/m³</text>
+            </g>
 
-            {/* Specular glass reflection arc */}
+            <g transform="translate(315, 160)">
+              <rect x="0" y="0" width="95" height="50" rx="12" fill="#061e38" stroke="#38bdf8" strokeWidth="1.5" />
+              <text x="47" y="24" fill="#93c5fd" fontSize="11" fontWeight="600" textAnchor="middle" fontFamily="system-ui">PM 10</text>
+              <text x="47" y="42" fill="#ffffff" fontSize="14" fontWeight="800" textAnchor="middle" fontFamily="system-ui">28 µg/m³</text>
+            </g>
+
+            {/* Shield protection badge */}
+            <g transform="translate(130, 295)">
+              <rect x="0" y="0" width="200" height="42" rx="21" fill="#059669" stroke="#34d399" strokeWidth="1.5" filter="url(#glowGreen)" />
+              <text x="100" y="26" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">🛡️ Active Environmental Shield</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* ─── SLIDE 4: TACTILE MEDICATION ADHERENCE ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 3 ? 1 : 0,
+            transform: `scale(${currentSlide === 3 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 3 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glowBlue" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+
+            {/* 3D Smart Pillbox Container */}
+            <rect x="70" y="65" width="320" height="230" rx="20" fill="#0c233c" stroke="#38bdf8" strokeWidth="2" filter="drop-shadow(0 14px 30px rgba(0,0,0,0.5))" />
+
+            {/* Checklist Header */}
+            <rect x="70" y="65" width="320" height="46" rx="20" fill="#08182b" />
+            <text x="95" y="94" fill="#ffffff" fontSize="14" fontWeight="700" fontFamily="system-ui">Today&apos;s Prescribed Regimen</text>
+            <rect x="310" y="78" width="65" height="22" rx="11" fill="#10b981" />
+            <text x="342" y="93" fill="#ffffff" fontSize="10" fontWeight="800" textAnchor="middle" fontFamily="system-ui">100% DONE</text>
+
+            {/* Med Row 1 */}
+            <rect x="90" y="125" width="280" height="46" rx="10" fill="#133659" stroke="#38bdf8" strokeWidth="1" />
+            <circle cx="115" cy="148" r="11" fill="#10b981" />
+            <path d="M 111 148 L 114 151 L 120 144" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+            <text x="135" y="145" fill="#ffffff" fontSize="13" fontWeight="700" fontFamily="system-ui">Budecort Inhaler (2 Puffs)</text>
+            <text x="135" y="160" fill="#93c5fd" fontSize="10" fontFamily="system-ui">Morning · 8:00 AM — Taken</text>
+
+            {/* Med Row 2 */}
+            <rect x="90" y="180" width="280" height="46" rx="10" fill="#133659" stroke="#38bdf8" strokeWidth="1" />
+            <circle cx="115" cy="203" r="11" fill="#10b981" />
+            <path d="M 111 203 L 114 206 L 120 199" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+            <text x="135" y="200" fill="#ffffff" fontSize="13" fontWeight="700" fontFamily="system-ui">Pirfenidone 200mg (1 Tab)</text>
+            <text x="135" y="215" fill="#93c5fd" fontSize="10" fontFamily="system-ui">After Lunch — Taken</text>
+
+            {/* Med Row 3 */}
+            <rect x="90" y="235" width="280" height="46" rx="10" fill="#133659" stroke="#38bdf8" strokeWidth="1" />
+            <circle cx="115" cy="258" r="11" fill="#10b981" />
+            <path d="M 111 258 L 114 261 L 120 254" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+            <text x="135" y="255" fill="#ffffff" fontSize="13" fontWeight="700" fontFamily="system-ui">Formoterol 12mcg (1 Cap)</text>
+            <text x="135" y="270" fill="#93c5fd" fontSize="10" fontFamily="system-ui">Night · 9:00 PM — Taken</text>
+
+            {/* Streak Badge */}
+            <g transform="translate(140, 310)">
+              <rect x="0" y="0" width="180" height="38" rx="19" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.5" filter="url(#glowBlue)" />
+              <text x="90" y="24" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">🔥 14-Day Perfect Adherence</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* ─── SLIDE 5: LONGITUDINAL SPIROMETRY & PFT ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 4 ? 1 : 0,
+            transform: `scale(${currentSlide === 4 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 4 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glowPurple" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+
+            {/* PFT Chart Canvas Frame */}
+            <rect x="50" y="60" width="360" height="240" rx="18" fill="#0b1e36" stroke="#4f46e5" strokeWidth="2" filter="drop-shadow(0 14px 30px rgba(0,0,0,0.5))" />
+
+            {/* Chart Grid Lines */}
+            <line x1="80" y1="110" x2="380" y2="110" stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="80" y1="160" x2="380" y2="160" stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="80" y1="210" x2="380" y2="210" stroke="#1e3a5f" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="80" y1="260" x2="380" y2="260" stroke="#334155" strokeWidth="1.5" />
+
+            {/* FEV1 & FVC Spirometry Curve */}
             <path
-              d="M 245 155 A 64 64 0 0 1 350 145"
-              stroke="#ffffff"
-              strokeWidth="2.5"
+              d="M 90 250 Q 150 90, 230 130 T 370 100"
+              stroke="#6366f1"
+              strokeWidth="3.5"
+              fill="none"
               strokeLinecap="round"
-              opacity="0.5"
+              filter="url(#glowPurple)"
+            />
+            <path
+              d="M 90 255 Q 160 140, 240 170 T 370 140"
+              stroke="#06b6d4"
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              filter="url(#glowPurple)"
             />
 
-            {/* ─── ANATOMICAL HUMAN LUNGS (TRANSLUCENT & LUMINESCENT) ─── */}
-            <g transform="translate(250, 140)">
-              {/* Right Lung Lobe (Viewer's Left) */}
-              <path
-                d="M 40 18 C 30 18, 16 30, 12 48 C 8 64, 10 82, 22 92 C 30 98, 38 92, 44 80 C 48 70, 48 40, 46 25 C 45 20, 43 18, 40 18 Z"
-                fill="url(#lungTissueGrad)"
-                stroke="#38bdf8"
-                strokeWidth="1.8"
-                filter="url(#laserGlow)"
-              />
+            {/* Data Point Nodes */}
+            <circle cx="150" cy="120" r="5" fill="#6366f1" stroke="#ffffff" strokeWidth="2" />
+            <circle cx="230" cy="130" r="5" fill="#6366f1" stroke="#ffffff" strokeWidth="2" />
+            <circle cx="370" cy="100" r="6" fill="#10b981" stroke="#ffffff" strokeWidth="2" filter="url(#glowPurple)" />
 
-              {/* Left Lung Lobe (Viewer's Right) */}
-              <path
-                d="M 60 18 C 70 18, 84 30, 88 48 C 92 64, 90 82, 78 92 C 70 98, 62 92, 56 80 C 52 70, 52 40, 54 25 C 55 20, 57 18, 60 18 Z"
-                fill="url(#lungTissueGrad)"
-                stroke="#38bdf8"
-                strokeWidth="1.8"
-                filter="url(#laserGlow)"
-              />
-
-              {/* Trachea (Windpipe) */}
-              <path
-                d="M 47 0 L 53 0 L 53 28 C 53 32, 50 36, 50 36 C 50 36, 47 32, 47 28 Z"
-                fill="#e0f2fe"
-                stroke="#38bdf8"
-                strokeWidth="1.4"
-              />
-              {/* Trachea horizontal cartilages */}
-              <line x1="47" y1="6" x2="53" y2="6" stroke="#0284c7" strokeWidth="1.2" />
-              <line x1="47" y1="12" x2="53" y2="12" stroke="#0284c7" strokeWidth="1.2" />
-              <line x1="47" y1="18" x2="53" y2="18" stroke="#0284c7" strokeWidth="1.2" />
-              <line x1="47" y1="24" x2="53" y2="24" stroke="#0284c7" strokeWidth="1.2" />
-
-              {/* Main Bronchi Branches (Bifurcation / Carina) */}
-              {/* Right main bronchus */}
-              <path d="M 48 32 C 42 36, 32 45, 26 58" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-              <path d="M 36 43 C 32 48, 22 52, 18 64" stroke="#e0f2fe" strokeWidth="1.4" strokeLinecap="round" />
-              <path d="M 30 52 C 28 62, 24 72, 24 80" stroke="#bae6fd" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M 38 48 C 38 60, 36 70, 34 82" stroke="#bae6fd" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M 22 58 C 17 64, 15 72, 16 78" stroke="#7dd3fc" strokeWidth="1" strokeLinecap="round" />
-
-              {/* Left main bronchus */}
-              <path d="M 52 32 C 58 36, 68 45, 74 58" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-              <path d="M 64 43 C 68 48, 78 52, 82 64" stroke="#e0f2fe" strokeWidth="1.4" strokeLinecap="round" />
-              <path d="M 70 52 C 72 62, 76 72, 76 80" stroke="#bae6fd" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M 62 48 C 62 60, 64 70, 66 82" stroke="#bae6fd" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M 78 58 C 83 64, 85 72, 84 78" stroke="#7dd3fc" strokeWidth="1" strokeLinecap="round" />
-
-              {/* Alveoli capillary light points */}
-              <circle cx="20" cy="55" r="1.5" fill="#ffffff" filter="url(#orbGlow)" />
-              <circle cx="28" cy="74" r="1.5" fill="#ffffff" filter="url(#orbGlow)" />
-              <circle cx="80" cy="55" r="1.5" fill="#ffffff" filter="url(#orbGlow)" />
-              <circle cx="72" cy="74" r="1.5" fill="#ffffff" filter="url(#orbGlow)" />
-              <circle cx="50" cy="35" r="2" fill="#00f0ff" filter="url(#orbGlow)" />
+            {/* Dial Badges */}
+            <g transform="translate(70, 75)">
+              <rect x="0" y="0" width="85" height="26" rx="8" fill="#1e1b4b" stroke="#6366f1" strokeWidth="1" />
+              <text x="42" y="17" fill="#c7d2fe" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="system-ui">FEV₁: 84%</text>
             </g>
-          </g>
-        </svg>
+            <g transform="translate(165, 75)">
+              <rect x="0" y="0" width="85" height="26" rx="8" fill="#082f49" stroke="#06b6d4" strokeWidth="1" />
+              <text x="42" y="17" fill="#bae6fd" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="system-ui">FVC: 91%</text>
+            </g>
+            <g transform="translate(260, 75)">
+              <rect x="0" y="0" width="95" height="26" rx="8" fill="#064e3b" stroke="#10b981" strokeWidth="1" />
+              <text x="47" y="17" fill="#a7f3d0" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="system-ui">DLCO: Stable</text>
+            </g>
+
+            {/* Bottom Insight Badge */}
+            <g transform="translate(130, 315)">
+              <rect x="0" y="0" width="200" height="38" rx="19" fill="#4f46e5" stroke="#a5b4fc" strokeWidth="1.5" filter="url(#glowPurple)" />
+              <text x="100" y="24" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">📈 Sustained Lung Capacity Gain</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* ─── SLIDE 6: SPECIALIST CARE LOOP & TELE-CONSULT ─── */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px",
+            opacity: currentSlide === 5 ? 1 : 0,
+            transform: `scale(${currentSlide === 5 ? 1 : 0.95})`,
+            transition: "opacity 0.5s ease, transform 0.5s ease",
+            pointerEvents: currentSlide === 5 ? "auto" : "none",
+          }}
+        >
+          <svg viewBox="0 0 460 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", maxHeight: 420 }}>
+            <defs>
+              <filter id="glowTeal" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1" />
+                <feMerge><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+
+            {/* Doctor Hub Card */}
+            <rect x="65" y="65" width="330" height="235" rx="20" fill="#0b223c" stroke="#0ea5e9" strokeWidth="2" filter="drop-shadow(0 14px 30px rgba(0,0,0,0.5))" />
+
+            {/* Doctor Avatar Header */}
+            <circle cx="115" cy="115" r="28" fill="#0284c7" stroke="#ffffff" strokeWidth="2" filter="url(#glowTeal)" />
+            <text x="115" y="122" fill="#ffffff" fontSize="16" fontWeight="800" textAnchor="middle" fontFamily="system-ui">Dr</text>
+
+            <text x="160" y="112" fill="#ffffff" fontSize="15" fontWeight="800" fontFamily="system-ui">Dr. Sharma, MD</text>
+            <text x="160" y="128" fill="#7dd3fc" fontSize="11" fontWeight="600" fontFamily="system-ui">Senior Pulmonologist · Interventional</text>
+
+            {/* Digital Prescription & Instruction Card */}
+            <rect x="90" y="160" width="280" height="52" rx="12" fill="#06182a" stroke="#38bdf8" strokeWidth="1" />
+            <text x="105" y="182" fill="#38bdf8" fontSize="11" fontWeight="700" fontFamily="system-ui">CLINICAL INSTRUCTION · TODAY</text>
+            <text x="105" y="199" fill="#ffffff" fontSize="12" fontFamily="system-ui">&quot;SpO₂ stable at 98%. Maintain Budecort 2 puffs.&quot;</text>
+
+            {/* Action Buttons */}
+            <rect x="90" y="225" width="135" height="42" rx="10" fill="#0284c7" />
+            <text x="157" y="251" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">📋 View Full Rx</text>
+
+            <rect x="235" y="225" width="135" height="42" rx="10" fill="#059669" />
+            <text x="302" y="251" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">📅 Book Follow-Up</text>
+
+            {/* Care Loop Verified Badge */}
+            <g transform="translate(130, 315)">
+              <rect x="0" y="0" width="200" height="38" rx="19" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.5" filter="url(#glowTeal)" />
+              <text x="100" y="24" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="system-ui">✨ Connected Specialist Loop</text>
+            </g>
+          </svg>
+        </div>
       </div>
 
-      {/* Bottom Clinical Caption */}
+      {/* Bottom Information & Interactive Carousel Controls */}
       <div
         style={{
           padding: "16px 20px",
           background: "linear-gradient(180deg, rgba(4, 16, 33, 0.7) 0%, rgba(2, 8, 18, 0.95) 100%)",
           borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-          textAlign: "center",
-          zIndex: 3,
+          zIndex: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
         }}
       >
-        <p
-          style={{
-            margin: "0 0 3px",
-            fontSize: "1rem",
-            fontWeight: 700,
-            color: "#ffffff",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Log your daily symptoms.
-        </p>
-        <p
-          style={{
-            margin: 0,
-            fontSize: "0.82rem",
-            color: "#7dd3fc",
-            fontWeight: 500,
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-          }}
-        >
-          Continuous respiratory care &amp; intelligent triage defense.
-        </p>
+        {/* Dynamic Titles */}
+        <div style={{ textAlign: "center" }}>
+          <p
+            style={{
+              margin: "0 0 4px",
+              fontSize: "1.02rem",
+              fontWeight: 700,
+              color: "#ffffff",
+              fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {slidesData[currentSlide]?.title}
+          </p>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.84rem",
+              color: "#93c5fd",
+              fontWeight: 500,
+              fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+              lineHeight: 1.4,
+            }}
+          >
+            {slidesData[currentSlide]?.subtitle}
+          </p>
+        </div>
+
+        {/* Indicator Progress Dots */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          {slidesData.map((_, idx) => {
+            const isActive = idx === currentSlide;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+                style={{
+                  height: 6,
+                  width: isActive ? 28 : 8,
+                  borderRadius: 4,
+                  background: isActive ? "#38bdf8" : "rgba(255, 255, 255, 0.2)",
+                  boxShadow: isActive ? "0 0 10px #38bdf8" : "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );
