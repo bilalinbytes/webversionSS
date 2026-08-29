@@ -38,6 +38,22 @@ export function Hero3DScene() {
         userSelect: "none",
       }}
     >
+      <style>{`
+        @keyframes ecgContinuousScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes ecgScanSweep {
+          0% { left: -15%; opacity: 0; }
+          15% { opacity: 0.85; }
+          85% { opacity: 0.85; }
+          100% { left: 105%; opacity: 0; }
+        }
+        @keyframes heroPulseGlow {
+          0%, 100% { opacity: 0.55; transform: scale(1); }
+          50% { opacity: 0.95; transform: scale(1.02); }
+        }
+      `}</style>
       {/* 3D Rotational Canvas Container */}
       <div
         style={{
@@ -400,29 +416,79 @@ export function Hero3DScene() {
             </div>
           </div>
 
-          {/* Live Rhythm Pulse Wave SVG */}
+          {/* Live Rhythm Pulse Wave Container with Seamless Moving ECG */}
           <div
             style={{
-              background: "#08182b",
+              position: "relative",
+              background: "#061325",
               borderRadius: 8,
-              padding: "6px 8px",
+              padding: "4px 0",
               height: 48,
               display: "flex",
               alignItems: "center",
               overflow: "hidden",
+              border: "1px solid rgba(0, 240, 255, 0.2)",
+              boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5)",
             }}
           >
-            <svg viewBox="0 0 300 40" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
-              <path
-                d="M 0,20 Q 15,20 25,20 T 40,20 L 48,6 L 56,34 L 64,2 L 72,30 L 80,20 L 120,20 Q 135,20 145,20 T 160,20 L 168,8 L 176,32 L 184,4 L 192,28 L 200,20 L 240,20 Q 255,20 265,20 T 280,20 L 288,6 L 296,34 L 300,20"
-                fill="none"
-                stroke="#00f0ff"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="400"
-                style={{ animation: "waveDash 3s linear infinite" }}
-              />
-            </svg>
+            {/* Grid Background Lines */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage:
+                  "linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px)",
+                backgroundSize: "16px 16px",
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Seamless Infinite Moving Waveform Track */}
+            <div
+              style={{
+                display: "flex",
+                width: "200%",
+                height: "100%",
+                animation: "ecgContinuousScroll 2.2s linear infinite",
+              }}
+            >
+              <svg viewBox="0 0 300 40" preserveAspectRatio="none" style={{ width: "50%", height: "100%", flexShrink: 0 }}>
+                <path
+                  d="M 0,20 L 35,20 L 42,6 L 50,34 L 58,2 L 66,30 L 74,20 L 150,20 L 158,6 L 166,34 L 174,2 L 182,30 L 190,20 L 300,20"
+                  fill="none"
+                  stroke="#00f0ff"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ filter: "drop-shadow(0 0 6px #00f0ff)" }}
+                />
+              </svg>
+              <svg viewBox="0 0 300 40" preserveAspectRatio="none" style={{ width: "50%", height: "100%", flexShrink: 0 }}>
+                <path
+                  d="M 0,20 L 35,20 L 42,6 L 50,34 L 58,2 L 66,30 L 74,20 L 150,20 L 158,6 L 166,34 L 174,2 L 182,30 L 190,20 L 300,20"
+                  fill="none"
+                  stroke="#00f0ff"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ filter: "drop-shadow(0 0 6px #00f0ff)" }}
+                />
+              </svg>
+            </div>
+
+            {/* Luminous Sweep Beam Flare */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                width: "40px",
+                background: "linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.4) 50%, #ffffff 90%, transparent 100%)",
+                filter: "blur(2px)",
+                animation: "ecgScanSweep 2.2s linear infinite",
+                pointerEvents: "none",
+              }}
+            />
           </div>
 
           {/* Autonomous Triage Banner */}
