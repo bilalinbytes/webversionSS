@@ -1224,42 +1224,47 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: "0 0 32px" }}>
-      {viewer === "doctor" && (
-        <section style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#132d36" }}>Patient Export Dossier</p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6d8794" }}>Download structured PDF reports for clinical review</p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => handleExport("single")}
-              disabled={exporting !== null}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 8, border: "1.5px solid #2563eb",
-                background: "#ffffff", color: "#2563eb", fontSize: 12, fontWeight: 700,
-                cursor: exporting ? "not-allowed" : "pointer",
-              }}
-            >
-              {exporting === "single" ? "Exporting..." : "Export Patient PDF"}
-            </button>
+      <section style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 18px", borderRadius: 12, background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)", border: "1.5px solid #0284c7", boxShadow: "0 2px 8px rgba(2,132,199,0.06)" }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: "#0f2b48" }}>
+            {viewer === "doctor" ? "Patient Export Dossier" : "Download PDF Clinical Report · नैदानिक रिपोर्ट डाउनलोड करें"}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#64748b" }}>
+            {viewer === "doctor" ? "Download structured PDF reports for clinical review" : "Download comprehensive longitudinal vitals, symptoms, PFTs & prescriptions record"}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => handleExport("single")}
+            disabled={exporting !== null}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 8, border: "none",
+              background: "linear-gradient(135deg, #0284c7, #0369a1)", color: "#ffffff", fontSize: 12.5, fontWeight: 700,
+              cursor: exporting ? "not-allowed" : "pointer",
+              boxShadow: "0 2px 6px rgba(2,132,199,0.25)",
+            }}
+          >
+            {exporting === "single" ? "Generating Report..." : viewer === "doctor" ? "Export Patient PDF" : "📄 Download PDF Report"}
+          </button>
+          {viewer === "doctor" && (
             <button
               type="button"
               onClick={() => handleExport("all")}
               disabled={exporting !== null}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 8, border: "none",
-                background: "#2563eb", color: "#ffffff", fontSize: 12, fontWeight: 700,
+                padding: "8px 16px", borderRadius: 8, border: "1.5px solid #0284c7",
+                background: "#ffffff", color: "#0284c7", fontSize: 12.5, fontWeight: 700,
                 cursor: exporting ? "not-allowed" : "pointer",
               }}
             >
               {exporting === "all" ? "Exporting..." : "Combined Cohort PDF"}
             </button>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
       {/* PFT Trends Section */}
       <section>

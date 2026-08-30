@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle, FileText, Download, Eye, Pill } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
 import { DiseaseHero3DVisual } from "./DiseaseHero3DVisual";
+import { PatientReportModal } from "./PatientReportModal";
 
 export interface CommonDashboardProps {
   name: string;
@@ -130,6 +131,7 @@ export function CommonPatientDashboard({
   latestPft,
   onLogToday,
   onViewHistory,
+  diseaseLabel,
   todayMedications,
   onMedicationToggle,
 }: CommonDashboardProps) {
@@ -141,6 +143,7 @@ export function CommonPatientDashboard({
   const mmrcItem = MMRC_BILINGUAL[Math.min(Math.max(mmrcToday, 0), 4)] ?? MMRC_BILINGUAL[0]!;
 
   const [prescriptionChanges, setPrescriptionChanges] = useState<PrescriptionChanges | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,42 +170,39 @@ export function CommonPatientDashboard({
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap",
         background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
         borderRadius: 14,
-        padding: "16px 22px",
+        padding: "16px 20px",
+        boxShadow: "0 2px 8px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255,255,255,0.8)",
         border: "1px solid var(--med-border-subtle, #e2e8f0)",
-        boxShadow: "0 4px 16px rgba(15, 43, 72, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12,
-            background: "linear-gradient(135deg, #0284c7 0%, #1e6091 100%)",
+            background: "linear-gradient(135deg, #1e6091 0%, #0f2b48 100%)",
             color: "#ffffff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 17, fontWeight: 800,
-            boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
-            border: "1px solid rgba(255, 255, 255, 0.25)",
-            flexShrink: 0,
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            boxShadow: "0 4px 12px rgba(15, 43, 72, 0.2)",
+            flexShrink: 0
           }}>
-            {firstName.charAt(0).toUpperCase() || "P"}
+            <Heart size={22} color="#ffffff" strokeWidth={2.2} />
           </div>
           <div>
-            <h1 className={dStyles.pageTitle} style={{ margin: 0, fontSize: 21, fontWeight: 800, color: "var(--med-navy-800, #0f2b48)", letterSpacing: "-0.015em" }}>
-              Welcome back, {firstName}
-            </h1>
-            {diagnosis && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "var(--med-navy-900, #0f2b48)", fontFamily: "var(--font-lora), Georgia, serif" }}>
+                Namaste, {firstName} · नमस्ते
+              </h1>
+              {diseaseLabel && (
                 <span style={{
-                  display: "inline-flex", alignItems: "center", padding: "3px 11px", borderRadius: 999,
-                  background: "linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%)",
-                  color: "#0369a1", fontSize: 11.5, fontWeight: 700,
-                  border: "1px solid #7dd3fc",
-                  boxShadow: "0 1px 3px rgba(2, 132, 199, 0.1)",
+                  fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
+                  background: "var(--med-blue-50, #f0f7fb)", color: "var(--med-blue-600, #1e6091)",
+                  border: "1px solid var(--med-border-subtle, #cbd5e1)"
                 }}>
-                  {diagnosis}
+                  {diseaseLabel}
                 </span>
-                <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 500 }}>Active Care Plan</span>
-              </div>
-            )}
+              )}
+            </div>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--med-text-muted, #64748b)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              {hasTodayLog ? "Today's telemetry recorded · आज का डेटा दर्ज किया गया" : "Daily telemetry log pending · आज का डेटा दर्ज करें"}
+            </p>
           </div>
         </div>
 
@@ -210,13 +210,15 @@ export function CommonPatientDashboard({
           {hasTodayLog ? (
             <>
               <span style={{
-                display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999,
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", borderRadius: 9,
                 background: "linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)",
-                color: "#166534", fontSize: 12, fontWeight: 700,
                 border: "1px solid #86efac",
-                boxShadow: "0 2px 6px rgba(22, 101, 52, 0.08)",
+                color: "#166534", fontSize: 12, fontWeight: 700,
+                boxShadow: "0 1px 3px rgba(22, 101, 52, 0.08)"
               }}>
-                <CheckCircle2 size={15} color="#16a34a" /> Today&apos;s Log Done · आज का लॉग पूर्ण
+                <CheckCircle2 size={15} strokeWidth={2.5} />
+                Logged Today · दर्ज हुआ
               </span>
               <button
                 type="button"
@@ -365,7 +367,7 @@ export function CommonPatientDashboard({
           {/* Change items breakdown */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
             gap: 10,
             background: "#ffffff",
             padding: 12,
@@ -373,39 +375,45 @@ export function CommonPatientDashboard({
             border: "1px solid #e2e8f0",
           }}>
             {prescriptionChanges.stopped && prescriptionChanges.stopped.length > 0 && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca" }}>
-                <strong style={{ fontSize: 12, color: "#dc2626", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                  🔴 Stopped Medications · बंद की गईं
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca" }}>
+                <strong style={{ fontSize: 12.5, color: "#dc2626", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  🔴 Discontinued / Deleted Medications · बंद या हटाई गई दवाएं
                 </strong>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#991b1b" }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#991b1b", display: "flex", flexDirection: "column", gap: 3 }}>
                   {prescriptionChanges.stopped.map((m, i) => (
-                    <li key={i}><strong>{m.name}</strong> {m.details ? `(${m.details})` : ""}</li>
+                    <li key={i}>
+                      <strong>Medication deleted/discontinued: {m.name}</strong> {m.details ? `(${m.details})` : ""}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
 
             {prescriptionChanges.started && prescriptionChanges.started.length > 0 && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-                <strong style={{ fontSize: 12, color: "#16a34a", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                  🟢 Started Medications · नई शुरू की गईं
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                <strong style={{ fontSize: 12.5, color: "#16a34a", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  🟢 Newly Prescribed Medications · नई जोड़ी गई दवाएं
                 </strong>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#166534" }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#166534", display: "flex", flexDirection: "column", gap: 3 }}>
                   {prescriptionChanges.started.map((m, i) => (
-                    <li key={i}><strong>{m.name}</strong> {m.details ? `(${m.details})` : ""}</li>
+                    <li key={i}>
+                      <strong>New medication added: {m.name}</strong> {m.details ? `(${m.details})` : ""}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
 
             {prescriptionChanges.modified && prescriptionChanges.modified.length > 0 && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a" }}>
-                <strong style={{ fontSize: 12, color: "#d97706", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                  🟡 Modified Medications · बदलाव
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a" }}>
+                <strong style={{ fontSize: 12.5, color: "#d97706", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  🟡 Dosage &amp; Frequency Modified · खुराक में बदलाव
                 </strong>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#92400e" }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#92400e", display: "flex", flexDirection: "column", gap: 3 }}>
                   {prescriptionChanges.modified.map((m, i) => (
-                    <li key={i}><strong>{m.name}</strong> — {m.details || `${m.from} → ${m.to}`}</li>
+                    <li key={i}>
+                      <strong>Medication modified: {m.name}</strong> — {m.details || `${m.from} → ${m.to}`}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -729,6 +737,66 @@ export function CommonPatientDashboard({
           </div>
         </div>
       </div>
+
+      {/* -- Download PDF Report (Positioned directly below Analytics) -- */}
+      <div className={dStyles.card} style={{
+        background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)",
+        border: "1.5px solid #0284c7",
+        borderRadius: 14,
+        padding: "16px 20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 14,
+        flexWrap: "wrap",
+        boxShadow: "0 4px 16px rgba(2, 132, 199, 0.07)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 10,
+            background: "linear-gradient(135deg, #0284c7, #0369a1)",
+            display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff",
+            boxShadow: "0 2px 8px rgba(2, 132, 199, 0.25)",
+            flexShrink: 0,
+          }}>
+            <FileText size={22} strokeWidth={2.2} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: "#0f2b48", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              Download PDF Report · पीडीएफ रिपोर्ट डाउनलोड करें
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              Comprehensive longitudinal telemetry, vital trends, symptom analysis, and doctor prescription record
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setReportModalOpen(true)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "10px 18px", borderRadius: 10, border: "none",
+            background: "linear-gradient(135deg, #0284c7, #0369a1)",
+            color: "#ffffff", fontSize: 13, fontWeight: 700,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(2, 132, 199, 0.25)",
+            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <Download size={16} strokeWidth={2.2} />
+          <span>Download PDF Report</span>
+        </button>
+      </div>
+
+      <PatientReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        patientId={patientId}
+        patientName={name}
+        isDoctorView={false}
+      />
 
       {/* -- Today's Medications -- */}
       <div className={`${dStyles.card} ${dStyles.medsCard}`} style={{ display: "flex", flexDirection: "column", gap: 12 }}>

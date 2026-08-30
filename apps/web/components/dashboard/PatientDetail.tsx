@@ -1093,7 +1093,7 @@ const ROUTE_OPTS = ["Tablet", "Capsule", "Injection", "Inhaler", "Nebulisation",
 const UNIT_OPTS = ["mg", "mcg", "ml", "puffs", "units", "g", "other"];
 const FREQUENCY_OPTS = ["OD", "BD", "TDS", "Once a week", "Once in 15 days", "Once a month", "Every 6 months"];
 const PATIENT_INSTRUCTION_WORD_LIMIT = 50;
-const PRESCRIPTION_EDITOR_COLUMNS = "76px 130px minmax(180px, 2fr) 90px 80px 140px 110px 120px 120px";
+const PRESCRIPTION_EDITOR_COLUMNS = "56px 125px minmax(170px, 2fr) 80px 75px 125px 95px 110px 110px 110px";
 
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
@@ -1522,8 +1522,8 @@ function TreatmentTab({ patientId }: { patientId: string }) {
               <div style={{ minWidth: 1360, display: "flex", flexDirection: "column", gap: 8 }}>
                 {/* Header row */}
                 <div style={{ display: "grid", gridTemplateColumns: PRESCRIPTION_EDITOR_COLUMNS, gap: 8, padding: "0 4px" }}>
-                  {["Serial number", "Medication Type", "Drug Name", "Dose", "Unit", "Frequency", "Number of days", "Start date", "End date"].map(h => (
-                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{h}</span>
+                  {["#", "Type", "Drug Name", "Dose", "Unit", "Frequency", "Days", "Start date", "End date", "Action"].map(h => (
+                    <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6d8794", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", textAlign: h === "Action" || h === "#" ? "center" : "left" }}>{h}</span>
                   ))}
                 </div>
 
@@ -1618,6 +1618,45 @@ function TreatmentTab({ patientId }: { patientId: string }) {
                         onChange={e => handleEndDateChange(med._key, e.target.value)}
                         style={{ padding: "5px 6px", border: "1px solid #d4cfc7", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-dm-sans), system-ui, sans-serif", background: isStopped ? "#fdecea" : "white" }}
                       />
+                      <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                        {med.source_id ? (
+                          <button
+                            type="button"
+                            onClick={() => isStopped ? restoreDraft(med._key) : removeDraft(med._key)}
+                            style={{
+                              background: isStopped ? "#0284c7" : "#ef4444",
+                              color: "#ffffff",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "4px 8px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {isStopped ? "Resume" : "Discontinue"}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => removeDraft(med._key)}
+                            style={{
+                              background: "#fee2e2",
+                              color: "#dc2626",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "4px 8px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

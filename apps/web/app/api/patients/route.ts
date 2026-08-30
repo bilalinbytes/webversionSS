@@ -950,6 +950,67 @@ export async function PUT(request: Request): Promise<NextResponse> {
     }
   }
 
+  // Track prescription changes for patient notifications
+  const { data: existingMeds } = await admin
+    .from("medications")
+    .select("id, drug_name, route, dose, dose_unit, frequency, start_date, end_date")
+    .eq("patient_id", patientId);
+
+  const existingMap = new Map((existingMeds ?? []).map(m => [m.drug_name.toLowerCase().trim(), m]));
+  const incomingMap = new Map((medications ?? []).filter(m => m.drug_name).map(m => [(m.drug_name as string).toLowerCase().trim(), m]));
+
+  const stoppedChanges: Array<{ name: string; details?: string; route?: string; dose?: string }> = [];
+  const startedChanges: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }> = [];
+  const modifiedChanges: Array<{ name: string; details?: string; from?: string; to?: string }> = [];
+
+  const todayStr = new Date().toISOString().split("T")[0]!;
+
+  for (const [name, existing] of existingMap.entries()) {
+    const incoming = incomingMap.get(name);
+    if (!incoming) {
+      stoppedChanges.push({
+        name: existing.drug_name,
+        details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")}`,
+        route: existing.route,
+        dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
+      });
+    } else if (incoming.end_date && incoming.end_date <= todayStr && (!existing.end_date || existing.end_date > todayStr)) {
+      stoppedChanges.push({
+        name: existing.drug_name,
+        details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} (Discontinued)`,
+        route: existing.route,
+        dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
+      });
+    }
+  }
+
+  for (const [name, incoming] of incomingMap.entries()) {
+    const existing = existingMap.get(name);
+    const doseStr = [incoming.dose, incoming.dose_unit].filter(Boolean).join(" ");
+    if (!existing) {
+      startedChanges.push({
+        name: (incoming.drug_name as string).trim(),
+        details: `${incoming.route || "Tablet"}${doseStr ? ` · ${doseStr}` : ""}${incoming.frequency ? ` · ${incoming.frequency}` : ""}`,
+        route: incoming.route as string,
+        dose: doseStr,
+        frequency: incoming.frequency as string,
+      });
+    } else if (
+      existing.dose !== (incoming.dose ? Number(incoming.dose) : null) ||
+      existing.frequency !== incoming.frequency ||
+      existing.route !== incoming.route
+    ) {
+      const fromDose = `${existing.route || ""} ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} ${existing.frequency || ""}`.trim();
+      const toDose = `${incoming.route || ""} ${doseStr} ${incoming.frequency || ""}`.trim();
+      modifiedChanges.push({
+        name: (incoming.drug_name as string).trim(),
+        details: `${fromDose} → ${toDose}`,
+        from: fromDose,
+        to: toDose,
+      });
+    }
+  }
+
   await admin.from("medications").delete().eq("patient_id", patientId);
   if (medications && medications.length > 0) {
     const medInserts = medications
@@ -981,6 +1042,25 @@ export async function PUT(request: Request): Promise<NextResponse> {
       const { error: instructionError } = await admin.from("doctor_instructions").insert(instructionInserts);
       if (instructionError) return NextResponse.json({ error: instructionError.message }, { status: 500 });
     }
+  }
+
+  if (stoppedChanges.length > 0 || startedChanges.length > 0 || modifiedChanges.length > 0) {
+    const { data: docData } = await admin.from("doctors").select("name").eq("id", user.id).maybeSingle();
+    await admin.from("audit_logs").insert({
+      action: "prescription_updated",
+      actor_id: user.id,
+      actor_role: "doctor",
+      target_patient_id: patientId,
+      metadata: {
+        updated_at: new Date().toISOString(),
+        prescription_date: todayStr,
+        doctor_name: docData?.name || "Attending Doctor",
+        has_changes: true,
+        stopped: stoppedChanges,
+        started: startedChanges,
+        modified: modifiedChanges,
+      },
+    });
   }
 
   return NextResponse.json({ ok: true, patientId });

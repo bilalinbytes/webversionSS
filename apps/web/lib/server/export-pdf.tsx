@@ -811,27 +811,27 @@ function SinglePatientDossierPages({
           {multiPfts.length > 1 ? (
             <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
               <GenericTrendChart
-                title="FEV1 (Liters) Progression"
+                title="1. FEV1 (Liters) Progression"
                 points={multiPfts.map((p) => ({ date: p.testDate, val: p.fev1 ?? null }))}
                 minVal={0.5}
                 maxVal={4.5}
                 lineColor={ACCENT}
                 unit="L"
-                width={264}
-                height={46}
+                width={172}
+                height={42}
               />
               <GenericTrendChart
-                title="FVC (Liters) Progression"
+                title="2. FVC (Liters) Progression"
                 points={multiPfts.map((p) => ({ date: p.testDate, val: p.fvc ?? null }))}
                 minVal={0.5}
                 maxVal={5.5}
                 lineColor={CYAN}
                 unit="L"
-                width={264}
-                height={46}
+                width={172}
+                height={42}
               />
               <GenericTrendChart
-                title="FEV1/FVC Ratio (%)"
+                title="3. FEV1/FVC Ratio (%)"
                 points={multiPfts.map((p) => ({ date: p.testDate, val: p.fev1FvcRatio ?? null }))}
                 minVal={40}
                 maxVal={100}
@@ -839,25 +839,84 @@ function SinglePatientDossierPages({
                 targetLabel="70%"
                 lineColor={AMBER}
                 unit="%"
-                width={264}
-                height={46}
+                width={172}
+                height={42}
               />
               <GenericTrendChart
-                title="6-Minute Walk Distance (6MWD)"
+                title="4. FEV1 % Predicted"
+                points={multiPfts.map((p) => ({ date: p.testDate, val: p.fev1Pct ?? null }))}
+                minVal={20}
+                maxVal={120}
+                targetLine={80}
+                targetLabel="80%"
+                lineColor="#059669"
+                unit="%"
+                width={172}
+                height={42}
+              />
+              <GenericTrendChart
+                title="5. FVC % Predicted"
+                points={multiPfts.map((p) => ({ date: p.testDate, val: p.fvcPct ?? null }))}
+                minVal={20}
+                maxVal={120}
+                targetLine={80}
+                targetLabel="80%"
+                lineColor="#0d9488"
+                unit="%"
+                width={172}
+                height={42}
+              />
+              <GenericTrendChart
+                title="6. DLCO (%)"
+                points={multiPfts.map((p) => ({ date: p.testDate, val: p.dlco ?? null }))}
+                minVal={20}
+                maxVal={120}
+                targetLine={60}
+                targetLabel="60%"
+                lineColor="#9333ea"
+                unit="%"
+                width={172}
+                height={42}
+              />
+              <GenericTrendChart
+                title="7. 6-Minute Walk Distance (6MWD)"
                 points={multiPfts.map((p) => ({ date: p.testDate, val: p.sixMwd ?? null }))}
                 minVal={100}
                 maxVal={700}
                 lineColor={GREEN}
                 unit="m"
-                width={264}
-                height={46}
+                width={534}
+                height={42}
               />
             </View>
           ) : (
-            <View style={{ padding: 4, border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
-              <Text style={{ fontSize: 6.5, color: MUTED }}>
-                Single Baseline Assessment Recorded ({multiPfts[0]?.testDate || "Baseline"}): FEV1 {multiPfts[0]?.fev1 || "—"}L | FVC {multiPfts[0]?.fvc || "—"}L | FEV1/FVC {multiPfts[0]?.fev1FvcRatio || "—"}% | DLCO {multiPfts[0]?.dlco || "—"}% | 6MWD {multiPfts[0]?.sixMwd || "—"}m. Subsequent PFT check-ups will plot progression curves.
+            <View style={{ padding: "6 8", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
+              <Text style={{ fontSize: 7, color: BRAND, fontFamily: "Helvetica-Bold", marginBottom: 3 }}>
+                Baseline Pulmonary Function Assessment ({multiPfts[0]?.testDate || dem["Enrollment Date"] || "Baseline"}):
               </Text>
+              <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • FEV1: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.fev1 ? `${multiPfts[0]?.fev1} L` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • FVC: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.fvc ? `${multiPfts[0]?.fvc} L` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • FEV1/FVC: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.fev1FvcRatio ? `${multiPfts[0]?.fev1FvcRatio}%` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • FEV1 %Pred: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.fev1Pct ? `${multiPfts[0]?.fev1Pct}%` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • FVC %Pred: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.fvcPct ? `${multiPfts[0]?.fvcPct}%` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • DLCO: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.dlco ? `${multiPfts[0]?.dlco}%` : "—"}</Text>
+                </Text>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • 6MWD: <Text style={{ color: BRAND, fontFamily: "Helvetica-Bold" }}>{multiPfts[0]?.sixMwd ? `${multiPfts[0]?.sixMwd} m` : "—"}</Text>
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -875,8 +934,8 @@ function SinglePatientDossierPages({
           {dashboard === "ild" ? (
             <View style={{ flexDirection: "row", gap: 6 }}>
               <GenericTrendChart
-                title="K-BILD Total Score (Sum of All Question Responses)"
-                subtitle="Scale: 0-100 (Higher is Better)"
+                title="K-BILD Total Score (Sum of All 15 Domain Question Responses)"
+                subtitle="Scale: 0-100 (Higher is Better HRQoL)"
                 points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.kbild_score ?? l.diseaseSpecificData?.kbild_total ?? "")) || null }))}
                 minVal={0}
                 maxVal={100}
@@ -893,94 +952,118 @@ function SinglePatientDossierPages({
 
           {/* Asthma Track: Asthma Control Questionnaire & Interpretation */}
           {dashboard === "asthma" ? (
-            <View style={{ flexDirection: "row", gap: 6 }}>
-              <GenericTrendChart
-                title="PEFR (Peak Expiratory Flow Rate) Trend"
-                subtitle="Personal Best Target Reference"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.pefr_reading ?? l.diseaseSpecificData?.pefr_lpm ?? "")) || null }))}
-                minVal={100}
-                maxVal={600}
-                lineColor={GREEN}
-                unit="L/min"
-                width={264}
-                height={48}
-              />
-              <GenericTrendChart
-                title="Rescue Inhaler Puffs per Day"
-                subtitle="Target: 0 puffs/day"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.rescue_inhaler_puffs ?? l.diseaseSpecificData?.rescue_puffs_count ?? "")) || null }))}
-                minVal={0}
-                maxVal={10}
-                targetLine={2}
-                targetLineColor={RED}
-                targetLabel="2 puffs"
-                lineColor={RED}
-                unit="puffs"
-                width={264}
-                height={48}
-              />
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                <GenericTrendChart
+                  title="PEFR (Peak Expiratory Flow Rate) Trend"
+                  subtitle="Personal Best Target Reference"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.pefr_reading ?? l.diseaseSpecificData?.pefr_lpm ?? "")) || null }))}
+                  minVal={100}
+                  maxVal={600}
+                  lineColor={GREEN}
+                  unit="L/min"
+                  width={264}
+                  height={48}
+                />
+                <GenericTrendChart
+                  title="Rescue Inhaler Puffs per Day"
+                  subtitle="Target: 0 puffs/day"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.rescue_inhaler_puffs ?? l.diseaseSpecificData?.rescue_puffs_count ?? "")) || null }))}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={2}
+                  targetLineColor={RED}
+                  targetLabel="2 puffs"
+                  lineColor={RED}
+                  unit="puffs"
+                  width={264}
+                  height={48}
+                />
+              </View>
+              <View style={{ padding: "4 6", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT, flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ fontSize: 6.5, color: BRAND }}>
+                  GINA Asthma Control Surveillance: Daytime Symptoms, Night Waking, Activity Limitation &amp; Reliever Use monitored daily.
+                </Text>
+                <Text style={{ fontSize: 6.5, fontFamily: "Helvetica-Bold", color: ACCENT }}>
+                  Status: {logs[logs.length - 1]?.diseaseSpecificData?.asthma_control_status ? String(logs[logs.length - 1]?.diseaseSpecificData?.asthma_control_status).replace(/_/g, " ").toUpperCase() : "CONTROLLED"}
+                </Text>
+              </View>
             </View>
           ) : null}
 
-          {/* COPD Track: Cough Frequency, Sputum, Energy, Chest Heaviness */}
+          {/* COPD Track: 7 Metrics (Cough, Sputum Vol, Sputum Colour, Exercise, Sleep, Energy, Chest Heaviness) */}
           {dashboard === "copd" ? (
-            <View style={{ flexDirection: "row", gap: 6 }}>
-              <GenericTrendChart
-                title="Energy Level (0-10 Scale)"
-                subtitle="Higher is Better"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.energy_level ?? "")) || null }))}
-                minVal={0}
-                maxVal={10}
-                lineColor={GREEN}
-                unit="/10"
-                width={264}
-                height={48}
-              />
-              <GenericTrendChart
-                title="Chest Heaviness (0-10 Scale)"
-                subtitle="Lower is Better"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.chest_heaviness ?? "")) || null }))}
-                minVal={0}
-                maxVal={10}
-                targetLine={5}
-                targetLineColor={AMBER}
-                targetLabel="5"
-                lineColor={AMBER}
-                unit="/10"
-                width={264}
-                height={48}
-              />
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                <GenericTrendChart
+                  title="Energy Level (0-10 Scale)"
+                  subtitle="Higher is Better"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.energy_level ?? "")) || null }))}
+                  minVal={0}
+                  maxVal={10}
+                  lineColor={GREEN}
+                  unit="/10"
+                  width={264}
+                  height={48}
+                />
+                <GenericTrendChart
+                  title="Chest Heaviness (0-10 Scale)"
+                  subtitle="Lower is Better"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.chest_heaviness ?? "")) || null }))}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={5}
+                  targetLineColor={AMBER}
+                  targetLabel="5"
+                  lineColor={AMBER}
+                  unit="/10"
+                  width={264}
+                  height={48}
+                />
+              </View>
+              <View style={{ padding: "4 6", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • Cough Frequency &amp; Severity: Monitored daily | Sputum Profile: Tracked for colour change &amp; volume surge | Sleep &amp; Exercise: Evaluated continuously for early exacerbation triage.
+                </Text>
+              </View>
             </View>
           ) : null}
 
-          {/* Bronchiectasis & Post-ICU: Sputum Clearance, Temperature */}
+          {/* Bronchiectasis & Post-ICU: Sputum Clearance, Temperature, Fever, Malaise */}
           {dashboard === "bronchiectasis" || dashboard === "post_icu" ? (
-            <View style={{ flexDirection: "row", gap: 6 }}>
-              <GenericTrendChart
-                title="Ease of Sputum Clearance (1-5 Scale)"
-                subtitle="1 (Difficult) to 5 (Easy)"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.ease_of_clearance ?? l.diseaseSpecificData?.ease_of_sputum_clearance ?? "")) || null }))}
-                minVal={1}
-                maxVal={5}
-                lineColor={CYAN}
-                unit="/5"
-                width={264}
-                height={48}
-              />
-              <GenericTrendChart
-                title="Recorded Temperature (°F)"
-                subtitle="Fever Threshold: ≥100.4°F"
-                points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.recorded_temperature_f ?? l.diseaseSpecificData?.temperature_f ?? "")) || null }))}
-                minVal={96}
-                maxVal={104}
-                targetLine={100.4}
-                targetLineColor={RED}
-                targetLabel="100.4°F"
-                lineColor={RED}
-                unit="°F"
-                width={264}
-                height={48}
-              />
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                <GenericTrendChart
+                  title="Ease of Sputum Clearance (1-5 Scale)"
+                  subtitle="1 (Difficult) to 5 (Easy)"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.ease_of_clearance ?? l.diseaseSpecificData?.ease_of_sputum_clearance ?? "")) || null }))}
+                  minVal={1}
+                  maxVal={5}
+                  lineColor={CYAN}
+                  unit="/5"
+                  width={264}
+                  height={48}
+                />
+                <GenericTrendChart
+                  title="Recorded Temperature (°F)"
+                  subtitle="Fever Threshold: ≥100.4°F"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.recorded_temperature_f ?? l.diseaseSpecificData?.temperature_f ?? "")) || null }))}
+                  minVal={96}
+                  maxVal={104}
+                  targetLine={100.4}
+                  targetLineColor={RED}
+                  targetLabel="100.4°F"
+                  lineColor={RED}
+                  unit="°F"
+                  width={264}
+                  height={48}
+                />
+              </View>
+              <View style={{ padding: "4 6", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
+                <Text style={{ fontSize: 6.5, color: MUTED }}>
+                  • Airway Clearance Status: Assessed daily | Sputum Purulence: Monitored for bacterial flare | Systemic Malaise &amp; Fever: Auto-triaged for acute bronchiectasis / post-ICU review.
+                </Text>
+              </View>
             </View>
           ) : null}
         </View>

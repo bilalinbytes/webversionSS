@@ -23,38 +23,30 @@ interface FixedColumnDef {
 
 const FIXED_REGISTRY_COLUMNS: FixedColumnDef[] = [
   { header: "S No.",               key: "sno",               width: 7,   align: "center" },
-  { header: "File No.",            key: "fileNo",            width: 13,  align: "center" },
-  { header: "UHID",                key: "uhid",              width: 15,  align: "center" },
-  { header: "Mobile No.",          key: "mobile",            width: 15,  align: "center" },
   { header: "Name",                key: "name",              width: 22,  align: "left"   },
   { header: "Age",                 key: "age",               width: 7,   align: "center" },
   { header: "Sex",                 key: "sex",               width: 7,   align: "center" },
-  { header: "Occupation",          key: "occupation",        width: 16,  align: "left"   },
-  { header: "Smoker",              key: "smoker",            width: 10,  align: "center" },
-  { header: "Symptomatic",         key: "symptomatic",       width: 14,  align: "center" },
-  { header: "Date of Enroll",      key: "dateOfEnroll",      width: 15,  align: "center" },
-  { header: "Histopathology",      key: "histopathology",    width: 20,  align: "left"   },
-  { header: "Complete diag",       key: "completeDiag",      width: 32,  align: "left",  wrapText: true },
-  { header: "Type of connective",  key: "typeOfConnective",  width: 20,  align: "left"   },
-  { header: "Co-morbidities",      key: "comorbidities",     width: 32,  align: "left",  wrapText: true },
-  { header: "6MWD",                key: "sixMwd",            width: 10,  align: "right"  },
-  { header: "FEV1/FVC",            key: "fev1Fvc",           width: 12,  align: "right"  },
-  { header: "observed FEV",        key: "observedFev",       width: 14,  align: "right"  },
-  { header: "% predicted FEV1",    key: "pctPredictedFev1",  width: 16,  align: "right"  },
-  { header: "Observed FVC",        key: "observedFvc",       width: 14,  align: "right"  },
-  { header: "% predicted FVC",     key: "pctPredictedFvc",   width: 16,  align: "right"  },
-  { header: "Dlco",                key: "dlco",              width: 10,  align: "right"  },
-  { header: "Baseline SpO2 (%)",   key: "baselineSpo2",      width: 16,  align: "right"  },
-  { header: "Baseline HR (bpm)",   key: "baselineHr",        width: 16,  align: "right"  },
-  { header: "Worst SpO2 (%)",      key: "worstSpo2",         width: 15,  align: "right"  },
-  { header: "Worst mMRC (0-4)",    key: "worstMmrc",         width: 16,  align: "center" },
-  { header: "Worst Risk Score",    key: "worstRiskScore",    width: 16,  align: "center" },
-  { header: "Risk Level",          key: "riskLevel",         width: 14,  align: "center" },
-  { header: "Alert Status",        key: "alertStatus",       width: 16,  align: "center" },
-  { header: "Total Logs",          key: "totalLogs",         width: 12,  align: "right"  },
-  { header: "Adherence %",         key: "adherencePct",      width: 14,  align: "right"  },
-  { header: "Current Meds",        key: "currentMeds",       width: 44,  align: "left",  wrapText: true },
-  { header: "Respiratory Support", key: "respiratorySupport",width: 22,  align: "left"   },
+  { header: "Occupation",          key: "occupation",        width: 18,  align: "left"   },
+  { header: "Mobile No.",          key: "mobile",            width: 15,  align: "center" },
+  { header: "Diagnosis",           key: "primaryDiagnosis",  width: 32,  align: "left",  wrapText: true },
+  { header: "Co-morbidities",      key: "comorbidities",     width: 28,  align: "left",  wrapText: true },
+  { header: "6MWD (m)",            key: "sixMwd",            width: 11,  align: "right"  },
+  { header: "Baseline FEV1 (L)",   key: "observedFev",       width: 14,  align: "right"  },
+  { header: "Baseline FVC (L)",    key: "observedFvc",       width: 14,  align: "right"  },
+  { header: "FEV1 % Pred",         key: "pctPredictedFev1",  width: 13,  align: "right"  },
+  { header: "FVC % Pred",          key: "pctPredictedFvc",   width: 13,  align: "right"  },
+  { header: "FEV1/FVC (%)",        key: "fev1Fvc",           width: 13,  align: "right"  },
+  { header: "DLCO (%)",            key: "dlco",              width: 11,  align: "right"  },
+  { header: "Baseline HR (BPM)",   key: "baselineHr",        width: 15,  align: "right"  },
+  { header: "Baseline SpO2 (%)",   key: "baselineSpo2",      width: 15,  align: "right"  },
+  { header: "Respiratory Support", key: "respiratorySupport",width: 26,  align: "left",  wrapText: true },
+  { header: "Medications Prescribed in Last Visit", key: "currentMeds", width: 46, align: "left", wrapText: true },
+  { header: "Days in Period",      key: "totalDaysInPeriod", width: 14,  align: "center" },
+  { header: "Days Logged in App",  key: "daysLogged",        width: 16,  align: "center" },
+  { header: "Logging %",           key: "adherencePct",      width: 13,  align: "right"  },
+  { header: "Risk Status",         key: "riskLevel",         width: 14,  align: "center" },
+  { header: "File No.",            key: "fileNo",            width: 12,  align: "center" },
+  { header: "UHID",                key: "uhid",              width: 14,  align: "center" },
 ];
 
 function applyHeaderStyle(row: ExcelJS.Row, bgArgb: string, colCount: number) {
@@ -125,11 +117,11 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
   wb.modified = new Date();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SHEET 1: Master Patient Registry (High Level Overview)
+  // SHEET 1: Master Patient Registry (One Single Row per Patient)
   // ═══════════════════════════════════════════════════════════════════════════
   const wsRegistry = wb.addWorksheet("Master Patient Registry", {
     properties: { defaultRowHeight: 22 },
-    views: [{ state: "frozen", ySplit: 1, xSplit: 5, activeCell: "F2" }],
+    views: [{ state: "frozen", ySplit: 1, xSplit: 2, activeCell: "C2" }],
   });
 
   wsRegistry.columns = FIXED_REGISTRY_COLUMNS.map((col) => ({
@@ -144,25 +136,29 @@ export async function renderExcelRegistry(bundle: ExportDataBundle): Promise<Buf
     to: { row: 1, column: FIXED_REGISTRY_COLUMNS.length },
   };
 
+  const riskColIdx = FIXED_REGISTRY_COLUMNS.findIndex((c) => c.key === "riskLevel") + 1;
+
   bundle.records.forEach((record, idx) => {
     const row = wsRegistry.addRow({ ...record });
     const isEven = idx % 2 === 1;
     applyStandardDataRowStyle(row, isEven, FIXED_REGISTRY_COLUMNS);
 
-    // Conditional Formatting for Risk Level (Col 28)
-    const riskStyles = getRiskColorStyles(record.riskLevel);
-    const riskCell = row.getCell(28);
-    riskCell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: riskStyles.fillColor },
-    };
-    riskCell.font = {
-      name: "Calibri",
-      size: 10,
-      bold: riskStyles.bold,
-      color: { argb: riskStyles.fontColor },
-    };
+    // Conditional Formatting for Risk Level
+    if (riskColIdx > 0) {
+      const riskStyles = getRiskColorStyles(record.riskLevel);
+      const riskCell = row.getCell(riskColIdx);
+      riskCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: riskStyles.fillColor },
+      };
+      riskCell.font = {
+        name: "Calibri",
+        size: 10,
+        bold: riskStyles.bold,
+        color: { argb: riskStyles.fontColor },
+      };
+    }
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

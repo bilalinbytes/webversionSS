@@ -71,6 +71,8 @@ export interface PatientExportRecord {
   riskLevel: "Stable" | "Moderate" | "High" | "Critical";
   alertStatus: string;
   totalLogs: number;
+  totalDaysInPeriod?: number;
+  daysLogged?: number;
   adherencePct: string;
   currentMeds: string;
   respiratorySupport: string;

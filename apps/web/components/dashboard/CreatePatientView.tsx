@@ -1273,6 +1273,20 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
 
   const removeMed = (id: number) => update({ medications: data.medications.filter(m => m._clientId !== id) });
 
+  const toggleDiscontinueMed = (id: number) => {
+    const today = new Date().toISOString().split("T")[0]!;
+    update({
+      medications: data.medications.map(m => {
+        if (m._clientId !== id) return m;
+        const isDiscontinued = Boolean(m.end_date && m.end_date <= today);
+        return {
+          ...m,
+          end_date: isDiscontinued ? null : today,
+        };
+      })
+    });
+  };
+
   return (
     <div className={styles.stepContent}>
       <div className={styles.stepIntro}>
@@ -1387,32 +1401,64 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
                   <th>Frequency</th>
                   <th>Start Date</th>
                   <th>End Date</th>
-                  <th style={{ width: 44, textAlign: "center" }}></th>
+                  <th style={{ width: 140, textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {data.medications.map((m) => (
-                  <tr key={m._clientId}>
-                    <td>
-                      <span className={styles.routeBadge}>{RTE_OPTS.find(r => r.v === m.route)?.l ?? m.route}</span>
-                    </td>
-                    <td className={styles.medDrugName}>{m.drug_name}</td>
-                    <td>{m.dose !== null ? `${m.dose} ${m.dose_unit || ""}` : "—"}</td>
-                    <td><span className={styles.freqBadge}>{m.frequency}</span></td>
-                    <td className={styles.medDateText}>{m.start_date}</td>
-                    <td className={styles.medDateText}>{m.end_date || "Ongoing"}</td>
-                    <td style={{ textAlign: "center" }}>
-                      <button
-                        type="button"
-                        className={styles.removeMedBtn}
-                        onClick={() => removeMed(m._clientId)}
-                        title="Remove medication"
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {data.medications.map((m) => {
+                  const today = new Date().toISOString().split("T")[0]!;
+                  const isDiscontinued = Boolean(m.end_date && m.end_date <= today);
+
+                  return (
+                    <tr key={m._clientId} style={{ opacity: isDiscontinued ? 0.75 : 1, background: isDiscontinued ? "#fdecea" : undefined }}>
+                      <td>
+                        <span className={styles.routeBadge}>{RTE_OPTS.find(r => r.v === m.route)?.l ?? m.route}</span>
+                      </td>
+                      <td className={styles.medDrugName} style={{ textDecoration: isDiscontinued ? "line-through" : "none" }}>
+                        {m.drug_name}
+                      </td>
+                      <td>{m.dose !== null ? `${m.dose} ${m.dose_unit || ""}` : "—"}</td>
+                      <td><span className={styles.freqBadge}>{m.frequency}</span></td>
+                      <td className={styles.medDateText}>{m.start_date}</td>
+                      <td className={styles.medDateText}>
+                        {isDiscontinued ? (
+                          <span style={{ color: "#dc2626", fontWeight: 700 }}>Discontinued ({m.end_date})</span>
+                        ) : (
+                          m.end_date || "Ongoing"
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleDiscontinueMed(m._clientId)}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              border: "none",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              background: isDiscontinued ? "#0284c7" : "#ef4444",
+                              color: "#ffffff",
+                            }}
+                            title={isDiscontinued ? "Resume medication" : "Discontinue medication"}
+                          >
+                            {isDiscontinued ? "Resume" : "Discontinue"}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.removeMedBtn}
+                            onClick={() => removeMed(m._clientId)}
+                            title="Remove medication"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

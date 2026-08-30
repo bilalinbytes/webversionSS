@@ -365,6 +365,16 @@ export async function executeExport(
         };
       });
 
+    let totalDaysSpan = 30;
+    if (payload.start_date && payload.end_date) {
+      const diffMs = new Date(payload.end_date).getTime() - new Date(payload.start_date).getTime();
+      totalDaysSpan = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    } else if (patLogs.length > 0) {
+      const firstDate = new Date(patLogs[0]!.logged_at).getTime();
+      const lastDate = new Date().getTime();
+      totalDaysSpan = Math.max(1, Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)) + 1);
+    }
+
     return {
       sno: idx + 1,
       fileNo,
@@ -398,7 +408,9 @@ export async function executeExport(
       riskLevel,
       alertStatus: alert?.alert_type ? alert.alert_type : "Normal",
       totalLogs: logStats.totalLogs,
-      adherencePct: adherence,
+      totalDaysInPeriod: totalDaysSpan,
+      daysLogged: logStats.totalLogs,
+      adherencePct: `${Math.min(100, Math.round((logStats.totalLogs / totalDaysSpan) * 100))}%`,
       currentMeds,
       respiratorySupport: respSupport,
       dailyLogs: formattedDailyLogs,

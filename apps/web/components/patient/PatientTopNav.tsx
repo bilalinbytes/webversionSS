@@ -568,20 +568,20 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
                       {/* Structured Changes Breakdown */}
                       {latestChanges?.has_changes && (
-                        <div style={{ margin: "6px 0", padding: "8px 10px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 11.5 }}>
+                        <div style={{ margin: "8px 0", padding: "10px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 11.5, display: "flex", flexDirection: "column", gap: 4 }}>
                           {latestChanges.stopped && latestChanges.stopped.length > 0 && (
-                            <div style={{ color: "#dc2626", marginBottom: 3 }}>
-                              <strong>🔴 Stopped:</strong> {latestChanges.stopped.map(m => `${m.name} ${m.details || ""}`).join(", ")}
+                            <div style={{ color: "#dc2626" }}>
+                              <strong>🔴 Medication deleted/discontinued:</strong> {latestChanges.stopped.map(m => `${m.name} ${m.details ? `(${m.details})` : ""}`).join(", ")}
                             </div>
                           )}
                           {latestChanges.started && latestChanges.started.length > 0 && (
-                            <div style={{ color: "#16a34a", marginBottom: 3 }}>
-                              <strong>🟢 Started:</strong> {latestChanges.started.map(m => `${m.name} ${m.details || ""}`).join(", ")}
+                            <div style={{ color: "#16a34a" }}>
+                              <strong>🟢 New medication added:</strong> {latestChanges.started.map(m => `${m.name} ${m.details ? `(${m.details})` : ""}`).join(", ")}
                             </div>
                           )}
                           {latestChanges.modified && latestChanges.modified.length > 0 && (
                             <div style={{ color: "#d97706" }}>
-                              <strong>🟡 Modified:</strong> {latestChanges.modified.map(m => `${m.name} (${m.details || `${m.from} → ${m.to}`})`).join(", ")}
+                              <strong>🟡 Medication modified:</strong> {latestChanges.modified.map(m => `${m.name} (${m.details || `${m.from} → ${m.to}`})`).join(", ")}
                             </div>
                           )}
                         </div>
