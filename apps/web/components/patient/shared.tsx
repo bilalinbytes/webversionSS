@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle, AlertCircle, CloudSun, ShieldAlert } from "lucide-react";
+import { CheckCircle, AlertCircle, CloudSun, ShieldAlert, Check, X, Edit3 } from "lucide-react";
 import styles from "./shared.module.css";
 
 // ── Animated number ───────────────────────────────────────────────────────────
@@ -102,39 +102,263 @@ export function MMRCPicker({ value, onChange }: { value: number | null; onChange
   );
 }
 
-// ── SpO2 Input ────────────────────────────────────────────────────────────────
-export function SpO2Input({ value, onChange, label = "SpO₂ at Rest", isCOPD = false }: {
-  value: string; onChange: (v: string) => void; label?: string; isCOPD?: boolean;
+// ── SpO2 Input with Previous Reading Quick Select ─────────────────────────────
+export function SpO2Input({
+  value,
+  onChange,
+  prevValue,
+  label = "SpO₂ at Rest · आराम के समय ऑक्सीजन",
+  isCOPD = false,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  prevValue?: number | null;
+  label?: string;
+  isCOPD?: boolean;
 }) {
+  const hasPrevious = prevValue !== null && prevValue !== undefined && prevValue > 0;
+  const isSameSelected = hasPrevious && value !== "" && Number(value) === prevValue;
+  const [mode, setMode] = useState<"same" | "custom" | null>(() => {
+    if (hasPrevious && value !== "" && Number(value) === prevValue) return "same";
+    if (value !== "") return "custom";
+    return null;
+  });
+
+  useEffect(() => {
+    if (hasPrevious && value !== "" && Number(value) === prevValue) {
+      setMode("same");
+    } else if (value !== "") {
+      setMode("custom");
+    }
+  }, [value, prevValue, hasPrevious]);
+
   const num = Number(value);
   const threshold = isCOPD ? 88 : 94;
   const isLow = value !== "" && num < threshold;
+
+  const handleSelectSame = () => {
+    setMode("same");
+    onChange(String(prevValue));
+  };
+
+  const handleSelectCustom = () => {
+    setMode("custom");
+    if (isSameSelected) {
+      onChange("");
+    }
+  };
+
   return (
-    <div className={styles.spo2Wrap}>
-      <label className={styles.fieldLabel}>{label} <span className={styles.req}>*</span></label>
-      <div className={styles.spo2InputRow}>
-        <input
-          type="number"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          min="50"
-          max="100"
-          className={`${styles.spo2Input} ${isLow ? styles.spo2InputWarn : ""}`}
-          placeholder="e.g. 94"
-          value={value}
-          onChange={(e) => {
-            const v = e.target.value.replace(/\D/g, "");
-            if (v === "" || Number(v) <= 100) {
-              onChange(v);
-            }
-          }}
-        />
-        <span className={styles.spo2Unit}>%</span>
+    <div className={styles.vitalContainer}>
+      <div className={styles.vitalHeaderRow}>
+        <label className={styles.fieldLabel}>
+          {label} <span className={styles.req}>*</span>
+        </label>
+        {hasPrevious && (
+          <div className={styles.vitalPrevPill}>
+            <span>Previous:</span>
+            <strong className={styles.vitalPrevValue}>{prevValue}%</strong>
+            <span>· पिछली रीडिंग</span>
+          </div>
+        )}
       </div>
+
+      {hasPrevious ? (
+        <>
+          <div className={styles.vitalQuickOptions}>
+            <button
+              type="button"
+              className={`${styles.vitalQuickBtn} ${mode === "same" ? styles.vitalQuickBtnActive : ""}`}
+              onClick={handleSelectSame}
+            >
+              <Check size={15} strokeWidth={2.5} />
+              <span>Same as previous ({prevValue}%)</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.vitalQuickBtn} ${mode === "custom" ? styles.vitalQuickBtnCustomActive : ""}`}
+              onClick={handleSelectCustom}
+            >
+              <Edit3 size={14} strokeWidth={2} />
+              <span>Enter new value</span>
+            </button>
+          </div>
+
+          {(mode === "custom" || (!mode && value !== "")) && (
+            <div style={{ marginTop: 8 }}>
+              <div className={styles.spo2InputRow}>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="50"
+                  max="100"
+                  autoFocus={mode === "custom" && value === ""}
+                  className={`${styles.spo2Input} ${isLow ? styles.spo2InputWarn : ""}`}
+                  placeholder="e.g. 94"
+                  value={value}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v === "" || Number(v) <= 100) {
+                      onChange(v);
+                    }
+                  }}
+                />
+                <span className={styles.spo2Unit}>%</span>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles.spo2InputRow}>
+          <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            min="50"
+            max="100"
+            className={`${styles.spo2Input} ${isLow ? styles.spo2InputWarn : ""}`}
+            placeholder="e.g. 94"
+            value={value}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "");
+              if (v === "" || Number(v) <= 100) {
+                onChange(v);
+              }
+            }}
+          />
+          <span className={styles.spo2Unit}>%</span>
+        </div>
+      )}
+
       {isCOPD && <p className={styles.spo2Target}>Target: 88–92% for COPD · लक्ष्य: 88–92%</p>}
       {!isCOPD && <p className={styles.spo2Target}>Target: &gt;94% · लक्ष्य: &gt;94%</p>}
       {isLow && (
         <span className={styles.warnMsg}><AlertCircle size={11} /> Below target — contact your doctor · लक्ष्य से कम — डॉक्टर से संपर्क करें</span>
+      )}
+    </div>
+  );
+}
+
+// ── Heart Rate Input with Previous Reading Quick Select ───────────────────────
+export function HeartRateInput({
+  value,
+  onChange,
+  prevValue,
+  label = "Heart Rate (Optional) · नाड़ी / मिनट (वैकल्पिक)",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  prevValue?: number | null;
+  label?: string;
+}) {
+  const hasPrevious = prevValue !== null && prevValue !== undefined && prevValue > 0;
+  const isSameSelected = hasPrevious && value !== "" && Number(value) === prevValue;
+  const [mode, setMode] = useState<"same" | "custom" | null>(() => {
+    if (hasPrevious && value !== "" && Number(value) === prevValue) return "same";
+    if (value !== "") return "custom";
+    return null;
+  });
+
+  useEffect(() => {
+    if (hasPrevious && value !== "" && Number(value) === prevValue) {
+      setMode("same");
+    } else if (value !== "") {
+      setMode("custom");
+    }
+  }, [value, prevValue, hasPrevious]);
+
+  const handleSelectSame = () => {
+    setMode("same");
+    onChange(String(prevValue));
+  };
+
+  const handleSelectCustom = () => {
+    setMode("custom");
+    if (isSameSelected) {
+      onChange("");
+    }
+  };
+
+  return (
+    <div className={styles.vitalContainer}>
+      <div className={styles.vitalHeaderRow}>
+        <label className={styles.fieldLabel}>{label}</label>
+        {hasPrevious && (
+          <div className={styles.vitalPrevPill}>
+            <span>Previous:</span>
+            <strong className={styles.vitalPrevValue}>{prevValue} BPM</strong>
+            <span>· पिछली रीडिंग</span>
+          </div>
+        )}
+      </div>
+
+      {hasPrevious ? (
+        <>
+          <div className={styles.vitalQuickOptions}>
+            <button
+              type="button"
+              className={`${styles.vitalQuickBtn} ${mode === "same" ? styles.vitalQuickBtnActive : ""}`}
+              onClick={handleSelectSame}
+            >
+              <Check size={15} strokeWidth={2.5} />
+              <span>Same as previous ({prevValue} BPM)</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.vitalQuickBtn} ${mode === "custom" ? styles.vitalQuickBtnCustomActive : ""}`}
+              onClick={handleSelectCustom}
+            >
+              <Edit3 size={14} strokeWidth={2} />
+              <span>Enter new value</span>
+            </button>
+          </div>
+
+          {(mode === "custom" || (!mode && value !== "")) && (
+            <div style={{ marginTop: 8 }}>
+              <div className={styles.spo2InputRow}>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="20"
+                  max="250"
+                  autoFocus={mode === "custom" && value === ""}
+                  className={styles.spo2Input}
+                  placeholder="e.g. 88"
+                  value={value}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v === "" || Number(v) <= 250) {
+                      onChange(v);
+                    }
+                  }}
+                />
+                <span className={styles.spo2Unit}>BPM</span>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles.spo2InputRow}>
+          <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            min="20"
+            max="250"
+            className={styles.spo2Input}
+            placeholder="e.g. 88"
+            value={value}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "");
+              if (v === "" || Number(v) <= 250) {
+                onChange(v);
+              }
+            }}
+          />
+          <span className={styles.spo2Unit}>BPM</span>
+        </div>
       )}
     </div>
   );
@@ -243,39 +467,103 @@ export function AQIDisplay({ aqi }: { aqi: number | null }) {
   );
 }
 
-// ── Medication Checklist ──────────────────────────────────────────────────────
-interface Med { id: string; name: string; dose: string; route: string; frequency: string; }
+// ── Medication Checklist (Compulsory [ ✓ Taken ] [ ✕ Not Taken ] Selection) ───
+interface Med {
+  id: string;
+  name: string;
+  dose: string;
+  route: string;
+  frequency: string;
+}
 
-export function MedChecklist({ meds, taken, onToggle }: {
-  meds: Med[]; taken: Record<string, boolean>; onToggle: (id: string) => void;
+export function MedChecklist({
+  meds,
+  taken,
+  onSelect,
+}: {
+  meds: Med[];
+  taken: Record<string, boolean | null>;
+  onSelect: (id: string, isTaken: boolean) => void;
 }) {
-  const takenCount = Object.values(taken).filter(Boolean).length;
+  const answeredCount = meds.filter((m) => taken[m.id] === true || taken[m.id] === false).length;
+  const takenCount = meds.filter((m) => taken[m.id] === true).length;
+  const allAnswered = meds.length > 0 && answeredCount === meds.length;
+
   return (
     <div className={styles.medWrap}>
       <div className={styles.medHeader}>
-        <p className={styles.medTitle}>Medications Today · आज की दवाएं</p>
-        <span className={`${styles.medBadge} ${takenCount === meds.length ? styles.medBadgeDone : ""}`}>
-          {takenCount}/{meds.length} taken · ली गई
+        <p className={styles.medTitle}>Medications Today · आज की दवाएं (चयन अनिवार्य है)</p>
+        <span className={`${styles.medBadge} ${allAnswered ? styles.medBadgeDone : ""}`}>
+          {answeredCount}/{meds.length} answered · {takenCount} taken
         </span>
       </div>
+
       <div className={styles.medList}>
-        {meds.map(med => (
-          <button key={med.id} type="button"
-            className={`${styles.medItem} ${taken[med.id] ? styles.medItemTaken : ""}`}
-            onClick={() => onToggle(med.id)}
-          >
-            <div className={`${styles.medCheck} ${taken[med.id] ? styles.medCheckDone : ""}`}>
-              {taken[med.id] && <CheckCircle size={13} strokeWidth={2.5} />}
+        {meds.map((med) => {
+          const status = taken[med.id];
+          const isTaken = status === true;
+          const isNotTaken = status === false;
+          const isUnselected = status === null || status === undefined;
+
+          return (
+            <div key={med.id} className={styles.medCard}>
+              <div className={styles.medCardHeader}>
+                <div className={styles.medNameBlock}>
+                  <p className={styles.medName}>
+                    <span>{med.name}</span>
+                    {med.dose ? <span className={styles.medDose}>{med.dose}</span> : null}
+                  </p>
+                  <p className={styles.medMetaPill}>
+                    {med.route} {med.frequency ? `· ${med.frequency}` : ""}
+                  </p>
+                </div>
+
+                {isTaken && (
+                  <span className={`${styles.medSelectionStatus} ${styles.medStatusTaken}`}>
+                    <Check size={12} strokeWidth={2.5} /> Taken · ली गई
+                  </span>
+                )}
+                {isNotTaken && (
+                  <span className={`${styles.medSelectionStatus} ${styles.medStatusNotTaken}`}>
+                    <X size={12} strokeWidth={2.5} /> Not Taken · नहीं ली गई
+                  </span>
+                )}
+                {isUnselected && (
+                  <span className={`${styles.medSelectionStatus} ${styles.medStatusPending}`}>
+                    Required · चयन करें
+                  </span>
+                )}
+              </div>
+
+              {/* Compulsory Box-Style Selection */}
+              <div className={styles.medBtnGroup}>
+                <button
+                  type="button"
+                  className={`${styles.medChoiceBtn} ${styles.medChoiceBtnTaken} ${isTaken ? styles.medChoiceBtnTakenActive : ""}`}
+                  onClick={() => onSelect(med.id, true)}
+                  aria-pressed={isTaken}
+                >
+                  <Check size={16} strokeWidth={isTaken ? 3 : 2} />
+                  <span className={styles.medChoiceText}>
+                    Taken <span className={styles.medChoiceHi}>· ली गई</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.medChoiceBtn} ${styles.medChoiceBtnNotTaken} ${isNotTaken ? styles.medChoiceBtnNotTakenActive : ""}`}
+                  onClick={() => onSelect(med.id, false)}
+                  aria-pressed={isNotTaken}
+                >
+                  <X size={16} strokeWidth={isNotTaken ? 3 : 2} />
+                  <span className={styles.medChoiceText}>
+                    Not Taken <span className={styles.medChoiceHi}>· नहीं ली गई</span>
+                  </span>
+                </button>
+              </div>
             </div>
-            <div className={styles.medInfo}>
-              <p className={styles.medName}>{med.name} <span className={styles.medDose}>{med.dose}</span></p>
-              <p className={styles.medFreq}>{med.route} · {med.frequency}</p>
-            </div>
-            <span className={`${styles.medStatus} ${taken[med.id] ? styles.medStatusTaken : styles.medStatusPending}`}>
-              {taken[med.id] ? "Taken · ली गई" : "Tap to mark · मार्क करें"}
-            </span>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

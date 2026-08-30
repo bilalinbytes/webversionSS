@@ -1363,6 +1363,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
       medications: draftMeds
         .filter(m => m.drug_name.trim())
         .map(m => ({
+          source_id: m.source_id || null,
           drug_name: m.drug_name.trim(),
           route: m.route,
           dose: m.dose !== "" ? parseFloat(m.dose) : null,

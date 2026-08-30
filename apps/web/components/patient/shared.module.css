@@ -422,7 +422,261 @@
 .medList {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 10px;
+}
+
+/* ── New Compulsory Box-Style Medication Card ── */
+.medCard {
+  background: #ffffff;
+  border: 1.5px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.04);
+}
+
+.medCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 43, 72, 0.06);
+}
+
+.medCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.medNameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.medName {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--med-navy-800, #0f2b48);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.medDose {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+.medMetaPill {
+  font-size: 11.5px;
+  color: var(--med-text-secondary, #475569);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  margin: 0;
+}
+
+.medSelectionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.medStatusTaken {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.medStatusNotTaken {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.medStatusPending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.medBtnGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.medChoiceBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  cursor: pointer;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 43, 72, 0.03);
+}
+
+.medChoiceBtn:hover {
+  transform: translateY(-1px);
+}
+
+.medChoiceBtnTaken {
+  color: #334155;
+}
+
+.medChoiceBtnTaken:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+  color: #065f46;
+}
+
+.medChoiceBtnTakenActive {
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border-color: #059669 !important;
+  color: #065f46 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.medChoiceBtnNotTaken {
+  color: #334155;
+}
+
+.medChoiceBtnNotTaken:hover {
+  border-color: #f43f5e;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.medChoiceBtnNotTakenActive {
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  border-color: #e11d48 !important;
+  color: #9f1239 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.medChoiceText {
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.medChoiceHi {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* ── Vitals Previous Reading & Quick Selection Box ── */
+.vitalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid var(--med-border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(15, 43, 72, 0.03);
+}
+
+.vitalHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vitalPrevPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.vitalPrevValue {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.vitalQuickOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.vitalQuickBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--med-border-strong, #cbd5e1);
+  background: #ffffff;
+  color: var(--med-text-secondary, #475569);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: all 0.16s ease;
+}
+
+.vitalQuickBtn:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.vitalQuickBtnActive {
+  background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.vitalQuickBtnCustomActive {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
 /* ── Side Effects Picker (Amber Warning Accents) ─────────────────────────── */

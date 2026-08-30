@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const pdfStyles = StyleSheet.create({
   page: { padding: 36, backgroundColor: "#ffffff", fontSize: 9.5, color: "#0f172a", fontFamily: "Helvetica" },
   topBar: { height: 4, backgroundColor: "#0284c7", marginBottom: 14, borderRadius: 2 },
-  header: { backgroundColor: "#0f2b48", color: "#ffffff", padding: 18, marginBottom: 16, borderRadius: 8 },
+  header: { backgroundColor: "#0f2b48", color: "#ffffff", padding: 18, marginBottom: 14, borderRadius: 8 },
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 4, color: "#ffffff" },
   subtitle: { fontSize: 10, color: "#93c5fd", marginBottom: 10 },
   headerGrid: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "rgba(255, 255, 255, 0.18)", paddingTop: 8 },
@@ -17,7 +17,21 @@ const pdfStyles = StyleSheet.create({
   headerMetaRight: { width: "50%", alignItems: "flex-end" },
   meta: { fontSize: 9, color: "#e2e8f0", marginBottom: 2 },
   metaBold: { fontWeight: "bold", color: "#ffffff" },
-  section: { marginTop: 14 },
+
+  // Prescription Update / Changes Banner
+  updateBox: { marginTop: 12, marginBottom: 12, padding: 12, backgroundColor: "#f8fafc", borderWidth: 1.5, borderColor: "#0284c7", borderRadius: 6 },
+  updateHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#bae6fd", paddingBottom: 6, marginBottom: 8 },
+  updateTitle: { fontSize: 11, fontWeight: "bold", color: "#0369a1" },
+  updateTime: { fontSize: 8.5, color: "#64748b" },
+  updateGrid: { gap: 6 },
+  changeGroup: { marginBottom: 4 },
+  changeGroupTitle: { fontSize: 9, fontWeight: "bold", marginBottom: 2 },
+  changeItem: { fontSize: 8.5, color: "#334155", marginLeft: 8, marginBottom: 1.5 },
+  stoppedTag: { color: "#dc2626", fontWeight: "bold" },
+  startedTag: { color: "#16a34a", fontWeight: "bold" },
+  modifiedTag: { color: "#d97706", fontWeight: "bold" },
+
+  section: { marginTop: 12 },
   sectionTitle: { fontSize: 11.5, fontWeight: "bold", marginBottom: 8, color: "#0369a1", borderBottomWidth: 1.5, borderBottomColor: "#bae6fd", paddingBottom: 4 },
   row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingVertical: 7 },
   rowEven: { backgroundColor: "#f8fafc" },
@@ -28,10 +42,20 @@ const pdfStyles = StyleSheet.create({
   cell: { width: "11%", paddingHorizontal: 4 },
   cellFreq: { width: "14%", paddingHorizontal: 4 },
   cellDate: { width: "10%", paddingHorizontal: 4 },
-  instructionBox: { borderLeftWidth: 3.5, borderLeftColor: "#059669", backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0", padding: 12, minHeight: 48, lineHeight: 1.45, borderRadius: 6 },
+  instructionBox: { borderLeftWidth: 3.5, borderLeftColor: "#059669", backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0", padding: 12, minHeight: 44, lineHeight: 1.45, borderRadius: 6 },
   instructionText: { fontSize: 9.5, color: "#166534" },
-  footer: { position: "absolute", left: 36, right: 36, bottom: 28, flexDirection: "row", justifyContent: "space-between", color: "#64748b", fontSize: 8.5, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 10 },
+  footer: { position: "absolute", left: 36, right: 36, bottom: 24, flexDirection: "row", justifyContent: "space-between", color: "#64748b", fontSize: 8.5, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 },
 });
+
+export interface PrescriptionChangeSummary {
+  updated_at?: string;
+  prescription_date?: string;
+  doctor_name?: string;
+  has_changes?: boolean;
+  stopped?: Array<{ name: string; details?: string; route?: string; dose?: string }>;
+  started?: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }>;
+  modified?: Array<{ name: string; details?: string; from?: string; to?: string }>;
+}
 
 function PrescriptionPdfDocument({
   patientName,
@@ -40,6 +64,7 @@ function PrescriptionPdfDocument({
   prescriptionDate,
   medications,
   instruction,
+  changes,
 }: {
   patientName: string;
   doctorName: string;
@@ -47,6 +72,7 @@ function PrescriptionPdfDocument({
   prescriptionDate: string;
   medications: Array<{ drug_name: string; route: string; dose: number | null; dose_unit: string | null; frequency: string | null; start_date?: string | null; end_date: string | null; serial_number: number | null }>;
   instruction: string | null;
+  changes?: PrescriptionChangeSummary | null;
 }) {
   const generatedLabel = new Date(generatedAt).toLocaleString("en-IN", {
     day: "numeric",
@@ -55,6 +81,21 @@ function PrescriptionPdfDocument({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const hasStopped = Boolean(changes?.stopped && changes.stopped.length > 0);
+  const hasStarted = Boolean(changes?.started && changes.started.length > 0);
+  const hasModified = Boolean(changes?.modified && changes.modified.length > 0);
+  const hasAnyChange = hasStopped || hasStarted || hasModified;
+
+  const changeTimeLabel = changes?.updated_at
+    ? new Date(changes.updated_at).toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : generatedLabel;
 
   return React.createElement(
     Document,
@@ -74,21 +115,63 @@ function PrescriptionPdfDocument({
           React.createElement(
             View,
             { style: pdfStyles.headerMetaLeft },
-            React.createElement(Text, { style: pdfStyles.meta }, `Patient: `, React.createElement(Text, { style: pdfStyles.metaBold }, patientName)),
-            React.createElement(Text, { style: pdfStyles.meta }, `Doctor: `, React.createElement(Text, { style: pdfStyles.metaBold }, doctorName)),
+            React.createElement(Text, { style: pdfStyles.meta }, "Patient: ", React.createElement(Text, { style: pdfStyles.metaBold }, patientName)),
+            React.createElement(Text, { style: pdfStyles.meta }, "Doctor: ", React.createElement(Text, { style: pdfStyles.metaBold }, doctorName)),
           ),
           React.createElement(
             View,
             { style: pdfStyles.headerMetaRight },
-            React.createElement(Text, { style: pdfStyles.meta }, `Prescription Date: `, React.createElement(Text, { style: pdfStyles.metaBold }, prescriptionDate)),
+            React.createElement(Text, { style: pdfStyles.meta }, "Prescription Date: ", React.createElement(Text, { style: pdfStyles.metaBold }, prescriptionDate)),
             React.createElement(Text, { style: pdfStyles.meta }, `Issued: ${generatedLabel}`),
           ),
         ),
       ),
+
+      // Highlighted Prescription Update Box if prescription was modified/changed
+      hasAnyChange && React.createElement(
+        View,
+        { style: pdfStyles.updateBox },
+        React.createElement(
+          View,
+          { style: pdfStyles.updateHeader },
+          React.createElement(Text, { style: pdfStyles.updateTitle }, "Prescription Updated · Recent Changes"),
+          React.createElement(Text, { style: pdfStyles.updateTime }, `Updated: ${changeTimeLabel}`),
+        ),
+        React.createElement(
+          View,
+          { style: pdfStyles.updateGrid },
+          hasStopped && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.stoppedTag] }, "🔴 Stopped:"),
+            ...(changes?.stopped ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `stopped-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || m.dose || ""}`.trim())
+            ),
+          ),
+          hasStarted && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.startedTag] }, "🟢 Started:"),
+            ...(changes?.started ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `started-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || `${m.dose || ""} ${m.frequency || ""}`}`.trim())
+            ),
+          ),
+          hasModified && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.modifiedTag] }, "🟡 Modified:"),
+            ...(changes?.modified ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `mod-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} — ${m.details || `${m.from || ""} → ${m.to || ""}`}`.trim())
+            ),
+          ),
+        ),
+      ),
+
+      // Medication Regimen Table
       React.createElement(
         View,
         { style: pdfStyles.section },
-        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Medication Regimen"),
+        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Current Active Medication Regimen"),
         React.createElement(
           View,
           { style: pdfStyles.tableHeader },
@@ -116,6 +199,8 @@ function PrescriptionPdfDocument({
           ),
         ),
       ),
+
+      // Instructions Box
       React.createElement(
         View,
         { style: pdfStyles.section },
@@ -126,6 +211,8 @@ function PrescriptionPdfDocument({
           React.createElement(Text, { style: pdfStyles.instructionText }, instruction || "Take medications regularly as prescribed. Report any acute breathlessness or red flag symptoms immediately."),
         ),
       ),
+
+      // Footer
       React.createElement(
         View,
         { style: pdfStyles.footer },
@@ -170,6 +257,36 @@ export async function GET(request: Request) {
   const requestedDate = url.searchParams.get("date");
   const requestedDisposition = url.searchParams.get("disposition");
 
+  // Fetch the latest prescription update audit log if any
+  const { data: latestAudit } = await admin
+    .from("audit_logs")
+    .select("created_at, metadata")
+    .eq("action", "prescription_updated")
+    .eq("target_patient_id", patient.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let latestChanges: PrescriptionChangeSummary | null = null;
+  if (latestAudit?.metadata && typeof latestAudit.metadata === "object") {
+    const meta = latestAudit.metadata as Record<string, any>;
+    if (meta.changes) {
+      latestChanges = {
+        updated_at: meta.updated_at ?? latestAudit.created_at,
+        prescription_date: meta.prescription_date,
+        doctor_name: meta.doctor_name,
+        has_changes: Boolean(
+          (meta.changes.stopped?.length ?? 0) > 0 ||
+          (meta.changes.started?.length ?? 0) > 0 ||
+          (meta.changes.modified?.length ?? 0) > 0
+        ),
+        stopped: meta.changes.stopped ?? [],
+        started: meta.changes.started ?? [],
+        modified: meta.changes.modified ?? [],
+      };
+    }
+  }
+
   if (requestedFormat === "pdf") {
     const prescriptionDate = requestedDate ?? new Date().toISOString().split("T")[0]!;
     const [doctorRes, medsRes, instructionRes] = await Promise.all([
@@ -180,7 +297,6 @@ export async function GET(request: Request) {
         .from("medications")
         .select("drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
         .eq("patient_id", patient.id)
-        .eq("start_date", prescriptionDate)
         .order("serial_number", { ascending: true }),
       admin
         .from("doctor_instructions")
@@ -195,16 +311,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: doctorRes.error?.message ?? medsRes.error?.message ?? instructionRes.error?.message }, { status: 500 });
     }
 
+    const today = new Date().toISOString().split("T")[0]!;
+    const activeMeds = (medsRes.data ?? []).filter(
+      (m) => !m.end_date || m.end_date >= today || m.start_date === prescriptionDate
+    );
+
     const generatedAt = new Date().toISOString();
     const pdfBuffer = await renderPrescriptionPdfBuffer({
       patientName: patient.name ?? "Patient",
-      doctorName: doctorRes.data?.name ?? "Doctor",
+      doctorName: doctorRes.data?.name ?? latestChanges?.doctor_name ?? "Doctor",
       generatedAt,
       prescriptionDate,
-      medications: medsRes.data ?? [],
+      medications: activeMeds.length > 0 ? activeMeds : (medsRes.data ?? []),
       instruction: instructionRes.data?.instruction_text ?? null,
+      changes: latestChanges,
     });
-    const filename = `saans-prescription-${prescriptionDate}-${generatedAt.replace(/[:.]/g, "-")}.pdf`;
+    const filename = `o2plus-prescription-${prescriptionDate}-${generatedAt.replace(/[:.]/g, "-")}.pdf`;
 
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
@@ -258,7 +380,11 @@ export async function GET(request: Request) {
       return { date, created_at: createdAt, medications };
     });
 
-  return NextResponse.json({ prescriptions, instruction: instruction ?? null });
+  return NextResponse.json({
+    prescriptions,
+    instruction: instruction ?? null,
+    latest_changes: latestChanges,
+  });
 }
 
 export async function PATCH(request: Request) {

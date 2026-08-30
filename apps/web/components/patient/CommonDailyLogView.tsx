@@ -8,6 +8,7 @@ import {
   MedChecklist,
   SideEffectsPicker,
   SpO2Input,
+  HeartRateInput,
   SymptomsTracker,
   BreathlessnessTracker,
   buildVasSymptomsPayload,
@@ -138,7 +139,7 @@ export function CommonDailyLogView({
   const [supportType, setSupportType] = useState("");
   const [supportSummary, setSupportSummary] = useState("Loading doctor plan · डॉक्टर का प्लान लोड हो रहा है");
   const [mmrc, setMmrc] = useState<number | null>(null);
-  const [medsTaken, setMedsTaken] = useState<Record<string, boolean>>({});
+  const [medsTaken, setMedsTaken] = useState<Record<string, boolean | null>>({});
   const [sideEffects, setSideEffects] = useState<Set<string>>(new Set());
   const [sideEffectsOther, setSideEffectsOther] = useState("");
   const [symptomsData, setSymptomsData] = useState<SymptomsData>({});
@@ -202,7 +203,7 @@ export function CommonDailyLogView({
         setHeartRate(String(diseaseRecord.heart_rate));
       }
       if (alreadyLoggedToday.medication_compliance && typeof alreadyLoggedToday.medication_compliance === "object") {
-        setMedsTaken(alreadyLoggedToday.medication_compliance);
+        setMedsTaken(alreadyLoggedToday.medication_compliance as Record<string, boolean>);
       }
       if (alreadyLoggedToday.disease_specific_data && typeof alreadyLoggedToday.disease_specific_data === "object") {
         setDiseaseSpecificData(alreadyLoggedToday.disease_specific_data as Partial<DailyLogPayload>);
@@ -211,7 +212,14 @@ export function CommonDailyLogView({
   }, [alreadyLoggedToday, reset]);
 
   useEffect(() => {
-    setMedsTaken((current) => Object.fromEntries(meds.map((m) => [m.id, current[m.id] ?? false])));
+    setMedsTaken((current) => {
+      const next: Record<string, boolean | null> = {};
+      for (const m of meds) {
+        const val = current[m.id];
+        next[m.id] = typeof val === "boolean" ? val : null;
+      }
+      return next;
+    });
   }, [meds]);
 
   useEffect(() => {
@@ -248,7 +256,7 @@ export function CommonDailyLogView({
   const spo2ExertionValid = inRange(spo2Exertion, 0, 100);
   const heartRateValid = inRange(heartRate, 20, 250);
   const oxygenLitresValid = inRange(breathlessness.additionalLitres, 0, 15);
-  const hasMedicationsTaken = Object.values(medsTaken).some((taken) => taken === true);
+  const allMedsAnswered = meds.length === 0 || meds.every((m) => medsTaken[m.id] === true || medsTaken[m.id] === false);
   const diseaseValues = diseaseSpecificData as Record<string, unknown>;
   const asthmaControlComplete = dashboard !== "asthma"
     || (Array.isArray(diseaseValues.asthma_control_responses)
@@ -265,8 +273,8 @@ export function CommonDailyLogView({
       ? "SpO2 after walking must be between 0 and 100. · चलने के बाद SpO2 0 से 100 के बीच होना चाहिए."
       : !heartRateValid
         ? "Heart rate must be between 20 and 250. · नाड़ी 20 से 250 के बीच होनी चाहिए."
-        : !hasMedicationsTaken && meds.length > 0
-          ? "Please mark at least one medication taken. · कृपया कम से कम एक दवा को चिह्नित करें।"
+        : !allMedsAnswered && meds.length > 0
+          ? "Please mark Taken or Not Taken for all medications. · कृपया सभी दवाओं के लिए 'ली गई' या 'नहीं ली गई' चुनें।"
           : !asthmaControlComplete
             ? "Please answer all asthma control questions. · कृपया अस्थमा नियंत्रण के सभी सवालों का जवाब दें."
             : !asthmaDailyTrackingComplete
@@ -278,7 +286,10 @@ export function CommonDailyLogView({
   const isSubmitting = submitState === "submitting";
   const previousMmrcLabel = prevDay.loading ? "..." : prevDay.mmrc !== null ? String(prevDay.mmrc) : "-";
 
-  const toggleMed = (id: string) => setMedsTaken((current) => ({ ...current, [id]: !current[id] }));
+  const handleMedSelect = (id: string, isTaken: boolean) => {
+    setMedsTaken((current) => ({ ...current, [id]: isTaken }));
+  };
+
   const toggleSideEffect = (id: string) => {
     setSideEffects((current) => {
       const next = new Set(current);
@@ -313,6 +324,11 @@ export function CommonDailyLogView({
     const diseaseTemperatureF = diseaseSpecificData.temperature_f;
     const commonHaemoptysis = (haemoptysisEntry?.vas ?? 0) > 0 ? true : null;
 
+    const compliancePayload: Record<string, boolean> = {};
+    for (const m of meds) {
+      compliancePayload[m.id] = Boolean(medsTaken[m.id]);
+    }
+
     const payload: DailyLogPayload = {
       effective_dashboard: dashboard,
       patient_id: patientId,
@@ -322,7 +338,7 @@ export function CommonDailyLogView({
       heart_rate: parseOptionalNumber(heartRate),
       mmrc_today: mmrc,
       aqi_value: aqi,
-      medication_compliance: medsTaken,
+      medication_compliance: compliancePayload,
       vas_symptoms: {
         ...(commonVasSymptoms ?? {}),
         ...(diseaseVasSymptoms ?? {}),
@@ -349,6 +365,7 @@ export function CommonDailyLogView({
     dashboard,
     diseaseSpecificData,
     heartRate,
+    meds,
     medsTaken,
     mmrc,
     onSuccess,
@@ -576,6 +593,7 @@ export function CommonDailyLogView({
             <SpO2Input
               value={spo2}
               onChange={setSpo2}
+              prevValue={prevDay.spo2Rest}
               isCOPD={dashboard === "copd"}
               label="SpO₂ at Rest · आराम के समय ऑक्सीजन"
             />
@@ -599,26 +617,12 @@ export function CommonDailyLogView({
                 }}
               />
             </div>
-            <div>
-              <label className={dStyles.fieldLabel}>
-                Heart Rate (Optional)
-                <span className={dStyles.fieldLabelHi}>नाड़ी / मिनट (वैकल्पिक)</span>
-              </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                min={20}
-                max={250}
-                className={dStyles.numInput}
-                placeholder="e.g. 88"
-                value={heartRate}
-                onChange={(event) => {
-                  const v = event.target.value.replace(/\D/g, "");
-                  if (v === "" || Number(v) <= 250) setHeartRate(v);
-                }}
-              />
-            </div>
+            <HeartRateInput
+              value={heartRate}
+              onChange={setHeartRate}
+              prevValue={prevDay.heartRate}
+              label="Heart Rate (Optional) · नाड़ी / मिनट (वैकल्पिक)"
+            />
           </div>
           <div style={{ marginTop: 16 }}>
             <BreathlessnessTracker
@@ -666,7 +670,7 @@ export function CommonDailyLogView({
           </div>
 
           {meds.length > 0 ? (
-            <MedChecklist meds={meds} taken={medsTaken} onToggle={toggleMed} />
+            <MedChecklist meds={meds} taken={medsTaken} onSelect={handleMedSelect} />
           ) : (
             <p className={dStyles.cardSub}>No active meds for this date. · इस तारीख के लिए कोई सक्रिय दवा नहीं है।</p>
           )}

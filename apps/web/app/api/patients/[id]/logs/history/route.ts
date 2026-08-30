@@ -67,6 +67,7 @@ export async function GET(
     logged_at: row.logged_at,
     spo2_rest: row.spo2_rest,
     spo2_exertion: row.spo2_exertion,
+    heart_rate: (row as any).heart_rate ?? (row.disease_specific_data as any)?.heart_rate ?? null,
     mmrc_today: row.mmrc_today,
     aqi_value: row.aqi_value,
     vas_symptoms: row.vas_symptoms as Record<string, number> | null,

@@ -60,6 +60,16 @@ interface PrescriptionNotification {
   medications: PrescriptionNotificationMed[];
 }
 
+interface PrescriptionChanges {
+  updated_at?: string;
+  prescription_date?: string;
+  doctor_name?: string;
+  has_changes?: boolean;
+  stopped?: Array<{ name: string; details?: string; route?: string; dose?: string }>;
+  started?: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }>;
+  modified?: Array<{ name: string; details?: string; from?: string; to?: string }>;
+}
+
 interface PatientInstruction {
   id: string;
   instruction_text: string;
@@ -165,10 +175,11 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   const [profileOpen, setProfileOpen] = useState(false);
   const [latestPrescription, setLatestPrescription] = useState<PrescriptionNotification | null>(null);
   const [latestInstruction, setLatestInstruction] = useState<PatientInstruction | null>(null);
+  const [latestChanges, setLatestChanges] = useState<PrescriptionChanges | null>(null);
   const [seenPrescriptionKey, setSeenPrescriptionKey] = useState<string | null>(null);
   const [appointmentNotification, setAppointmentNotification] = useState<AppointmentNotification | null>(null);
   const [seenAppointmentKey, setSeenAppointmentKey] = useState<string | null>(null);
-  const [doctorAcceptsAppointments, setDoctorAcceptsAppointments] = useState<boolean | null>(null);
+  const [doctorAcceptsAppointments, setDoctorAcceptsAppointments] = useState<boolean>(true);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [profileMeta, setProfileMeta] = useState<ProfileMeta>({
     doctorName: "Assigned Pulmonologist",
@@ -204,15 +215,17 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
     fetch("/api/patient/prescriptions", { credentials: "include" })
       .then((response) => response.ok ? response.json() : null)
-      .then((body: { prescriptions?: PrescriptionNotification[]; instruction?: PatientInstruction | null } | null) => {
+      .then((body: { prescriptions?: PrescriptionNotification[]; instruction?: PatientInstruction | null; latest_changes?: PrescriptionChanges | null } | null) => {
         if (cancelled) return;
         setLatestPrescription(body?.prescriptions?.[0] ?? null);
         setLatestInstruction(body?.instruction ?? null);
+        setLatestChanges(body?.latest_changes ?? null);
       })
       .catch(() => {
         if (!cancelled) {
           setLatestPrescription(null);
           setLatestInstruction(null);
+          setLatestChanges(null);
         }
       });
 
@@ -536,10 +549,10 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                       <div className={styles.notifItemHeader}>
                         <div>
                           <p className={styles.notifStatus}>
-                            {latestPrescription ? "Prescription Ready" : "Doctor Note"}
+                            {latestChanges?.has_changes ? "Prescription Updated" : latestPrescription ? "Prescription Ready" : "Doctor Note"}
                           </p>
                           <h4 className={styles.notifTitle}>
-                            {latestPrescription ? "New Prescription Issued" : "New Care Instruction"}
+                            {latestChanges?.has_changes ? "Prescription Changes" : latestPrescription ? "New Prescription Issued" : "New Care Instruction"}
                           </h4>
                         </div>
                         {latestPrescription && (
@@ -551,6 +564,27 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
                       </time>
                       {latestInstruction?.instruction_text && (
                         <p className={styles.notifMessage}>{latestInstruction.instruction_text}</p>
+                      )}
+
+                      {/* Structured Changes Breakdown */}
+                      {latestChanges?.has_changes && (
+                        <div style={{ margin: "6px 0", padding: "8px 10px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 11.5 }}>
+                          {latestChanges.stopped && latestChanges.stopped.length > 0 && (
+                            <div style={{ color: "#dc2626", marginBottom: 3 }}>
+                              <strong>🔴 Stopped:</strong> {latestChanges.stopped.map(m => `${m.name} ${m.details || ""}`).join(", ")}
+                            </div>
+                          )}
+                          {latestChanges.started && latestChanges.started.length > 0 && (
+                            <div style={{ color: "#16a34a", marginBottom: 3 }}>
+                              <strong>🟢 Started:</strong> {latestChanges.started.map(m => `${m.name} ${m.details || ""}`).join(", ")}
+                            </div>
+                          )}
+                          {latestChanges.modified && latestChanges.modified.length > 0 && (
+                            <div style={{ color: "#d97706" }}>
+                              <strong>🟡 Modified:</strong> {latestChanges.modified.map(m => `${m.name} (${m.details || `${m.from} → ${m.to}`})`).join(", ")}
+                            </div>
+                          )}
+                        </div>
                       )}
                       {latestPrescription && (
                         <>

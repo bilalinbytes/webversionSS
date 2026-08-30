@@ -7,6 +7,7 @@ export interface PreviousDayLogData {
   loading: boolean;
   mmrc: number | null;
   spo2Rest: number | null;
+  heartRate: number | null;
   vasSymptoms: Record<string, number> | null;
   logDate: string | null;
 }
@@ -15,6 +16,7 @@ interface HistoryLog {
   logged_at: string;
   mmrc_today: number | null;
   spo2_rest: number | null;
+  heart_rate?: number | null;
   vas_symptoms: Record<string, number> | null;
 }
 
@@ -41,13 +43,14 @@ export function usePreviousDayLog(patientId: string | null): PreviousDayLogData 
     loading: true,
     mmrc: null,
     spo2Rest: null,
+    heartRate: null,
     vasSymptoms: null,
     logDate: null,
   });
 
   useEffect(() => {
     if (!patientId) {
-      setData({ loading: false, mmrc: null, spo2Rest: null, vasSymptoms: null, logDate: null });
+      setData({ loading: false, mmrc: null, spo2Rest: null, heartRate: null, vasSymptoms: null, logDate: null });
       return;
     }
 
@@ -62,7 +65,7 @@ export function usePreviousDayLog(patientId: string | null): PreviousDayLogData 
         .sort((a: any, b: any) => b.logged_at.localeCompare(a.logged_at))[0];
 
       if (!log) {
-        setData({ loading: false, mmrc: null, spo2Rest: null, vasSymptoms: null, logDate: null });
+        setData({ loading: false, mmrc: null, spo2Rest: null, heartRate: null, vasSymptoms: null, logDate: null });
         return;
       }
 
@@ -70,6 +73,7 @@ export function usePreviousDayLog(patientId: string | null): PreviousDayLogData 
         loading: false,
         mmrc: log.mmrc_today ?? null,
         spo2Rest: log.spo2_rest ?? null,
+        heartRate: log.heart_rate ?? log.disease_specific_data?.heart_rate ?? null,
         vasSymptoms: log.vas_symptoms ?? null,
         logDate: log.logged_at,
       });

@@ -1,6 +1,7 @@
 "use client";
 
-import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle, FileText, Download, Eye, Pill } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
 import { DiseaseHero3DVisual } from "./DiseaseHero3DVisual";
 
@@ -83,10 +84,21 @@ function spo2Label(spo2: number): { label: string; color: string } {
 
 const MMRC_LABELS = ["No breathlessness", "On hills/hurrying", "Slower than peers", "Stops after ~100m", "Too breathless to leave home"];
 
+interface PrescriptionChanges {
+  updated_at?: string;
+  prescription_date?: string;
+  doctor_name?: string;
+  has_changes?: boolean;
+  stopped?: Array<{ name: string; details?: string; route?: string; dose?: string }>;
+  started?: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }>;
+  modified?: Array<{ name: string; details?: string; from?: string; to?: string }>;
+}
+
 export function CommonPatientDashboard({
   name,
   diagnosis,
   effectiveDashboard,
+  patientId,
   spo2Today,
   mmrcToday,
   aqiToday,
@@ -109,6 +121,25 @@ export function CommonPatientDashboard({
   const aqi = aqiLabel(aqiToday);
   const spo2 = spo2Label(spo2Today);
   const mmrcText = MMRC_LABELS[Math.min(mmrcToday, 4)] ?? MMRC_LABELS[0];
+
+  const [prescriptionChanges, setPrescriptionChanges] = useState<PrescriptionChanges | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/patient/prescriptions", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (cancelled || !body) return;
+        if (body.latest_changes) {
+          setPrescriptionChanges(body.latest_changes);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId]);
 
   return (
     <div className={dStyles.body} style={{ gap: 16 }}>
@@ -241,6 +272,129 @@ export function CommonPatientDashboard({
           )}
         </div>
       </div>
+
+      {/* -- Prominent Real-Time Prescription Updated Notification Card -- */}
+      {prescriptionChanges?.has_changes && (
+        <div style={{
+          background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)",
+          border: "1.5px solid #0284c7",
+          borderRadius: 14,
+          padding: "16px 20px",
+          boxShadow: "0 4px 16px rgba(2, 132, 199, 0.08)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: "linear-gradient(135deg, #0284c7, #0369a1)",
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff",
+                boxShadow: "0 2px 8px rgba(2, 132, 199, 0.3)",
+              }}>
+                <FileText size={20} strokeWidth={2.2} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <strong style={{ fontSize: 15, color: "#0f2b48" }}>Prescription Updated · दवाएं बदली गईं</strong>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd" }}>
+                    Doctor Revised
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                  {prescriptionChanges.doctor_name ? `By ${prescriptionChanges.doctor_name} · ` : ""}
+                  {prescriptionChanges.updated_at ? new Date(prescriptionChanges.updated_at).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recently updated"}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <a
+                href="/api/patient/prescriptions?format=pdf&disposition=inline"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 8,
+                  background: "#ffffff", border: "1.5px solid #0284c7",
+                  color: "#0284c7", fontSize: 12, fontWeight: 700,
+                  textDecoration: "none", cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <Eye size={14} strokeWidth={2.2} />
+                <span>View PDF</span>
+              </a>
+              <a
+                href="/api/patient/prescriptions?format=pdf"
+                download
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 8,
+                  background: "linear-gradient(135deg, #0284c7, #0369a1)", border: "1.5px solid #0284c7",
+                  color: "#ffffff", fontSize: 12, fontWeight: 700,
+                  textDecoration: "none", cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
+                }}
+              >
+                <Download size={14} strokeWidth={2.2} />
+                <span>Download</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Change items breakdown */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 10,
+            background: "#ffffff",
+            padding: 12,
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+          }}>
+            {prescriptionChanges.stopped && prescriptionChanges.stopped.length > 0 && (
+              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca" }}>
+                <strong style={{ fontSize: 12, color: "#dc2626", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  🔴 Stopped Medications · बंद की गईं
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#991b1b" }}>
+                  {prescriptionChanges.stopped.map((m, i) => (
+                    <li key={i}><strong>{m.name}</strong> {m.details ? `(${m.details})` : ""}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {prescriptionChanges.started && prescriptionChanges.started.length > 0 && (
+              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                <strong style={{ fontSize: 12, color: "#16a34a", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  🟢 Started Medications · नई शुरू की गईं
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#166534" }}>
+                  {prescriptionChanges.started.map((m, i) => (
+                    <li key={i}><strong>{m.name}</strong> {m.details ? `(${m.details})` : ""}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {prescriptionChanges.modified && prescriptionChanges.modified.length > 0 && (
+              <div style={{ padding: "8px 12px", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a" }}>
+                <strong style={{ fontSize: 12, color: "#d97706", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  🟡 Modified Medications · बदलाव
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#92400e" }}>
+                  {prescriptionChanges.modified.map((m, i) => (
+                    <li key={i}><strong>{m.name}</strong> — {m.details || `${m.from} → ${m.to}`}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* -- Dynamic 3D Disease Educational Hero Visual -- */}
       <DiseaseHero3DVisual

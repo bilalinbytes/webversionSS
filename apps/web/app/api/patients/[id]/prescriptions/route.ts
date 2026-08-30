@@ -13,31 +13,58 @@ function wordCount(value: string) {
 }
 
 const pdfStyles = StyleSheet.create({
-  page: { padding: 44, backgroundColor: "#ffffff", fontSize: 10, color: "#0f2b48", fontFamily: "Helvetica" },
-  header: { borderBottomWidth: 1, borderBottomColor: "#1e6091", paddingBottom: 12, marginBottom: 18, flexDirection: "row", justifyContent: "space-between" },
+  page: { padding: 36, backgroundColor: "#ffffff", fontSize: 9.5, color: "#0f2b48", fontFamily: "Helvetica" },
+  topBar: { height: 4, backgroundColor: "#0284c7", marginBottom: 14, borderRadius: 2 },
+  header: { borderBottomWidth: 1, borderBottomColor: "#1e6091", paddingBottom: 12, marginBottom: 14, flexDirection: "row", justifyContent: "space-between" },
   headerLeft: {},
   headerRight: { textAlign: "right" },
-  title: { fontSize: 20, fontWeight: 700, color: "#0f2b48", marginBottom: 6 },
-  meta: { fontSize: 10, color: "#4b5563", marginBottom: 3 },
-  section: { marginTop: 18 },
-  sectionTitle: { fontSize: 13, fontWeight: 700, color: "#1e6091", marginBottom: 8, borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingBottom: 4 },
+  title: { fontSize: 18, fontWeight: "bold", color: "#0f2b48", marginBottom: 4 },
+  meta: { fontSize: 9.5, color: "#4b5563", marginBottom: 2 },
+  metaBold: { fontWeight: "bold", color: "#0f2b48" },
+
+  // Prescription Update / Changes Banner
+  updateBox: { marginTop: 10, marginBottom: 10, padding: 12, backgroundColor: "#f8fafc", borderWidth: 1.5, borderColor: "#0284c7", borderRadius: 6 },
+  updateHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#bae6fd", paddingBottom: 6, marginBottom: 8 },
+  updateTitle: { fontSize: 11, fontWeight: "bold", color: "#0369a1" },
+  updateTime: { fontSize: 8.5, color: "#64748b" },
+  updateGrid: { gap: 6 },
+  changeGroup: { marginBottom: 4 },
+  changeGroupTitle: { fontSize: 9, fontWeight: "bold", marginBottom: 2 },
+  changeItem: { fontSize: 8.5, color: "#334155", marginLeft: 8, marginBottom: 1.5 },
+  stoppedTag: { color: "#dc2626", fontWeight: "bold" },
+  startedTag: { color: "#16a34a", fontWeight: "bold" },
+  modifiedTag: { color: "#d97706", fontWeight: "bold" },
+
+  section: { marginTop: 14 },
+  sectionTitle: { fontSize: 11.5, fontWeight: "bold", color: "#1e6091", marginBottom: 8, borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingBottom: 4 },
   row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e2e8f0", paddingVertical: 6 },
-  rowHeader: { backgroundColor: "#f1f5f9", fontWeight: 700 },
+  rowEven: { backgroundColor: "#f8fafc" },
+  rowHeader: { backgroundColor: "#e0f2fe", fontWeight: "bold", color: "#0369a1", borderRadius: 4 },
   cellNo: { width: "7%", paddingHorizontal: 4 },
   cellRoute: { width: "12%", paddingHorizontal: 4 },
-  cellDrug: { width: "25%", paddingHorizontal: 4 },
+  cellDrug: { width: "25%", paddingHorizontal: 4, fontWeight: "bold", color: "#0f172a" },
   cell: { width: "11%", paddingHorizontal: 4 },
   cellFreq: { width: "14%", paddingHorizontal: 4 },
   cellDate: { width: "10%", paddingHorizontal: 4 },
-  instruction: { borderWidth: 1, borderColor: "#cbd5e1", padding: 10, minHeight: 40, lineHeight: 1.5, borderRadius: 4, backgroundColor: "#f8fafc" },
-  footer: { position: "absolute", left: 44, right: 44, bottom: 36, flexDirection: "row", justifyContent: "space-between", color: "#94a3b8", fontSize: 9, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 },
+  instruction: { borderWidth: 1, borderColor: "#cbd5e1", padding: 10, minHeight: 40, lineHeight: 1.45, borderRadius: 4, backgroundColor: "#f8fafc", fontSize: 9 },
+  footer: { position: "absolute", left: 36, right: 36, bottom: 24, flexDirection: "row", justifyContent: "space-between", color: "#94a3b8", fontSize: 8.5, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 },
   
   trendRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#f1f5f9", paddingVertical: 4 },
-  trendCellDate: { width: "20%", color: "#64748b" },
-  trendCellValue: { width: "80%" },
+  trendCellDate: { width: "20%", color: "#64748b", fontSize: 8 },
+  trendCellValue: { width: "80%", fontSize: 8 },
   trendGrid: { flexDirection: "row", flexWrap: "wrap" },
-  trendBox: { width: "48%", marginBottom: 16, marginRight: "2%" },
+  trendBox: { width: "48%", marginBottom: 12, marginRight: "2%" },
 });
+
+export interface PrescriptionChangeSummary {
+  updated_at?: string;
+  prescription_date?: string;
+  doctor_name?: string;
+  has_changes?: boolean;
+  stopped?: Array<{ name: string; details?: string; route?: string; dose?: string }>;
+  started?: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }>;
+  modified?: Array<{ name: string; details?: string; from?: string; to?: string }>;
+}
 
 function PrescriptionPdfDocument({
   patientName,
@@ -47,6 +74,7 @@ function PrescriptionPdfDocument({
   medications,
   instruction,
   recentLogs,
+  changes,
 }: {
   patientName: string;
   doctorName: string;
@@ -55,15 +83,30 @@ function PrescriptionPdfDocument({
   medications: any[];
   instruction: string | null;
   recentLogs: any[];
+  changes?: PrescriptionChangeSummary | null;
 }) {
   const generatedLabel = new Date(generatedAt).toLocaleString("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
+    hour: "2-digit",
+    minute: "2-digit",
   });
+
+  const hasStopped = Boolean(changes?.stopped && changes.stopped.length > 0);
+  const hasStarted = Boolean(changes?.started && changes.started.length > 0);
+  const hasModified = Boolean(changes?.modified && changes.modified.length > 0);
+  const hasAnyChange = hasStopped || hasStarted || hasModified;
+
+  const changeTimeLabel = changes?.updated_at
+    ? new Date(changes.updated_at).toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : generatedLabel;
 
   return React.createElement(
     Document,
@@ -71,6 +114,7 @@ function PrescriptionPdfDocument({
     React.createElement(
       Page,
       { size: "A4", style: pdfStyles.page },
+      React.createElement(View, { style: pdfStyles.topBar }),
       // Header
       React.createElement(
         View,
@@ -78,23 +122,63 @@ function PrescriptionPdfDocument({
         React.createElement(
           View,
           { style: pdfStyles.headerLeft },
-          React.createElement(Text, { style: pdfStyles.title }, "Patient Summary & Prescription"),
-          React.createElement(Text, { style: pdfStyles.meta }, "Patient: " + patientName),
-          React.createElement(Text, { style: pdfStyles.meta }, "Doctor: " + doctorName)
+          React.createElement(Text, { style: pdfStyles.title }, "Patient Summary & Medical Prescription"),
+          React.createElement(Text, { style: pdfStyles.meta }, "Patient: ", React.createElement(Text, { style: pdfStyles.metaBold }, patientName)),
+          React.createElement(Text, { style: pdfStyles.meta }, "Doctor: ", React.createElement(Text, { style: pdfStyles.metaBold }, doctorName))
         ),
         React.createElement(
           View,
           { style: pdfStyles.headerRight },
-          React.createElement(Text, { style: pdfStyles.meta }, "Date: " + prescriptionDate),
-          React.createElement(Text, { style: pdfStyles.meta }, "Generated: " + generatedLabel)
+          React.createElement(Text, { style: pdfStyles.meta }, "Prescription Date: ", React.createElement(Text, { style: pdfStyles.metaBold }, prescriptionDate)),
+          React.createElement(Text, { style: pdfStyles.meta }, `Issued: ${generatedLabel}`)
         )
+      ),
+
+      // Highlighted Prescription Update Box if prescription was modified/changed
+      hasAnyChange && React.createElement(
+        View,
+        { style: pdfStyles.updateBox },
+        React.createElement(
+          View,
+          { style: pdfStyles.updateHeader },
+          React.createElement(Text, { style: pdfStyles.updateTitle }, "Prescription Updated · Recent Changes"),
+          React.createElement(Text, { style: pdfStyles.updateTime }, `Updated: ${changeTimeLabel}`),
+        ),
+        React.createElement(
+          View,
+          { style: pdfStyles.updateGrid },
+          hasStopped && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.stoppedTag] }, "🔴 Stopped:"),
+            ...(changes?.stopped ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `stopped-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || m.dose || ""}`.trim())
+            ),
+          ),
+          hasStarted && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.startedTag] }, "🟢 Started:"),
+            ...(changes?.started ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `started-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || `${m.dose || ""} ${m.frequency || ""}`}`.trim())
+            ),
+          ),
+          hasModified && React.createElement(
+            View,
+            { style: pdfStyles.changeGroup },
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.modifiedTag] }, "🟡 Modified:"),
+            ...(changes?.modified ?? []).map((m, idx) =>
+              React.createElement(Text, { key: `mod-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} — ${m.details || `${m.from || ""} → ${m.to || ""}`}`.trim())
+            ),
+          ),
+        ),
       ),
 
       // Medications
       React.createElement(
         View,
         { style: pdfStyles.section },
-        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Medications Prescribed"),
+        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Current Active Medication Regimen"),
         React.createElement(
           View,
           { style: [pdfStyles.row, pdfStyles.rowHeader] },
@@ -112,7 +196,7 @@ function PrescriptionPdfDocument({
           : medications.map((medication, index) =>
               React.createElement(
                 View,
-                { key: index, style: pdfStyles.row },
+                { key: index, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
                 React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
                 React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
                 React.createElement(Text, { style: pdfStyles.cellDrug }, medication.drug_name),
@@ -129,8 +213,8 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.section },
-        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Doctor's Instructions"),
-        React.createElement(Text, { style: pdfStyles.instruction }, instruction || "No specific instructions provided.")
+        React.createElement(Text, { style: pdfStyles.sectionTitle }, "Doctor's Instructions & Care Advice"),
+        React.createElement(Text, { style: pdfStyles.instruction }, instruction || "Take medications regularly as prescribed. Report any acute breathlessness or red flag symptoms immediately.")
       ),
 
       // Trend Data Section
@@ -144,7 +228,7 @@ function PrescriptionPdfDocument({
           
           // SpO2 Trend
           React.createElement(View, { style: pdfStyles.trendBox }, 
-            React.createElement(Text, { style: { fontWeight: 700, marginBottom: 4 } }, "SpO2 Trend"),
+            React.createElement(Text, { style: { fontWeight: "bold", marginBottom: 4 } }, "SpO2 Trend"),
             recentLogs.map((log, i) => React.createElement(View, { key: "spo2-"+i, style: pdfStyles.trendRow }, 
               React.createElement(Text, { style: pdfStyles.trendCellDate }, log.date),
               React.createElement(Text, { style: pdfStyles.trendCellValue }, (log.spo2_rest ? log.spo2_rest+"% (Rest)" : "-") + " | " + (log.spo2_exertion ? log.spo2_exertion+"% (Walk)" : "-"))
@@ -153,7 +237,7 @@ function PrescriptionPdfDocument({
 
           // MMRC Trend
           React.createElement(View, { style: pdfStyles.trendBox }, 
-            React.createElement(Text, { style: { fontWeight: 700, marginBottom: 4 } }, "mMRC Score"),
+            React.createElement(Text, { style: { fontWeight: "bold", marginBottom: 4 } }, "mMRC Score"),
             recentLogs.map((log, i) => React.createElement(View, { key: "mmrc-"+i, style: pdfStyles.trendRow }, 
               React.createElement(Text, { style: pdfStyles.trendCellDate }, log.date),
               React.createElement(Text, { style: pdfStyles.trendCellValue }, log.mmrc_today !== null ? String(log.mmrc_today) : "-")
@@ -162,7 +246,7 @@ function PrescriptionPdfDocument({
 
           // Symptom Trend
           React.createElement(View, { style: pdfStyles.trendBox }, 
-            React.createElement(Text, { style: { fontWeight: 700, marginBottom: 4 } }, "Symptoms & Severity"),
+            React.createElement(Text, { style: { fontWeight: "bold", marginBottom: 4 } }, "Symptoms & Severity"),
             recentLogs.map((log, i) => {
               let symStr = "-";
               if (log.vas_symptoms && typeof log.vas_symptoms === "object") {
@@ -178,7 +262,7 @@ function PrescriptionPdfDocument({
 
           // Adherence Trend
           React.createElement(View, { style: pdfStyles.trendBox }, 
-            React.createElement(Text, { style: { fontWeight: 700, marginBottom: 4 } }, "Medication Adherence"),
+            React.createElement(Text, { style: { fontWeight: "bold", marginBottom: 4 } }, "Medication Adherence"),
             recentLogs.map((log, i) => {
               let adStr = "-";
               if (log.medication_compliance && typeof log.medication_compliance === "object") {
@@ -191,25 +275,6 @@ function PrescriptionPdfDocument({
                 React.createElement(Text, { style: pdfStyles.trendCellValue }, adStr)
               );
             })
-          ),
-
-          // Disease Specific Scores
-          React.createElement(View, { style: pdfStyles.trendBox }, 
-            React.createElement(Text, { style: { fontWeight: 700, marginBottom: 4 } }, "Disease Specific Scores (Asthma/ILD)"),
-            recentLogs.map((log, i) => {
-              let scoreStr = "-";
-              if (log.disease_specific_data && typeof log.disease_specific_data === "object") {
-                const d = log.disease_specific_data as any;
-                const scores = [];
-                if (d.asthma?.act_score !== undefined) scores.push("ACT: " + d.asthma.act_score);
-                if (d.ild?.kbild_score !== undefined) scores.push("K-BILD: " + d.ild.kbild_score);
-                if (scores.length > 0) scoreStr = scores.join(" | ");
-              }
-              return React.createElement(View, { key: "ds-"+i, style: pdfStyles.trendRow }, 
-                React.createElement(Text, { style: pdfStyles.trendCellDate }, log.date),
-                React.createElement(Text, { style: pdfStyles.trendCellValue }, scoreStr)
-              );
-            })
           )
         )
       ),
@@ -218,8 +283,8 @@ function PrescriptionPdfDocument({
       React.createElement(
         View,
         { style: pdfStyles.footer },
-        React.createElement(Text, null, "O2Plus Respiratory Care Platform"),
-        React.createElement(Text, null, "Signature: ____________________")
+        React.createElement(Text, null, "O2Plus Respiratory Care Platform · Valid Clinical Record"),
+        React.createElement(Text, null, "Doctor Signature: ____________________")
       )
     )
   );
@@ -229,7 +294,9 @@ async function renderPrescriptionPdfBuffer(props: React.ComponentProps<typeof Pr
   const rendered = await pdf(
     React.createElement(PrescriptionPdfDocument, props) as React.ReactElement<DocumentProps>
   ).toBuffer();
-  return rendered;
+  if (Buffer.isBuffer(rendered)) return rendered;
+  const arrayBuffer = await new Response(rendered as unknown as BodyInit).arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -241,49 +308,150 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const p = await params;
     const patientId = p.id;
     const body = await request.json();
-    const instructionText = body.instruction_text?.trim();
+    const instructionText = (body.patient_instruction || body.instruction_text)?.trim();
+    const prescriptionDate = body.prescription_date || new Date().toISOString().split("T")[0]!;
+    const medicationsList: any[] = body.medications || [];
+    const stoppedMedicationIds: string[] = body.stopped_medication_ids || [];
 
     if (instructionText) {
       const wordLimit = PATIENT_INSTRUCTION_WORD_LIMIT;
       if (wordCount(instructionText) > wordLimit) {
-        return NextResponse.json({ error: "Instruction text exceeds " + wordLimit + " words limit" }, { status: 400 });
+        return NextResponse.json({ error: `Instruction text exceeds ${wordLimit} words limit` }, { status: 400 });
       }
     }
 
     const admin = createAdminClient();
-    
-    // De-duplicate instruction insertion (check last 5 mins)
-    let savedInstructionId = null;
-    if (instructionText) {
-      const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      const recentCheck = await admin
-        .from("doctor_instructions")
-        .select("id, instruction_text")
-        .eq("patient_id", patientId)
-        .eq("doctor_id", user.id)
-        .gte("created_at", fiveMinsAgo)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
 
-      if (recentCheck.data && recentCheck.data.instruction_text === instructionText) {
-        savedInstructionId = recentCheck.data.id;
-      } else {
-        const ins = await admin
-          .from("doctor_instructions")
-          .insert({
-            patient_id: patientId,
-            doctor_id: user.id,
-            instruction_text: instructionText,
-          })
-          .select("id")
-          .single();
-        if (ins.error) throw ins.error;
-        savedInstructionId = ins.data.id;
+    // Fetch doctor name
+    const { data: doctor } = await admin
+      .from("doctors")
+      .select("name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const doctorName = doctor?.name ?? "Attending Doctor";
+
+    // Fetch existing medications to compute diffs accurately
+    const { data: existingMeds } = await admin
+      .from("medications")
+      .select("*")
+      .eq("patient_id", patientId);
+
+    const existingMap = new Map((existingMeds || []).map((m) => [m.id, m]));
+
+    // Handle stopped medications
+    if (stoppedMedicationIds.length > 0) {
+      await admin
+        .from("medications")
+        .update({ end_date: prescriptionDate })
+        .in("id", stoppedMedicationIds)
+        .eq("patient_id", patientId);
+    }
+
+    // Process new & modified medications
+    const activeDrafts = medicationsList.filter((m: any) => m.drug_name && m.drug_name.trim() && m.status !== "stopped");
+
+    if (activeDrafts.length > 0) {
+      const insertRows = activeDrafts.map((m: any, idx: number) => ({
+        patient_id: patientId,
+        prescribed_by_doctor_id: user.id,
+        route: m.route || "Tablet",
+        drug_name: m.drug_name.trim(),
+        dose: m.dose !== null && m.dose !== undefined && m.dose !== "" ? Number(m.dose) : null,
+        dose_unit: m.dose_unit || null,
+        frequency: m.frequency || "OD",
+        start_date: prescriptionDate,
+        end_date: m.end_date || null,
+        serial_number: idx + 1,
+      }));
+
+      await admin.from("medications").insert(insertRows);
+    }
+
+    // Compute diff: Stopped, Started, Modified
+    const stoppedChanges: Array<{ name: string; details: string; route?: string; dose?: string }> = [];
+    const startedChanges: Array<{ name: string; details: string; route?: string; dose?: string; frequency?: string }> = [];
+    const modifiedChanges: Array<{ name: string; details: string; from?: string; to?: string }> = [];
+
+    // Stopped
+    for (const stoppedId of stoppedMedicationIds) {
+      const existing = existingMap.get(stoppedId);
+      if (existing) {
+        stoppedChanges.push({
+          name: existing.drug_name,
+          details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")}`,
+          route: existing.route,
+          dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
+        });
       }
     }
 
-    return NextResponse.json({ success: true, instruction_id: savedInstructionId });
+    // Started & Modified from draft list
+    for (const m of medicationsList) {
+      if (m.status === "new" && m.drug_name?.trim()) {
+        const doseStr = [m.dose, m.dose_unit].filter(Boolean).join(" ");
+        startedChanges.push({
+          name: m.drug_name.trim(),
+          details: `${m.route || "Tablet"}${doseStr ? ` · ${doseStr}` : ""}${m.frequency ? ` · ${m.frequency}` : ""}`,
+          route: m.route,
+          dose: doseStr,
+          frequency: m.frequency,
+        });
+      } else if (m.status === "modified" && m.drug_name?.trim()) {
+        const existing = m.source_id ? existingMap.get(m.source_id) : null;
+        const fromDose = existing ? `${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} ${existing.frequency || ""}`.trim() : "previous";
+        const toDose = `${[m.dose, m.dose_unit].filter(Boolean).join(" ")} ${m.frequency || ""}`.trim();
+        modifiedChanges.push({
+          name: m.drug_name.trim(),
+          details: `${fromDose} → ${toDose} (dosage/instructions changed)`,
+          from: fromDose,
+          to: toDose,
+        });
+      }
+    }
+
+    // Save doctor instruction
+    let savedInstructionId = null;
+    if (instructionText) {
+      const ins = await admin
+        .from("doctor_instructions")
+        .insert({
+          patient_id: patientId,
+          doctor_id: user.id,
+          instruction_text: instructionText,
+        })
+        .select("id")
+        .single();
+      if (ins.error) throw ins.error;
+      savedInstructionId = ins.data.id;
+    }
+
+    const changesSummary: PrescriptionChangeSummary = {
+      updated_at: new Date().toISOString(),
+      prescription_date: prescriptionDate,
+      doctor_name: doctorName,
+      has_changes: stoppedChanges.length > 0 || startedChanges.length > 0 || modifiedChanges.length > 0,
+      stopped: stoppedChanges,
+      started: startedChanges,
+      modified: modifiedChanges,
+    };
+
+    // Save prescription update in audit log
+    await admin.from("audit_logs").insert({
+      action: "prescription_updated",
+      actor_id: user.id,
+      actor_role: "doctor",
+      target_patient_id: patientId,
+      metadata: {
+        ...changesSummary,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      instruction_id: savedInstructionId,
+      changes: changesSummary,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -301,9 +469,40 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const requestedFormat = url.searchParams.get("format");
     const requestedDate = url.searchParams.get("date");
 
+    const admin = createAdminClient();
+
+    // Fetch latest changes audit log
+    const { data: latestAudit } = await admin
+      .from("audit_logs")
+      .select("created_at, metadata")
+      .eq("action", "prescription_updated")
+      .eq("target_patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let latestChanges: PrescriptionChangeSummary | null = null;
+    if (latestAudit?.metadata && typeof latestAudit.metadata === "object") {
+      const meta = latestAudit.metadata as Record<string, any>;
+      if (meta.changes || meta.stopped || meta.started || meta.modified) {
+        latestChanges = {
+          updated_at: meta.updated_at ?? latestAudit.created_at,
+          prescription_date: meta.prescription_date,
+          doctor_name: meta.doctor_name,
+          has_changes: Boolean(
+            (meta.stopped?.length ?? 0) > 0 ||
+            (meta.started?.length ?? 0) > 0 ||
+            (meta.modified?.length ?? 0) > 0
+          ),
+          stopped: meta.stopped ?? meta.changes?.stopped ?? [],
+          started: meta.started ?? meta.changes?.started ?? [],
+          modified: meta.modified ?? meta.changes?.modified ?? [],
+        };
+      }
+    }
+
     if (requestedFormat === "pdf") {
       const prescriptionDate: string = requestedDate || (new Date().toISOString().split("T")[0] as string);
-      const admin = createAdminClient();
       
       const [patientRes, doctorRes, medsRes, instructionRes, logsRes] = await Promise.all([
         admin.from("patients").select("name").eq("id", patientId).maybeSingle(),
@@ -312,13 +511,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           .from("medications")
           .select("drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number")
           .eq("patient_id", patientId)
-          .eq("start_date", prescriptionDate)
           .order("serial_number", { ascending: true }),
         admin
           .from("doctor_instructions")
           .select("instruction_text")
           .eq("patient_id", patientId)
-          .eq("doctor_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -333,6 +530,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (patientRes.error || doctorRes.error || medsRes.error || instructionRes.error || logsRes.error) {
         return NextResponse.json({ error: "Failed to fetch PDF data" }, { status: 500 });
       }
+
+      const today = new Date().toISOString().split("T")[0]!;
+      const activeMeds = (medsRes.data || []).filter(
+        (m) => !m.end_date || m.end_date >= today || m.start_date === prescriptionDate
+      );
       
       const formattedLogs = (logsRes.data || []).map(log => ({
         date: new Date(log.logged_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
@@ -345,11 +547,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         doctorName: doctorRes.data?.name ?? "Doctor",
         generatedAt,
         prescriptionDate,
-        medications: medsRes.data ?? [],
+        medications: activeMeds.length > 0 ? activeMeds : (medsRes.data || []),
         instruction: instructionRes.data?.instruction_text ?? null,
         recentLogs: formattedLogs,
+        changes: latestChanges,
       });
-      const filename = "saans-summary-" + prescriptionDate + "-" + generatedAt.replace(/[:.]/g, "-") + ".pdf";
+      const filename = "o2plus-prescription-" + prescriptionDate + "-" + generatedAt.replace(/[:.]/g, "-") + ".pdf";
 
       return new NextResponse(pdfBuffer as unknown as BodyInit, {
         status: 200,
@@ -360,7 +563,55 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
-    return NextResponse.json({ error: "Invalid format" }, { status: 400 });
+    // Default JSON response for doctor dashboard
+    const [{ data: meds, error: medsError }, { data: instruction, error: instructionError }] = await Promise.all([
+      admin
+        .from("medications")
+        .select("id, drug_name, dose, dose_unit, route, frequency, start_date, end_date, serial_number, created_at")
+        .eq("patient_id", patientId)
+        .order("start_date", { ascending: false })
+        .order("serial_number", { ascending: true }),
+      admin
+        .from("doctor_instructions")
+        .select("id, instruction_text, created_at, read_by_patient_at")
+        .eq("patient_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (medsError) {
+      return NextResponse.json({ error: medsError.message }, { status: 500 });
+    }
+
+    if (instructionError) {
+      return NextResponse.json({ error: instructionError.message }, { status: 500 });
+    }
+
+    const grouped: Record<string, typeof meds> = {};
+    for (const med of meds ?? []) {
+      const key = med.start_date;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key]!.push(med);
+    }
+
+    const prescriptions = Object.entries(grouped)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, medications]) => {
+        const createdAt = (medications ?? [])
+          .map((medication) => medication.created_at)
+          .filter((value): value is string => Boolean(value))
+          .sort()
+          .at(-1) ?? null;
+
+        return { date, created_at: createdAt, medications };
+      });
+
+    return NextResponse.json({
+      prescriptions,
+      instruction: instruction ?? null,
+      latest_changes: latestChanges,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
