@@ -191,8 +191,14 @@ export async function executeExport(
     });
 
   const latestPftMap = new Map<string, PftRow>();
+  const pftsByPatient = new Map<string, PftRow[]>();
   rawPfts.forEach((p) => {
     if (p.patient_id && !latestPftMap.has(p.patient_id)) latestPftMap.set(p.patient_id, p);
+    if (p.patient_id) {
+      const arr = pftsByPatient.get(p.patient_id) ?? [];
+      arr.push(p);
+      pftsByPatient.set(p.patient_id, arr);
+    }
   });
 
   const respMap = new Map<string, (typeof rawResp)[0]>();
@@ -223,12 +229,13 @@ export async function executeExport(
     return scoreB - scoreA || a.name.localeCompare(b.name);
   });
 
-  // 6. Aggregate into normalized PatientExportRecord[]
+  // 6. Aggregate into normalized PatientExportRecord[] (Single Consolidated Row per Patient)
   const records: PatientExportRecord[] = sortedPatients.map((patient, idx) => {
     const diag = diagMap.get(patient.id);
     const score = latestScoreMap.get(patient.id);
     const alert = activeAlertMap.get(patient.id);
     const pft = latestPftMap.get(patient.id);
+    const patPfts = pftsByPatient.get(patient.id) ?? [];
     const patLogs = logsByPatient.get(patient.id) ?? [];
     const patMeds = medsByPatient.get(patient.id) ?? [];
     const resp = respMap.get(patient.id);
@@ -238,8 +245,6 @@ export async function executeExport(
 
     const diagDetails = resolveCompleteDiagnosis(diag);
     const logStats = aggregateClinicalLogs(patLogs);
-    const adherence = calculateAdherencePercentage(patLogs);
-    const currentMeds = formatActiveMedications(patMeds);
     const respSupport = formatRespiratorySupport(resp);
 
     const uhid = `P-${patient.id.slice(0, 8).toUpperCase()}`;
@@ -249,6 +254,66 @@ export async function executeExport(
     const riskScoreVal = score?.global_score ?? null;
     const riskLevel = calculateRiskCategory(riskScoreVal);
 
+    // ── Updated & Longitudinal PFTs ──
+    const sortedPfts = [...patPfts].sort((a, b) => new Date(a.test_date ?? a.created_at ?? 0).getTime() - new Date(b.test_date ?? b.created_at ?? 0).getTime());
+    const latestPft = sortedPfts[sortedPfts.length - 1] ?? pft;
+    const latestFev1 = safeValue(latestPft?.fev1);
+    const latestFvc = safeValue(latestPft?.fvc);
+    const latestFev1Fvc = safeValue(latestPft?.fev1_fvc_ratio);
+    const latestDlco = safeValue(latestPft?.dlco);
+    const longitudinalPftHistory = sortedPfts.length > 0
+      ? sortedPfts.map((p) => `[${formatDateDDMMYYYY(p.test_date ?? p.created_at)}] FEV1: ${safeValue(p.fev1)}L, FVC: ${safeValue(p.fvc)}L, Ratio: ${safeValue(p.fev1_fvc_ratio)}%${p.dlco ? `, DLCO: ${p.dlco}%` : ""}`).join(" | ")
+      : "No longitudinal PFTs recorded";
+
+    // ── Telemetry Surveillance Averages & Extremes ──
+    const restingSpo2Vals = patLogs.map(l => l.spo2_rest).filter((v): v is number => typeof v === "number" && v > 0);
+    const avgSpo2Rest = restingSpo2Vals.length > 0 ? `${Math.round(restingSpo2Vals.reduce((a, b) => a + b, 0) / restingSpo2Vals.length)}%` : "—";
+    const worstSpo2Rest = restingSpo2Vals.length > 0 ? `${Math.min(...restingSpo2Vals)}%` : "—";
+
+    const exertionSpo2Vals = patLogs.map(l => l.spo2_exertion).filter((v): v is number => typeof v === "number" && v > 0);
+    const avgSpo2Exertion = exertionSpo2Vals.length > 0 ? `${Math.round(exertionSpo2Vals.reduce((a, b) => a + b, 0) / exertionSpo2Vals.length)}%` : "—";
+    const worstSpo2Exertion = exertionSpo2Vals.length > 0 ? `${Math.min(...exertionSpo2Vals)}%` : "—";
+
+    const hrVals = patLogs.map(l => {
+      const raw = l as Record<string, unknown>;
+      const ds = (l.disease_specific_data ?? {}) as Record<string, unknown>;
+      const vas = (l.vas_symptoms ?? {}) as Record<string, unknown>;
+      return typeof raw["heart_rate"] === "number" ? raw["heart_rate"] : typeof ds["heart_rate"] === "number" ? ds["heart_rate"] : typeof vas["heart_rate"] === "number" ? vas["heart_rate"] : null;
+    }).filter((v): v is number => typeof v === "number" && v > 0);
+    const avgHeartRate = hrVals.length > 0 ? `${Math.round(hrVals.reduce((a, b) => a + b, 0) / hrVals.length)} BPM` : "—";
+    const worstHeartRate = hrVals.length > 0 ? `${Math.max(...hrVals)} BPM` : "—";
+
+    const aqiVals = patLogs.map(l => l.aqi_value).filter((v): v is number => typeof v === "number" && v > 0);
+    const avgAqi = aqiVals.length > 0 ? `${Math.round(aqiVals.reduce((a, b) => a + b, 0) / aqiVals.length)}` : "—";
+    const worstAqi = aqiVals.length > 0 ? `${Math.max(...aqiVals)}` : "—";
+
+    const mmrcVals = patLogs.map(l => l.mmrc_today).filter((v): v is number => typeof v === "number" && v >= 0);
+    const latestMmrc = mmrcVals.length > 0 ? `Grade ${mmrcVals[mmrcVals.length - 1]}` : "—";
+    const worstMmrc = mmrcVals.length > 0 ? `Grade ${Math.max(...mmrcVals)}` : "—";
+
+    // ── Consolidated Symptoms Surveillance ──
+    const symptomMap = new Map<string, { severities: number[]; lastVal: number }>();
+    patLogs.forEach(l => {
+      if (l.vas_symptoms && typeof l.vas_symptoms === "object") {
+        Object.entries(l.vas_symptoms as Record<string, unknown>).forEach(([symp, val]) => {
+          if (typeof val === "number") {
+            const entry = symptomMap.get(symp) ?? { severities: [], lastVal: 0 };
+            entry.severities.push(val);
+            entry.lastVal = val;
+            symptomMap.set(symp, entry);
+          }
+        });
+      }
+    });
+    const allSymptomsSummary = symptomMap.size > 0
+      ? Array.from(symptomMap.entries()).map(([k, v]) => {
+          const avg = (v.severities.reduce((a, b) => a + b, 0) / v.severities.length).toFixed(1);
+          const status = v.lastVal === 0 ? "Resolved" : `Latest: ${v.lastVal}/10`;
+          return `${toTitleCase(k.replace(/_/g, " "))} (Avg: ${avg}/10, ${status})`;
+        }).join("; ")
+      : "No symptoms reported";
+
+    // ── Formatted Daily Logs ──
     const formattedDailyLogs = patLogs
       .slice()
       .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
@@ -365,6 +430,83 @@ export async function executeExport(
         };
       });
 
+    const longitudinalLogsHistory = formattedDailyLogs.length > 0
+      ? formattedDailyLogs.map(l => `[${l.logDate}] SpO2: ${l.spo2Rest}%, HR: ${l.heartRate}, mMRC: ${l.mmrc}, AQI: ${l.aqi}, Symptoms: ${l.symptomsVas}, Meds: ${l.medicationAdherence}${l.diseaseSpecific !== "—" ? `, Specific: ${l.diseaseSpecific}` : ""}`).join(" | ")
+      : "No daily logs recorded";
+
+    // ── Medications (Active, Newly Added, Discontinued & Compliance) ──
+    const todayIso = new Date().toISOString().split("T")[0]!;
+    const activeMedsList = patMeds.filter(m => !m.end_date || m.end_date > todayIso);
+    const discontinuedMedsList = patMeds.filter(m => m.end_date && m.end_date <= todayIso);
+    const currentMeds = formatActiveMedications(activeMedsList);
+    const newlyAddedMeds = activeMedsList.filter(m => m.start_date && m.start_date >= (payload.start_date ?? todayIso)).map(m => `${m.drug_name} (${m.dose || ""}${m.dose_unit || ""} ${m.frequency || ""})`.trim()).join("; ") || "None in period";
+    const discontinuedMedsHistory = discontinuedMedsList.map(m => `${m.drug_name} (${m.dose || ""}${m.dose_unit || ""} - Discontinued: ${m.end_date})`).join("; ") || "None";
+
+    let totalLoggedDoses = 0;
+    let takenDoses = 0;
+    patLogs.forEach(l => {
+      if (l.medication_compliance && typeof l.medication_compliance === "object") {
+        const entries = Object.values(l.medication_compliance as Record<string, boolean>);
+        entries.forEach(v => {
+          totalLoggedDoses++;
+          if (v === true) takenDoses++;
+        });
+      }
+    });
+    const medicationComplianceSummary = totalLoggedDoses > 0
+      ? `${Math.round((takenDoses / totalLoggedDoses) * 100)}% (${takenDoses}/${totalLoggedDoses} doses taken)`
+      : "No medication compliance logged";
+
+    // ── Quality of Life & Disease Specific Details ──
+    const kbildScores = patLogs.map(l => (l as Record<string, unknown>)["kbild_score"]).filter((v): v is number => typeof v === "number");
+    const latestKbildScore = kbildScores.length > 0 ? `${kbildScores[kbildScores.length - 1]}/100` : "—";
+    const latestLogWithKbild = patLogs.slice().reverse().find(l => typeof (l as Record<string, unknown>)["kbild_score"] === "number");
+    let kbildSubscoresInterpretation = "—";
+    if (latestLogWithKbild) {
+      const raw = latestLogWithKbild as Record<string, unknown>;
+      const psych = raw["kbild_psychological"] ?? raw["kbild_psych"] ?? "—";
+      const breath = raw["kbild_breathlessness"] ?? raw["kbild_breath"] ?? "—";
+      const chest = raw["kbild_chest"] ?? "—";
+      const kScoreNum = Number(raw["kbild_score"]);
+      const interp = kScoreNum >= 70 ? "Good HRQoL" : kScoreNum >= 50 ? "Moderate HRQoL Impact" : "Significant HRQoL Impairment";
+      kbildSubscoresInterpretation = `Psych: ${psych}, Breath: ${breath}, Chest: ${chest} | ${interp}`;
+    }
+
+    const asthmaLogs = patLogs.filter(l => (l as Record<string, unknown>)["asthma_control_status"] || (l as Record<string, unknown>)["pefr_lpm"] || (l as Record<string, unknown>)["pefr_reading"]);
+    const latestAsthmaLog = asthmaLogs[asthmaLogs.length - 1];
+    let asthmaControlStatus = "—";
+    let asthmaPefrRescuePuffs = "—";
+    if (latestAsthmaLog) {
+      const raw = latestAsthmaLog as Record<string, unknown>;
+      const status = raw["asthma_control_status"] ? toTitleCase(String(raw["asthma_control_status"]).replace(/_/g, " ")) : "Assessed";
+      const yesCount = raw["asthma_control_yes_count"] ?? "—";
+      asthmaControlStatus = `${status} (${yesCount}/4 Criteria Yes)`;
+      const pefr = raw["pefr_lpm"] ?? raw["pefr_reading"] ?? "—";
+      const puffs = raw["rescue_inhaler_puffs"] ?? "0";
+      asthmaPefrRescuePuffs = `PEFR: ${pefr} L/min | Rescue Puffs: ${puffs}/day`;
+    }
+
+    const copdLogs = patLogs.filter(l => (l as Record<string, unknown>)["energy_level"] !== undefined || (l as Record<string, unknown>)["sputum_volume"]);
+    let copdMetricsSummary = "—";
+    if (copdLogs.length > 0) {
+      const latest = copdLogs[copdLogs.length - 1] as Record<string, unknown>;
+      const energy = latest["energy_level"] ?? "—";
+      const heaviness = latest["chest_heaviness"] ?? "—";
+      const sputumVol = latest["sputum_volume"] ? toTitleCase(String(latest["sputum_volume"])) : "Normal";
+      const sputumCol = latest["sputum_colour"] ? toTitleCase(String(latest["sputum_colour"])) : "Clear";
+      copdMetricsSummary = `Energy: ${energy}/10, Chest Heaviness: ${heaviness}/10, Sputum: ${sputumVol} (${sputumCol})`;
+    }
+
+    const bronchLogs = patLogs.filter(l => (l as Record<string, unknown>)["ease_of_clearance"] || (l as Record<string, unknown>)["recorded_temperature_f"]);
+    let bronchPostIcuMetricsSummary = "—";
+    if (bronchLogs.length > 0) {
+      const latest = bronchLogs[bronchLogs.length - 1] as Record<string, unknown>;
+      const ease = latest["ease_of_clearance"] ?? latest["ease_of_sputum_clearance"] ?? "—";
+      const temp = latest["recorded_temperature_f"] ?? latest["temperature_f"] ?? "—";
+      const malaise = latest["malaise"] === true ? "Yes" : "No";
+      bronchPostIcuMetricsSummary = `Clearance Ease: ${ease}/5, Temp: ${temp}°F, Malaise: ${malaise}`;
+    }
+
     let totalDaysSpan = 30;
     if (payload.start_date && payload.end_date) {
       const diffMs = new Date(payload.end_date).getTime() - new Date(payload.start_date).getTime();
@@ -379,40 +521,84 @@ export async function executeExport(
       sno: idx + 1,
       fileNo,
       uhid,
-      mobile: formatCleanMobile(patient.mobile_number),
       name: toTitleCase(patient.name),
       age: computeAgeFromDob(patient.date_of_birth),
       sex: normalizeSex(patient.gender),
       occupation: safeValue(patExt["occupation"]),
-      smoker: safeValue(patExt["smoker"] ?? patExt["smoking_status"]),
-      symptomatic: logStats.symptomatic,
+      otherOccupation: safeValue(patExt["other_occupation"]),
+      significantExposure: safeValue(patExt["significant_exposure"]),
+      mobile: formatCleanMobile(patient.mobile_number),
+      alternateMobile: safeValue(patExt["alternate_mobile"] ?? patExt["alternate_phone"]),
       dateOfEnroll: formatDateDDMMYYYY(patient.created_at),
+
+      // Diagnosis & Subtype
+      diseaseCategory: safeValue(patExt["disease_category"] ?? diag?.effective_dashboard),
+      primaryDiagnosis: diag?.primary_diagnosis || diagDetails.completeDiag || "Respiratory Condition",
+      diseaseSubtype: diagDetails.completeDiag,
       histopathology: diagDetails.histopathology,
       completeDiag: diagDetails.completeDiag,
-      primaryDiagnosis: diag?.primary_diagnosis || diagDetails.completeDiag || "Respiratory Condition",
       effectiveDashboard: (diag?.effective_dashboard || "ild").toLowerCase() as any,
       typeOfConnective: diagDetails.connective,
       comorbidities: diagDetails.comorbidities,
-      sixMwd: safeValue(pftOther["six_mwd"] ?? patExt["six_mwd"]),
-      fev1Fvc: safeValue(pft?.fev1_fvc_ratio),
-      observedFev: safeValue(pft?.fev1),
-      pctPredictedFev1: safeValue(pftOther["fev1_pct_pred"]),
-      observedFvc: safeValue(pft?.fvc),
-      pctPredictedFvc: safeValue(pftOther["fvc_pct_pred"]),
-      dlco: safeValue(pft?.dlco),
+      smoker: safeValue(patExt["smoker"] ?? patExt["smoking_status"]),
+      symptomatic: logStats.symptomatic,
+
+      // Baseline Physiology
       baselineSpo2: safeValue(patExt["baseline_spo2"] ?? pftOther["baseline_spo2"]),
       baselineHr: safeValue(patExt["baseline_heart_rate"] ?? pftOther["baseline_heart_rate"]),
-      worstSpo2: logStats.worstSpo2,
-      worstMmrc: logStats.worstMmrc,
+      sixMwd: safeValue(pftOther["six_mwd"] ?? patExt["six_mwd"]),
+      observedFev: safeValue(pft?.fev1),
+      observedFvc: safeValue(pft?.fvc),
+      fev1Fvc: safeValue(pft?.fev1_fvc_ratio),
+      pctPredictedFev1: safeValue(pftOther["fev1_pct_pred"]),
+      pctPredictedFvc: safeValue(pftOther["fvc_pct_pred"]),
+      dlco: safeValue(pft?.dlco),
+      respiratorySupport: respSupport,
+
+      // Updated & Longitudinal PFTs
+      latestFev1,
+      latestFvc,
+      latestFev1Fvc,
+      latestDlco,
+      longitudinalPftHistory,
+
+      // App Engagement & Telemetry Surveillance
+      totalDaysInPeriod: totalDaysSpan,
+      daysLogged: logStats.totalLogs,
+      adherencePct: `${Math.min(100, Math.round((logStats.totalLogs / totalDaysSpan) * 100))}%`,
+      avgSpo2Rest,
+      worstSpo2: worstSpo2Rest,
+      avgSpo2Exertion,
+      worstSpo2Exertion,
+      avgHeartRate,
+      worstHeartRate,
+      avgAqi,
+      worstAqi,
+      latestMmrc,
+      worstMmrc,
       worstRiskScore: riskScoreVal !== null ? riskScoreVal : "—",
       riskLevel,
       alertStatus: alert?.alert_type ? alert.alert_type : "Normal",
       totalLogs: logStats.totalLogs,
-      totalDaysInPeriod: totalDaysSpan,
-      daysLogged: logStats.totalLogs,
-      adherencePct: `${Math.min(100, Math.round((logStats.totalLogs / totalDaysSpan) * 100))}%`,
+
+      // Symptoms & Daily Logs History
+      allSymptomsSummary,
+      longitudinalLogsHistory,
+
+      // Medications
       currentMeds,
-      respiratorySupport: respSupport,
+      newlyAddedMeds,
+      discontinuedMedsHistory,
+      medicationComplianceSummary,
+
+      // Quality of Life & Disease Specific Details
+      latestKbildScore,
+      kbildSubscoresInterpretation,
+      asthmaControlStatus,
+      asthmaPefrRescuePuffs,
+      copdMetricsSummary,
+      bronchPostIcuMetricsSummary,
+
       dailyLogs: formattedDailyLogs,
     };
   });

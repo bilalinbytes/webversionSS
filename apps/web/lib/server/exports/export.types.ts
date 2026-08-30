@@ -42,40 +42,84 @@ export interface PatientExportRecord {
   sno: number;
   fileNo: string;
   uhid: string;
-  mobile: string;
   name: string;
   age: number | string;
   sex: "M" | "F" | "Other" | string;
   occupation: string;
-  smoker: string;
-  symptomatic: string;
+  otherOccupation?: string;
+  significantExposure?: string;
+  mobile: string;
+  alternateMobile?: string;
   dateOfEnroll: string;
+
+  // Diagnosis & Clinical Details
+  diseaseCategory?: string;
+  primaryDiagnosis: string;
+  diseaseSubtype?: string;
   histopathology: string;
   completeDiag: string;
-  primaryDiagnosis: string;
   effectiveDashboard: "ild" | "asthma" | "copd" | "bronchiectasis" | "post_icu" | "general" | string;
   typeOfConnective: string;
   comorbidities: string;
-  sixMwd: string;
-  fev1Fvc: string;
-  observedFev: string;
-  pctPredictedFev1: string;
-  observedFvc: string;
-  pctPredictedFvc: string;
-  dlco: string;
+  smoker: string;
+  symptomatic: string;
+
+  // Baseline Physiology
   baselineSpo2: string;
   baselineHr: string;
+  sixMwd: string;
+  observedFev: string;
+  observedFvc: string;
+  pctPredictedFev1: string;
+  pctPredictedFvc: string;
+  fev1Fvc: string;
+  dlco: string;
+  respiratorySupport: string;
+
+  // Updated & Longitudinal PFT Values
+  latestFev1?: string;
+  latestFvc?: string;
+  latestFev1Fvc?: string;
+  latestDlco?: string;
+  longitudinalPftHistory?: string;
+
+  // App Engagement & Telemetry Surveillance
+  totalDaysInPeriod?: number;
+  daysLogged?: number;
+  adherencePct: string;
+  avgSpo2Rest?: string;
   worstSpo2: number | string;
+  avgSpo2Exertion?: string;
+  worstSpo2Exertion?: string;
+  avgHeartRate?: string;
+  worstHeartRate?: string;
+  avgAqi?: string;
+  worstAqi?: string;
+  latestMmrc?: string;
   worstMmrc: number | string;
   worstRiskScore: number | string;
   riskLevel: "Stable" | "Moderate" | "High" | "Critical";
   alertStatus: string;
   totalLogs: number;
-  totalDaysInPeriod?: number;
-  daysLogged?: number;
-  adherencePct: string;
+
+  // Consolidated Symptoms Surveillance & Daily Logs History
+  allSymptomsSummary?: string;
+  longitudinalLogsHistory?: string;
+
+  // Medications History & Adherence
   currentMeds: string;
-  respiratorySupport: string;
+  newlyAddedMeds?: string;
+  discontinuedMedsHistory?: string;
+  medicationComplianceSummary?: string;
+
+  // Quality of Life (HRQoL) & Disease-Specific Details
+  latestKbildScore?: string;
+  kbildSubscoresInterpretation?: string;
+  asthmaControlStatus?: string;
+  asthmaPefrRescuePuffs?: string;
+  copdMetricsSummary?: string;
+  bronchPostIcuMetricsSummary?: string;
+
   dailyLogs?: FormattedDailyLogColumnSet[];
 }
 
