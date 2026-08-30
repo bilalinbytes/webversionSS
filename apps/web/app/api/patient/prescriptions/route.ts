@@ -63,6 +63,7 @@ function PrescriptionPdfDocument({
   generatedAt,
   prescriptionDate,
   medications,
+  discontinuedMedications,
   instruction,
   changes,
 }: {
@@ -71,6 +72,7 @@ function PrescriptionPdfDocument({
   generatedAt: string;
   prescriptionDate: string;
   medications: Array<{ drug_name: string; route: string; dose: number | null; dose_unit: string | null; frequency: string | null; start_date?: string | null; end_date: string | null; serial_number: number | null }>;
+  discontinuedMedications?: Array<{ drug_name: string; route: string; dose: number | null; dose_unit: string | null; frequency: string | null; start_date?: string | null; end_date: string | null; serial_number: number | null }>;
   instruction: string | null;
   changes?: PrescriptionChangeSummary | null;
 }) {
@@ -143,17 +145,17 @@ function PrescriptionPdfDocument({
           hasStopped && React.createElement(
             View,
             { style: pdfStyles.changeGroup },
-            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.stoppedTag] }, "🔴 Stopped:"),
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.stoppedTag] }, "🔴 Discontinued / Deleted:"),
             ...(changes?.stopped ?? []).map((m, idx) =>
-              React.createElement(Text, { key: `stopped-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || m.dose || ""}`.trim())
+              React.createElement(Text, { key: `stopped-${idx}`, style: pdfStyles.changeItem }, `• Medication deleted/discontinued: ${m.name} ${m.details || m.dose || ""}`.trim())
             ),
           ),
           hasStarted && React.createElement(
             View,
             { style: pdfStyles.changeGroup },
-            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.startedTag] }, "🟢 Started:"),
+            React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.startedTag] }, "🟢 Newly Prescribed:"),
             ...(changes?.started ?? []).map((m, idx) =>
-              React.createElement(Text, { key: `started-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} ${m.details || `${m.dose || ""} ${m.frequency || ""}`}`.trim())
+              React.createElement(Text, { key: `started-${idx}`, style: pdfStyles.changeItem }, `• New medication added: ${m.name} ${m.details || `${m.dose || ""} ${m.frequency || ""}`}`.trim())
             ),
           ),
           hasModified && React.createElement(
@@ -161,13 +163,13 @@ function PrescriptionPdfDocument({
             { style: pdfStyles.changeGroup },
             React.createElement(Text, { style: [pdfStyles.changeGroupTitle, pdfStyles.modifiedTag] }, "🟡 Modified:"),
             ...(changes?.modified ?? []).map((m, idx) =>
-              React.createElement(Text, { key: `mod-${idx}`, style: pdfStyles.changeItem }, `• ${m.name} — ${m.details || `${m.from || ""} → ${m.to || ""}`}`.trim())
+              React.createElement(Text, { key: `mod-${idx}`, style: pdfStyles.changeItem }, `• Medication modified: ${m.name} — ${m.details || `${m.from || ""} → ${m.to || ""}`}`.trim())
             ),
           ),
         ),
       ),
 
-      // Medication Regimen Table
+      // Active Medication Regimen Table
       React.createElement(
         View,
         { style: pdfStyles.section },
@@ -182,20 +184,61 @@ function PrescriptionPdfDocument({
           React.createElement(Text, { style: pdfStyles.cell }, "Unit"),
           React.createElement(Text, { style: pdfStyles.cellFreq }, "Frequency"),
           React.createElement(Text, { style: pdfStyles.cellDate }, "Start Date"),
-          React.createElement(Text, { style: pdfStyles.cellDate }, "End Date"),
+          React.createElement(Text, { style: pdfStyles.cellDate }, "Status"),
         ),
-        ...medications.map((medication, index) =>
+        medications.length === 0
+          ? React.createElement(Text, { style: { padding: 8, fontSize: 8.5, color: "#64748b" } }, "No active medications.")
+          : medications.map((medication, index) => {
+              const isNewlyAdded = changes?.started?.some((s) => s.name.toLowerCase() === medication.drug_name.toLowerCase());
+              return React.createElement(
+                View,
+                { key: `${medication.drug_name}-${index}`, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
+                React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
+                React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
+                React.createElement(
+                  Text,
+                  { style: pdfStyles.cellDrug },
+                  medication.drug_name,
+                  isNewlyAdded ? " (✨ NEW)" : ""
+                ),
+                React.createElement(Text, { style: pdfStyles.cell }, medication.dose !== null ? String(medication.dose) : "-"),
+                React.createElement(Text, { style: pdfStyles.cell }, medication.dose_unit ?? "-"),
+                React.createElement(Text, { style: pdfStyles.cellFreq }, medication.frequency ?? "-"),
+                React.createElement(Text, { style: pdfStyles.cellDate }, medication.start_date ?? prescriptionDate),
+                React.createElement(Text, { style: [pdfStyles.cellDate, { color: isNewlyAdded ? "#0369a1" : "#166534", fontFamily: "Helvetica-Bold" }] }, isNewlyAdded ? "Newly Added" : "Active"),
+              );
+            }),
+      ),
+
+      // Discontinued Medications Table (if any)
+      discontinuedMedications && discontinuedMedications.length > 0 && React.createElement(
+        View,
+        { style: pdfStyles.section },
+        React.createElement(Text, { style: [pdfStyles.sectionTitle, { color: "#dc2626" }] }, "🔴 Discontinued / Stopped Medications"),
+        React.createElement(
+          View,
+          { style: [pdfStyles.tableHeader, { backgroundColor: "#fef2f2" }] },
+          React.createElement(Text, { style: pdfStyles.cellNo }, "S.No"),
+          React.createElement(Text, { style: pdfStyles.cellRoute }, "Route"),
+          React.createElement(Text, { style: pdfStyles.cellDrug }, "Drug Name"),
+          React.createElement(Text, { style: pdfStyles.cell }, "Dose"),
+          React.createElement(Text, { style: pdfStyles.cell }, "Unit"),
+          React.createElement(Text, { style: pdfStyles.cellFreq }, "Frequency"),
+          React.createElement(Text, { style: pdfStyles.cellDate }, "Start Date"),
+          React.createElement(Text, { style: pdfStyles.cellDate }, "Discontinued"),
+        ),
+        ...discontinuedMedications.map((medication, index) =>
           React.createElement(
             View,
-            { key: `${medication.drug_name}-${index}`, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
-            React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
+            { key: `disc-${medication.drug_name}-${index}`, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
+            React.createElement(Text, { style: pdfStyles.cellNo }, String(index + 1)),
             React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
-            React.createElement(Text, { style: pdfStyles.cellDrug }, medication.drug_name),
+            React.createElement(Text, { style: [pdfStyles.cellDrug, { color: "#dc2626", textDecoration: "line-through" }] }, medication.drug_name),
             React.createElement(Text, { style: pdfStyles.cell }, medication.dose !== null ? String(medication.dose) : "-"),
             React.createElement(Text, { style: pdfStyles.cell }, medication.dose_unit ?? "-"),
             React.createElement(Text, { style: pdfStyles.cellFreq }, medication.frequency ?? "-"),
-            React.createElement(Text, { style: pdfStyles.cellDate }, medication.start_date ?? prescriptionDate),
-            React.createElement(Text, { style: pdfStyles.cellDate }, medication.end_date ?? "-"),
+            React.createElement(Text, { style: pdfStyles.cellDate }, medication.start_date ?? "-"),
+            React.createElement(Text, { style: [pdfStyles.cellDate, { color: "#dc2626", fontFamily: "Helvetica-Bold" }] }, medication.end_date ?? "Stopped"),
           ),
         ),
       ),
@@ -313,7 +356,10 @@ export async function GET(request: Request) {
 
     const today = new Date().toISOString().split("T")[0]!;
     const activeMeds = (medsRes.data ?? []).filter(
-      (m) => !m.end_date || m.end_date >= today || m.start_date === prescriptionDate
+      (m) => (!m.end_date || m.end_date > today) && (!m.start_date || m.start_date <= today || m.start_date === prescriptionDate)
+    );
+    const discontinuedMeds = (medsRes.data ?? []).filter(
+      (m) => m.end_date && m.end_date <= today && m.start_date !== prescriptionDate
     );
 
     const generatedAt = new Date().toISOString();
@@ -322,7 +368,8 @@ export async function GET(request: Request) {
       doctorName: doctorRes.data?.name ?? latestChanges?.doctor_name ?? "Doctor",
       generatedAt,
       prescriptionDate,
-      medications: activeMeds.length > 0 ? activeMeds : (medsRes.data ?? []),
+      medications: activeMeds,
+      discontinuedMedications: discontinuedMeds,
       instruction: instructionRes.data?.instruction_text ?? null,
       changes: latestChanges,
     });

@@ -766,8 +766,13 @@ function SinglePatientDossierPages({
         <View style={S.section}>
           <View style={S.sectionHead}>
             <View style={S.sectionBar} />
-            <Text style={S.sectionTitle}>7. Medications Prescribed by Doctor &amp; Days Taken Adherence</Text>
+            <Text style={S.sectionTitle}>7. Longitudinal Medication Regimen &amp; Adherence History</Text>
           </View>
+
+          {/* 7A: Active Prescribed Regimen */}
+          <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: ACCENT, marginBottom: 2 }}>
+            7A. Active Prescribed Regimen (Current Tele-Surveillance)
+          </Text>
           <View style={S.table}>
             <View style={S.tHead}>
               <Text style={[S.tHeadCell, { flex: 0.3 }]}>#</Text>
@@ -778,20 +783,20 @@ function SinglePatientDossierPages({
               <Text style={[S.tHeadCell, { flex: 0.9 }]}>Status</Text>
               <Text style={[S.tHeadLast, { flex: 1.2 }]}>Days Taken (Adherence)</Text>
             </View>
-            {prescribedMeds.length === 0 ? (
+            {prescribedMeds.filter((m) => m.status === "Active").length === 0 ? (
               <View style={S.tRow}>
-                <Text style={[S.tCellLast, { color: MUTED }]}>No prescriptions recorded for this period.</Text>
+                <Text style={[S.tCellLast, { color: MUTED }]}>No active prescriptions recorded.</Text>
               </View>
             ) : (
-              prescribedMeds.slice(0, 6).map((med, i) => (
+              prescribedMeds.filter((m) => m.status === "Active").map((med, i) => (
                 <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
                   <Text style={[S.tCell, { flex: 0.3, fontFamily: "Helvetica-Bold" }]}>{i + 1}.</Text>
                   <Text style={[S.tCell, { flex: 2, fontFamily: "Helvetica-Bold", color: ACCENT }]}>{med.drugName}</Text>
                   <Text style={[S.tCell, { flex: 0.9 }]}>{med.route}</Text>
                   <Text style={[S.tCell, { flex: 0.9 }]}>{med.dose} · {med.frequency}</Text>
                   <Text style={[S.tCell, { flex: 1.1 }]}>{med.startDate} → {med.endDate}</Text>
-                  <Text style={[S.tCell, { flex: 0.9, color: med.status === "Active" ? GREEN : RED, fontFamily: "Helvetica-Bold" }]}>
-                    {med.status}
+                  <Text style={[S.tCell, { flex: 0.9, color: GREEN, fontFamily: "Helvetica-Bold" }]}>
+                    Active
                   </Text>
                   <Text style={[S.tCellLast, { flex: 1.2, fontFamily: "Helvetica-Bold", color: parseInt(med.adherencePct, 10) >= 80 ? GREEN : AMBER }]}>
                     {med.daysTaken}/{med.daysPrescribed} days ({med.adherencePct})
@@ -800,6 +805,41 @@ function SinglePatientDossierPages({
               ))
             )}
           </View>
+
+          {/* 7B: Discontinued / Stopped Medications */}
+          {prescribedMeds.some((m) => m.status !== "Active") && (
+            <View style={{ marginTop: 4 }}>
+              <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: RED, marginBottom: 2 }}>
+                7B. Discontinued / Stopped Medications (Historical Changes)
+              </Text>
+              <View style={S.table}>
+                <View style={[S.tHead, { backgroundColor: "#fef2f2" }]}>
+                  <Text style={[S.tHeadCell, { flex: 0.3 }]}>#</Text>
+                  <Text style={[S.tHeadCell, { flex: 2 }]}>Medication (Drug Name)</Text>
+                  <Text style={[S.tHeadCell, { flex: 0.9 }]}>Route</Text>
+                  <Text style={[S.tHeadCell, { flex: 0.9 }]}>Dose / Freq</Text>
+                  <Text style={[S.tHeadCell, { flex: 1.1 }]}>Start → Discontinued</Text>
+                  <Text style={[S.tHeadCell, { flex: 0.9 }]}>Status</Text>
+                  <Text style={[S.tHeadLast, { flex: 1.2 }]}>Days Taken Prior</Text>
+                </View>
+                {prescribedMeds.filter((m) => m.status !== "Active").map((med, i) => (
+                  <View key={i} style={i % 2 === 1 ? S.tRowAlt : S.tRow}>
+                    <Text style={[S.tCell, { flex: 0.3, fontFamily: "Helvetica-Bold" }]}>{i + 1}.</Text>
+                    <Text style={[S.tCell, { flex: 2, fontFamily: "Helvetica-Bold", color: RED, textDecoration: "line-through" }]}>{med.drugName}</Text>
+                    <Text style={[S.tCell, { flex: 0.9 }]}>{med.route}</Text>
+                    <Text style={[S.tCell, { flex: 0.9 }]}>{med.dose} · {med.frequency}</Text>
+                    <Text style={[S.tCell, { flex: 1.1 }]}>{med.startDate} → {med.endDate}</Text>
+                    <Text style={[S.tCell, { flex: 0.9, color: RED, fontFamily: "Helvetica-Bold" }]}>
+                      Discontinued
+                    </Text>
+                    <Text style={[S.tCellLast, { flex: 1.2, fontFamily: "Helvetica-Bold", color: MUTED }]}>
+                      {med.daysTaken} days taken
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Section 8: Longitudinal PFT Progression (Point 8) */}

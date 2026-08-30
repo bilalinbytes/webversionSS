@@ -1795,13 +1795,15 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
               </div>
             </div>
             <div className={styles.reviewCardBody}>
-              {data.medications.length === 0 ? (
-                <p style={{ color: "#94a3b8", fontSize: 12.5, margin: 0, fontStyle: "italic" }}>
+              {data.medications.filter(m => !m.end_date || new Date(m.end_date) > new Date()).length === 0 ? (
+                <p className={styles.emptyTableSub} style={{ margin: "4px 0" }}>
                   No active medications assigned yet.
                 </p>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
-                  {data.medications.map((m, i) => (
+                  {data.medications
+                    .filter(m => !m.end_date || new Date(m.end_date) > new Date())
+                    .map((m, i) => (
                     <div key={i} className={styles.reviewMedCard}>
                       <div>
                         <p className={styles.reviewMedName}>{m.drug_name || "Unnamed Drug"}</p>
@@ -1809,11 +1811,37 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                           {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · {m.frequency || "As prescribed"}
                         </p>
                       </div>
-                      <span className={styles.reviewBadge} style={{ background: "#e0f2fe", color: "#0369a1" }}>
-                        {m.route || "Oral"}
+                      <span className={styles.reviewBadge} style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}>
+                        {m.route || "Oral"} · Active
                       </span>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Discontinued Medications Summary in Review */}
+              {data.medications.some(m => m.end_date && new Date(m.end_date) <= new Date()) && (
+                <div style={{ marginTop: 12, borderTop: "1px dashed #fecaca", paddingTop: 10 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 700, color: "#dc2626" }}>
+                    🔴 Discontinued / Stopped Medications (Excluded from active patient checklist):
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+                    {data.medications
+                      .filter(m => m.end_date && new Date(m.end_date) <= new Date())
+                      .map((m, i) => (
+                      <div key={i} className={styles.reviewMedCard} style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+                        <div>
+                          <p className={styles.reviewMedName} style={{ textDecoration: "line-through", color: "#991b1b" }}>{m.drug_name || "Unnamed Drug"}</p>
+                          <p className={styles.reviewMedDetails} style={{ color: "#b91c1c" }}>
+                            {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · Discontinued: {m.end_date}
+                          </p>
+                        </div>
+                        <span className={styles.reviewBadge} style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca" }}>
+                          Discontinued
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

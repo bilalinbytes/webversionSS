@@ -97,11 +97,17 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0]!;
   const compliance = (activeLog?.medication_compliance ?? {}) as Record<string, unknown>;
   const todayMedications = medications
     .filter((med) => {
+      if ((med as { status?: string }).status === "stopped" || (med as { status?: string }).status === "discontinued") {
+        return false;
+      }
       if (!med.end_date) return true;
-      return new Date(med.end_date) >= today;
+      const endStr = med.end_date.split("T")[0]!;
+      // Discontinued today or in the past must not appear in the active daily checklist
+      return endStr > todayStr;
     })
     .map((med) => {
       const keys = [

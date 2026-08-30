@@ -46,7 +46,7 @@ export async function GET(
     .order("drug_name", { ascending: true });
 
   const activeMeds = (medications ?? []).filter(
-    (med) => !med.end_date || med.end_date >= today,
+    (med) => !med.end_date || med.end_date > today,
   );
 
   return NextResponse.json({ medications: activeMeds });
