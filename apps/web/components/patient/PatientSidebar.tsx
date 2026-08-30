@@ -9,6 +9,7 @@ import {
   CalendarClock,
   ShieldAlert,
   HeartHandshake,
+  LogOut,
 } from "lucide-react";
 import { usePatient } from "@/contexts/PatientContext";
 import styles from "./PatientSidebar.module.css";
@@ -29,7 +30,7 @@ const NAV: { id: View; icon: React.ElementType; label: string; labelHi: string; 
 ];
 
 export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps) {
-  const { patient } = usePatient();
+  const { patient, logout } = usePatient();
   const [hasLoggedToday, setHasLoggedToday] = useState(false);
 
   useEffect(() => {
@@ -78,10 +79,20 @@ export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps
         })}
       </nav>
 
-      {/* ── Companion Status Footer ── */}
+      {/* ── Companion Status Footer & Sign Out ── */}
       <div className={styles.sidebarFooter}>
+        <button
+          type="button"
+          className={styles.sidebarSignOutBtn}
+          onClick={logout}
+          title="Sign Out · साइन आउट"
+          aria-label="Sign Out of Patient Portal"
+        >
+          <LogOut size={16} />
+          <span className={styles.sidebarSignOutLabel}>Sign Out</span>
+        </button>
         <div className={styles.companionBadge} title="O2Plus Respiratory Care Companion">
-          <HeartHandshake size={16} />
+          <HeartHandshake size={15} />
         </div>
       </div>
     </aside>

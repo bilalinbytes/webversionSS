@@ -359,9 +359,38 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
   }, [patient]);
 
   async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
+    try {
+      await fetch("/api/auth/signout", { method: "POST" }).catch(() => undefined);
+      const supabase = createClient();
+      await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+      await supabase.auth.signOut().catch(() => undefined);
+    } catch (e) {
+      console.error("Sign out error:", e);
+    }
+
+    try {
+      if (typeof window !== "undefined") {
+        Object.keys(window.localStorage).forEach((key) => {
+          if (
+            key.startsWith("sb-") ||
+            key.includes("supabase") ||
+            key.startsWith("saans:") ||
+            key.startsWith("o2plus:")
+          ) {
+            window.localStorage.removeItem(key);
+          }
+        });
+        window.sessionStorage.clear();
+      }
+    } catch {
+      // Ignore
+    }
+
+    if (typeof window !== "undefined") {
+      window.location.href = "/patient/login";
+    } else {
+      router.replace("/patient/login");
+    }
   }
 
   const markPrescriptionSeen = useCallback(() => {
