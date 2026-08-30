@@ -25,7 +25,7 @@ export interface BuildPatientHomeDataParams {
   score: Pick<RedFlagScore, "global_score"> | null;
   doctor: { name?: string | null; hospital?: string | null } | null;
   diagnosis: Pick<PatientDiagnosis, "primary_diagnosis" | "effective_dashboard"> | null;
-  baseline: Pick<PatientBaseline, "baseline_spo2"> | null;
+  baseline: (Pick<PatientBaseline, "baseline_spo2"> & { baseline_heart_rate?: number | null }) | null;
   latestPft: Pick<PftRecord, "test_date" | "fev1_fvc_ratio" | "fev1" | "fvc" | "dlco"> | null;
   medications: Pick<Medication, "id" | "drug_name" | "dose" | "dose_unit" | "end_date">[];
 }
@@ -122,6 +122,21 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
       return { id: med.id, name: med.drug_name, dose, taken };
     });
 
+  const heartRateTrend = logs.map(l => {
+    const d = l.disease_specific_data as Record<string, unknown> | null;
+    const v = l.vas_symptoms as Record<string, unknown> | null;
+    const hr = (typeof d?.["heart_rate"] === "number" ? d["heart_rate"] : typeof v?.["heart_rate"] === "number" ? v["heart_rate"] : null);
+    return hr ?? (baseline?.baseline_heart_rate ?? 78);
+  });
+
+  const activeHr = (() => {
+    const d = activeLog?.disease_specific_data as Record<string, unknown> | null;
+    const v = activeLog?.vas_symptoms as Record<string, unknown> | null;
+    if (typeof d?.["heart_rate"] === "number" && d["heart_rate"] > 0) return d["heart_rate"];
+    if (typeof v?.["heart_rate"] === "number" && v["heart_rate"] > 0) return v["heart_rate"];
+    return baseline?.baseline_heart_rate ?? null;
+  })();
+
   return {
     loading: false,
     spo2Today: activeLog?.spo2_rest ?? (baseline?.baseline_spo2 ?? FALLBACKS.spo2Today),
@@ -139,7 +154,9 @@ export function buildPatientHomeData(params: BuildPatientHomeDataParams): Patien
     diagnosis: diagnosis?.primary_diagnosis ? formatDiagnosisDisplay(diagnosis.primary_diagnosis) : null,
     effectiveDashboard: activeDashboard,
     baselineSpo2: baseline?.baseline_spo2 ?? null,
-    baselineHeartRate: null,
+    baselineHeartRate: baseline?.baseline_heart_rate ?? null,
+    heartRateToday: activeHr,
+    heartRateTrend: heartRateTrend.length > 0 ? heartRateTrend : [],
     latestPft: latestPft
       ? {
           fev1_fvc_ratio: latestPft.fev1_fvc_ratio,

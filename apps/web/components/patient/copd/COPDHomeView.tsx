@@ -11,7 +11,28 @@ const ENERGY_TREND = [4, 3, 4, 3, 3, 2, 3, 2, 2, 1, 2, 2, 1, 1];
 const DAYS = ["27M","28T","29W","30T","31F","1S","2S","3M","4T","5W","6T","7F","8S","9S"];
 
 interface Props {
-  patient: { name: string; doctor: string; doctorHospital: string; nextAppointment: string; riskScore: number; spo2Today: number; mmrcToday: number; aqiToday: number; hasTodayLog?: boolean; diagnosis?: string | null; latestPft?: { fev1_fvc_ratio: number | null; fev1: number | null; fvc: number | null; dlco: number | null; test_date: string | null } | null; patientId?: string; };
+  patient: {
+    name: string;
+    doctor: string;
+    doctorHospital: string;
+    nextAppointment: string;
+    riskScore: number;
+    spo2Today: number;
+    mmrcToday: number;
+    aqiToday: number;
+    hasTodayLog?: boolean;
+    diagnosis?: string | null;
+    heartRateToday?: number | null;
+    heartRateTrend?: number[];
+    todayMedications?: Array<{
+      id: string;
+      name: string;
+      dose?: string;
+      taken: boolean | null;
+    }>;
+    latestPft?: { fev1_fvc_ratio: number | null; fev1: number | null; fvc: number | null; dlco: number | null; test_date: string | null } | null;
+    patientId?: string;
+  };
   onLogToday: () => void;
   spo2Trend?: number[];
   mmrcTrend?: number[];
@@ -32,6 +53,7 @@ export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTre
           effectiveDashboard="copd"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
+          heartRateToday={patient.heartRateToday}
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
@@ -40,9 +62,11 @@ export function COPDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTre
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}
           spo2Trend={spo2Trend}
+          heartRateTrend={patient.heartRateTrend}
           mmrcTrend={mmrcTrend}
           vasTrend={vasTrend}
           latestPft={patient.latestPft}
+          todayMedications={patient.todayMedications}
           onLogToday={onLogToday}
           accentColor="#378add"
           diseaseLabel="My Health"

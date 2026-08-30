@@ -50,6 +50,8 @@ interface PatientInfo {
   emergency_contact_phone: string | null;
   date_of_birth: string;
   gender: string | null;
+  occupation?: string | null;
+  significant_exposure?: string | null;
 }
 
 interface DiagnosisInfo {
@@ -233,9 +235,10 @@ export function PatientDetail({
       supabase.from("daily_logs").select("id,logged_at,spo2_rest,mmrc_today,aqi_value").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
     ]);
 
-    if (patientRes.data) {
-      setPatientInfo(patientRes.data as PatientInfo);
-    } else {
+    // Fetch comprehensive patient form data including occupation & illness exposure
+    let fetchedOccupation = "";
+    let fetchedExposure = "";
+    try {
       const response = await fetch(`/api/patients?id=${resolvedId}`, { credentials: "include" });
       const body = await response.json().catch(() => null) as {
         formData?: {
@@ -248,34 +251,60 @@ export function PatientDetail({
           primary_diagnosis?: string;
           disease_category?: string;
           comorbidities?: string[];
+          occupation?: string;
+          significant_exposure?: string;
         };
       } | null;
       const form = body?.formData;
       if (form) {
-        const age = Number(form.age);
-        const estimatedDob = Number.isFinite(age) && age > 0
-          ? `${new Date().getFullYear() - age}-01-01`
-          : "";
-        setPatientInfo({
-          id: resolvedId,
-          name: form.name ?? "-",
-          mobile_number: form.mobile_number ? `+91${form.mobile_number}` : "",
-          address: null,
-          emergency_contact_name: form.emergency_contact_name ?? null,
-          emergency_contact_phone: form.emergency_contact_phone ?? null,
-          date_of_birth: estimatedDob,
-          gender: form.gender ?? null,
-        });
-        if (!diagRes.data) {
-          setDiagnosis({
-            primary_diagnosis: form.disease_category || form.primary_diagnosis || "-",
-            diagnosed_at: null,
-            comorbidities: form.comorbidities ?? null,
-            comorbidities_other_text: null,
-            effective_dashboard: "",
+        fetchedOccupation = form.occupation || "";
+        fetchedExposure = form.significant_exposure || "";
+        if (!patientRes.data) {
+          const age = Number(form.age);
+          const estimatedDob = Number.isFinite(age) && age > 0
+            ? `${new Date().getFullYear() - age}-01-01`
+            : "";
+          setPatientInfo({
+            id: resolvedId,
+            name: form.name ?? "-",
+            mobile_number: form.mobile_number ? `+91${form.mobile_number}` : "",
+            address: null,
+            emergency_contact_name: form.emergency_contact_name ?? null,
+            emergency_contact_phone: form.emergency_contact_phone ?? null,
+            date_of_birth: estimatedDob,
+            gender: form.gender ?? null,
+            occupation: fetchedOccupation,
+            significant_exposure: fetchedExposure,
           });
+          if (!diagRes.data) {
+            setDiagnosis({
+              primary_diagnosis: form.disease_category || form.primary_diagnosis || "-",
+              diagnosed_at: null,
+              comorbidities: form.comorbidities ?? null,
+              comorbidities_other_text: null,
+              effective_dashboard: "",
+            });
+          }
         }
       }
+    } catch {}
+
+    if (patientRes.data) {
+      const pData = patientRes.data as PatientInfo;
+      const addr = pData.address || "";
+      if (!fetchedOccupation && addr.includes("Occupation: ")) {
+        const m = addr.match(/Occupation:\s*([^|\]]+)/);
+        if (m?.[1]) fetchedOccupation = m[1].trim();
+      }
+      if (!fetchedExposure && (addr.includes("Exposure: ") || addr.includes("Illness Exposure: "))) {
+        const m = addr.match(/(?:Exposure|Illness Exposure):\s*([^|\]]+)/);
+        if (m?.[1]) fetchedExposure = m[1].trim();
+      }
+      setPatientInfo({
+        ...pData,
+        occupation: fetchedOccupation || null,
+        significant_exposure: fetchedExposure || null,
+      });
     }
     if (diagRes.data) {
       const d = diagRes.data;
@@ -437,9 +466,20 @@ export function PatientDetail({
             <p className={styles.patientComorbidities}>
               Co-morbidities: {displayComorbidities || "None recorded"}
             </p>
-            <p className={styles.patientSub}>Sex: {displayGender}</p>
-            <p className={styles.patientSub}>Age: {displayAge}y</p>
-            <div className={styles.tags}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 5, fontSize: 12, color: "rgba(255, 255, 255, 0.9)" }}>
+              <span>Sex: <strong>{displayGender}</strong></span>
+              <span>Age: <strong>{displayAge}y</strong></span>
+              {patientInfo?.mobile_number && (
+                <span>Mobile: <strong>{patientInfo.mobile_number}</strong></span>
+              )}
+              {patientInfo?.occupation && (
+                <span>Occupation: <strong style={{ color: "#7dd3fc" }}>{patientInfo.occupation}</strong></span>
+              )}
+              {patientInfo?.significant_exposure && (
+                <span>Exposure: <strong style={{ color: "#fed7aa" }}>{patientInfo.significant_exposure}</strong></span>
+              )}
+            </div>
+            <div className={styles.tags} style={{ marginTop: 6 }}>
               {ltotTag && <span className={styles.tag}>{ltotTag}</span>}
               {bipapTag && <span className={styles.tag}>{bipapTag}</span>}
             </div>

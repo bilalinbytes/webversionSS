@@ -49,6 +49,8 @@ export interface PatientHomeData {
   effectiveDashboard: EffectiveDashboardValue | null;
   baselineSpo2: number | null;
   baselineHeartRate: number | null;
+  heartRateToday?: number | null;
+  heartRateTrend?: number[];
   latestPft: {
     fev1_fvc_ratio: number | null;
     fev1: number | null;

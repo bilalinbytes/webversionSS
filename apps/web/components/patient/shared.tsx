@@ -172,7 +172,7 @@ export function SpO2Input({
               onClick={handleSelectSame}
             >
               <Check size={15} strokeWidth={2.5} />
-              <span>Same as previous ({prevValue}%)</span>
+              <span>Same as previous ({prevValue}%) · पिछले जैसा</span>
             </button>
             <button
               type="button"
@@ -180,7 +180,7 @@ export function SpO2Input({
               onClick={handleSelectCustom}
             >
               <Edit3 size={14} strokeWidth={2} />
-              <span>Enter new value</span>
+              <span>Enter new value · नया मान दर्ज करें</span>
             </button>
           </div>
 
@@ -245,7 +245,7 @@ export function HeartRateInput({
   value,
   onChange,
   prevValue,
-  label = "Heart Rate (Optional) · नाड़ी / मिनट (वैकल्पिक)",
+  label = "Heart Rate (Resting Pulse) · नाड़ी / मिनट (वैकल्पिक)",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -302,7 +302,7 @@ export function HeartRateInput({
               onClick={handleSelectSame}
             >
               <Check size={15} strokeWidth={2.5} />
-              <span>Same as previous ({prevValue} BPM)</span>
+              <span>Same as previous ({prevValue} BPM) · पिछले जैसा</span>
             </button>
             <button
               type="button"
@@ -310,7 +310,7 @@ export function HeartRateInput({
               onClick={handleSelectCustom}
             >
               <Edit3 size={14} strokeWidth={2} />
-              <span>Enter new value</span>
+              <span>Enter new value · नया मान दर्ज करें</span>
             </button>
           </div>
 
@@ -325,7 +325,7 @@ export function HeartRateInput({
                   max="250"
                   autoFocus={mode === "custom" && value === ""}
                   className={styles.spo2Input}
-                  placeholder="e.g. 88"
+                  placeholder="e.g. 78"
                   value={value}
                   onChange={(e) => {
                     const v = e.target.value.replace(/\D/g, "");
@@ -348,7 +348,7 @@ export function HeartRateInput({
             min="20"
             max="250"
             className={styles.spo2Input}
-            placeholder="e.g. 88"
+            placeholder="e.g. 78"
             value={value}
             onChange={(e) => {
               const v = e.target.value.replace(/\D/g, "");
@@ -360,6 +360,8 @@ export function HeartRateInput({
           <span className={styles.spo2Unit}>BPM</span>
         </div>
       )}
+
+      <p className={styles.spo2Target}>Normal resting pulse: 60–100 BPM · सामान्य नाड़ी: 60–100 प्रति मिनट</p>
     </div>
   );
 }

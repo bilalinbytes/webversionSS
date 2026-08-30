@@ -11,6 +11,7 @@ export interface CommonDashboardProps {
   effectiveDashboard?: string | null;
   patientId: string;
   spo2Today: number;
+  heartRateToday?: number | null;
   mmrcToday: number;
   aqiToday: number;
   riskScore: number;
@@ -19,6 +20,7 @@ export interface CommonDashboardProps {
   doctorHospital: string;
   nextAppointment: string;
   spo2Trend?: number[];
+  heartRateTrend?: number[];
   mmrcTrend?: number[];
   vasTrend?: number[];
   latestPft?: {
@@ -63,26 +65,39 @@ function SparkLine({ values, color = "var(--med-blue-600)" }: { values: number[]
   );
 }
 
-function riskLabel(score: number): { label: string; color: string; bg: string } {
-  if (score <= 3) return { label: "Stable", color: "var(--med-blue-600)", bg: "var(--med-blue-50)" };
-  if (score <= 6) return { label: "Moderate", color: "#b7791f", bg: "rgba(183,121,31,0.1)" };
-  return { label: "High Risk", color: "#c94d49", bg: "rgba(201,77,73,0.1)" };
+function riskLabel(score: number): { label: string; labelHi: string; color: string; bg: string } {
+  if (score <= 3) return { label: "Stable", labelHi: "स्थिर", color: "var(--med-blue-600)", bg: "var(--med-blue-50)" };
+  if (score <= 6) return { label: "Moderate", labelHi: "मध्यम", color: "#b7791f", bg: "rgba(183,121,31,0.1)" };
+  return { label: "High Risk", labelHi: "उच्च जोखिम", color: "#c94d49", bg: "rgba(201,77,73,0.1)" };
 }
 
-function aqiLabel(aqi: number): { label: string; color: string } {
-  if (aqi <= 50) return { label: "Good", color: "var(--med-blue-600)" };
-  if (aqi <= 100) return { label: "Moderate", color: "#b7791f" };
-  if (aqi <= 150) return { label: "Unhealthy for Sensitive", color: "#d85a30" };
-  return { label: "Unhealthy", color: "#c94d49" };
+function aqiLabel(aqi: number): { label: string; labelHi: string; color: string } {
+  if (aqi <= 50) return { label: "Good", labelHi: "अच्छी", color: "#059669" };
+  if (aqi <= 100) return { label: "Moderate", labelHi: "मध्यम", color: "#b7791f" };
+  if (aqi <= 150) return { label: "Unhealthy for Sensitive", labelHi: "संवेदनशील के लिए अस्वस्थ", color: "#d85a30" };
+  return { label: "Unhealthy", labelHi: "अस्वस्थ", color: "#c94d49" };
 }
 
-function spo2Label(spo2: number): { label: string; color: string } {
-  if (spo2 >= 95) return { label: "Normal", color: "var(--med-blue-600)" };
-  if (spo2 >= 90) return { label: "Borderline", color: "#b7791f" };
-  return { label: "Low - Alert", color: "#c94d49" };
+function spo2Label(spo2: number): { label: string; labelHi: string; color: string } {
+  if (spo2 >= 95) return { label: "Normal (≥95%)", labelHi: "सामान्य", color: "#059669" };
+  if (spo2 >= 90) return { label: "Borderline (90-94%)", labelHi: "सीमा रेखा", color: "#b7791f" };
+  return { label: "Low Alert (<90%)", labelHi: "कम - ध्यान दें", color: "#c94d49" };
 }
 
-const MMRC_LABELS = ["No breathlessness", "On hills/hurrying", "Slower than peers", "Stops after ~100m", "Too breathless to leave home"];
+function heartRateLabel(hr: number | null | undefined): { label: string; labelHi: string; color: string } {
+  if (!hr || hr <= 0) return { label: "Pulse not recorded", labelHi: "नाड़ी दर्ज नहीं", color: "#64748b" };
+  if (hr < 60) return { label: "Bradycardia (<60)", labelHi: "धीमी नाड़ी", color: "#d97706" };
+  if (hr <= 100) return { label: "Normal (60-100)", labelHi: "सामान्य", color: "#059669" };
+  return { label: "Tachycardia (>100)", labelHi: "तेज नाड़ी", color: "#c94d49" };
+}
+
+const MMRC_BILINGUAL = [
+  { en: "No breathlessness", hi: "सांस नहीं फूलती" },
+  { en: "On hills / hurrying", hi: "चढ़ाई या दौड़ने पर" },
+  { en: "Slower than peers", hi: "दूसरों से धीरे चलना" },
+  { en: "Stops after ~100m", hi: "100 मी. बाद रुकना" },
+  { en: "Too breathless to leave home", hi: "घर से निकलने में असमर्थ" },
+];
 
 interface PrescriptionChanges {
   updated_at?: string;
@@ -100,6 +115,7 @@ export function CommonPatientDashboard({
   effectiveDashboard,
   patientId,
   spo2Today,
+  heartRateToday,
   mmrcToday,
   aqiToday,
   riskScore,
@@ -108,6 +124,7 @@ export function CommonPatientDashboard({
   doctorHospital,
   nextAppointment,
   spo2Trend,
+  heartRateTrend,
   mmrcTrend,
   vasTrend,
   latestPft,
@@ -120,7 +137,8 @@ export function CommonPatientDashboard({
   const risk = riskLabel(riskScore);
   const aqi = aqiLabel(aqiToday);
   const spo2 = spo2Label(spo2Today);
-  const mmrcText = MMRC_LABELS[Math.min(mmrcToday, 4)] ?? MMRC_LABELS[0];
+  const hr = heartRateLabel(heartRateToday);
+  const mmrcItem = MMRC_BILINGUAL[Math.min(Math.max(mmrcToday, 0), 4)] ?? MMRC_BILINGUAL[0]!;
 
   const [prescriptionChanges, setPrescriptionChanges] = useState<PrescriptionChanges | null>(null);
 
@@ -198,7 +216,7 @@ export function CommonPatientDashboard({
                 border: "1px solid #86efac",
                 boxShadow: "0 2px 6px rgba(22, 101, 52, 0.08)",
               }}>
-                <CheckCircle2 size={15} color="#16a34a" /> Today&apos;s Log Completed
+                <CheckCircle2 size={15} color="#16a34a" /> Today&apos;s Log Done · आज का लॉग पूर्ण
               </span>
               <button
                 type="button"
@@ -216,7 +234,7 @@ export function CommonPatientDashboard({
                   transition: "all 0.15s ease",
                 }}
               >
-                Update Entry
+                Update Entry · बदलें
               </button>
               {onViewHistory && (
                 <button
@@ -235,7 +253,7 @@ export function CommonPatientDashboard({
                     transition: "all 0.15s ease",
                   }}
                 >
-                  View Logs History →
+                  Logs History → · इतिहास
                 </button>
               )}
             </>
@@ -247,7 +265,7 @@ export function CommonPatientDashboard({
                 className={dStyles.submitBtn}
                 style={{ padding: "10px 22px", fontSize: 13, borderRadius: 10, minHeight: 44, fontWeight: 700, width: "auto" }}
               >
-                Log Today&apos;s Health
+                Log Today&apos;s Health · आज का स्वास्थ्य दर्ज करें
               </button>
               {onViewHistory && (
                 <button
@@ -265,7 +283,7 @@ export function CommonPatientDashboard({
                     boxShadow: "0 1px 3px rgba(15, 43, 72, 0.04)",
                   }}
                 >
-                  Logs History
+                  Logs History · इतिहास
                 </button>
               )}
             </>
@@ -495,10 +513,10 @@ export function CommonPatientDashboard({
         </div>
       </div>
 
-      {/* -- Vitals row (3D Tactile Metric Pods) -- */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
+      {/* -- Vitals Summary Tiles (5 Metric Cards with Bilingual Support) -- */}
+      <div className={dStyles.summaryGrid}>
 
-        {/* SpO2 */}
+        {/* 1. SpO2 */}
         <div className={`${dStyles.metricCard} ${dStyles.metricCardVitals}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
@@ -508,18 +526,43 @@ export function CommonPatientDashboard({
             }}>
               <Heart size={15} color="#0284c7" strokeWidth={2.2} />
             </div>
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0369a1", fontSize: 12 }}>SpO₂ (Oxygen)</span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0369a1", fontSize: 12 }}>
+              SpO₂ · ऑक्सीजन
+            </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: spo2.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {spo2Today > 0 ? `${spo2Today}%` : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: spo2.color, fontWeight: 600 }}>
-            {spo2Today > 0 ? `${spo2.label} ${hasTodayLog ? "(Today)" : "(Last Recorded)"}` : "No entry recorded"}
+            {spo2Today > 0 ? `${spo2.label} · ${spo2.labelHi} ${hasTodayLog ? "(Today)" : "(Last)"}` : "No entry · कोई प्रविष्टि नहीं"}
           </span>
           {spo2Trend && spo2Trend.length > 1 && <SparkLine values={spo2Trend} color={spo2.color} />}
         </div>
 
-        {/* mMRC */}
+        {/* 2. Heart Rate */}
+        <div className={`${dStyles.metricCard} ${dStyles.metricCardVitals}`} style={{ display: "flex", flexDirection: "column", gap: 8, borderColor: "#fecaca", background: "linear-gradient(180deg, #ffffff 0%, #fff5f5 100%)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 7,
+              background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <Activity size={15} color="#dc2626" strokeWidth={2.2} />
+            </div>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#991b1b", fontSize: 12 }}>
+              Heart Rate · नाड़ी (BPM)
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: hr.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
+            {heartRateToday && heartRateToday > 0 ? heartRateToday : "--"}
+          </p>
+          <span style={{ fontSize: 11.5, color: hr.color, fontWeight: 600 }}>
+            {heartRateToday && heartRateToday > 0 ? `${hr.label} · ${hr.labelHi} ${hasTodayLog ? "(Today)" : "(Last)"}` : "Pulse not recorded · दर्ज नहीं"}
+          </span>
+          {heartRateTrend && heartRateTrend.length > 1 && <SparkLine values={heartRateTrend} color={hr.color} />}
+        </div>
+
+        {/* 3. mMRC */}
         <div className={`${dStyles.metricCard} ${dStyles.metricCardSymptoms}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
@@ -529,17 +572,20 @@ export function CommonPatientDashboard({
             }}>
               <Wind size={15} color="#d97706" strokeWidth={2.2} />
             </div>
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#b45309", fontSize: 12 }}>Breathlessness</span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#b45309", fontSize: 12 }}>
+              Breathlessness · सांस फूलना
+            </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {mmrcToday}
           </p>
           <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 600 }}>
-            Grade {mmrcToday} — {mmrcText} {hasTodayLog ? "(Today)" : "(Last Log)"}
+            Grade {mmrcToday} · {mmrcItem.hi}
           </span>
+          {mmrcTrend && mmrcTrend.length > 1 && <SparkLine values={mmrcTrend} color="#d97706" />}
         </div>
 
-        {/* AQI */}
+        {/* 4. AQI */}
         <div className={`${dStyles.metricCard} ${dStyles.metricCardAqi}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
@@ -550,17 +596,19 @@ export function CommonPatientDashboard({
             }}>
               <Activity size={15} color={aqiToday > 0 ? "#0d9488" : "#64748b"} strokeWidth={2.2} />
             </div>
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0f766e", fontSize: 12 }}>Air Quality (AQI)</span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0f766e", fontSize: 12 }}>
+              Air Quality · वायु गुणवत्ता (AQI)
+            </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: aqiToday > 0 ? aqi.color : "#64748b", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {aqiToday > 0 ? aqiToday : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: aqiToday > 0 ? aqi.color : "#64748b", fontWeight: 600 }}>
-            {aqiToday > 0 ? `${aqi.label} ${hasTodayLog ? "(Logged)" : "(Live AQI)"}` : "AQI unavailable"}
+            {aqiToday > 0 ? `${aqi.label} · ${aqi.labelHi} ${hasTodayLog ? "(Logged)" : "(Live)"}` : "AQI unavailable"}
           </span>
         </div>
 
-        {/* Risk Score */}
+        {/* 5. Risk Score / Health Status */}
         <div className={`${dStyles.metricCard} ${dStyles.metricCardAppointment}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
@@ -570,7 +618,9 @@ export function CommonPatientDashboard({
             }}>
               <AlertCircle size={15} color={risk.color} strokeWidth={2.2} />
             </div>
-            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#4338ca", fontSize: 12 }}>Clinical Risk Score</span>
+            <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#4338ca", fontSize: 12 }}>
+              Health Status · स्वास्थ्य स्थिति
+            </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: risk.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {riskScore > 0 ? riskScore : "--"}
@@ -580,7 +630,7 @@ export function CommonPatientDashboard({
             borderRadius: 999, background: risk.bg, color: risk.color, fontWeight: 700, width: "fit-content",
             boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
           }}>
-            {risk.label}
+            {risk.label} · {risk.labelHi}
           </span>
         </div>
       </div>
@@ -637,7 +687,7 @@ export function CommonPatientDashboard({
                 Grade {mmrcToday}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#dc2626" : "#0284c7" }}>
-                {mmrcText}
+                {mmrcItem.en} · {mmrcItem.hi}
               </span>
             </div>
             <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "var(--med-text-muted)", lineHeight: 1.45 }}>
@@ -685,9 +735,11 @@ export function CommonPatientDashboard({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
             <p className={dStyles.cardTitle} style={{ margin: 0 }}>
-              Today&apos;s Prescribed Medications
+              Today&apos;s Prescribed Medications · आज की दवाएं
             </p>
-            <span style={{ fontSize: 11.5, color: "var(--med-text-muted)" }}>Tap to record taken / not taken doses</span>
+            <span style={{ fontSize: 11.5, color: "var(--med-text-muted)" }}>
+              Select Taken or Not Taken for each medicine · हर दवा के लिए ली गई या नहीं ली गई चुनें
+            </span>
           </div>
           {todayMedications && todayMedications.length > 0 && (() => {
             const total = todayMedications.length;
@@ -703,7 +755,7 @@ export function CommonPatientDashboard({
                 fontSize: 12, fontWeight: 700,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
               }}>
-                {taken} of {total} doses logged today — {pct}% adherence
+                {taken} of {total} doses logged · {pct}% adherence
               </span>
             );
           })()}
@@ -711,7 +763,7 @@ export function CommonPatientDashboard({
 
         {(!todayMedications || todayMedications.length === 0) ? (
           <p style={{ margin: 0, fontSize: 13, color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-            No medications assigned. Log today to record adherence.
+            No medications assigned. Log today to record adherence. · कोई दवा असाइन नहीं है।
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
@@ -745,40 +797,38 @@ export function CommonPatientDashboard({
                     {med.name}{med.dose ? ` - ${med.dose}` : ""}
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 11.5, color: med.taken === true ? "#059669" : med.taken === false ? "#dc2626" : "#888680", fontWeight: 500 }}>
-                    {med.taken === true ? "Taken today" : med.taken === false ? "Not taken today" : "Not marked yet"}
+                    {med.taken === true ? "✓ Taken · दवा ली गई" : med.taken === false ? "✕ Not taken · दवा नहीं ली गई" : "Compulsory Selection Required · चयन अनिवार्य है"}
                   </p>
                 </div>
                 {onMedicationToggle && (
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                     <button
                       type="button"
                       onClick={() => onMedicationToggle(med.id, true)}
                       style={{
-                        minHeight: 38, minWidth: 68, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(5,150,105,0.3)",
-                        background: med.taken === true ? "linear-gradient(180deg, #059669 0%, #047857 100%)" : "linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%)",
-                        color: med.taken === true ? "white" : "#047857",
+                        minHeight: 38, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #059669",
+                        background: med.taken === true ? "linear-gradient(180deg, #059669 0%, #047857 100%)" : "#ffffff",
+                        color: med.taken === true ? "#ffffff" : "#059669",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
-                        fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-                        boxShadow: med.taken === true ? "0 2px 6px rgba(5,150,105,0.3)" : "0 1px 3px rgba(0,0,0,0.04)",
+                        boxShadow: med.taken === true ? "0 2px 8px rgba(5,150,105,0.3)" : "0 1px 3px rgba(0,0,0,0.04)",
                         transition: "all 0.14s ease",
                       }}
                     >
-                      Taken
+                      ✓ Taken · ली गई
                     </button>
                     <button
                       type="button"
                       onClick={() => onMedicationToggle(med.id, false)}
                       style={{
-                        minHeight: 38, minWidth: 72, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(220,38,38,0.3)",
-                        background: med.taken === false ? "linear-gradient(180deg, #dc2626 0%, #b91c1c 100%)" : "linear-gradient(180deg, #ffffff 0%, #fef2f2 100%)",
-                        color: med.taken === false ? "white" : "#dc2626",
+                        minHeight: 38, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #dc2626",
+                        background: med.taken === false ? "linear-gradient(180deg, #dc2626 0%, #b91c1c 100%)" : "#ffffff",
+                        color: med.taken === false ? "#ffffff" : "#dc2626",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
-                        fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-                        boxShadow: med.taken === false ? "0 2px 6px rgba(220,38,38,0.3)" : "0 1px 3px rgba(0,0,0,0.04)",
+                        boxShadow: med.taken === false ? "0 2px 8px rgba(220,38,38,0.3)" : "0 1px 3px rgba(0,0,0,0.04)",
                         transition: "all 0.14s ease",
                       }}
                     >
-                      Not Taken
+                      ✕ Not Taken · नहीं ली
                     </button>
                   </div>
                 )}

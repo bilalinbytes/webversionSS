@@ -23,6 +23,14 @@ interface Props {
     aqiToday: number;
     hasTodayLog?: boolean;
     diagnosis?: string | null;
+    heartRateToday?: number | null;
+    heartRateTrend?: number[];
+    todayMedications?: Array<{
+      id: string;
+      name: string;
+      dose?: string;
+      taken: boolean | null;
+    }>;
     latestPft?: {
       fev1_fvc_ratio: number | null;
       fev1: number | null;
@@ -83,6 +91,7 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
           effectiveDashboard="ild"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
+          heartRateToday={patient.heartRateToday}
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
@@ -91,9 +100,11 @@ export function ILDHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vasTren
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}
           spo2Trend={spo2Trend}
+          heartRateTrend={patient.heartRateTrend}
           mmrcTrend={mmrcTrend}
           vasTrend={vasTrend}
           latestPft={patient.latestPft}
+          todayMedications={patient.todayMedications}
           onLogToday={onLogToday}
           accentColor="#4527a0"
           diseaseLabel="My Health"

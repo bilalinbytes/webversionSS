@@ -14,6 +14,14 @@ interface Props {
     diagnosis?: string | null;
     baselineSpo2?: number | null;
     baselineHeartRate?: number | null;
+    heartRateToday?: number | null;
+    heartRateTrend?: number[];
+    todayMedications?: Array<{
+      id: string;
+      name: string;
+      dose?: string;
+      taken: boolean | null;
+    }>;
     latestPft?: { fev1_fvc_ratio: number | null; fev1: number | null; fvc: number | null; dlco: number | null; test_date: string | null } | null;
     patientId?: string;
   };
@@ -39,6 +47,7 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
           effectiveDashboard="post_icu"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
+          heartRateToday={patient.heartRateToday}
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
@@ -47,9 +56,11 @@ export function PostICUHomeView({ patient, onLogToday, spo2Trend, mmrcTrend, vas
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}
           spo2Trend={spo2Trend}
+          heartRateTrend={patient.heartRateTrend}
           mmrcTrend={mmrcTrend}
           vasTrend={vasTrend}
           latestPft={patient.latestPft}
+          todayMedications={patient.todayMedications}
           onLogToday={onLogToday}
           accentColor="#1565c0"
           diseaseLabel="My Health"

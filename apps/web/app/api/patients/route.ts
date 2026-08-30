@@ -213,7 +213,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const [patientRes, diagnosisRes, supportRes, pftRes, medsRes, baselineRes] = await Promise.all([
     admin
       .from("patients")
-      .select("id,name,date_of_birth,mobile_number,alternate_mobile_number,gender,emergency_contact_name,emergency_contact_phone")
+      .select("id,name,date_of_birth,mobile_number,alternate_mobile_number,gender,emergency_contact_name,emergency_contact_phone,address")
       .eq("id", patientId)
       .single(),
     admin
@@ -282,6 +282,36 @@ export async function GET(request: Request): Promise<NextResponse> {
     resolvedBaselineHeartRate = "78";
   }
 
+  // Resolve occupation and significant illness exposure
+  let resolvedOccupation = "";
+  let resolvedOtherOccupation = "";
+  let resolvedSignificantExposure = "";
+
+  if (pftRes.data && pftRes.data.length > 0) {
+    for (const rec of pftRes.data) {
+      const other = (rec.other_fields as Record<string, string | null>) ?? {};
+      if (!resolvedOccupation && other.occupation) {
+        resolvedOccupation = String(other.occupation);
+      }
+      if (!resolvedOtherOccupation && other.other_occupation) {
+        resolvedOtherOccupation = String(other.other_occupation);
+      }
+      if (!resolvedSignificantExposure && other.significant_exposure) {
+        resolvedSignificantExposure = String(other.significant_exposure);
+      }
+    }
+  }
+
+  const addrStr = patientRes.data.address ?? "";
+  if (!resolvedOccupation && addrStr.includes("Occupation: ")) {
+    const occMatch = addrStr.match(/Occupation:\s*([^|\]]+)/);
+    if (occMatch?.[1]) resolvedOccupation = occMatch[1].trim();
+  }
+  if (!resolvedSignificantExposure && (addrStr.includes("Exposure: ") || addrStr.includes("Illness Exposure: "))) {
+    const expMatch = addrStr.match(/(?:Exposure|Illness Exposure):\s*([^|\]]+)/);
+    if (expMatch?.[1]) resolvedSignificantExposure = expMatch[1].trim();
+  }
+
   const formData = {
     name: patientRes.data.name ?? "",
     age: ageFromDob(patientRes.data.date_of_birth),
@@ -290,6 +320,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     alternate_mobile: nationalPhone(patientRes.data.alternate_mobile_number),
     emergency_contact_name: patientRes.data.emergency_contact_name ?? "",
     emergency_contact_phone: patientRes.data.emergency_contact_phone ?? "",
+    occupation: resolvedOccupation,
+    other_occupation: resolvedOtherOccupation,
+    significant_exposure: resolvedSignificantExposure,
     ...parsedDiagnosis,
     post_icu_sub_diagnosis: diagnosisRes.data?.post_icu_sub_diagnosis ?? null,
     comorbidities: Array.isArray(diagnosisRes.data?.comorbidities) ? diagnosisRes.data.comorbidities : [],
@@ -440,14 +473,25 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
   }
 
-  // Build address string
+  // Build address and metadata string
+  const occupation = (basicInfo.occupation as string) || null;
+  const otherOccupation = (basicInfo.other_occupation as string) || null;
+  const significantExposure = (basicInfo.significant_exposure as string) || null;
+  const effectiveOccupation = occupation === "Other" && otherOccupation ? otherOccupation : occupation;
+
   const addressParts = [
     basicInfo.street_address,
     basicInfo.city,
     basicInfo.state,
     basicInfo.pincode,
   ].filter(Boolean);
-  const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+  let address = addressParts.length > 0 ? addressParts.join(", ") : null;
+  if (effectiveOccupation || significantExposure) {
+    const occTag = effectiveOccupation ? `Occupation: ${effectiveOccupation}` : "";
+    const expTag = significantExposure ? `Exposure: ${significantExposure}` : "";
+    const metaStr = [occTag, expTag].filter(Boolean).join(" | ");
+    address = address ? `${address} [${metaStr}]` : metaStr;
+  }
 
   // 1. Insert patient
   const { data: patient, error: patientError } = await supabase
@@ -588,6 +632,9 @@ export async function POST(request: Request): Promise<NextResponse> {
           max_spo2: r.max_spo2 || null,
           baseline_spo2: r.baseline_spo2 || null,
           baseline_heart_rate: r.baseline_heart_rate || null,
+          occupation: effectiveOccupation || null,
+          other_occupation: otherOccupation || null,
+          significant_exposure: significantExposure || null,
         } as import("@/lib/database.types").Json,
         created_by_doctor_id: user.id,
       }));
@@ -599,6 +646,20 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: "Failed to save PFT records" }, { status: 500 });
       }
     }
+  } else {
+    // If no PFT records entered, create a baseline record to persist occupation and exposures
+    await supabase.from("pft_records").insert({
+      patient_id: patientId,
+      test_date: new Date().toISOString().split("T")[0]!,
+      other_fields: {
+        baseline_spo2: (body.baselineVitals as { baseline_spo2?: string })?.baseline_spo2 || null,
+        baseline_heart_rate: (body.baselineVitals as { baseline_heart_rate?: string })?.baseline_heart_rate || null,
+        occupation: effectiveOccupation || null,
+        other_occupation: otherOccupation || null,
+        significant_exposure: significantExposure || null,
+      } as import("@/lib/database.types").Json,
+      created_by_doctor_id: user.id,
+    });
   }
 
   const baselineSpo2Str =
@@ -713,6 +774,18 @@ export async function PUT(request: Request): Promise<NextResponse> {
       : `+91${rawAlternateMobile}`
     : null;
 
+  const occupation = (basicInfo.occupation as string) || null;
+  const otherOccupation = (basicInfo.other_occupation as string) || null;
+  const significantExposure = (basicInfo.significant_exposure as string) || null;
+  const effectiveOccupation = occupation === "Other" && otherOccupation ? otherOccupation : occupation;
+
+  let updateAddress: string | null | undefined = undefined;
+  if (effectiveOccupation || significantExposure) {
+    const occTag = effectiveOccupation ? `Occupation: ${effectiveOccupation}` : "";
+    const expTag = significantExposure ? `Exposure: ${significantExposure}` : "";
+    updateAddress = [occTag, expTag].filter(Boolean).join(" | ");
+  }
+
   const { error: patientError } = await admin
     .from("patients")
     .update({
@@ -722,6 +795,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
       gender: basicInfo.gender || null,
       emergency_contact_name: basicInfo.emergency_contact_name || null,
       emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+      ...(updateAddress ? { address: updateAddress } : {}),
     })
     .eq("id", patientId);
 
@@ -836,6 +910,9 @@ export async function PUT(request: Request): Promise<NextResponse> {
           max_spo2: r.max_spo2 || null,
           baseline_spo2: r.baseline_spo2 || null,
           baseline_heart_rate: r.baseline_heart_rate || null,
+          occupation: effectiveOccupation || null,
+          other_occupation: otherOccupation || null,
+          significant_exposure: significantExposure || null,
         } as Json,
         created_by_doctor_id: user.id,
       }));
@@ -843,6 +920,19 @@ export async function PUT(request: Request): Promise<NextResponse> {
       const { error: pftError } = await admin.from("pft_records").insert(pftInserts);
       if (pftError) return NextResponse.json({ error: pftError.message }, { status: 500 });
     }
+  } else if (effectiveOccupation || significantExposure) {
+    await admin.from("pft_records").insert({
+      patient_id: patientId,
+      test_date: new Date().toISOString().split("T")[0]!,
+      other_fields: {
+        baseline_spo2: (body.baselineVitals as { baseline_spo2?: string })?.baseline_spo2 || null,
+        baseline_heart_rate: (body.baselineVitals as { baseline_heart_rate?: string })?.baseline_heart_rate || null,
+        occupation: effectiveOccupation || null,
+        other_occupation: otherOccupation || null,
+        significant_exposure: significantExposure || null,
+      } as Json,
+      created_by_doctor_id: user.id,
+    });
   }
 
   const baselineSpo2Str =

@@ -41,6 +41,8 @@ export function usePatientHomeData(
     effectiveDashboard: null,
     baselineSpo2: null,
     baselineHeartRate: null,
+    heartRateToday: null,
+    heartRateTrend: [],
     latestPft: null,
     todayMedications: [],
   });

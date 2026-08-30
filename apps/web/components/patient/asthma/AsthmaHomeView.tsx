@@ -16,6 +16,14 @@ interface Props {
     nextAppointment: string; riskScore: number;
     spo2Today: number; mmrcToday: number; aqiToday: number; hasTodayLog?: boolean;
     diagnosis?: string | null;
+    heartRateToday?: number | null;
+    heartRateTrend?: number[];
+    todayMedications?: Array<{
+      id: string;
+      name: string;
+      dose?: string;
+      taken: boolean | null;
+    }>;
     latestPft?: { fev1_fvc_ratio: number | null; fev1: number | null; fvc: number | null; dlco: number | null; test_date: string | null } | null;
     patientId?: string;
   };
@@ -53,6 +61,7 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
           effectiveDashboard="asthma"
           patientId={patient.patientId ?? ""}
           spo2Today={patient.spo2Today}
+          heartRateToday={patient.heartRateToday}
           mmrcToday={patient.mmrcToday}
           aqiToday={patient.aqiToday}
           riskScore={patient.riskScore}
@@ -61,9 +70,11 @@ export function AsthmaHomeView({ patient, onLogToday, spo2Trend, diseaseSpecific
           doctorHospital={patient.doctorHospital}
           nextAppointment={patient.nextAppointment}
           spo2Trend={spo2Trend}
+          heartRateTrend={patient.heartRateTrend}
           mmrcTrend={mmrcTrend}
           vasTrend={vasTrend}
           latestPft={patient.latestPft}
+          todayMedications={patient.todayMedications}
           onLogToday={onLogToday}
           accentColor="#0f6e56"
           diseaseLabel="My Health"

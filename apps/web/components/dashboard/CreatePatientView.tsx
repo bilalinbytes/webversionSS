@@ -16,6 +16,11 @@ export type FormData = {
   emergency_contact_name: string;
   emergency_contact_phone: string;
 
+  // Occupation and Exposure details
+  occupation: string;
+  other_occupation: string;
+  significant_exposure: string;
+
   // Clinical diagnosis
   disease_category: "ILD" | "OAD" | "Bronchiectasis" | "Post ICU Recovery" | "";
   // ILD sub-fields
@@ -106,6 +111,7 @@ export type FormData = {
 
 const INIT_FORM_DATA: FormData = {
   name: "", age: "", gender: "", mobile_number: "", alternate_mobile: "", emergency_contact_name: "", emergency_contact_phone: "",
+  occupation: "", other_occupation: "", significant_exposure: "",
   disease_category: "",
   ild_subtype: "", ild_other_text: "", is_fibrotic: null,
   oad_diagnosis: "", oad_other_text: "",
@@ -303,9 +309,78 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
           </Field>
         </div>
       </div>
+
+      {/* Occupation & Environmental Exposure (3-Box System) */}
+      <div className={styles.card}>
+        <p className={styles.cardTitle}>Occupation &amp; Significant Illness Exposure</p>
+        <p className={styles.cardSub}>Occupational history and environmental exposures relevant to respiratory disease assessment.</p>
+        <div className={styles.grid2}>
+          {/* Box 1: Occupation Dropdown */}
+          <Field label="Occupation (व्यवसाय)">
+            <select
+              className={styles.select}
+              value={data.occupation}
+              onChange={(e) => updateField("occupation", e.target.value)}
+            >
+              <option value="">-- Select Occupation --</option>
+              {OCCUPATION_OPTIONS.map((occ) => (
+                <option key={occ} value={occ}>
+                  {occ}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          {/* Box 2: Other Occupation Text (Visible when Other is selected) */}
+          {data.occupation === "Other" && (
+            <Field label="Other Occupation (अन्य व्यवसाय)">
+              <input
+                className={`${styles.input} ${data.other_occupation.trim() ? styles.inputValid : ""}`}
+                placeholder="Type specific occupation..."
+                value={data.other_occupation}
+                onChange={(e) => updateField("other_occupation", e.target.value)}
+              />
+            </Field>
+          )}
+
+          {/* Box 3: Significant Exposure Related to Illness */}
+          <div style={{ gridColumn: "1 / -1" }}>
+            <Field label="Significant Exposure Related to Illness (संबंधित एक्सपोजर / जोखिम)">
+              <textarea
+                className={styles.textarea}
+                rows={2}
+                placeholder="e.g. Biomass fuel smoke (chulha), Pigeon/bird exposure, Silica/sand dust, Chemical fumes, Grain dust, Textile fibers, Molds..."
+                value={data.significant_exposure}
+                onChange={(e) => updateField("significant_exposure", e.target.value)}
+              />
+            </Field>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+export const OCCUPATION_OPTIONS = [
+  "Teacher",
+  "Engineer",
+  "Doctor / Healthcare Worker",
+  "Farmer / Agricultural Worker",
+  "Housewife / Homemaker",
+  "Cook / Kitchen Staff",
+  "Desktop / IT Employee",
+  "Bank Employee",
+  "Construction Worker / Mason",
+  "Industrial / Factory Worker",
+  "Driver / Transport Worker",
+  "Textile / Tailor Worker",
+  "Miner / Quarry Worker",
+  "Security Guard",
+  "Business / Merchant",
+  "Student",
+  "Retired",
+  "Other",
+];
 
 // -- Step 2: Diagnosis ---------------------------------------------------------
 const ILD_SUBTYPES = [
@@ -1434,6 +1509,18 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                   </span>
                 </div>
               )}
+              <div className={styles.reviewInfoRow}>
+                <span className={styles.reviewInfoLabel}>Occupation</span>
+                <span className={styles.reviewInfoValue}>
+                  {data.occupation === "Other" ? (data.other_occupation || "Other") : (data.occupation || "—")}
+                </span>
+              </div>
+              {data.significant_exposure && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Illness Exposure</span>
+                  <span className={styles.reviewInfoValue}>{data.significant_exposure}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1745,6 +1832,9 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           gender: data.gender || null,
           emergency_contact_name: data.emergency_contact_name || null,
           emergency_contact_phone: data.emergency_contact_phone || null,
+          occupation: data.occupation === "Other" ? (data.other_occupation || "Other") : (data.occupation || null),
+          other_occupation: data.other_occupation || null,
+          significant_exposure: data.significant_exposure || null,
         },
         diagnosis: {
           primary_diagnosis: (
