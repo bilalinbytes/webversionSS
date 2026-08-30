@@ -1114,22 +1114,36 @@ export function PatientAnalyticsView({ patientId, viewer = "patient", patientNam
     setExporting(type);
     setError(null);
     try {
-      const body = type === "single"
-        ? { export_type: "single_patient", patient_id: patientId }
-        : { export_type: "combined" };
-      const response = await fetch("/api/exports", {
+      const endpoint = viewer === "patient" ? "/api/patient/report" : "/api/exports";
+      const body = viewer === "patient"
+        ? { format: "pdf" }
+        : type === "single"
+          ? { export_type: "single_patient", patient_id: patientId, format: "pdf" }
+          : { export_type: "combined", format: "pdf" };
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       if (!response.ok) {
         const payload = await response.json().catch(() => null) as { error?: string; details?: string } | null;
         throw new Error(payload?.details ?? payload?.error ?? "Export failed.");
       }
+
       const blob = await response.blob();
       const header = response.headers.get("Content-Disposition");
-      const filename = header?.match(/filename="(.+)"/)?.[1] ?? `saans-${type}-patient-export.pdf`;
-      downloadBlob(blob, filename);
+      const filename = header?.match(/filename="(.+)"/)?.[1] ?? `O2Plus_${(patientName || "Patient").replace(/\s+/g, "_")}_Clinical_Report.pdf`;
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : "Export failed.");
     } finally {

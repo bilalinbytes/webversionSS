@@ -726,7 +726,7 @@ function SinglePatientDossierPages({
             </View>
           ) : (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-              {dynamicSymptoms.slice(0, 6).map((sym) => (
+              {dynamicSymptoms.map((sym) => (
                 <GenericTrendChart
                   key={sym.symptomName}
                   title={`Symptom: ${sym.symptomName}`}
