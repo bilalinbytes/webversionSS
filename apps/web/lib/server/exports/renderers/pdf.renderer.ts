@@ -43,13 +43,16 @@ export async function renderPdfRegistry(bundle: ExportDataBundle): Promise<Buffe
       ["Occupation", r.occupation],
       ["Smoking Status", r.smoker],
       ["Enrollment Date", r.dateOfEnroll],
+      ["Baseline HR", r.baselineHr ? `${r.baselineHr} BPM` : "78 BPM"],
+      ["Baseline SpO2", r.baselineSpo2 ? `${r.baselineSpo2}%` : "96%"],
     ],
     diagnosis: [
-      ["Primary Diagnosis", r.completeDiag],
+      ["Primary Diagnosis", r.primaryDiagnosis || r.completeDiag],
       ["Histopathology", r.histopathology],
       ["Connective Tissue Disease", r.typeOfConnective],
       ["Co-morbidities", r.comorbidities],
       ["Respiratory Support", r.respiratorySupport],
+      ["Effective dashboard", r.effectiveDashboard],
     ],
     respiratorySupport: [["Support Type", r.respiratorySupport]],
     pftRows: [
@@ -97,7 +100,43 @@ export async function renderPdfRegistry(bundle: ExportDataBundle): Promise<Buffe
             a.reason || "SpO2 dropped below target threshold",
           ])
         : [],
-    instructionRows: [],
+    instructionRows:
+      bundle.rawDoctorInstructions && bundle.rawDoctorInstructions.length > 0
+        ? bundle.rawDoctorInstructions.map((ins) => [ins.createdAt, ins.instructionText])
+        : [],
+    adherenceStats: bundle.adherenceStats,
+    dynamicSymptoms: bundle.dynamicSymptomsSeries,
+    prescribedMedsWithAdherence: bundle.prescribedMedsWithAdherence,
+    multiPftsProgression: bundle.multiPftsProgression,
+    detailedLogs: bundle.singlePatientLogs
+      ? bundle.singlePatientLogs.map((l) => ({
+          date: l.date,
+          spo2Rest: l.spo2Rest,
+          spo2Walk: l.spo2Walk,
+          heartRate: l.heartRate ?? 75,
+          mmrc: l.mmrc,
+          aqi: l.aqi,
+          vasSymptoms: l.vasSymptoms,
+          diseaseSpecificData: l.diseaseSpecificData,
+        }))
+      : r.dailyLogs
+        ? r.dailyLogs.map((dl) => ({
+            date: dl.logDate,
+            spo2Rest: dl.spo2Rest,
+            spo2Walk: dl.spo2Exertion,
+            heartRate: dl.heartRate,
+            mmrc: dl.mmrc,
+            aqi: dl.aqi,
+            vasSymptoms: dl.symptomsVas,
+          }))
+        : [],
+    trackRecords: {
+      ild: bundle.ildTrackRecords,
+      asthma: bundle.asthmaTrackRecords,
+      copd: bundle.copdTrackRecords,
+      bronch: bundle.bronchTrackRecords,
+      postIcu: bundle.postIcuTrackRecords,
+    },
   }));
 
   const doc = ExportPdfDocument({

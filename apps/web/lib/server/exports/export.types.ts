@@ -77,18 +77,60 @@ export interface PatientExportRecord {
   dailyLogs?: FormattedDailyLogColumnSet[];
 }
 
+export interface SymptomTrendPoint {
+  date: string;
+  val: number;
+}
+
+export interface DynamicSymptomSeries {
+  symptomName: string;
+  points: SymptomTrendPoint[];
+  currentSeverity: number;
+  isResolved: boolean;
+}
+
+export interface MedicationPrescribedAdherence {
+  drugName: string;
+  route: string;
+  dose: string;
+  frequency: string;
+  startDate: string;
+  endDate: string;
+  status: "Active" | "Discontinued" | "Modified";
+  daysTaken: number;
+  daysPrescribed: number;
+  adherencePct: string;
+}
+
+export interface MultiPftProgressionPoint {
+  testDate: string;
+  fev1?: number | null;
+  fvc?: number | null;
+  fev1Pct?: number | null;
+  fvcPct?: number | null;
+  fev1FvcRatio?: number | null;
+  dlco?: number | null;
+  sixMwd?: number | null;
+  baselineSpo2?: number | null;
+  baselineHr?: number | null;
+}
+
 export interface DetailedLogRecord {
   patientName?: string;
   uhid?: string;
   date: string;
   spo2Rest: number | string;
   spo2Walk: number | string;
+  heartRate?: number | string;
   mmrc: number | string;
   aqi: number | string;
   vasSymptoms: string;
+  vasMap?: Record<string, number>;
   medicationCompliance: string;
+  medicationComplianceMap?: Record<string, boolean>;
   riskScore: number | string;
   clinicalNotes: string;
+  diseaseSpecificData?: Record<string, unknown>;
 }
 
 export interface DetailedAlertRecord {
@@ -314,6 +356,17 @@ export interface ExportDataBundle {
   singlePatientPfts?: DetailedPftRecord[];
   singlePatientUhid?: string;
   
+  // Enhanced Surveillance & Clinical Parity Structures
+  rawDoctorInstructions?: Array<{ instructionText: string; createdAt: string }>;
+  prescribedMedsWithAdherence?: MedicationPrescribedAdherence[];
+  dynamicSymptomsSeries?: DynamicSymptomSeries[];
+  multiPftsProgression?: MultiPftProgressionPoint[];
+  adherenceStats?: {
+    totalDays: number;
+    loggedDays: number;
+    pct: string;
+  };
+
   // Multi-patient detailed logs
   allPatientLogs?: DetailedLogRecord[];
 }

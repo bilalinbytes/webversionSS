@@ -121,6 +121,7 @@ export async function executeExport(
     rawMeds,
     rawPfts,
     rawResp,
+    rawInstructionsRes,
   ] = await Promise.all([
     fetchPatientsByIds(admin, targetIds),
     fetchDiagnosesByPatientIds(admin, targetIds),
@@ -130,7 +131,14 @@ export async function executeExport(
     fetchMedicationsByPatientIds(admin, targetIds),
     fetchPftRecordsByPatientIds(admin, targetIds),
     fetchRespiratorySupportByPatientIds(admin, targetIds),
+    admin
+      .from("doctor_instructions")
+      .select("patient_id, instruction_text, created_at")
+      .in("patient_id", targetIds)
+      .order("created_at", { ascending: false }),
   ]);
+
+  const rawInstructions = rawInstructionsRes.data ?? [];
 
   // 4. Handle Disease-Specific filtering if applicable
   let patients = rawPatients;
@@ -457,12 +465,17 @@ export async function executeExport(
     }
   });
 
-  // 7. For Single Patient mode: Build multi-sheet detailed data
+  // 7. For Single Patient mode: Build multi-sheet detailed data & rich surveillance series
   let singlePatientLogs: DetailedLogRecord[] | undefined;
   let singlePatientAlerts: DetailedAlertRecord[] | undefined;
   let singlePatientMeds: DetailedMedicationRecord[] | undefined;
   let singlePatientPfts: DetailedPftRecord[] | undefined;
   let singlePatientUhid: string | undefined;
+  let dynamicSymptomsSeries: import("./export.types").DynamicSymptomSeries[] | undefined;
+  let prescribedMedsWithAdherence: import("./export.types").MedicationPrescribedAdherence[] | undefined;
+  let multiPftsProgression: import("./export.types").MultiPftProgressionPoint[] | undefined;
+  let adherenceStats: { totalDays: number; loggedDays: number; pct: string } | undefined;
+  let rawDoctorInstructionsList: Array<{ instructionText: string; createdAt: string }> | undefined;
 
   if (normalizedScope === "single_patient" && patients.length === 1 && patients[0] && records[0]) {
     const pId = patients[0].id;
@@ -472,15 +485,32 @@ export async function executeExport(
     const patLogs = [...(logsByPatient.get(pId) ?? [])].sort(
       (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
     );
-    singlePatientLogs = patLogs.map((log) => {
-      const vasStr = typeof log.vas_symptoms === "object" && log.vas_symptoms
-        ? Object.entries(log.vas_symptoms)
-            .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`)
-            .join(", ")
-        : "—";
 
-      const compStr = typeof log.medication_compliance === "object" && log.medication_compliance
-        ? Object.entries(log.medication_compliance)
+    singlePatientLogs = patLogs.map((log) => {
+      const rawObj = log as Record<string, unknown>;
+      const vasMap: Record<string, number> = {};
+      if (typeof log.vas_symptoms === "object" && log.vas_symptoms) {
+        for (const [k, v] of Object.entries(log.vas_symptoms)) {
+          const num = Number(v);
+          if (!isNaN(num)) vasMap[k] = num;
+        }
+      }
+
+      const vasStr = Object.keys(vasMap).length > 0
+        ? Object.entries(vasMap)
+            .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}/10`)
+            .join(", ")
+        : "None / Stable";
+
+      const compMap: Record<string, boolean> = {};
+      if (typeof log.medication_compliance === "object" && log.medication_compliance) {
+        for (const [k, v] of Object.entries(log.medication_compliance)) {
+          compMap[k] = Boolean(v);
+        }
+      }
+
+      const compStr = Object.keys(compMap).length > 0
+        ? Object.entries(compMap)
             .map(([k, v]) => `${k}: ${v ? "Taken" : "Missed"}`)
             .join(", ")
         : "—";
@@ -489,14 +519,71 @@ export async function executeExport(
         date: formatDateDDMMYYYY(log.logged_at),
         spo2Rest: safeValue(log.spo2_rest),
         spo2Walk: safeValue(log.spo2_exertion),
+        heartRate: safeValue(rawObj["heart_rate"] ?? (log as any).heart_rate),
         mmrc: safeValue(log.mmrc_today),
         aqi: safeValue(log.aqi_value),
         vasSymptoms: vasStr,
+        vasMap,
         medicationCompliance: compStr,
+        medicationComplianceMap: compMap,
         riskScore: safeValue(log.aqi_value),
         clinicalNotes: "Daily routine check-in recorded",
+        diseaseSpecificData: (log.disease_specific_data as Record<string, unknown>) ?? {},
       };
     });
+
+    // Calculate Adherence Stats
+    let totalDaysSpan = 30;
+    if (payload.start_date && payload.end_date) {
+      const diffMs = new Date(payload.end_date).getTime() - new Date(payload.start_date).getTime();
+      totalDaysSpan = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    } else if (patLogs.length > 0) {
+      const firstDate = new Date(patLogs[0]!.logged_at).getTime();
+      const lastDate = new Date().getTime();
+      totalDaysSpan = Math.max(1, Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)) + 1);
+    }
+    const loggedCount = patLogs.length;
+    adherenceStats = {
+      totalDays: totalDaysSpan,
+      loggedDays: loggedCount,
+      pct: `${Math.min(100, Math.round((loggedCount / Math.max(1, totalDaysSpan)) * 100))}%`,
+    };
+
+    // Calculate Dynamic Symptoms Series with Zero-Drop Rule
+    const allSymptomKeys = new Set<string>();
+    patLogs.forEach((l) => {
+      if (typeof l.vas_symptoms === "object" && l.vas_symptoms) {
+        Object.keys(l.vas_symptoms).forEach((k) => allSymptomKeys.add(k));
+      }
+    });
+
+    dynamicSymptomsSeries = Array.from(allSymptomKeys)
+      .map((key) => {
+        const points = patLogs.map((l) => {
+          const vMap = (l.vas_symptoms as Record<string, number | null | undefined>) ?? {};
+          const rawVal = vMap[key];
+          const val = rawVal !== undefined && rawVal !== null ? Number(rawVal) : 0;
+          return {
+            date: formatDateDDMMYYYY(l.logged_at),
+            val: isNaN(val) ? 0 : val,
+          };
+        });
+
+        const hasAnyPositive = points.some((p) => p.val > 0);
+        const lastPoint = points.length > 0 ? points[points.length - 1]! : { val: 0 };
+        const currentSeverity = lastPoint.val;
+        const isResolved = currentSeverity === 0;
+
+        return {
+          symptomName: toTitleCase(key.replace(/_/g, " ")),
+          points,
+          currentSeverity,
+          isResolved,
+          hasAnyPositive,
+        };
+      })
+      .filter((s) => s.hasAnyPositive)
+      .map(({ hasAnyPositive, ...rest }) => rest);
 
     // Sheet 3: Alerts
     const patAlerts = rawAlerts.filter((a) => a.patient_id === pId);
@@ -511,15 +598,16 @@ export async function executeExport(
       };
     });
 
-    // Sheet 4: Medications
+    // Sheet 4: Medications & Per-Medication Adherence
     const patMeds = rawMeds.filter((m) => m.patient_id === pId);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     singlePatientMeds = patMeds.map((m) => {
       const isActive = !m.end_date || new Date(m.end_date) >= today;
       return {
         drugName: m.drug_name,
-        route: "Oral/Inhaled",
+        route: m.route || "Oral/Inhaled",
         dose: `${m.dose || ""} ${m.dose_unit || ""}`.trim() || "—",
         frequency: m.frequency || "—",
         startDate: formatDateDDMMYYYY(m.start_date),
@@ -528,8 +616,44 @@ export async function executeExport(
       };
     });
 
-    // Sheet 5: PFT History (Zero raw JSON)
-    const patPfts = rawPfts.filter((p) => p.patient_id === pId);
+    prescribedMedsWithAdherence = patMeds.map((m) => {
+      const isActive = !m.end_date || new Date(m.end_date) >= today;
+      const startMs = m.start_date ? new Date(m.start_date).getTime() : 0;
+      const endMs = m.end_date ? new Date(m.end_date).getTime() : today.getTime();
+      const medDays = Math.max(1, Math.ceil(Math.abs(endMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
+      const daysPrescribed = Math.min(totalDaysSpan, medDays);
+
+      let daysTaken = 0;
+      patLogs.forEach((l) => {
+        if (typeof l.medication_compliance === "object" && l.medication_compliance) {
+          const comp = l.medication_compliance as Record<string, boolean>;
+          if (comp[m.id] === true || comp[m.drug_name] === true) {
+            daysTaken++;
+          }
+        }
+      });
+
+      const adhPct = `${Math.min(100, Math.round((daysTaken / Math.max(1, daysPrescribed)) * 100))}%`;
+
+      return {
+        drugName: m.drug_name,
+        route: m.route || "Oral/Inhaled",
+        dose: `${m.dose || ""} ${m.dose_unit || ""}`.trim() || "Standard",
+        frequency: m.frequency || "OD",
+        startDate: formatDateDDMMYYYY(m.start_date),
+        endDate: m.end_date ? formatDateDDMMYYYY(m.end_date) : "Ongoing",
+        status: (isActive ? "Active" : "Discontinued") as "Active" | "Discontinued",
+        daysTaken,
+        daysPrescribed,
+        adherencePct: adhPct,
+      };
+    });
+
+    // Sheet 5: PFT History (Zero raw JSON) & Multi-PFT Progression
+    const patPfts = rawPfts
+      .filter((p) => p.patient_id === pId)
+      .sort((a, b) => new Date(a.test_date).getTime() - new Date(b.test_date).getTime());
+
     singlePatientPfts = patPfts.map((p) => {
       const other = (p.other_fields ?? {}) as Record<string, unknown>;
       return {
@@ -545,6 +669,29 @@ export async function executeExport(
         baselineHr: safeValue(other["baseline_heart_rate"]),
       };
     });
+
+    multiPftsProgression = patPfts.map((p) => {
+      const other = (p.other_fields ?? {}) as Record<string, unknown>;
+      return {
+        testDate: formatDateDDMMYYYY(p.test_date),
+        fev1: p.fev1 !== null ? Number(p.fev1) : null,
+        fvc: p.fvc !== null ? Number(p.fvc) : null,
+        fev1Pct: other["fev1_pct_pred"] !== undefined ? Number(other["fev1_pct_pred"]) : null,
+        fvcPct: other["fvc_pct_pred"] !== undefined ? Number(other["fvc_pct_pred"]) : null,
+        fev1FvcRatio: p.fev1_fvc_ratio !== null ? Number(p.fev1_fvc_ratio) : null,
+        dlco: p.dlco !== null ? Number(p.dlco) : null,
+        sixMwd: other["six_mwd"] !== undefined ? Number(other["six_mwd"]) : null,
+        baselineSpo2: other["baseline_spo2"] !== undefined ? Number(other["baseline_spo2"]) : null,
+        baselineHr: other["baseline_heart_rate"] !== undefined ? Number(other["baseline_heart_rate"]) : null,
+      };
+    });
+
+    // Doctor Instructions
+    const patInstructions = rawInstructions.filter((ins: any) => ins.patient_id === pId);
+    rawDoctorInstructionsList = patInstructions.map((ins: any) => ({
+      instructionText: ins.instruction_text,
+      createdAt: formatDateDDMMYYYY(ins.created_at),
+    }));
   }
 
   let allPatientLogs: DetailedLogRecord[] | undefined;
@@ -574,12 +721,14 @@ export async function executeExport(
         date: formatDateDDMMYYYY(log.logged_at),
         spo2Rest: safeValue(log.spo2_rest),
         spo2Walk: safeValue(log.spo2_exertion),
+        heartRate: safeValue((log as any).heart_rate),
         mmrc: safeValue(log.mmrc_today),
         aqi: safeValue(log.aqi_value),
         vasSymptoms: vasStr,
         medicationCompliance: compStr,
         riskScore: safeValue((log as any).computed_risk_score),
         clinicalNotes: safeValue((log as any).clinical_notes),
+        diseaseSpecificData: (log.disease_specific_data as Record<string, unknown>) ?? {},
       };
     });
   }
@@ -615,6 +764,11 @@ export async function executeExport(
     singlePatientMeds,
     singlePatientPfts,
     singlePatientUhid,
+    rawDoctorInstructions: rawDoctorInstructionsList,
+    prescribedMedsWithAdherence,
+    dynamicSymptomsSeries,
+    multiPftsProgression,
+    adherenceStats,
     allPatientLogs,
   };
 
