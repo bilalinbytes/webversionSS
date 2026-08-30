@@ -506,7 +506,7 @@ function SinglePatientDossierPages({
               </Text>
             </View>
             <View style={S.kvBox}>
-              <Text style={S.kvLabel}>Histopathology / Subtype</Text>
+              <Text style={S.kvLabel}>Clinical Subtype / Etiology</Text>
               <Text style={S.kvValue}>{diag["Histopathology"] || "Standard Clinical Subtype"}</Text>
             </View>
           </View>
@@ -1031,23 +1031,23 @@ function SinglePatientDossierPages({
             </View>
           ) : null}
 
-          {/* COPD Track: 7 Metrics (Cough, Sputum Vol, Sputum Colour, Exercise, Sleep, Energy, Chest Heaviness) */}
+          {/* COPD Track: All Metrics (Energy, Heaviness, Cough, Sputum Vol, Sputum Colour) */}
           {dashboard === "copd" ? (
             <View style={{ gap: 5 }}>
-              <View style={{ flexDirection: "row", gap: 6 }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                 <GenericTrendChart
-                  title="Energy Level (0-10 Scale)"
+                  title="1. Energy Level (0-10 Scale)"
                   subtitle="Higher is Better"
                   points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.energy_level ?? "")) || null }))}
                   minVal={0}
                   maxVal={10}
                   lineColor={GREEN}
                   unit="/10"
-                  width={264}
-                  height={48}
+                  width={172}
+                  height={44}
                 />
                 <GenericTrendChart
-                  title="Chest Heaviness (0-10 Scale)"
+                  title="2. Chest Heaviness (0-10)"
                   subtitle="Lower is Better"
                   points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.chest_heaviness ?? "")) || null }))}
                   minVal={0}
@@ -1057,36 +1057,101 @@ function SinglePatientDossierPages({
                   targetLabel="5"
                   lineColor={AMBER}
                   unit="/10"
+                  width={172}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="3. Cough Frequency / Severity"
+                  subtitle="0 (None) to 10 (Severe)"
+                  points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.cough_frequency ?? "")) || null }))}
+                  minVal={0}
+                  maxVal={10}
+                  lineColor="#0284c7"
+                  unit="/10"
+                  width={172}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="4. Sputum Volume Profile"
+                  subtitle="0 (None) · 5 (Usual) · 10 (Copious)"
+                  points={logs.map((l) => {
+                    const raw = l.diseaseSpecificData?.sputum_volume;
+                    let val: number | null = null;
+                    if (raw !== undefined && raw !== null && raw !== "") {
+                      const s = String(raw).toLowerCase();
+                      if (s.includes("none")) val = 0;
+                      else if (s.includes("scanty")) val = 2;
+                      else if (s.includes("usual") || s.includes("mod")) val = 5;
+                      else if (s.includes("more")) val = 8;
+                      else if (s.includes("large") || s.includes("copious")) val = 10;
+                      else val = parseFloat(s) || null;
+                    }
+                    return { date: l.date, val };
+                  })}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={5}
+                  targetLineColor={AMBER}
+                  targetLabel="5"
+                  lineColor="#0d9488"
+                  unit="/10"
                   width={264}
-                  height={48}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="5. Sputum Colour / Purulence Index"
+                  subtitle="1 (Clear) · 3 (White) · 6 (Yellow) · 9 (Green) · 10 (Blood)"
+                  points={logs.map((l) => {
+                    const raw = l.diseaseSpecificData?.sputum_colour;
+                    let val: number | null = null;
+                    if (raw !== undefined && raw !== null && raw !== "") {
+                      const s = String(raw).toLowerCase();
+                      if (s.includes("clear")) val = 1;
+                      else if (s.includes("white") || s.includes("mucoid")) val = 3;
+                      else if (s.includes("yellow") || s.includes("mucopurulent")) val = 6;
+                      else if (s.includes("green") || s.includes("purulent")) val = 9;
+                      else if (s.includes("rust") || s.includes("blood") || s.includes("haem")) val = 10;
+                      else val = parseFloat(s) || null;
+                    }
+                    return { date: l.date, val };
+                  })}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={6}
+                  targetLineColor={RED}
+                  targetLabel="Purulent"
+                  lineColor={RED}
+                  unit="/10"
+                  width={264}
+                  height={44}
                 />
               </View>
               <View style={{ padding: "4 6", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
                 <Text style={{ fontSize: 6.5, color: MUTED }}>
-                  • Cough Frequency &amp; Severity: Monitored daily | Sputum Profile: Tracked for colour change &amp; volume surge | Sleep &amp; Exercise: Evaluated continuously for early exacerbation triage.
+                  • COPD Surveillance: Energy, Chest Heaviness, Cough Frequency, Sputum Volume &amp; Sputum Colour are continuously evaluated for early exacerbation triage.
                 </Text>
               </View>
             </View>
           ) : null}
 
-          {/* Bronchiectasis & Post-ICU: Sputum Clearance, Temperature, Fever, Malaise */}
+          {/* Bronchiectasis & Post-ICU: All 5 Questions & Metrics (Clearance, Temp, Sputum Vol, Sputum Colour, Malaise) */}
           {dashboard === "bronchiectasis" || dashboard === "post_icu" ? (
             <View style={{ gap: 5 }}>
-              <View style={{ flexDirection: "row", gap: 6 }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                 <GenericTrendChart
-                  title="Ease of Sputum Clearance (1-5 Scale)"
+                  title="1. Ease of Sputum Clearance"
                   subtitle="1 (Difficult) to 5 (Easy)"
                   points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.ease_of_clearance ?? l.diseaseSpecificData?.ease_of_sputum_clearance ?? "")) || null }))}
                   minVal={1}
                   maxVal={5}
                   lineColor={CYAN}
                   unit="/5"
-                  width={264}
-                  height={48}
+                  width={172}
+                  height={44}
                 />
                 <GenericTrendChart
-                  title="Recorded Temperature (°F)"
-                  subtitle="Fever Threshold: ≥100.4°F"
+                  title="2. Recorded Temperature (°F)"
+                  subtitle="Fever Alert Threshold: ≥100.4°F"
                   points={logs.map((l) => ({ date: l.date, val: parseFloat(String(l.diseaseSpecificData?.recorded_temperature_f ?? l.diseaseSpecificData?.temperature_f ?? "")) || null }))}
                   minVal={96}
                   maxVal={104}
@@ -1095,13 +1160,95 @@ function SinglePatientDossierPages({
                   targetLabel="100.4°F"
                   lineColor={RED}
                   unit="°F"
+                  width={172}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="3. Sputum Volume Profile"
+                  subtitle="0 (None) · 5 (Usual) · 10 (Large)"
+                  points={logs.map((l) => {
+                    const raw = l.diseaseSpecificData?.sputum_volume;
+                    let val: number | null = null;
+                    if (raw !== undefined && raw !== null && raw !== "") {
+                      const s = String(raw).toLowerCase();
+                      if (s.includes("none")) val = 0;
+                      else if (s.includes("scanty")) val = 2;
+                      else if (s.includes("usual") || s.includes("mod")) val = 5;
+                      else if (s.includes("more")) val = 8;
+                      else if (s.includes("large") || s.includes("copious")) val = 10;
+                      else val = parseFloat(s) || null;
+                    }
+                    return { date: l.date, val };
+                  })}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={5}
+                  targetLineColor={AMBER}
+                  targetLabel="5"
+                  lineColor="#0d9488"
+                  unit="/10"
+                  width={172}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="4. Sputum Colour / Purulence Index"
+                  subtitle="1 (Clear) · 3 (White) · 6 (Yellow) · 9 (Green) · 10 (Blood)"
+                  points={logs.map((l) => {
+                    const raw = l.diseaseSpecificData?.sputum_colour;
+                    let val: number | null = null;
+                    if (raw !== undefined && raw !== null && raw !== "") {
+                      const s = String(raw).toLowerCase();
+                      if (s.includes("clear")) val = 1;
+                      else if (s.includes("white") || s.includes("mucoid")) val = 3;
+                      else if (s.includes("yellow") || s.includes("mucopurulent")) val = 6;
+                      else if (s.includes("green") || s.includes("purulent")) val = 9;
+                      else if (s.includes("rust") || s.includes("blood") || s.includes("haem")) val = 10;
+                      else val = parseFloat(s) || null;
+                    }
+                    return { date: l.date, val };
+                  })}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={6}
+                  targetLineColor={RED}
+                  targetLabel="Purulent"
+                  lineColor={RED}
+                  unit="/10"
                   width={264}
-                  height={48}
+                  height={44}
+                />
+                <GenericTrendChart
+                  title="5. Malaise, Fatigue & Weakness"
+                  subtitle="0 (Resolved/None) to 10 (Severe)"
+                  points={logs.map((l) => {
+                    const d = l.diseaseSpecificData;
+                    let val: number | null = null;
+                    if (d) {
+                      if (d.malaise === true) val = 8;
+                      else if (d.malaise === false) val = 0;
+                      else if (d.icu_muscle_weakness !== undefined && d.icu_muscle_weakness !== null) val = parseFloat(String(d.icu_muscle_weakness)) || 0;
+                      else if (d.fatigue_vas !== undefined && d.fatigue_vas !== null) val = parseFloat(String(d.fatigue_vas)) || 0;
+                      else if (d.malaise !== undefined && d.malaise !== null) {
+                        const s = String(d.malaise).toLowerCase();
+                        val = s === "yes" || s === "true" ? 8 : s === "no" || s === "false" ? 0 : parseFloat(s) || null;
+                      }
+                    }
+                    return { date: l.date, val };
+                  })}
+                  minVal={0}
+                  maxVal={10}
+                  targetLine={5}
+                  targetLineColor={AMBER}
+                  targetLabel="5"
+                  lineColor="#9333ea"
+                  unit="/10"
+                  width={264}
+                  height={44}
                 />
               </View>
               <View style={{ padding: "4 6", border: `1 solid ${BORDER}`, borderRadius: 3, backgroundColor: LIGHT }}>
                 <Text style={{ fontSize: 6.5, color: MUTED }}>
-                  • Airway Clearance Status: Assessed daily | Sputum Purulence: Monitored for bacterial flare | Systemic Malaise &amp; Fever: Auto-triaged for acute bronchiectasis / post-ICU review.
+                  • Post-ICU &amp; Bronchiectasis Track: All 5 core parameters (Sputum Clearance Ease, Body Temp, Sputum Volume, Sputum Colour Purulence &amp; Systemic Malaise/Fatigue) actively tracked.
                 </Text>
               </View>
             </View>

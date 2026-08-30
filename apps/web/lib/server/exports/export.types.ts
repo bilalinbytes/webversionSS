@@ -115,6 +115,7 @@ export interface PatientExportRecord {
   // Quality of Life (HRQoL) & Disease-Specific Details
   latestKbildScore?: string;
   kbildSubscoresInterpretation?: string;
+  diseaseSpecificMetricsSummary?: string;
   asthmaControlStatus?: string;
   asthmaPefrRescuePuffs?: string;
   copdMetricsSummary?: string;

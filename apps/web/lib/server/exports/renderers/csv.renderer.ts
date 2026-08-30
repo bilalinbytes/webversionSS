@@ -73,12 +73,8 @@ const FIXED_CSV_COLUMNS: Array<{ label: string; key: keyof PatientExportRecord }
   { label: "Medication Compliance Rate",    key: "medicationComplianceSummary" },
 
   // Quality of Life (HRQoL) & Disease-Specific Details
-  { label: "Latest KBILD Total Score",      key: "latestKbildScore" },
-  { label: "KBILD Subscores & HRQoL Impact", key: "kbildSubscoresInterpretation" },
-  { label: "Asthma GINA Control Status",    key: "asthmaControlStatus" },
-  { label: "Asthma PEFR & Rescue Puffs",    key: "asthmaPefrRescuePuffs" },
-  { label: "COPD Surveillance Metrics",     key: "copdMetricsSummary" },
-  { label: "Bronch / Post-ICU Metrics",     key: "bronchPostIcuMetricsSummary" },
+  { label: "Quality of Life (KBILD / HRQoL)", key: "kbildSubscoresInterpretation" },
+  { label: "Disease-Specific Dashboard Details", key: "diseaseSpecificMetricsSummary" },
 ];
 
 const DAILY_CSV_FIELD_TEMPLATES: Array<{ suffix: string; getter: (d: FormattedDailyLogColumnSet) => string | number }> = [

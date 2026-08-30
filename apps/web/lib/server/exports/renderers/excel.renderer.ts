@@ -77,12 +77,8 @@ const FIXED_REGISTRY_COLUMNS: FixedColumnDef[] = [
   { header: "Medication Compliance Rate", key: "medicationComplianceSummary", width: 28, align: "left", wrapText: true },
 
   // Quality of Life (HRQoL) & Disease-Specific Details
-  { header: "Latest KBILD Total Score", key: "latestKbildScore",       width: 16,  align: "center" },
-  { header: "KBILD Subscores & HRQoL Impact", key: "kbildSubscoresInterpretation", width: 36, align: "left", wrapText: true },
-  { header: "Asthma GINA Control Status", key: "asthmaControlStatus",  width: 28,  align: "left",  wrapText: true },
-  { header: "Asthma PEFR & Rescue Puffs", key: "asthmaPefrRescuePuffs",width: 28,  align: "left",  wrapText: true },
-  { header: "COPD Surveillance Metrics", key: "copdMetricsSummary",    width: 36,  align: "left",  wrapText: true },
-  { header: "Bronch / Post-ICU Metrics", key: "bronchPostIcuMetricsSummary", width: 36, align: "left", wrapText: true },
+  { header: "Quality of Life (KBILD / HRQoL)", key: "kbildSubscoresInterpretation", width: 34, align: "left", wrapText: true },
+  { header: "Disease-Specific Dashboard Details", key: "diseaseSpecificMetricsSummary", width: 38, align: "left", wrapText: true },
 ];
 
 function applyHeaderStyle(row: ExcelJS.Row, bgArgb: string, colCount: number) {

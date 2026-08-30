@@ -1012,36 +1012,77 @@ export async function PUT(request: Request): Promise<NextResponse> {
   }
 
   await admin.from("medications").delete().eq("patient_id", patientId);
+  
+  const allMedInserts: Array<{
+    patient_id: string;
+    prescribed_by_doctor_id: string;
+    route: string;
+    drug_name: string;
+    dose: number | null;
+    dose_unit: string | null;
+    frequency: string;
+    start_date: string;
+    end_date: string | null;
+    serial_number: number;
+  }> = [];
+
+  let nextSerial = 1;
+
   if (medications && medications.length > 0) {
-    const medInserts = medications
+    medications
       .filter((m) => m.drug_name)
-      .map((m, idx) => ({
+      .forEach((m) => {
+        allMedInserts.push({
+          patient_id: patientId,
+          prescribed_by_doctor_id: user.id,
+          route: (m.route as string) ?? "tablet",
+          drug_name: m.drug_name as string,
+          dose: m.dose ? Number(m.dose) : null,
+          dose_unit: (m.dose_unit as string) || null,
+          frequency: (m.frequency as string) || "OD",
+          start_date: (m.prescription_date as string) || (m.start_date as string) || new Date().toISOString().split("T")[0]!,
+          end_date: (m.end_date as string) || null,
+          serial_number: nextSerial++,
+        });
+      });
+  }
+
+  // Preserve any discontinued medications that were omitted from incoming list
+  for (const stopped of stoppedChanges) {
+    const isAlreadyInserted = allMedInserts.some(
+      (m) => m.drug_name.toLowerCase().trim() === stopped.name.toLowerCase().trim()
+    );
+    if (!isAlreadyInserted) {
+      const existing = existingMap.get(stopped.name.toLowerCase().trim());
+      allMedInserts.push({
         patient_id: patientId,
         prescribed_by_doctor_id: user.id,
-        route: (m.route as string) ?? "tablet",
-        drug_name: m.drug_name as string,
-        dose: m.dose ? Number(m.dose) : null,
-        dose_unit: (m.dose_unit as string) || null,
-        frequency: (m.frequency as string) || "OD",
-        start_date: (m.prescription_date as string) || (m.start_date as string) || new Date().toISOString().split("T")[0]!,
-        end_date: (m.end_date as string) || null,
-        serial_number: idx + 1,
-      }));
-    if (medInserts.length > 0) {
-      const { error: medError } = await admin.from("medications").insert(medInserts);
-      if (medError) return NextResponse.json({ error: medError.message }, { status: 500 });
+        route: stopped.route || existing?.route || "Tablet",
+        drug_name: stopped.name,
+        dose: existing?.dose ? Number(existing.dose) : (stopped.dose ? parseFloat(stopped.dose) : null),
+        dose_unit: existing?.dose_unit || null,
+        frequency: existing?.frequency || "OD",
+        start_date: existing?.start_date || todayStr,
+        end_date: todayStr,
+        serial_number: nextSerial++,
+      });
     }
+  }
 
-    const instructionInserts = patientInstructions.map((instruction) => ({
-      patient_id: patientId,
-      doctor_id: user.id,
-      instruction_text: instruction,
-    }));
+  if (allMedInserts.length > 0) {
+    const { error: medError } = await admin.from("medications").insert(allMedInserts);
+    if (medError) return NextResponse.json({ error: medError.message }, { status: 500 });
+  }
 
-    if (instructionInserts.length > 0) {
-      const { error: instructionError } = await admin.from("doctor_instructions").insert(instructionInserts);
-      if (instructionError) return NextResponse.json({ error: instructionError.message }, { status: 500 });
-    }
+  const instructionInserts = patientInstructions.map((instruction) => ({
+    patient_id: patientId,
+    doctor_id: user.id,
+    instruction_text: instruction,
+  }));
+
+  if (instructionInserts.length > 0) {
+    const { error: instructionError } = await admin.from("doctor_instructions").insert(instructionInserts);
+    if (instructionError) return NextResponse.json({ error: instructionError.message }, { status: 500 });
   }
 
   if (stoppedChanges.length > 0 || startedChanges.length > 0 || modifiedChanges.length > 0) {

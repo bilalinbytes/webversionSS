@@ -507,6 +507,22 @@ export async function executeExport(
       bronchPostIcuMetricsSummary = `Clearance Ease: ${ease}/5, Temp: ${temp}°F, Malaise: ${malaise}`;
     }
 
+    let diseaseSpecificMetricsSummary = "—";
+    const diagStr = (diag?.primary_diagnosis || diagDetails.completeDiag || "").toLowerCase();
+    const effStr = (diag?.effective_dashboard || "").toLowerCase();
+    if (effStr === "ild" || diagStr.includes("ild") || diagStr.includes("ipf")) {
+      diseaseSpecificMetricsSummary = latestKbildScore !== "—" ? `K-BILD: ${latestKbildScore}/100 (${kbildSubscoresInterpretation})` : "K-BILD: Surveillance active";
+    } else if (effStr === "asthma" || diagStr.includes("asthma")) {
+      diseaseSpecificMetricsSummary = `GINA: ${asthmaControlStatus} | ${asthmaPefrRescuePuffs}`;
+    } else if (effStr === "copd" || diagStr.includes("copd")) {
+      diseaseSpecificMetricsSummary = copdMetricsSummary !== "—" ? copdMetricsSummary : "COPD Surveillance active";
+    } else if (effStr === "bronchiectasis" || effStr === "post_icu" || diagStr.includes("bronch") || diagStr.includes("icu")) {
+      diseaseSpecificMetricsSummary = bronchPostIcuMetricsSummary !== "—" ? bronchPostIcuMetricsSummary : "Airway Clearance & Recovery active";
+    } else {
+      const activeMetrics = [copdMetricsSummary, bronchPostIcuMetricsSummary, asthmaControlStatus].filter(s => s !== "—");
+      diseaseSpecificMetricsSummary = activeMetrics.length > 0 ? activeMetrics.join(" | ") : "Clinical surveillance active";
+    }
+
     let totalDaysSpan = 30;
     if (payload.start_date && payload.end_date) {
       const diffMs = new Date(payload.end_date).getTime() - new Date(payload.start_date).getTime();
@@ -594,6 +610,7 @@ export async function executeExport(
       // Quality of Life & Disease Specific Details
       latestKbildScore,
       kbildSubscoresInterpretation,
+      diseaseSpecificMetricsSummary,
       asthmaControlStatus,
       asthmaPefrRescuePuffs,
       copdMetricsSummary,

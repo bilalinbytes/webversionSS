@@ -35,15 +35,16 @@ export function resolveCompleteDiagnosis(
   } else if (ildSub) {
     const fibroticTag = isFibrotic === true ? " (Fibrotic)" : isFibrotic === false ? " (Non-Fibrotic)" : "";
     completeDiag = `ILD / ${ildSub}${fibroticTag}`;
-    histopath = ildSub;
+    histopath = `${ildSub}${fibroticTag}`;
   } else if (bronchSub) {
     completeDiag = `Bronchiectasis / ${bronchSub}`;
     histopath = bronchSub;
   } else if (postSub) {
-    completeDiag = `Post ICU / ${postSub}`;
+    completeDiag = postSub.toLowerCase().includes("post icu") ? postSub : `Post ICU / ${postSub}`;
     histopath = postSub;
   } else if (primary) {
-    histopath = primary;
+    completeDiag = primary;
+    histopath = primary.includes("/") ? primary.split("/")[1]!.trim() : "Standard Clinical Presentation";
   }
 
   const completeLower = completeDiag.toLowerCase();

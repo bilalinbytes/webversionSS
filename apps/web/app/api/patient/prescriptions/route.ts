@@ -358,9 +358,52 @@ export async function GET(request: Request) {
     const activeMeds = (medsRes.data ?? []).filter(
       (m) => (!m.end_date || m.end_date > today) && (!m.start_date || m.start_date <= today || m.start_date === prescriptionDate)
     );
-    const discontinuedMeds = (medsRes.data ?? []).filter(
-      (m) => m.end_date && m.end_date <= today && m.start_date !== prescriptionDate
-    );
+
+    const allDiscontinuedMap = new Map<string, {
+      drug_name: string;
+      route: string;
+      dose: number | null;
+      dose_unit: string | null;
+      frequency: string | null;
+      start_date: string | null;
+      end_date: string | null;
+      serial_number: number | null;
+    }>();
+
+    (medsRes.data ?? []).forEach((m) => {
+      if (m.end_date && m.end_date <= today) {
+        allDiscontinuedMap.set(m.drug_name.toLowerCase().trim(), {
+          drug_name: m.drug_name,
+          route: m.route || "Tablet",
+          dose: m.dose,
+          dose_unit: m.dose_unit,
+          frequency: m.frequency,
+          start_date: m.start_date,
+          end_date: m.end_date,
+          serial_number: m.serial_number ?? null,
+        });
+      }
+    });
+
+    if (latestChanges?.stopped && latestChanges.stopped.length > 0) {
+      latestChanges.stopped.forEach((s, idx) => {
+        const key = s.name.toLowerCase().trim();
+        if (!allDiscontinuedMap.has(key)) {
+          allDiscontinuedMap.set(key, {
+            drug_name: s.name,
+            route: s.route || "Tablet",
+            dose: s.dose ? parseFloat(s.dose) : null,
+            dose_unit: null,
+            frequency: null,
+            start_date: prescriptionDate,
+            end_date: today,
+            serial_number: idx + 1,
+          });
+        }
+      });
+    }
+
+    const discontinuedMeds = Array.from(allDiscontinuedMap.values());
 
     const generatedAt = new Date().toISOString();
     const pdfBuffer = await renderPrescriptionPdfBuffer({
