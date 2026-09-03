@@ -416,6 +416,9 @@ export interface ExportDataBundle {
 
   // Multi-patient detailed logs
   allPatientLogs?: DetailedLogRecord[];
+
+  // Longitudinal Research Export Bundle
+  longitudinalPatients?: import("./aggregation/longitudinal-transformer").LongitudinalPatientData[];
 }
 
 export interface ExportResult {
@@ -423,3 +426,4 @@ export interface ExportResult {
   mimeType: string;
   buffer: Buffer | Uint8Array | string;
 }
+

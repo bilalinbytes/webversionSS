@@ -86,6 +86,8 @@ export const patientEnrolmentSchema = z
     pincode: z.string().optional(),
     emergency_contact_name: z.string().optional(),
     emergency_contact_phone: z.string().optional(),
+    occupation: z.string().nullable().optional(),
+    significant_exposure: z.string().nullable().optional(),
     primary_diagnosis: z.enum(diagnosisValues),
     post_icu_sub_diagnosis: z
       .enum(postIcuSubDiagnosisValues)
@@ -123,7 +125,10 @@ export const patientUpdateSchema = z
     pincode: z.string().optional(),
     emergency_contact_name: z.string().optional(),
     emergency_contact_phone: z.string().optional(),
+    occupation: z.string().nullable().optional(),
+    significant_exposure: z.string().nullable().optional(),
     primary_diagnosis: z.enum(diagnosisValues).optional(),
+
     post_icu_sub_diagnosis: z
       .enum(postIcuSubDiagnosisValues)
       .nullable()

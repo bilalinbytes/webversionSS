@@ -503,6 +503,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       alternate_mobile_number: normalizedAlternateMobile,
       gender: basicInfo.gender || null,
       address,
+      occupation: effectiveOccupation || null,
+      significant_exposure: significantExposure || null,
       doctor_id: user.id,
       emergency_contact_name: basicInfo.emergency_contact_name || null,
       emergency_contact_phone: basicInfo.emergency_contact_phone || null,
@@ -579,31 +581,41 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   // 3. Insert respiratory_support (if applicable)
-  if (respSupport?.hasRespSupport) {
+  if (respSupport?.hasRespSupport || respSupport?.requires_support) {
     const rs = respSupport;
     const { error: rsError } = await supabase
       .from("respiratory_support")
       .insert({
         patient_id: patientId,
         requires_support: true,
-        ltot_enabled: !!(rs.ltot_litres),
+        ltot_enabled: Boolean(rs.ltot_enabled || rs.ltot_litres),
         ltot_litres: rs.ltot_litres ? parseFloat(rs.ltot_litres as string) : null,
-        bipap_enabled: !!(rs.bipap_ipap),
+        bipap_enabled: Boolean(rs.bipap_enabled || rs.bipap_ipap),
+        bipap_overnight: Boolean(rs.bipap_overnight || rs.bipap_usage === "Overnight only"),
+        bipap_all_time: Boolean(rs.bipap_all_time || rs.bipap_usage === "All-time"),
+        bipap_requires_oxygen: Boolean(rs.bipap_requires_oxygen),
+        bipap_oxygen_litres: rs.bipap_oxygen_litres ? parseFloat(rs.bipap_oxygen_litres as string) : null,
         bipap_ipap: rs.bipap_ipap ? parseFloat(rs.bipap_ipap as string) : null,
         bipap_epap: rs.bipap_epap ? parseFloat(rs.bipap_epap as string) : null,
         bipap_pressure_support: rs.bipap_pressure_support ? parseFloat(rs.bipap_pressure_support as string) : null,
         bipap_respiratory_rate: rs.bipap_respiratory_rate ? parseFloat(rs.bipap_respiratory_rate as string) : null,
-        bipap_requires_oxygen: (rs.bipap_requires_oxygen as boolean) ?? false,
-        bipap_oxygen_litres: rs.bipap_oxygen_litres ? parseFloat(rs.bipap_oxygen_litres as string) : null,
-        bipap_overnight: rs.bipap_usage === "Overnight only",
-        bipap_all_time: rs.bipap_usage === "All-time",
-        invasive_vent_enabled: !!(rs.vent_ipap),
+        invasive_vent_enabled: Boolean(rs.invasive_vent_enabled || rs.vent_ipap),
         vent_ipap: rs.vent_ipap ? parseFloat(rs.vent_ipap as string) : null,
         vent_epap: rs.vent_epap ? parseFloat(rs.vent_epap as string) : null,
         vent_pressure_support: rs.vent_pressure_support ? parseFloat(rs.vent_pressure_support as string) : null,
         vent_fio2_percent: rs.vent_fio2_percent ? parseFloat(rs.vent_fio2_percent as string) : null,
         vent_respiratory_rate: rs.vent_respiratory_rate ? parseFloat(rs.vent_respiratory_rate as string) : null,
-        tracheostomy_enabled: !!(rs.trach_tube_size),
+        tracheostomy_enabled: Boolean(rs.tracheostomy_enabled || rs.trach_tube_size),
+        trach_for_airway_patency: Boolean(rs.trach_for_airway_patency),
+        trach_requires_oxygen: Boolean(rs.trach_requires_oxygen),
+        trach_oxygen_litres: rs.trach_oxygen_litres ? parseFloat(rs.trach_oxygen_litres as string) : null,
+        trach_requires_vent: Boolean(rs.trach_requires_vent),
+        trach_vent_ipap: rs.trach_vent_ipap ? parseFloat(rs.trach_vent_ipap as string) : null,
+        trach_vent_epap: rs.trach_vent_epap ? parseFloat(rs.trach_vent_epap as string) : null,
+        trach_vent_pressure_support: rs.trach_vent_pressure_support ? parseFloat(rs.trach_vent_pressure_support as string) : null,
+        trach_vent_respiratory_rate: rs.trach_vent_respiratory_rate ? parseFloat(rs.trach_vent_respiratory_rate as string) : null,
+        trach_vent_tidal_volume: rs.trach_vent_tidal_volume ? parseFloat(rs.trach_vent_tidal_volume as string) : null,
+        trach_vent_fio2_percent: rs.trach_vent_fio2_percent ? parseFloat(rs.trach_vent_fio2_percent as string) : null,
       });
 
     if (rsError) {
@@ -795,6 +807,8 @@ export async function PUT(request: Request): Promise<NextResponse> {
       gender: basicInfo.gender || null,
       emergency_contact_name: basicInfo.emergency_contact_name || null,
       emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+      occupation: effectiveOccupation || null,
+      significant_exposure: significantExposure || null,
       ...(updateAddress ? { address: updateAddress } : {}),
     })
     .eq("id", patientId);

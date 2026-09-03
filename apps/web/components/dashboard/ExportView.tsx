@@ -341,36 +341,56 @@ export function ExportView({ onBack }: ExportViewProps) {
   // Format label for button
   const formatLabel = format === "excel" ? "Excel" : format === "csv" ? "CSV" : "PDF Report";
 
-  // Dynamic Button Text (Requirement 4)
+  // Dynamic Button Text
   const getExportButtonText = (): string => {
-    if (exporting) return `Generating ${formatLabel}-`;
+    if (exporting) return `Generating ${formatLabel}…`;
+
+    if (format === "excel") {
+      switch (scope) {
+        case "All Patients":
+          return "Generate Research Export — All Patients (.xlsx)";
+        case "Selected Patients": {
+          const count = selectedIds.size;
+          return `Generate Research Export — ${count} ${count === 1 ? "Patient" : "Patients"} (.xlsx)`;
+        }
+        case "Single Patient":
+          return "Generate Research Export — Single Patient (.xlsx)";
+        case "Disease-Specific":
+          return `Generate Research Export — ${diseaseFilter || "Disease Panel"} (.xlsx)`;
+        case "Date-Wise":
+          return "Generate Research Export — Date Range (.xlsx)";
+        default:
+          return `Generate Research Export — ${scope} (.xlsx)`;
+      }
+    }
 
     switch (scope) {
       case "All Patients":
-        return `Export All Patients - ${formatLabel}`;
+        return `Export All Patients — ${formatLabel}`;
       case "Selected Patients": {
         const count = selectedIds.size;
-        if (count === 1) return `Export 1 Patient - ${formatLabel}`;
-        return `Export ${count} Patients - ${formatLabel}`;
+        if (count === 1) return `Export 1 Patient — ${formatLabel}`;
+        return `Export ${count} Patients — ${formatLabel}`;
       }
       case "Single Patient":
-        return `Export Single Patient - ${formatLabel}`;
+        return `Export Single Patient — ${formatLabel}`;
       case "Disease-Specific":
-        return `Export Disease-Specific Records - ${formatLabel}`;
+        return `Export Disease-Specific Records — ${formatLabel}`;
       case "Date-Wise":
-        return `Export Date-Wise Records - ${formatLabel}`;
+        return `Export Date-Wise Records — ${formatLabel}`;
       case "Daily":
-        return `Export Daily Trends - ${formatLabel}`;
+        return `Export Daily Trends — ${formatLabel}`;
       case "Weekly":
-        return `Export Weekly Trends - ${formatLabel}`;
+        return `Export Weekly Trends — ${formatLabel}`;
       case "Bi-Weekly (15 Days)":
-        return `Export Bi-Weekly Trends - ${formatLabel}`;
+        return `Export Bi-Weekly Trends — ${formatLabel}`;
       case "Monthly":
-        return `Export Monthly Trends - ${formatLabel}`;
+        return `Export Monthly Trends — ${formatLabel}`;
       default:
-        return `Export Patient Records - ${formatLabel}`;
+        return `Export Patient Records — ${formatLabel}`;
     }
   };
+
 
   // Validation
   const isExportReady = useMemo(() => {
@@ -710,13 +730,15 @@ export function ExportView({ onBack }: ExportViewProps) {
                 onClick={() => setFormat("excel")}
               >
                 <FileSpreadsheet size={20} className={format === "excel" ? styles.formatIconActive : styles.formatIcon} />
+
                 <div>
-                  <p className={styles.formatTitle}>Excel (.xlsx)</p>
+                  <p className={styles.formatTitle}>Longitudinal Research Excel (.xlsx)</p>
                   <p className={styles.formatSub}>
-                    Multi-sheet workbook: Master Registry + Disease Tracks (ILD, Asthma, COPD, Bronchiectasis, Post-ICU)
+                    Production 8-Sheet Research Workbook: Read Me + All Patients + Asthma + COPD + ILD + Bronchiectasis + Post ICU + Codebook
                   </p>
                 </div>
               </button>
+
 
               <button
                 type="button"

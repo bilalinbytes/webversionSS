@@ -516,6 +516,8 @@ export type Database = {
           id: string
           mobile_number: string
           name: string
+          occupation: string | null
+          significant_exposure: string | null
           updated_at: string | null
           wants_appointments: boolean | null
           preferred_appointment_time: string | null
@@ -534,6 +536,8 @@ export type Database = {
           id?: string
           mobile_number: string
           name: string
+          occupation?: string | null
+          significant_exposure?: string | null
           updated_at?: string | null
           wants_appointments?: boolean | null
           preferred_appointment_time?: string | null
@@ -552,11 +556,14 @@ export type Database = {
           id?: string
           mobile_number?: string
           name?: string
+          occupation?: string | null
+          significant_exposure?: string | null
           updated_at?: string | null
           wants_appointments?: boolean | null
           preferred_appointment_time?: string | null
           appointment_preference_set_at?: string | null
         }
+
         Relationships: [
           {
             foreignKeyName: "patients_doctor_id_fkey"

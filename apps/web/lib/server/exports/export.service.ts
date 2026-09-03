@@ -51,6 +51,10 @@ import type {
 import { renderExcelRegistry } from "./renderers/excel.renderer";
 import { renderCsvRegistry } from "./renderers/csv.renderer";
 import { renderPdfRegistry } from "./renderers/pdf.renderer";
+import {
+  transformPatientToLongitudinal,
+  type LongitudinalPatientData,
+} from "./aggregation/longitudinal-transformer";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 type PftRow = Database["public"]["Tables"]["pft_records"]["Row"];
@@ -122,6 +126,7 @@ export async function executeExport(
     rawPfts,
     rawResp,
     rawInstructionsRes,
+    rawAppointmentsRes,
   ] = await Promise.all([
     fetchPatientsByIds(admin, targetIds),
     fetchDiagnosesByPatientIds(admin, targetIds),
@@ -133,12 +138,18 @@ export async function executeExport(
     fetchRespiratorySupportByPatientIds(admin, targetIds),
     admin
       .from("doctor_instructions")
-      .select("patient_id, instruction_text, created_at")
+      .select("id, patient_id, instruction_text, created_at, doctor_id, read_by_patient_at")
       .in("patient_id", targetIds)
       .order("created_at", { ascending: false }),
+    admin
+      .from("appointments")
+      .select("id, patient_id, scheduled_at, title, notes, status, created_at, doctor_id, updated_at")
+      .in("patient_id", targetIds)
+      .order("scheduled_at", { ascending: false }),
   ]);
 
   const rawInstructions = rawInstructionsRes.data ?? [];
+  const rawAppointments = rawAppointmentsRes.data ?? [];
 
   // 4. Handle Disease-Specific filtering if applicable
   let patients = rawPatients;
@@ -179,16 +190,28 @@ export async function executeExport(
   });
 
   const latestScoreMap = new Map<string, (typeof rawScores)[0]>();
+  const scoresByPatient = new Map<string, typeof rawScores>();
   rawScores.forEach((s) => {
     if (s.patient_id && !latestScoreMap.has(s.patient_id)) latestScoreMap.set(s.patient_id, s);
+    if (s.patient_id) {
+      const arr = scoresByPatient.get(s.patient_id) ?? [];
+      arr.push(s);
+      scoresByPatient.set(s.patient_id, arr);
+    }
   });
 
   const activeAlertMap = new Map<string, (typeof rawAlerts)[0]>();
-  rawAlerts
-    .filter((a) => !a.acknowledged_by_doctor && !a.is_suppressed)
-    .forEach((a) => {
-      if (a.patient_id && !activeAlertMap.has(a.patient_id)) activeAlertMap.set(a.patient_id, a);
-    });
+  const alertsByPatient = new Map<string, typeof rawAlerts>();
+  rawAlerts.forEach((a) => {
+    if (a.patient_id && !a.acknowledged_by_doctor && !a.is_suppressed && !activeAlertMap.has(a.patient_id)) {
+      activeAlertMap.set(a.patient_id, a);
+    }
+    if (a.patient_id) {
+      const arr = alertsByPatient.get(a.patient_id) ?? [];
+      arr.push(a);
+      alertsByPatient.set(a.patient_id, arr);
+    }
+  });
 
   const latestPftMap = new Map<string, PftRow>();
   const pftsByPatient = new Map<string, PftRow[]>();
@@ -222,12 +245,29 @@ export async function executeExport(
     logsByPatient.set(l.patient_id, arr);
   });
 
+  const instructionsByPatient = new Map<string, typeof rawInstructions>();
+  rawInstructions.forEach((ins) => {
+    if (!ins.patient_id) return;
+    const arr = instructionsByPatient.get(ins.patient_id) ?? [];
+    arr.push(ins);
+    instructionsByPatient.set(ins.patient_id, arr);
+  });
+
+  const appointmentsByPatient = new Map<string, typeof rawAppointments>();
+  rawAppointments.forEach((apt) => {
+    if (!apt.patient_id) return;
+    const arr = appointmentsByPatient.get(apt.patient_id) ?? [];
+    arr.push(apt);
+    appointmentsByPatient.set(apt.patient_id, arr);
+  });
+
   // Sort patients: highest risk score first, then by name
   const sortedPatients = [...patients].sort((a, b) => {
     const scoreA = latestScoreMap.get(a.id)?.global_score ?? -1;
     const scoreB = latestScoreMap.get(b.id)?.global_score ?? -1;
     return scoreB - scoreA || a.name.localeCompare(b.name);
   });
+
 
   // 6. Aggregate into normalized PatientExportRecord[] (Single Consolidated Row per Patient)
   const records: PatientExportRecord[] = sortedPatients.map((patient, idx) => {
@@ -948,7 +988,28 @@ export async function executeExport(
     });
   }
 
-  // 8. Compute Standardized File Name (Requirement 19)
+  // 7.5 Build Longitudinal Research Patient Export Set
+  const longitudinalPatients: LongitudinalPatientData[] = sortedPatients.map((patient, idx) => {
+    return transformPatientToLongitudinal(
+      {
+        patient,
+        diagnosis: diagMap.get(patient.id),
+        logs: logsByPatient.get(patient.id) ?? [],
+        scores: scoresByPatient.get(patient.id) ?? [],
+        alerts: alertsByPatient.get(patient.id) ?? [],
+        medications: medsByPatient.get(patient.id) ?? [],
+        pfts: pftsByPatient.get(patient.id) ?? [],
+        respiratorySupport: respMap.get(patient.id),
+        instructions: instructionsByPatient.get(patient.id) ?? [],
+        appointments: appointmentsByPatient.get(patient.id) ?? [],
+      },
+      idx + 1,
+      payload.start_date,
+      payload.end_date,
+    );
+  });
+
+  // 8. Compute Standardized File Name (Requirement 18 & 19)
   let baseFilename = `O2Plus_All_Patient_Records_${dateStamp}`;
   if (normalizedScope === "selected_patients") {
     baseFilename = `O2Plus_Selected_Patient_Records_${dateStamp}`;
@@ -969,6 +1030,7 @@ export async function executeExport(
     diseaseFilter: payload.disease_filter,
     startDate: payload.start_date,
     endDate: payload.end_date,
+    longitudinalPatients,
     ildTrackRecords,
     asthmaTrackRecords,
     copdTrackRecords,
@@ -1001,11 +1063,16 @@ export async function executeExport(
     mimeType = "application/pdf";
     filename = `${baseFilename}.pdf`;
   } else {
-    // excel default
+    // excel default: O2Plus_Disease_Specific_Longitudinal_Research_Export.xlsx
     buffer = await renderExcelRegistry(bundle);
     mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    filename = `${baseFilename}.xlsx`;
+    if (payload.start_date && payload.end_date) {
+      filename = `O2Plus_Disease_Specific_Longitudinal_Research_Export_${payload.start_date}_to_${payload.end_date}.xlsx`;
+    } else {
+      filename = `O2Plus_Disease_Specific_Longitudinal_Research_Export.xlsx`;
+    }
   }
+
 
   // 10. Audit Trail (Asynchronous fire-and-forget)
   Promise.resolve(
