@@ -2271,23 +2271,26 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
 
   const handleStepClick = (targetStep: number) => {
     if (targetStep === step) return;
+    if (editPatientId) {
+      // In edit mode, allow immediate jumping to any step directly
+      setErrors({});
+      setStep(targetStep);
+      return;
+    }
     if (targetStep < step) {
       // Navigating back is always allowed
       setErrors({});
       setStep(targetStep);
       return;
     }
-    // If clicking forward, validate current step first
+    // If clicking forward in new patient creation, validate current step first
     const currentStepErrors = validateStepData(step);
     if (Object.keys(currentStepErrors).length > 0) {
       setErrors(currentStepErrors);
       return;
     }
-    // Only allow advancing 1 step forward or to previously completed steps
-    if (targetStep === step + 1) {
-      setErrors({});
-      setStep(targetStep);
-    }
+    setErrors({});
+    setStep(targetStep);
   };
 
   return (
@@ -2295,7 +2298,14 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{editPatientId ? "Edit Patient Record" : "Enrol New Patient"}</h1>
-          <p className={styles.sub}>Step {step} of 7 — {STEPS[step - 1]?.label}</p>
+          <p className={styles.sub}>
+            Step {step} of 7 — {STEPS[step - 1]?.label}
+            {editPatientId && (
+              <span style={{ marginLeft: 8, color: "#1e6091", fontWeight: 600 }}>
+                (Click any step in sidebar to jump directly)
+              </span>
+            )}
+          </p>
         </div>
         <button type="button" className={styles.btnGhost} onClick={onBack}>
           ← Return to Patients
@@ -2308,15 +2318,15 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           {STEPS.map((s, i) => {
             const num = i + 1;
             const isActive = num === step;
-            const isCompleted = num < step;
-            const isClickable = num <= step + 1;
+            const isCompleted = editPatientId ? true : num < step;
+            const isClickable = true;
             return (
               <button
                 key={s.label}
                 type="button"
                 className={`${styles.stepItem} ${isActive ? styles.stepActive : ""} ${isCompleted ? styles.stepCompleted : ""}`}
                 onClick={() => handleStepClick(num)}
-                title={!isClickable ? "Please complete earlier steps first" : undefined}
+                title={editPatientId ? `Jump directly to ${s.label}` : undefined}
               >
                 <div className={`${styles.stepBubble} ${isCompleted ? styles.stepBubbleCompleted : ""}`}>
                   {isCompleted ? <Check size={12} strokeWidth={3} /> : num}
@@ -2360,6 +2370,17 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           </span>
         </div>
         <div className={styles.footerActions}>
+          {editPatientId && step !== 7 && (
+            <button
+              type="button"
+              className={styles.btnGhost}
+              style={{ background: "#f8fafc", borderColor: "#cbd5e1", color: "#1e6091", fontWeight: 600 }}
+              onClick={() => setStep(7)}
+              title="Jump directly to Review & Save"
+            >
+              Jump to Review (Step 7) →
+            </button>
+          )}
           <button
             type="button"
             className={styles.btnPrimary}
@@ -2381,3 +2402,4 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
     </div>
   );
 }
+
