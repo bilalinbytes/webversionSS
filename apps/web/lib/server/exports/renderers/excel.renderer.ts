@@ -66,42 +66,42 @@ function applyGroupedHeaderRow(
   const row = ws.getRow(3);
   row.height = 24;
 
-  // Section 1: Patient identity and baseline (Cols 1-21)
-  ws.mergeCells(3, 1, 3, 21);
+  // Section 1: Patient identity and baseline (Cols 1-25)
+  ws.mergeCells(3, 1, 3, 25);
   const cell1 = row.getCell(1);
   cell1.value = "Patient identity and baseline";
   cell1.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FFFFFFFF" } };
   cell1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.TEAL_GROUP } };
   cell1.alignment = { vertical: "middle", horizontal: "center" };
 
-  // Section 2: Patient dashboard — longitudinal (Cols 22-52)
-  ws.mergeCells(3, 22, 3, 52);
-  const cell2 = row.getCell(22);
+  // Section 2: Patient dashboard — longitudinal (Cols 26-56)
+  ws.mergeCells(3, 26, 3, 56);
+  const cell2 = row.getCell(26);
   cell2.value = "Patient dashboard — longitudinal";
   cell2.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FFFFFFFF" } };
   cell2.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.CYAN_GROUP } };
   cell2.alignment = { vertical: "middle", horizontal: "center" };
 
-  // Section 3: Doctor dashboard — longitudinal (Cols 53-62)
-  ws.mergeCells(3, 53, 3, 62);
-  const cell3 = row.getCell(53);
+  // Section 3: Doctor dashboard — longitudinal (Cols 57-66)
+  ws.mergeCells(3, 57, 3, 66);
+  const cell3 = row.getCell(57);
   cell3.value = "Doctor dashboard — longitudinal";
   cell3.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FFFFFFFF" } };
   cell3.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.TEAL_GROUP } };
   cell3.alignment = { vertical: "middle", horizontal: "center" };
 
-  // Section 4: <Disease> questions — longitudinal (Cols 63 to End)
+  // Section 4: <Disease> questions — longitudinal (Cols 67 to End)
   if (diseaseName && diseaseColCount > 0) {
-    const endCol = 62 + diseaseColCount;
-    ws.mergeCells(3, 63, 3, endCol);
-    const cell4 = row.getCell(63);
+    const endCol = 66 + diseaseColCount;
+    ws.mergeCells(3, 67, 3, endCol);
+    const cell4 = row.getCell(67);
     cell4.value = `${diseaseName} questions — longitudinal`;
     cell4.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FFFFFFFF" } };
     cell4.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.BLUE_GROUP } };
     cell4.alignment = { vertical: "middle", horizontal: "center" };
   }
 
-  const totalCols = 62 + diseaseColCount;
+  const totalCols = 66 + diseaseColCount;
   for (let c = 1; c <= totalCols; c++) {
     const cCell = row.getCell(c);
     cCell.border = {
@@ -113,6 +113,7 @@ function applyGroupedHeaderRow(
   }
 
   row.commit();
+
 }
 
 function applyColumnHeaders(ws: ExcelJS.Worksheet, columns: ColumnDefinition[]) {

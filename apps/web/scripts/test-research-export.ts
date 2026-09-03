@@ -42,17 +42,18 @@ async function runTests() {
     process.exit(1);
   }
   console.log("✓ Codebook validation passed! Exactly 8 sheets and all column counts & names matched perfectly.");
-  console.log(`  - Common Columns: ${COMMON_EXPORT_COLUMNS.length} (Expected: 62)`);
-  console.log(`  - Asthma Columns: ${ASTHMA_EXPORT_COLUMNS.length} (62 + 24 = 86)`);
-  console.log(`  - COPD Columns: ${COPD_EXPORT_COLUMNS.length} (62 + 30 = 92)`);
-  console.log(`  - ILD Columns: ${ILD_EXPORT_COLUMNS.length} (62 + 20 = 82)`);
-  console.log(`  - Bronchiectasis Columns: ${BRONCHIECTASIS_EXPORT_COLUMNS.length} (62 + 22 = 84)`);
-  console.log(`  - Post ICU Columns: ${POST_ICU_EXPORT_COLUMNS.length} (62 + 32 = 94)`);
+  console.log(`  - Common Columns: ${COMMON_EXPORT_COLUMNS.length} (Expected: 66)`);
+  console.log(`  - Asthma Columns: ${ASTHMA_EXPORT_COLUMNS.length} (66 + 24 = 90)`);
+  console.log(`  - COPD Columns: ${COPD_EXPORT_COLUMNS.length} (66 + 30 = 96)`);
+  console.log(`  - ILD Columns: ${ILD_EXPORT_COLUMNS.length} (66 + 20 = 86)`);
+  console.log(`  - Bronchiectasis Columns: ${BRONCHIECTASIS_EXPORT_COLUMNS.length} (66 + 22 = 88)`);
+  console.log(`  - Post ICU Columns: ${POST_ICU_EXPORT_COLUMNS.length} (66 + 32 = 98)`);
   console.log(`  - Codebook Definitions: ${DISEASE_FIELD_CODEBOOK.length}`);
 
-  if (COMMON_EXPORT_COLUMNS.length !== 62) {
-    throw new Error(`Expected 62 common columns, got ${COMMON_EXPORT_COLUMNS.length}`);
+  if (COMMON_EXPORT_COLUMNS.length !== 66) {
+    throw new Error(`Expected 66 common columns, got ${COMMON_EXPORT_COLUMNS.length}`);
   }
+
 
   // ── TEST 2: Data Transformation Engine ─────────────────────────────────────
   console.log("\n[TEST 2] Testing Longitudinal Patient Transformation with Diverse Patient Profiles...");
@@ -261,6 +262,19 @@ async function runTests() {
   if (p1Transformed.commonRow["Significant Exposure"] !== "Traffic dust and construction smoke") {
     throw new Error(`Expected Significant Exposure 'Traffic dust and construction smoke', got '${p1Transformed.commonRow["Significant Exposure"]}'`);
   }
+  if (p1Transformed.commonRow["Smoking Status"] !== "Yes") {
+    throw new Error(`Expected Smoking Status 'Yes', got '${p1Transformed.commonRow["Smoking Status"]}'`);
+  }
+  if (p1Transformed.commonRow["Smoking Index"] !== "150") {
+    throw new Error(`Expected Smoking Index '150', got '${p1Transformed.commonRow["Smoking Index"]}'`);
+  }
+  if (p1Transformed.commonRow["Alcohol Status"] !== "No") {
+    throw new Error(`Expected Alcohol Status 'No', got '${p1Transformed.commonRow["Alcohol Status"]}'`);
+  }
+  if (p1Transformed.commonRow["Past Medical History"] !== "None") {
+    throw new Error(`Expected Past Medical History 'None', got '${p1Transformed.commonRow["Past Medical History"]}'`);
+  }
+
 
 
   // Patient 2: Sparse patient with single log (ILD, no schema responses)
@@ -424,9 +438,22 @@ async function runTests() {
   if (p2Transformed.commonRow["Significant Exposure"] !== null) {
     throw new Error(`Expected unrecorded Significant Exposure to be null, got '${p2Transformed.commonRow["Significant Exposure"]}'`);
   }
+  if (p2Transformed.commonRow["Smoking Status"] !== null) {
+    throw new Error(`Expected unrecorded Smoking Status to be null, got '${p2Transformed.commonRow["Smoking Status"]}'`);
+  }
+  if (p2Transformed.commonRow["Smoking Index"] !== null) {
+    throw new Error(`Expected unrecorded Smoking Index to be null, got '${p2Transformed.commonRow["Smoking Index"]}'`);
+  }
+  if (p2Transformed.commonRow["Alcohol Status"] !== null) {
+    throw new Error(`Expected unrecorded Alcohol Status to be null, got '${p2Transformed.commonRow["Alcohol Status"]}'`);
+  }
+  if (p2Transformed.commonRow["Past Medical History"] !== null) {
+    throw new Error(`Expected unrecorded Past Medical History to be null, got '${p2Transformed.commonRow["Past Medical History"]}'`);
+  }
   if (p2Transformed.commonRow["Respiratory Support"] !== "LTOT 2 L/min") {
     throw new Error(`Expected Respiratory Support 'LTOT 2 L/min', got '${p2Transformed.commonRow["Respiratory Support"]}'`);
   }
+
 
 
 

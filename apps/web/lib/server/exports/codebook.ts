@@ -313,7 +313,12 @@ export const COMMON_EXPORT_COLUMNS: ColumnDefinition[] = [
   { header: "Sex", width: 7, align: "center", section: "baseline" },
   { header: "Occupation", width: 18, align: "left", section: "baseline" },
   { header: "Significant Exposure", width: 22, align: "left", wrapText: true, section: "baseline" },
+  { header: "Smoking Status", width: 15, align: "center", section: "baseline" },
+  { header: "Smoking Index", width: 16, align: "center", section: "baseline" },
+  { header: "Alcohol Status", width: 15, align: "center", section: "baseline" },
+  { header: "Past Medical History", width: 26, align: "left", wrapText: true, section: "baseline" },
   { header: "Mobile No.", width: 15, align: "center", section: "baseline" },
+
   { header: "Date of Enrollment", width: 16, align: "center", section: "baseline" },
   { header: "Primary Diagnosis", width: 26, align: "left", wrapText: true, section: "baseline" },
   { header: "Disease Subtype", width: 24, align: "left", wrapText: true, section: "baseline" },

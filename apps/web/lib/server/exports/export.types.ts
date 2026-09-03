@@ -62,7 +62,13 @@ export interface PatientExportRecord {
   typeOfConnective: string;
   comorbidities: string;
   smoker: string;
+  smokingStatus?: string;
+  smokingIndex?: string;
+  alcoholStatus?: string;
+  pastHistory?: string;
+  pastHistoryYearsAgo?: string;
   symptomatic: string;
+
 
   // Baseline Physiology
   baselineSpo2: string;

@@ -41,11 +41,16 @@ export async function renderPdfRegistry(bundle: ExportDataBundle): Promise<Buffe
       ["Sex", String(r.sex)],
       ["Mobile", r.mobile],
       ["Occupation", r.occupation],
-      ["Smoking Status", r.smoker],
+      ["Significant Exposure", r.significantExposure || ""],
+      ["Smoking Status", r.smokingStatus || r.smoker || ""],
+      ["Smoking Index", r.smokingIndex || ""],
+      ["Alcohol Status", r.alcoholStatus || ""],
+      ["Past History", r.pastHistory ? (r.pastHistoryYearsAgo ? `${r.pastHistory} (${r.pastHistoryYearsAgo} yrs ago)` : r.pastHistory) : ""],
       ["Enrollment Date", r.dateOfEnroll],
       ["Baseline HR", r.baselineHr ? `${r.baselineHr} BPM` : "78 BPM"],
       ["Baseline SpO2", r.baselineSpo2 ? `${r.baselineSpo2}%` : "96%"],
     ],
+
     diagnosis: [
       ["Primary Diagnosis", r.primaryDiagnosis || r.completeDiag],
       ["Histopathology", r.histopathology],

@@ -480,9 +480,28 @@ function SinglePatientDossierPages({
               <Text style={S.kvLabel}>Occupation</Text>
               <Text style={S.kvValue}>{dem["Occupation"] || "Not recorded"}</Text>
             </View>
-            <View style={[S.kvBox, { flex: 1.2 }]}>
-              <Text style={S.kvLabel}>Smoking &amp; Biomass Exposure</Text>
-              <Text style={S.kvValue}>{dem["Smoking Status"] || "Non-smoker / No biomass exposure"}</Text>
+            <View style={S.kvBox}>
+              <Text style={S.kvLabel}>Smoking History</Text>
+              <Text style={S.kvValue}>
+                {dem["Smoking Status"]
+                  ? `${dem["Smoking Status"]}${dem["Smoking Index"] ? ` (Index: ${dem["Smoking Index"]})` : ""}`
+                  : "Not recorded"}
+              </Text>
+            </View>
+            <View style={S.kvBox}>
+              <Text style={S.kvLabel}>Alcohol</Text>
+              <Text style={S.kvValue}>{dem["Alcohol Status"] || "Not recorded"}</Text>
+            </View>
+          </View>
+
+          <View style={S.rowFlex}>
+            <View style={[S.kvBox, { flex: 1.5 }]}>
+              <Text style={S.kvLabel}>Significant Illness / Environmental Exposure</Text>
+              <Text style={S.kvValue}>{dem["Significant Exposure"] || "None recorded"}</Text>
+            </View>
+            <View style={[S.kvBox, { flex: 1.5 }]}>
+              <Text style={S.kvLabel}>Past Medical History</Text>
+              <Text style={S.kvValue}>{dem["Past History"] || "None recorded"}</Text>
             </View>
             <View style={S.kvBox}>
               <Text style={S.kvLabel}>Enrollment Date</Text>
@@ -490,6 +509,7 @@ function SinglePatientDossierPages({
             </View>
           </View>
         </View>
+
 
         {/* Section 2: Complete Primary Diagnosis & Co-morbidities */}
         <View style={S.section}>

@@ -421,7 +421,17 @@ export function transformPatientToLongitudinal(
     "Sex": normalizeSex(patient.gender),
     "Occupation": patExt["occupation"] || (pftOther["occupation"] as string) || null,
     "Significant Exposure": patExt["significant_exposure"] || (pftOther["significant_exposure"] as string) || (pftOther["significant_illness_exposure"] as string) || null,
+    "Smoking Status": (patient as any).smoking_status || patExt["smoking_status"] || patExt["smoking"] || null,
+    "Smoking Index": (patient as any).smoking_index || patExt["smoking_index"] || null,
+    "Alcohol Status": (patient as any).alcohol_status || patExt["alcohol_status"] || patExt["alcohol"] || null,
+    "Past Medical History": (() => {
+      const hist = (patient as any).past_history || patExt["past_history"] || null;
+      const yrs = (patient as any).past_history_years_ago || patExt["past_history_years_ago"] || null;
+      if (!hist) return null;
+      return yrs ? `${hist} (${yrs} yrs ago)` : hist;
+    })(),
     "Mobile No.": formatCleanMobile(patient.mobile_number),
+
 
     "Date of Enrollment": formatIsoDate(patient.created_at),
     "Primary Diagnosis": diagnosis?.primary_diagnosis || diagDetails.completeDiag || "Respiratory Condition",

@@ -596,8 +596,14 @@ export async function executeExport(
       effectiveDashboard: (diag?.effective_dashboard || "ild").toLowerCase() as any,
       typeOfConnective: diagDetails.connective,
       comorbidities: diagDetails.comorbidities,
-      smoker: safeValue(patExt["smoker"] ?? patExt["smoking_status"]),
+      smoker: safeValue(patient.smoking_status ?? patExt["smoker"] ?? patExt["smoking_status"]),
+      smokingStatus: safeValue(patient.smoking_status ?? patExt["smoking_status"] ?? patExt["smoking"]),
+      smokingIndex: safeValue(patient.smoking_index ?? patExt["smoking_index"]),
+      alcoholStatus: safeValue(patient.alcohol_status ?? patExt["alcohol_status"] ?? patExt["alcohol"]),
+      pastHistory: safeValue(patient.past_history ?? patExt["past_history"]),
+      pastHistoryYearsAgo: safeValue(patient.past_history_years_ago ?? patExt["past_history_years_ago"]),
       symptomatic: logStats.symptomatic,
+
 
       // Baseline Physiology
       baselineSpo2: safeValue(patExt["baseline_spo2"] ?? pftOther["baseline_spo2"]),
