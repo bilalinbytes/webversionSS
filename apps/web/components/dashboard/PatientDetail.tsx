@@ -52,7 +52,13 @@ interface PatientInfo {
   gender: string | null;
   occupation?: string | null;
   significant_exposure?: string | null;
+  smoking_status?: string | null;
+  smoking_index?: string | null;
+  alcohol_status?: string | null;
+  past_history?: string | null;
+  past_history_years_ago?: string | null;
 }
+
 
 interface DiagnosisInfo {
   primary_diagnosis: string;
@@ -225,7 +231,8 @@ export function PatientDetail({
       trendRes,
       historyLogRes,
     ] = await Promise.all([
-      supabase.from("patients").select("id,name,mobile_number,address,emergency_contact_name,emergency_contact_phone,date_of_birth,gender").eq("id", resolvedId).single(),
+      supabase.from("patients").select("id,name,mobile_number,address,emergency_contact_name,emergency_contact_phone,date_of_birth,gender,occupation,significant_exposure,smoking_status,smoking_index,alcohol_status,past_history,past_history_years_ago").eq("id", resolvedId).single(),
+
       supabase.from("patient_diagnoses").select("primary_diagnosis,diagnosed_at,comorbidities,comorbidities_other_text,effective_dashboard").eq("patient_id", resolvedId).order("created_at", { ascending: false }).limit(1).single(),
       supabase.from("respiratory_support").select("ltot_enabled,ltot_litres,bipap_enabled,bipap_ipap,bipap_epap").eq("patient_id", resolvedId).single(),
       supabase.from("daily_logs").select("spo2_rest,mmrc_today,aqi_value,medication_compliance,logged_at").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(1).single(),
@@ -478,7 +485,17 @@ export function PatientDetail({
               {patientInfo?.significant_exposure && (
                 <span>Exposure: <strong style={{ color: "#fed7aa" }}>{patientInfo.significant_exposure}</strong></span>
               )}
+              {patientInfo?.smoking_status && (
+                <span>Smoking: <strong style={{ color: patientInfo.smoking_status === "Yes" ? "#f87171" : "#86efac" }}>{patientInfo.smoking_status}{patientInfo.smoking_status === "Yes" && patientInfo.smoking_index ? ` (Index: ${patientInfo.smoking_index})` : ""}</strong></span>
+              )}
+              {patientInfo?.alcohol_status && (
+                <span>Alcohol: <strong style={{ color: patientInfo.alcohol_status === "Yes" ? "#fde047" : "#86efac" }}>{patientInfo.alcohol_status}</strong></span>
+              )}
+              {patientInfo?.past_history && (
+                <span>Past History: <strong style={{ color: "#c4b5fd" }}>{patientInfo.past_history}{patientInfo.past_history_years_ago ? ` (${patientInfo.past_history_years_ago} yrs ago)` : ""}</strong></span>
+              )}
             </div>
+
             <div className={styles.tags} style={{ marginTop: 6 }}>
               {ltotTag && <span className={styles.tag}>{ltotTag}</span>}
               {bipapTag && <span className={styles.tag}>{bipapTag}</span>}

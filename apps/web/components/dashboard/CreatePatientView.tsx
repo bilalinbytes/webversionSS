@@ -21,6 +21,14 @@ export type FormData = {
   other_occupation: string;
   significant_exposure: string;
 
+  // Personal Habits & Past Medical History
+  smoking: "Yes" | "No" | "";
+  smoking_index: string;
+  alcohol: "Yes" | "No" | "";
+  past_history_selected: boolean;
+  past_history_text: string;
+  past_history_years_ago: string;
+
   // Clinical diagnosis
   disease_category: "ILD" | "OAD" | "Bronchiectasis" | "Post ICU Recovery" | "";
   // ILD sub-fields
@@ -112,6 +120,7 @@ export type FormData = {
 const INIT_FORM_DATA: FormData = {
   name: "", age: "", gender: "", mobile_number: "", alternate_mobile: "", emergency_contact_name: "", emergency_contact_phone: "",
   occupation: "", other_occupation: "", significant_exposure: "",
+  smoking: "", smoking_index: "", alcohol: "", past_history_selected: false, past_history_text: "", past_history_years_ago: "",
   disease_category: "",
   ild_subtype: "", ild_other_text: "", is_fibrotic: null,
   oad_diagnosis: "", oad_other_text: "",
@@ -357,9 +366,133 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
           </div>
         </div>
       </div>
+
+      {/* Personal Habits & Past Medical History (Doctor Dashboard) */}
+      <div className={styles.card}>
+        <p className={styles.cardTitle}>Personal Habits &amp; Past Medical History</p>
+        <p className={styles.cardSub}>Smoking habits, alcohol consumption, and relevant past illness or surgical history.</p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* 1. Smoking */}
+          <div style={{ padding: "14px", borderRadius: 8, background: "var(--med-surface-alt, #f8fafc)", border: "1px solid var(--med-border-subtle, #e2e8f0)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--med-text-primary, #0f172a)" }}>1. Smoking (धूम्रपान)</span>
+                <p style={{ fontSize: 11.5, color: "var(--med-text-muted, #64748b)", margin: "2px 0 0" }}>Does the patient currently or previously smoke?</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["No", "Yes"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`${styles.diagCatBtn} ${data.smoking === opt ? styles.diagCatBtnActive : ""}`}
+                    style={data.smoking === opt ? { background: opt === "Yes" ? "#dc2626" : "#1e6091", color: "#ffffff", borderColor: opt === "Yes" ? "#b91c1c" : "#1e6091" } : {}}
+                    onClick={() => {
+                      updateField("smoking", opt);
+                      if (opt === "No") updateField("smoking_index", "");
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {data.smoking === "Yes" && (
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed var(--med-border-strong, #cbd5e1)" }}>
+                <Field label="Smoking Index (धूम्रपान सूचकांक / Pack-Years)">
+                  <input
+                    className={`${styles.input} ${data.smoking_index.trim() ? styles.inputValid : ""}`}
+                    placeholder="e.g. 200 (cigarettes/day × years) or 10 pack-years..."
+                    value={data.smoking_index}
+                    onChange={(e) => updateField("smoking_index", e.target.value)}
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
+
+          {/* 2. Alcohol */}
+          <div style={{ padding: "14px", borderRadius: 8, background: "var(--med-surface-alt, #f8fafc)", border: "1px solid var(--med-border-subtle, #e2e8f0)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--med-text-primary, #0f172a)" }}>2. Alcohol (शराब / मदिरापान)</span>
+                <p style={{ fontSize: 11.5, color: "var(--med-text-muted, #64748b)", margin: "2px 0 0" }}>Does the patient consume alcohol?</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["No", "Yes"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`${styles.diagCatBtn} ${data.alcohol === opt ? styles.diagCatBtnActive : ""}`}
+                    style={data.alcohol === opt ? { background: opt === "Yes" ? "#d97706" : "#1e6091", color: "#ffffff", borderColor: opt === "Yes" ? "#b45309" : "#1e6091" } : {}}
+                    onClick={() => updateField("alcohol", opt)}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Past history of */}
+          <div style={{ padding: "14px", borderRadius: 8, background: "var(--med-surface-alt, #f8fafc)", border: "1px solid var(--med-border-subtle, #e2e8f0)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--med-text-primary, #0f172a)" }}>3. Past History of (पूर्व बीमारी का इतिहास)</span>
+                <p style={{ fontSize: 11.5, color: "var(--med-text-muted, #64748b)", margin: "2px 0 0" }}>Significant past medical illness, hospitalization, TB, or surgery?</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  className={`${styles.diagCatBtn} ${!data.past_history_selected ? styles.diagCatBtnActive : ""}`}
+                  style={!data.past_history_selected ? { background: "#1e6091", color: "#ffffff", borderColor: "#1e6091" } : {}}
+                  onClick={() => {
+                    updateField("past_history_selected", false);
+                    updateField("past_history_text", "");
+                    updateField("past_history_years_ago", "");
+                  }}
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.diagCatBtn} ${data.past_history_selected ? styles.diagCatBtnActive : ""}`}
+                  style={data.past_history_selected ? { background: "#0284c7", color: "#ffffff", borderColor: "#0284c7" } : {}}
+                  onClick={() => updateField("past_history_selected", true)}
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+
+            {data.past_history_selected && (
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed var(--med-border-strong, #cbd5e1)", display: "grid", gridTemplateColumns: "1fr 180px", gap: 12 }}>
+                <Field label="Past History of (पूर्व बीमारी का विवरण)">
+                  <input
+                    className={`${styles.input} ${data.past_history_text.trim() ? styles.inputValid : ""}`}
+                    placeholder="e.g. Pulmonary Tuberculosis, Pneumonia, CABG, COVID-19 ARDS..."
+                    value={data.past_history_text}
+                    onChange={(e) => updateField("past_history_text", e.target.value)}
+                  />
+                </Field>
+                <Field label="How Many Years Back (कितने वर्ष पूर्व)">
+                  <input
+                    className={`${styles.input} ${data.past_history_years_ago.trim() ? styles.inputValid : ""}`}
+                    placeholder="e.g. 5 or 5 years back"
+                    value={data.past_history_years_ago}
+                    onChange={(e) => updateField("past_history_years_ago", e.target.value)}
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
 
 export const OCCUPATION_OPTIONS = [
   "Teacher",
@@ -1567,8 +1700,31 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                   <span className={styles.reviewInfoValue}>{data.significant_exposure}</span>
                 </div>
               )}
+              {data.smoking && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Smoking</span>
+                  <span className={styles.reviewInfoValue}>
+                    {data.smoking}{data.smoking === "Yes" && data.smoking_index ? ` (Index: ${data.smoking_index})` : ""}
+                  </span>
+                </div>
+              )}
+              {data.alcohol && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Alcohol</span>
+                  <span className={styles.reviewInfoValue}>{data.alcohol}</span>
+                </div>
+              )}
+              {data.past_history_selected && data.past_history_text && (
+                <div className={styles.reviewInfoRow}>
+                  <span className={styles.reviewInfoLabel}>Past History</span>
+                  <span className={styles.reviewInfoValue}>
+                    {data.past_history_text}{data.past_history_years_ago ? ` (${data.past_history_years_ago} yrs back)` : ""}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
+
 
           {/* Card 2: Clinical Diagnosis */}
           <div className={styles.reviewCard}>
@@ -1909,7 +2065,15 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
           occupation: data.occupation === "Other" ? (data.other_occupation || "Other") : (data.occupation || null),
           other_occupation: data.other_occupation || null,
           significant_exposure: data.significant_exposure || null,
+          smoking: data.smoking || null,
+          smoking_status: data.smoking || null,
+          smoking_index: data.smoking === "Yes" ? (data.smoking_index || null) : null,
+          alcohol: data.alcohol || null,
+          alcohol_status: data.alcohol || null,
+          past_history: data.past_history_selected ? (data.past_history_text || null) : null,
+          past_history_years_ago: data.past_history_selected ? (data.past_history_years_ago || null) : null,
         },
+
         diagnosis: {
           primary_diagnosis: (
             data.disease_category === "ILD" ? "ild" :

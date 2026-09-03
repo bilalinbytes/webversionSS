@@ -70,6 +70,11 @@ async function runTests() {
       address: "Delhi",
       occupation: "Software Engineer",
       significant_exposure: "Traffic dust and construction smoke",
+      smoking_status: "Yes",
+      smoking_index: "150",
+      alcohol_status: "No",
+      past_history: "None",
+      past_history_years_ago: null,
       alternate_mobile_number: null,
       emergency_contact_name: null,
       emergency_contact_phone: null,
@@ -79,6 +84,7 @@ async function runTests() {
       preferred_appointment_time: null,
       appointment_preference_set_at: null,
     },
+
 
     diagnosis: {
       id: "diag-1",
@@ -270,6 +276,11 @@ async function runTests() {
       address: null,
       occupation: null,
       significant_exposure: null,
+      smoking_status: null,
+      smoking_index: null,
+      alcohol_status: null,
+      past_history: null,
+      past_history_years_ago: null,
       alternate_mobile_number: null,
       emergency_contact_name: null,
       emergency_contact_phone: null,
@@ -279,6 +290,7 @@ async function runTests() {
       preferred_appointment_time: null,
       appointment_preference_set_at: null,
     },
+
 
     diagnosis: {
       id: "diag-2",

@@ -26,12 +26,20 @@ CREATE TABLE IF NOT EXISTS public.patients (
   mobile_number TEXT NOT NULL,
   alternate_mobile_number TEXT,
   address TEXT,
+  occupation TEXT,
+  significant_exposure TEXT,
+  smoking_status TEXT,
+  smoking_index TEXT,
+  alcohol_status TEXT,
+  past_history TEXT,
+  past_history_years_ago TEXT,
   emergency_contact_name TEXT,
   emergency_contact_phone TEXT,
   expo_push_token TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
 
 -- 3. Patient diagnoses table
 CREATE TABLE IF NOT EXISTS public.patient_diagnoses (

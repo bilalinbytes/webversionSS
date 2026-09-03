@@ -518,6 +518,11 @@ export type Database = {
           name: string
           occupation: string | null
           significant_exposure: string | null
+          smoking_status: string | null
+          smoking_index: string | null
+          alcohol_status: string | null
+          past_history: string | null
+          past_history_years_ago: string | null
           updated_at: string | null
           wants_appointments: boolean | null
           preferred_appointment_time: string | null
@@ -538,6 +543,11 @@ export type Database = {
           name: string
           occupation?: string | null
           significant_exposure?: string | null
+          smoking_status?: string | null
+          smoking_index?: string | null
+          alcohol_status?: string | null
+          past_history?: string | null
+          past_history_years_ago?: string | null
           updated_at?: string | null
           wants_appointments?: boolean | null
           preferred_appointment_time?: string | null
@@ -558,11 +568,17 @@ export type Database = {
           name?: string
           occupation?: string | null
           significant_exposure?: string | null
+          smoking_status?: string | null
+          smoking_index?: string | null
+          alcohol_status?: string | null
+          past_history?: string | null
+          past_history_years_ago?: string | null
           updated_at?: string | null
           wants_appointments?: boolean | null
           preferred_appointment_time?: string | null
           appointment_preference_set_at?: string | null
         }
+
 
         Relationships: [
           {

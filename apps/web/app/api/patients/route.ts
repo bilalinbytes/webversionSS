@@ -320,9 +320,18 @@ export async function GET(request: Request): Promise<NextResponse> {
     alternate_mobile: nationalPhone(patientRes.data.alternate_mobile_number),
     emergency_contact_name: patientRes.data.emergency_contact_name ?? "",
     emergency_contact_phone: patientRes.data.emergency_contact_phone ?? "",
-    occupation: resolvedOccupation,
+    occupation: (patientRes.data as any).occupation ?? resolvedOccupation,
     other_occupation: resolvedOtherOccupation,
-    significant_exposure: resolvedSignificantExposure,
+    significant_exposure: (patientRes.data as any).significant_exposure ?? resolvedSignificantExposure,
+    smoking: (patientRes.data as any).smoking_status ?? "",
+    smoking_status: (patientRes.data as any).smoking_status ?? "",
+    smoking_index: (patientRes.data as any).smoking_index ?? "",
+    alcohol: (patientRes.data as any).alcohol_status ?? "",
+    alcohol_status: (patientRes.data as any).alcohol_status ?? "",
+    past_history_selected: Boolean((patientRes.data as any).past_history),
+    past_history: (patientRes.data as any).past_history ?? "",
+    past_history_text: (patientRes.data as any).past_history ?? "",
+    past_history_years_ago: (patientRes.data as any).past_history_years_ago ?? "",
     ...parsedDiagnosis,
     post_icu_sub_diagnosis: diagnosisRes.data?.post_icu_sub_diagnosis ?? null,
     comorbidities: Array.isArray(diagnosisRes.data?.comorbidities) ? diagnosisRes.data.comorbidities : [],
@@ -493,6 +502,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     address = address ? `${address} [${metaStr}]` : metaStr;
   }
 
+  // Habits and past medical history
+  const smokingStatus = (basicInfo.smoking_status || basicInfo.smoking as string) || null;
+  const smokingIndex = smokingStatus === "Yes" ? ((basicInfo.smoking_index as string) || null) : null;
+  const alcoholStatus = (basicInfo.alcohol_status || basicInfo.alcohol as string) || null;
+  const pastHistory = (basicInfo.past_history || basicInfo.past_history_text as string) || null;
+  const pastHistoryYearsAgo = pastHistory ? ((basicInfo.past_history_years_ago as string) || null) : null;
+
   // 1. Insert patient
   const { data: patient, error: patientError } = await supabase
     .from("patients")
@@ -505,6 +521,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       address,
       occupation: effectiveOccupation || null,
       significant_exposure: significantExposure || null,
+      smoking_status: smokingStatus,
+      smoking_index: smokingIndex,
+      alcohol_status: alcoholStatus,
+      past_history: pastHistory,
+      past_history_years_ago: pastHistoryYearsAgo,
       doctor_id: user.id,
       emergency_contact_name: basicInfo.emergency_contact_name || null,
       emergency_contact_phone: basicInfo.emergency_contact_phone || null,
@@ -798,6 +819,12 @@ export async function PUT(request: Request): Promise<NextResponse> {
     updateAddress = [occTag, expTag].filter(Boolean).join(" | ");
   }
 
+  const smokingStatus = (basicInfo.smoking_status || basicInfo.smoking as string) || null;
+  const smokingIndex = smokingStatus === "Yes" ? ((basicInfo.smoking_index as string) || null) : null;
+  const alcoholStatus = (basicInfo.alcohol_status || basicInfo.alcohol as string) || null;
+  const pastHistory = (basicInfo.past_history || basicInfo.past_history_text as string) || null;
+  const pastHistoryYearsAgo = pastHistory ? ((basicInfo.past_history_years_ago as string) || null) : null;
+
   const { error: patientError } = await admin
     .from("patients")
     .update({
@@ -809,6 +836,11 @@ export async function PUT(request: Request): Promise<NextResponse> {
       emergency_contact_phone: basicInfo.emergency_contact_phone || null,
       occupation: effectiveOccupation || null,
       significant_exposure: significantExposure || null,
+      smoking_status: smokingStatus,
+      smoking_index: smokingIndex,
+      alcohol_status: alcoholStatus,
+      past_history: pastHistory,
+      past_history_years_ago: pastHistoryYearsAgo,
       ...(updateAddress ? { address: updateAddress } : {}),
     })
     .eq("id", patientId);

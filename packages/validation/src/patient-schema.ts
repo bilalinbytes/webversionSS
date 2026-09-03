@@ -88,6 +88,11 @@ export const patientEnrolmentSchema = z
     emergency_contact_phone: z.string().optional(),
     occupation: z.string().nullable().optional(),
     significant_exposure: z.string().nullable().optional(),
+    smoking_status: z.string().nullable().optional(),
+    smoking_index: z.string().nullable().optional(),
+    alcohol_status: z.string().nullable().optional(),
+    past_history: z.string().nullable().optional(),
+    past_history_years_ago: z.string().nullable().optional(),
     primary_diagnosis: z.enum(diagnosisValues),
     post_icu_sub_diagnosis: z
       .enum(postIcuSubDiagnosisValues)
@@ -127,7 +132,13 @@ export const patientUpdateSchema = z
     emergency_contact_phone: z.string().optional(),
     occupation: z.string().nullable().optional(),
     significant_exposure: z.string().nullable().optional(),
+    smoking_status: z.string().nullable().optional(),
+    smoking_index: z.string().nullable().optional(),
+    alcohol_status: z.string().nullable().optional(),
+    past_history: z.string().nullable().optional(),
+    past_history_years_ago: z.string().nullable().optional(),
     primary_diagnosis: z.enum(diagnosisValues).optional(),
+
 
     post_icu_sub_diagnosis: z
       .enum(postIcuSubDiagnosisValues)
