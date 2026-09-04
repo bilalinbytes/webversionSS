@@ -51,8 +51,10 @@ describe("formatDiagnosisDisplay", () => {
   });
 
   it("formats other diagnoses appropriately", () => {
-    expect(formatDiagnosisDisplay("OAD / Asthma")).toBe("Asthma");
-    expect(formatDiagnosisDisplay("OAD / COPD")).toBe("COPD");
+    expect(formatDiagnosisDisplay("OAD / Asthma")).toBe("OAD / Asthma");
+    expect(formatDiagnosisDisplay("OAD / COPD")).toBe("OAD / COPD");
+    expect(formatDiagnosisDisplay("asthma")).toBe("OAD / Asthma");
+    expect(formatDiagnosisDisplay("copd")).toBe("OAD / COPD");
     expect(formatDiagnosisDisplay("ILD / IPF / Fibrotic")).toBe("ILD / IPF / Fibrotic");
     expect(formatDiagnosisDisplay("Bronchiectasis / Idiopathic")).toBe("Bronchiectasis / Idiopathic");
     expect(formatDiagnosisDisplay("Bronchiectasis / Post-infectious")).toBe("Bronchiectasis / Post-infectious");

@@ -313,19 +313,23 @@ export async function GET(request: Request) {
   let latestChanges: PrescriptionChangeSummary | null = null;
   if (latestAudit?.metadata && typeof latestAudit.metadata === "object") {
     const meta = latestAudit.metadata as Record<string, any>;
-    if (meta.changes) {
+    const stopped = meta.changes?.stopped ?? meta.stopped ?? [];
+    const started = meta.changes?.started ?? meta.started ?? [];
+    const modified = meta.changes?.modified ?? meta.modified ?? [];
+    const hasActualChanges = Boolean(
+      (stopped.length > 0 || started.length > 0 || modified.length > 0) &&
+      (meta.has_changes !== false)
+    );
+
+    if (hasActualChanges) {
       latestChanges = {
         updated_at: meta.updated_at ?? latestAudit.created_at,
         prescription_date: meta.prescription_date,
         doctor_name: meta.doctor_name,
-        has_changes: Boolean(
-          (meta.changes.stopped?.length ?? 0) > 0 ||
-          (meta.changes.started?.length ?? 0) > 0 ||
-          (meta.changes.modified?.length ?? 0) > 0
-        ),
-        stopped: meta.changes.stopped ?? [],
-        started: meta.changes.started ?? [],
-        modified: meta.changes.modified ?? [],
+        has_changes: true,
+        stopped,
+        started,
+        modified,
       };
     }
   }

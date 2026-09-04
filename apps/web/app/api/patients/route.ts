@@ -1074,127 +1074,168 @@ export async function PUT(request: Request): Promise<NextResponse> {
   }
 
   // Track prescription changes for patient notifications
-  const { data: existingMeds } = await admin
-    .from("medications")
-    .select("id, drug_name, route, dose, dose_unit, frequency, start_date, end_date")
-    .eq("patient_id", patientId);
+  const hasMedicationsPayload = Array.isArray(medications);
 
-  const existingMap = new Map((existingMeds ?? []).map(m => [m.drug_name.toLowerCase().trim(), m]));
-  const incomingMap = new Map((medications ?? []).filter(m => m.drug_name).map(m => [(m.drug_name as string).toLowerCase().trim(), m]));
+  if (hasMedicationsPayload) {
+    const { data: existingMeds } = await admin
+      .from("medications")
+      .select("id, drug_name, route, dose, dose_unit, frequency, start_date, end_date")
+      .eq("patient_id", patientId);
 
-  const stoppedChanges: Array<{ name: string; details?: string; route?: string; dose?: string }> = [];
-  const startedChanges: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }> = [];
-  const modifiedChanges: Array<{ name: string; details?: string; from?: string; to?: string }> = [];
+    const normStr = (s?: string | null) => (s ?? "").trim().toLowerCase();
+    const normFreq = (f?: string | null) => (f ?? "").trim().toUpperCase();
+    const normDose = (d?: number | string | null) => {
+      if (d === null || d === undefined || d === "" || isNaN(Number(d))) return null;
+      return Number(d);
+    };
 
-  const todayStr = new Date().toISOString().split("T")[0]!;
+    const existingMap = new Map((existingMeds ?? []).map((m) => [normStr(m.drug_name), m]));
+    const incomingMap = new Map(
+      (medications ?? [])
+        .filter((m) => Boolean(m.drug_name && String(m.drug_name).trim()))
+        .map((m) => [normStr(m.drug_name as string), m])
+    );
 
-  for (const [name, existing] of existingMap.entries()) {
-    const incoming = incomingMap.get(name);
-    if (!incoming) {
-      stoppedChanges.push({
-        name: existing.drug_name,
-        details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")}`,
-        route: existing.route,
-        dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
-      });
-    } else if (incoming.end_date && incoming.end_date <= todayStr && (!existing.end_date || existing.end_date > todayStr)) {
-      stoppedChanges.push({
-        name: existing.drug_name,
-        details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} (Discontinued)`,
-        route: existing.route,
-        dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
-      });
+    const stoppedChanges: Array<{ name: string; details?: string; route?: string; dose?: string }> = [];
+    const startedChanges: Array<{ name: string; details?: string; route?: string; dose?: string; frequency?: string }> = [];
+    const modifiedChanges: Array<{ name: string; details?: string; from?: string; to?: string }> = [];
+
+    const todayStr = new Date().toISOString().split("T")[0]!;
+
+    for (const [name, existing] of existingMap.entries()) {
+      const incoming = incomingMap.get(name);
+      if (!incoming) {
+        // Only mark as stopped if the medication was active (no end_date or end_date > today)
+        const wasActive = !existing.end_date || existing.end_date > todayStr;
+        if (wasActive) {
+          stoppedChanges.push({
+            name: existing.drug_name,
+            details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")}`,
+            route: existing.route,
+            dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
+          });
+        }
+      } else if (incoming.end_date && String(incoming.end_date) <= todayStr && (!existing.end_date || existing.end_date > todayStr)) {
+        stoppedChanges.push({
+          name: existing.drug_name,
+          details: `${existing.route || "Tablet"} · ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} (Discontinued)`,
+          route: existing.route,
+          dose: [existing.dose, existing.dose_unit].filter(Boolean).join(" "),
+        });
+      }
     }
-  }
 
-  for (const [name, incoming] of incomingMap.entries()) {
-    const existing = existingMap.get(name);
-    const doseStr = [incoming.dose, incoming.dose_unit].filter(Boolean).join(" ");
-    if (!existing) {
-      startedChanges.push({
-        name: (incoming.drug_name as string).trim(),
-        details: `${incoming.route || "Tablet"}${doseStr ? ` · ${doseStr}` : ""}${incoming.frequency ? ` · ${incoming.frequency}` : ""}`,
-        route: incoming.route as string,
-        dose: doseStr,
-        frequency: incoming.frequency as string,
-      });
-    } else if (
-      existing.dose !== (incoming.dose ? Number(incoming.dose) : null) ||
-      existing.frequency !== incoming.frequency ||
-      existing.route !== incoming.route
-    ) {
-      const fromDose = `${existing.route || ""} ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} ${existing.frequency || ""}`.trim();
-      const toDose = `${incoming.route || ""} ${doseStr} ${incoming.frequency || ""}`.trim();
-      modifiedChanges.push({
-        name: (incoming.drug_name as string).trim(),
-        details: `${fromDose} → ${toDose}`,
-        from: fromDose,
-        to: toDose,
-      });
+    for (const [name, incoming] of incomingMap.entries()) {
+      const existing = existingMap.get(name);
+      const doseStr = [incoming.dose, incoming.dose_unit].filter(Boolean).join(" ");
+      if (!existing) {
+        startedChanges.push({
+          name: (incoming.drug_name as string).trim(),
+          details: `${incoming.route || "Tablet"}${doseStr ? ` · ${doseStr}` : ""}${incoming.frequency ? ` · ${incoming.frequency}` : ""}`,
+          route: incoming.route as string,
+          dose: doseStr,
+          frequency: incoming.frequency as string,
+        });
+      } else {
+        const isRouteChanged = normStr(existing.route) !== normStr(incoming.route as string);
+        const isDoseChanged = normDose(existing.dose) !== normDose(incoming.dose as string | number);
+        const isUnitChanged = normStr(existing.dose_unit) !== normStr(incoming.dose_unit as string);
+        const isFreqChanged = normFreq(existing.frequency) !== normFreq(incoming.frequency as string);
+
+        if (isRouteChanged || isDoseChanged || isUnitChanged || isFreqChanged) {
+          const fromDose = `${existing.route || ""} ${[existing.dose, existing.dose_unit].filter(Boolean).join(" ")} ${existing.frequency || ""}`.trim();
+          const toDose = `${incoming.route || ""} ${doseStr} ${incoming.frequency || ""}`.trim();
+          modifiedChanges.push({
+            name: (incoming.drug_name as string).trim(),
+            details: `${fromDose} → ${toDose}`,
+            from: fromDose,
+            to: toDose,
+          });
+        }
+      }
     }
-  }
 
-  await admin.from("medications").delete().eq("patient_id", patientId);
+    await admin.from("medications").delete().eq("patient_id", patientId);
 
-  const allMedInserts: Array<{
-    patient_id: string;
-    prescribed_by_doctor_id: string;
-    route: string;
-    drug_name: string;
-    dose: number | null;
-    dose_unit: string | null;
-    frequency: string;
-    start_date: string;
-    end_date: string | null;
-    serial_number: number;
-  }> = [];
+    const allMedInserts: Array<{
+      patient_id: string;
+      prescribed_by_doctor_id: string;
+      route: string;
+      drug_name: string;
+      dose: number | null;
+      dose_unit: string | null;
+      frequency: string;
+      start_date: string;
+      end_date: string | null;
+      serial_number: number;
+    }> = [];
 
-  let nextSerial = 1;
+    let nextSerial = 1;
 
-  if (medications && medications.length > 0) {
-    medications
-      .filter((m) => m.drug_name)
-      .forEach((m) => {
+    if (medications && medications.length > 0) {
+      medications
+        .filter((m) => m.drug_name && String(m.drug_name).trim())
+        .forEach((m) => {
+          allMedInserts.push({
+            patient_id: patientId,
+            prescribed_by_doctor_id: user.id,
+            route: (m.route as string) ?? "Tablet",
+            drug_name: (m.drug_name as string).trim(),
+            dose: m.dose !== null && m.dose !== undefined && m.dose !== "" && !isNaN(Number(m.dose)) ? Number(m.dose) : null,
+            dose_unit: (m.dose_unit as string) || null,
+            frequency: (m.frequency as string) || "OD",
+            start_date: (m.prescription_date as string) || (m.start_date as string) || new Date().toISOString().split("T")[0]!,
+            end_date: (m.end_date as string) || null,
+            serial_number: nextSerial++,
+          });
+        });
+    }
+
+    // Preserve any discontinued medications that were omitted from incoming list
+    for (const stopped of stoppedChanges) {
+      const isAlreadyInserted = allMedInserts.some(
+        (m) => normStr(m.drug_name) === normStr(stopped.name)
+      );
+      if (!isAlreadyInserted) {
+        const existing = existingMap.get(normStr(stopped.name));
         allMedInserts.push({
           patient_id: patientId,
           prescribed_by_doctor_id: user.id,
-          route: (m.route as string) ?? "tablet",
-          drug_name: m.drug_name as string,
-          dose: m.dose ? Number(m.dose) : null,
-          dose_unit: (m.dose_unit as string) || null,
-          frequency: (m.frequency as string) || "OD",
-          start_date: (m.prescription_date as string) || (m.start_date as string) || new Date().toISOString().split("T")[0]!,
-          end_date: (m.end_date as string) || null,
+          route: stopped.route || existing?.route || "Tablet",
+          drug_name: stopped.name,
+          dose: existing?.dose ? Number(existing.dose) : (stopped.dose && !isNaN(parseFloat(stopped.dose)) ? parseFloat(stopped.dose) : null),
+          dose_unit: existing?.dose_unit || null,
+          frequency: existing?.frequency || "OD",
+          start_date: existing?.start_date || todayStr,
+          end_date: todayStr,
           serial_number: nextSerial++,
         });
-      });
-  }
+      }
+    }
 
-  // Preserve any discontinued medications that were omitted from incoming list
-  for (const stopped of stoppedChanges) {
-    const isAlreadyInserted = allMedInserts.some(
-      (m) => m.drug_name.toLowerCase().trim() === stopped.name.toLowerCase().trim()
-    );
-    if (!isAlreadyInserted) {
-      const existing = existingMap.get(stopped.name.toLowerCase().trim());
-      allMedInserts.push({
-        patient_id: patientId,
-        prescribed_by_doctor_id: user.id,
-        route: stopped.route || existing?.route || "Tablet",
-        drug_name: stopped.name,
-        dose: existing?.dose ? Number(existing.dose) : (stopped.dose ? parseFloat(stopped.dose) : null),
-        dose_unit: existing?.dose_unit || null,
-        frequency: existing?.frequency || "OD",
-        start_date: existing?.start_date || todayStr,
-        end_date: todayStr,
-        serial_number: nextSerial++,
+    if (allMedInserts.length > 0) {
+      const { error: medError } = await admin.from("medications").insert(allMedInserts);
+      if (medError) return NextResponse.json({ error: medError.message }, { status: 500 });
+    }
+
+    if (stoppedChanges.length > 0 || startedChanges.length > 0 || modifiedChanges.length > 0) {
+      const { data: docData } = await admin.from("doctors").select("name").eq("id", user.id).maybeSingle();
+      await admin.from("audit_logs").insert({
+        action: "prescription_updated",
+        actor_id: user.id,
+        actor_role: "doctor",
+        target_patient_id: patientId,
+        metadata: {
+          updated_at: new Date().toISOString(),
+          prescription_date: todayStr,
+          doctor_name: docData?.name || "Attending Doctor",
+          has_changes: true,
+          stopped: stoppedChanges,
+          started: startedChanges,
+          modified: modifiedChanges,
+        },
       });
     }
-  }
-
-  if (allMedInserts.length > 0) {
-    const { error: medError } = await admin.from("medications").insert(allMedInserts);
-    if (medError) return NextResponse.json({ error: medError.message }, { status: 500 });
   }
 
   const instructionInserts = patientInstructions.map((instruction) => ({
@@ -1206,25 +1247,6 @@ export async function PUT(request: Request): Promise<NextResponse> {
   if (instructionInserts.length > 0) {
     const { error: instructionError } = await admin.from("doctor_instructions").insert(instructionInserts);
     if (instructionError) return NextResponse.json({ error: instructionError.message }, { status: 500 });
-  }
-
-  if (stoppedChanges.length > 0 || startedChanges.length > 0 || modifiedChanges.length > 0) {
-    const { data: docData } = await admin.from("doctors").select("name").eq("id", user.id).maybeSingle();
-    await admin.from("audit_logs").insert({
-      action: "prescription_updated",
-      actor_id: user.id,
-      actor_role: "doctor",
-      target_patient_id: patientId,
-      metadata: {
-        updated_at: new Date().toISOString(),
-        prescription_date: todayStr,
-        doctor_name: docData?.name || "Attending Doctor",
-        has_changes: true,
-        stopped: stoppedChanges,
-        started: startedChanges,
-        modified: modifiedChanges,
-      },
-    });
   }
 
   return NextResponse.json({ ok: true, patientId });

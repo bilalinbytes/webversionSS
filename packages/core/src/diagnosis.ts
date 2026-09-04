@@ -92,20 +92,34 @@ export function formatDiagnosisDisplay(primaryDiagnosis: string | null | undefin
     return "OAD / Asthma COPD overlap";
   }
 
+  // OAD / Asthma (and variations)
+  if (
+    lower === "asthma" ||
+    lower === "oad / asthma" ||
+    lower === "oad/asthma" ||
+    ((lower.startsWith("oad /") || lower.startsWith("oad/")) && lower.includes("asthma"))
+  ) {
+    return "OAD / Asthma";
+  }
+
+  // OAD / COPD (and variations)
+  if (
+    lower === "copd" ||
+    lower === "oad / copd" ||
+    lower === "oad/copd" ||
+    ((lower.startsWith("oad /") || lower.startsWith("oad/")) && lower.includes("copd"))
+  ) {
+    return "OAD / COPD";
+  }
+
   const parts = trimmed.split("/");
   if ((lower.startsWith("oad /") || lower.startsWith("oad/")) && parts.length > 1) {
     const sub = parts.slice(1).join("/").trim();
-    if (sub.toLowerCase() === "copd") {
-      return "COPD";
-    }
-    if (sub.toLowerCase() === "asthma") {
-      return "Asthma";
-    }
-    return sub ? sub.charAt(0).toUpperCase() + sub.slice(1) : trimmed;
+    return sub ? `OAD / ${sub.charAt(0).toUpperCase() + sub.slice(1)}` : "OAD";
   }
 
-  if (lower === "copd") return "COPD";
-  if (lower === "asthma") return "Asthma";
+  if (lower === "copd") return "OAD / COPD";
+  if (lower === "asthma") return "OAD / Asthma";
   if (lower === "ild") return "ILD";
   if (lower === "bronchiectasis") return "Bronchiectasis";
   if (lower === "post_icu" || lower === "post icu" || lower === "post-icu") return "Post ICU Recovery";
