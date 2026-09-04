@@ -16,6 +16,7 @@ import { PatientAnalyticsView } from "@/components/patient/PatientAnalyticsView"
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { useToast } from "@/components/ui/Toast";
 import { MedicationAutocompleteInput } from "@/components/clinical/MedicationAutocompleteInput";
+import { formatDiagnosisDisplay } from "@o2plus/core";
 import styles from "./PatientDetail.module.css";
 
 // Legacy Patient type (used as optional fallback prop)
@@ -467,12 +468,7 @@ export function PatientDetail({
   const displayCondition = (() => {
     const raw = diagnosis?.primary_diagnosis ?? legacyPatient?.condition ?? "-";
     if (!raw || raw === "-") return "-";
-    const lower = raw.toLowerCase();
-    if (lower.includes("bronchiolitis")) return "OAD / Bronchiolitis Obliterans";
-    if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
-      return "OAD / Asthma COPD overlap";
-    }
-    return raw;
+    return formatDiagnosisDisplay(raw) ?? raw;
   })();
   const displayComorbidities = formatComorbidities(
     diagnosis?.comorbidities,

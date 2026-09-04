@@ -8,6 +8,7 @@ import {
   Wrench, FolderOpen, X, ChevronDown, UserCheck,
 } from 'lucide-react-native';
 import { colors } from '@o2plus/theme';
+import { formatDiagnosisDisplay } from '@o2plus/core';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getDoctorPatients, acknowledgePatientAlerts as acknowledgePatientAlertsApi } from '@o2plus/api-client/doctor';
@@ -60,10 +61,8 @@ function formatDashboardLabel(value: string | null | undefined): string {
 function formatDiagnosisLine(patient: any): string {
   const row = patient.patient_diagnoses?.[0];
   const diagnosis = row?.primary_diagnosis?.trim() ?? '';
-  const dashboard = formatDashboardLabel(row?.effective_dashboard);
-  const dashboardPart = diagnosis && diagnosis.toLowerCase().includes(dashboard.toLowerCase()) ? '' : dashboard;
-  const parts = [diagnosis, dashboardPart].filter(p => p.trim().length > 0);
-  return parts.length > 0 ? parts.join(' / ') : 'No diagnosis recorded';
+  if (!diagnosis) return 'No diagnosis recorded';
+  return formatDiagnosisDisplay(diagnosis) ?? diagnosis;
 }
 
 function formatComorbidityLine(patient: any): string {

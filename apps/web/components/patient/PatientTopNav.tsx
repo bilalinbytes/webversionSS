@@ -142,9 +142,10 @@ function getPrescriptionNotificationKey(
   prescription: PrescriptionNotification | null,
   instruction: PatientInstruction | null,
 ) {
+  if (!prescription && !instruction) return null;
+
   if (!prescription) {
-    if (!instruction?.instruction_text) return null;
-    return `instruction:${instruction.id}:${normalizeNotificationPart(instruction.instruction_text)}:${instruction.created_at ?? ""}`;
+    return `instruction:${instruction?.id ?? ""}:${normalizeNotificationPart(instruction?.instruction_text)}`;
   }
 
   const medicationParts = prescription.medications
@@ -159,7 +160,7 @@ function getPrescriptionNotificationKey(
     .join(",");
   const instructionPart = normalizeNotificationPart(instruction?.instruction_text);
 
-  return `${prescription.date}:${prescription.created_at ?? ""}:${medicationParts}:${instructionPart}`;
+  return `${prescription.date}:${medicationParts}:${instruction?.id ?? ""}:${instructionPart}`;
 }
 
 function getAppointmentNotificationKey(appointment: AppointmentNotification | null) {
