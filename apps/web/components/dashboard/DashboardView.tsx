@@ -6,6 +6,7 @@ import { PatientDetail } from "./PatientDetail";
 import { ImportPatientModal } from "./ImportPatientModal";
 import { createClient } from "@/lib/supabase/client";
 import { getDoctorPatients, acknowledgePatientAlerts as acknowledgePatientAlertsApi } from "@o2plus/api-client/doctor";
+import { formatDiagnosisDisplay } from "@o2plus/core";
 import styles from "./DashboardView.module.css";
 
 // -- Types aligned to Supabase schema ------------------------------------------
@@ -97,16 +98,7 @@ function formatDiagnosisLine(patient: SupabasePatient): string {
   const diagnosisRow = patient.patient_diagnoses?.[0];
   const rawDiagnosis = diagnosisRow?.primary_diagnosis?.trim() ?? "";
   if (!rawDiagnosis) return "No diagnosis recorded";
-
-  const lower = rawDiagnosis.toLowerCase();
-  if (lower.includes("bronchiolitis")) {
-    return "OAD / Bronchiolitis Obliterans";
-  }
-  if (lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"))) {
-    return "OAD / Asthma COPD overlap";
-  }
-
-  return rawDiagnosis;
+  return formatDiagnosisDisplay(rawDiagnosis) ?? rawDiagnosis;
 }
 
 function formatComorbidityLine(patient: SupabasePatient): string {
@@ -323,26 +315,26 @@ function PatientTableRow({
 
   const rowBorderClass = {
     critical: styles.rowBorderCritical,
-    high:     styles.rowBorderHigh,
+    high: styles.rowBorderHigh,
     moderate: styles.rowBorderModerate,
-    stable:   styles.rowBorderStable,
-    none:     styles.rowBorderNone,
+    stable: styles.rowBorderStable,
+    none: styles.rowBorderNone,
   }[risk];
 
   const riskLabel: Record<RiskLevel, string> = {
     critical: "CRITICAL",
-    high:     "HIGH",
+    high: "HIGH",
     moderate: "MODERATE",
-    stable:   "STABLE",
-    none:     "NO DATA",
+    stable: "STABLE",
+    none: "NO DATA",
   };
 
   const avatarClass = {
     critical: styles.avatarCritical,
-    high:     styles.avatarHigh,
+    high: styles.avatarHigh,
     moderate: styles.avatarModerate,
-    stable:   styles.avatarStable,
-    none:     styles.avatarNone,
+    stable: styles.avatarStable,
+    none: styles.avatarNone,
   }[risk];
 
   return (
@@ -542,8 +534,8 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     setDoctorId(user.id);
 
     const response = await getDoctorPatients({ supabase: null as any });
-    const body = response.data 
-      ? { patients: response.data as SupabasePatient[] } 
+    const body = response.data
+      ? { patients: response.data as SupabasePatient[] }
       : { error: response.error };
 
     if (!response.success) {
@@ -555,13 +547,13 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
         ...p,
         red_flag_scores: p.red_flag_scores
           ? [...p.red_flag_scores].sort(
-              (a, b) => new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime()
-            )
+            (a, b) => new Date(b.computed_at ?? "").getTime() - new Date(a.computed_at ?? "").getTime()
+          )
           : null,
         disease_alerts: p.disease_alerts
           ? [...p.disease_alerts].sort(
-              (a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()
-            )
+            (a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()
+          )
           : null,
       }));
       setPatients(sorted);
@@ -627,10 +619,10 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
     const effectiveDashboard = (diagnosisRow?.effective_dashboard ?? "").toLowerCase();
     const matchFilter =
       filter === "All" ||
-      (filter === "Post ICU"       && (effectiveDashboard === "post_icu"      || diagLabel.toLowerCase().includes("post icu"))) ||
-      (filter === "Asthma"         && effectiveDashboard === "asthma") ||
-      (filter === "COPD"           && effectiveDashboard === "copd") ||
-      (filter === "ILD"            && effectiveDashboard === "ild") ||
+      (filter === "Post ICU" && (effectiveDashboard === "post_icu" || diagLabel.toLowerCase().includes("post icu"))) ||
+      (filter === "Asthma" && effectiveDashboard === "asthma") ||
+      (filter === "COPD" && effectiveDashboard === "copd") ||
+      (filter === "ILD" && effectiveDashboard === "ild") ||
       (filter === "Bronchiectasis" && effectiveDashboard === "bronchiectasis");
     return matchSearch && matchFilter;
   }).sort((left, right) => {
@@ -685,15 +677,15 @@ export function DashboardView({ onViewChange, onEditPatient }: DashboardViewProp
       current.map((entry) =>
         entry.id === patient.id
           ? {
-              ...entry,
-              disease_alerts: entry.disease_alerts?.map((alert) =>
-                !alert.is_suppressed &&
+            ...entry,
+            disease_alerts: entry.disease_alerts?.map((alert) =>
+              !alert.is_suppressed &&
                 !alert.acknowledged_by_doctor &&
                 (alert.alert_type === "RED" || alert.alert_type === "YELLOW")
-                  ? { ...alert, acknowledged_by_doctor: true }
-                  : alert,
-              ) ?? null,
-            }
+                ? { ...alert, acknowledged_by_doctor: true }
+                : alert,
+            ) ?? null,
+          }
           : entry,
       ),
     );

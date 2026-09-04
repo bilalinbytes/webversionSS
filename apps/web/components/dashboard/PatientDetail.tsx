@@ -231,7 +231,7 @@ export function PatientDetail({
       trendRes,
       historyLogRes,
     ] = await Promise.all([
-      supabase.from("patients").select("id,name,mobile_number,address,emergency_contact_name,emergency_contact_phone,date_of_birth,gender,occupation,significant_exposure,smoking_status,smoking_index,alcohol_status,past_history,past_history_years_ago").eq("id", resolvedId).single(),
+      supabase.from("patients").select("id,name,mobile_number,address,emergency_contact_name,emergency_contact_phone,date_of_birth,gender").eq("id", resolvedId).single(),
 
       supabase.from("patient_diagnoses").select("primary_diagnosis,diagnosed_at,comorbidities,comorbidities_other_text,effective_dashboard").eq("patient_id", resolvedId).order("created_at", { ascending: false }).limit(1).single(),
       supabase.from("respiratory_support").select("ltot_enabled,ltot_litres,bipap_enabled,bipap_ipap,bipap_epap").eq("patient_id", resolvedId).single(),
@@ -242,9 +242,14 @@ export function PatientDetail({
       supabase.from("daily_logs").select("id,logged_at,spo2_rest,mmrc_today,aqi_value").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
     ]);
 
-    // Fetch comprehensive patient form data including occupation & illness exposure
+    // Fetch comprehensive patient form data including occupation, exposure, habits & past history
     let fetchedOccupation = "";
     let fetchedExposure = "";
+    let fetchedSmoking = "";
+    let fetchedSmokingIndex = "";
+    let fetchedAlcohol = "";
+    let fetchedPastHistory = "";
+    let fetchedPastHistoryYears = "";
     try {
       const response = await fetch(`/api/patients?id=${resolvedId}`, { credentials: "include" });
       const body = await response.json().catch(() => null) as {
@@ -260,12 +265,25 @@ export function PatientDetail({
           comorbidities?: string[];
           occupation?: string;
           significant_exposure?: string;
+          smoking?: string;
+          smoking_status?: string;
+          smoking_index?: string;
+          alcohol?: string;
+          alcohol_status?: string;
+          past_history?: string;
+          past_history_years_ago?: string;
         };
       } | null;
       const form = body?.formData;
       if (form) {
         fetchedOccupation = form.occupation || "";
         fetchedExposure = form.significant_exposure || "";
+        fetchedSmoking = form.smoking_status || form.smoking || "";
+        fetchedSmokingIndex = form.smoking_index || "";
+        fetchedAlcohol = form.alcohol_status || form.alcohol || "";
+        fetchedPastHistory = form.past_history || "";
+        fetchedPastHistoryYears = form.past_history_years_ago || "";
+
         if (!patientRes.data) {
           const age = Number(form.age);
           const estimatedDob = Number.isFinite(age) && age > 0
@@ -282,6 +300,11 @@ export function PatientDetail({
             gender: form.gender ?? null,
             occupation: fetchedOccupation,
             significant_exposure: fetchedExposure,
+            smoking_status: fetchedSmoking || null,
+            smoking_index: fetchedSmokingIndex || null,
+            alcohol_status: fetchedAlcohol || null,
+            past_history: fetchedPastHistory || null,
+            past_history_years_ago: fetchedPastHistoryYears || null,
           });
           if (!diagRes.data) {
             setDiagnosis({
@@ -294,7 +317,7 @@ export function PatientDetail({
           }
         }
       }
-    } catch {}
+    } catch { }
 
     if (patientRes.data) {
       const pData = patientRes.data as PatientInfo;
@@ -311,6 +334,11 @@ export function PatientDetail({
         ...pData,
         occupation: fetchedOccupation || null,
         significant_exposure: fetchedExposure || null,
+        smoking_status: fetchedSmoking || (pData as any).smoking_status || null,
+        smoking_index: fetchedSmokingIndex || (pData as any).smoking_index || null,
+        alcohol_status: fetchedAlcohol || (pData as any).alcohol_status || null,
+        past_history: fetchedPastHistory || (pData as any).past_history || null,
+        past_history_years_ago: fetchedPastHistoryYears || (pData as any).past_history_years_ago || null,
       });
     }
     if (diagRes.data) {
@@ -737,62 +765,62 @@ function OverviewTab({
               const batchMatch = group.groupKey?.match(/_rx(\d+)$/);
               const batchLabel = batchMatch ? `Prescription ${batchMatch[1]}` : null;
               return (
-              <article key={group.groupKey ?? group.date} className={styles.prescriptionGroup}>
-                <div className={styles.prescriptionDateRow}>
-                  <div>
-                    <span className={styles.prescriptionBadge}>Latest</span>
-                    <strong>{fmtDate(group.date)}</strong>
-                    {isMultiBatch && batchLabel && (
-                      <span style={{ marginLeft: 8, fontSize: 11, color: "var(--med-blue-600)", fontWeight: 600 }}>
-                        - {batchLabel}
-                      </span>
-                    )}
+                <article key={group.groupKey ?? group.date} className={styles.prescriptionGroup}>
+                  <div className={styles.prescriptionDateRow}>
+                    <div>
+                      <span className={styles.prescriptionBadge}>Latest</span>
+                      <strong>{fmtDate(group.date)}</strong>
+                      {isMultiBatch && batchLabel && (
+                        <span style={{ marginLeft: 8, fontSize: 11, color: "var(--med-blue-600)", fontWeight: 600 }}>
+                          - {batchLabel}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.prescriptionToggle}
+                      onClick={() => {
+                        setOpenPrescriptionDates((current) => {
+                          const next = new Set(current);
+                          const key = group.groupKey ?? group.date;
+                          if (next.has(key)) next.delete(key);
+                          else next.add(key);
+                          return next;
+                        });
+                      }}
+                      aria-expanded={isOpen}
+                    >
+                      {group.medications.length} medication{group.medications.length !== 1 ? "s" : ""} {isOpen ? "Hide" : "Open"}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className={styles.prescriptionToggle}
-                    onClick={() => {
-                      setOpenPrescriptionDates((current) => {
-                        const next = new Set(current);
-                        const key = group.groupKey ?? group.date;
-                        if (next.has(key)) next.delete(key);
-                        else next.add(key);
-                        return next;
-                      });
-                    }}
-                    aria-expanded={isOpen}
-                  >
-                    {group.medications.length} medication{group.medications.length !== 1 ? "s" : ""} {isOpen ? "Hide" : "Open"}
-                  </button>
-                </div>
-                {isOpen && <div className={styles.prescriptionTableWrap}>
-                  <table className={styles.prescriptionTable}>
-                    <thead>
-                      <tr>
-                        {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "Duration / End Date"].map((header) => (
-                          <th key={header}>{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.medications.map((med, medIndex) => {
-                        const isActive = !med.end_date || med.end_date >= today;
-                        return (
-                          <tr key={med.id} className={isActive ? undefined : styles.prescriptionStopped}>
-                            <td>{med.serial_number ?? medIndex + 1}</td>
-                            <td>{med.route}</td>
-                            <td>{med.drug_name}</td>
-                            <td>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
-                            <td>{med.frequency ?? "--"}</td>
-                            <td>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>}
-              </article>
-            );
+                  {isOpen && <div className={styles.prescriptionTableWrap}>
+                    <table className={styles.prescriptionTable}>
+                      <thead>
+                        <tr>
+                          {["S. No.", "Medication Type", "Drug Name", "Dose", "Frequency", "Duration / End Date"].map((header) => (
+                            <th key={header}>{header}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.medications.map((med, medIndex) => {
+                          const isActive = !med.end_date || med.end_date >= today;
+                          return (
+                            <tr key={med.id} className={isActive ? undefined : styles.prescriptionStopped}>
+                              <td>{med.serial_number ?? medIndex + 1}</td>
+                              <td>{med.route}</td>
+                              <td>{med.drug_name}</td>
+                              <td>{med.dose !== null ? `${med.dose} ${med.dose_unit ?? ""}` : "--"}</td>
+                              <td>{med.frequency ?? "--"}</td>
+                              <td>{med.end_date ? fmtDate(med.end_date) : "Ongoing"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>}
+                </article>
+              );
             })}
             {prescriptions.length > 1 && (
               <p style={{ margin: 0, fontSize: 11, color: "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", textAlign: "center" }}>

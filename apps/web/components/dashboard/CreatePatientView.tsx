@@ -149,13 +149,13 @@ function buildCombinedAddress(_data: FormData): string {
 }
 
 const STEPS = [
-  { label: "Basic Info",          sub: "Name, mobile, age" },
-  { label: "Diagnosis",           sub: "Category + subtype" },
-  { label: "Co-morbidities",      sub: "Associated conditions" },
-  { label: "PFT Records",         sub: "Lung function tests" },
+  { label: "Basic Info", sub: "Name, mobile, age" },
+  { label: "Diagnosis", sub: "Category + subtype" },
+  { label: "Co-morbidities", sub: "Associated conditions" },
+  { label: "PFT Records", sub: "Lung function tests" },
   { label: "Respiratory Support", sub: "LTOT / BiPAP / Vent" },
-  { label: "Medications",         sub: "Active prescriptions" },
-  { label: "Review & Create",     sub: "Preview before saving" },
+  { label: "Medications", sub: "Active prescriptions" },
+  { label: "Review & Create", sub: "Preview before saving" },
 ];
 
 const GENDER_OPTIONS: Array<FormData["gender"]> = ["Male", "Female", "Other"];
@@ -270,15 +270,14 @@ function StepBasicInfo({ data, update, errors, isEdit }: { data: FormData; updat
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={10}
-                className={`${styles.input} ${
-                  errors["mobile_number"] || errors["global_mobile"] || duplicateCheck === "duplicate"
+                className={`${styles.input} ${errors["mobile_number"] || errors["global_mobile"] || duplicateCheck === "duplicate"
                     ? styles.inputError
                     : duplicateCheck === "available"
-                    ? styles.inputValid
-                    : mobileValid
-                    ? styles.inputValid
-                    : ""
-                }`}
+                      ? styles.inputValid
+                      : mobileValid
+                        ? styles.inputValid
+                        : ""
+                  }`}
                 placeholder="10-digit number (e.g. 9876543210)"
                 value={data.mobile_number}
                 disabled={isEdit}
@@ -643,12 +642,12 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
       posticu_cause: "", posticu_other_text: "",
       // Also sync legacy field
       primary_diagnosis: cat === "ILD" ? "ild" : cat === "OAD" ? (() => {
-              const d = (data.oad_diagnosis ?? "").toLowerCase();
-              if (d.includes("bronchiolitis")) return "asthma";
-              if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
-              if (d.includes("asthma") && !d.includes("copd")) return "asthma";
-              return "copd";
-            })() : cat === "Bronchiectasis" ? "bronchiectasis" : cat === "Post ICU Recovery" ? "post_icu" : "",
+        const d = (data.oad_diagnosis ?? "").toLowerCase();
+        if (d.includes("bronchiolitis")) return "asthma";
+        if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
+        if (d.includes("asthma") && !d.includes("copd")) return "asthma";
+        return "copd";
+      })() : cat === "Bronchiectasis" ? "bronchiectasis" : cat === "Post ICU Recovery" ? "post_icu" : "",
     });
   }
 
@@ -675,7 +674,7 @@ function StepDiagnosis({ data, update, errors }: { data: FormData; update: (d: P
             </button>
           ))}
         </div>
-        {errors["primary_diagnosis"] && <p className={styles.fieldError} style={{marginTop: 8}}><AlertCircle size={11} /> {errors["primary_diagnosis"]}</p>}
+        {errors["primary_diagnosis"] && <p className={styles.fieldError} style={{ marginTop: 8 }}><AlertCircle size={11} /> {errors["primary_diagnosis"]}</p>}
       </div>
 
       {/* ILD sub-fields */}
@@ -1228,7 +1227,7 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
 function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial<FormData>) => void }) {
   const rs = data.respiratory_support;
   const updateRS = (updates: Partial<typeof rs>) => update({ respiratory_support: { ...rs, ...updates } });
-  
+
   const [activeTab, setActiveTab] = useState("LTOT");
   const TABS = ["LTOT", "BiPAP / NIV", "Invasive Vent", "Tracheostomy"];
 
@@ -1242,7 +1241,7 @@ function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial
         <div className={styles.radioGroup} style={{ marginTop: 12 }}>
           {["Yes", "No"].map((v) => (
             <label key={v} className={`${styles.radioItem} ${styles.radioLarge}`}>
-              <input type="radio" value={v} checked={rs.requires_support === (v==="Yes")}
+              <input type="radio" value={v} checked={rs.requires_support === (v === "Yes")}
                 onChange={() => updateRS({ requires_support: v === "Yes" })} className={styles.radioInput} />
               <span className={styles.radioLabel}>{v}</span>
             </label>
@@ -1282,7 +1281,7 @@ function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial
                 {rs.bipap_enabled && (
                   <div className={styles.grid2}>
                     <Field label="Requires Oxygen?">
-                       <input type="checkbox" checked={rs.bipap_requires_oxygen} onChange={e => updateRS({ bipap_requires_oxygen: e.target.checked })} />
+                      <input type="checkbox" checked={rs.bipap_requires_oxygen} onChange={e => updateRS({ bipap_requires_oxygen: e.target.checked })} />
                     </Field>
                     {rs.bipap_requires_oxygen && <Field label="O2 Litres"><input type="number" step="0.5" className={styles.input} value={rs.bipap_oxygen_litres ?? ""} onChange={e => updateRS({ bipap_oxygen_litres: e.target.value !== "" ? parseFloat(e.target.value) : null })} /></Field>}
                     <Field label="IPAP"><input type="number" className={styles.input} value={rs.bipap_ipap ?? ""} onChange={e => updateRS({ bipap_ipap: e.target.value !== "" ? parseFloat(e.target.value) : null })} /></Field>
@@ -1313,7 +1312,7 @@ function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial
             )}
 
             {activeTab === "Tracheostomy" && (
-               <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 16 }}>
                 <label className={styles.radioItem} style={{ marginBottom: 16 }}>
                   <input type="checkbox" checked={rs.tracheostomy_enabled} onChange={e => updateRS({ tracheostomy_enabled: e.target.checked })} />
                   <span className={styles.radioLabel}>Enable Tracheostomy</span>
@@ -1336,9 +1335,9 @@ function StepRespSupport({ data, update }: { data: FormData; update: (d: Partial
                     )}
                   </div>
                 )}
-               </div>
+              </div>
             )}
-            
+
           </div>
         )}
       </div>
@@ -1436,7 +1435,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
             <p className={styles.addRowTitle}>New Medication</p>
             <div className={styles.addMedGrid}>
               <Field label="Medication Type" required>
-                <select className={styles.select} value={draft.route} onChange={e => setDraft({...draft, route: e.target.value})}>
+                <select className={styles.select} value={draft.route} onChange={e => setDraft({ ...draft, route: e.target.value })}>
                   {RTE_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
               </Field>
@@ -1456,20 +1455,20 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
                 />
               </Field>
               <Field label="Dose">
-                <input type="number" step="0.1" className={styles.input} value={draft.dose} onChange={e => setDraft({...draft, dose: e.target.value})} />
+                <input type="number" step="0.1" className={styles.input} value={draft.dose} onChange={e => setDraft({ ...draft, dose: e.target.value })} />
               </Field>
               <Field label="Unit">
-                <select className={styles.select} value={draft.unit} onChange={e => setDraft({...draft, unit: e.target.value})}>
+                <select className={styles.select} value={draft.unit} onChange={e => setDraft({ ...draft, unit: e.target.value })}>
                   {["mg", "mcg", "ml", "puffs", "units", "other"].map(u => <option key={u}>{u}</option>)}
                 </select>
               </Field>
               <Field label="Frequency" required>
-                <select className={styles.select} value={draft.frequency} onChange={e => setDraft({...draft, frequency: e.target.value})}>
+                <select className={styles.select} value={draft.frequency} onChange={e => setDraft({ ...draft, frequency: e.target.value })}>
                   {FREQUENCY_OPTS.map(frequency => <option key={frequency}>{frequency}</option>)}
                 </select>
               </Field>
               <Field label="Prescription Date" required>
-                <input type="date" className={styles.input} value={draft.prescriptionDate} onChange={e => setDraft({...draft, prescriptionDate: e.target.value})} />
+                <input type="date" className={styles.input} value={draft.prescriptionDate} onChange={e => setDraft({ ...draft, prescriptionDate: e.target.value })} />
               </Field>
               <Field label="Start Date" required>
                 <input type="date" className={styles.input} value={draft.start} onChange={e => handleStartChange(e.target.value)} />
@@ -1487,9 +1486,9 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
               <div className={styles.field}>
                 <label className={styles.label}>End Date</label>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input type="date" className={styles.input} value={draft.end} onChange={e => setDraft({...draft, end: e.target.value})} disabled={draft.ongoing} />
+                  <input type="date" className={styles.input} value={draft.end} onChange={e => setDraft({ ...draft, end: e.target.value })} disabled={draft.ongoing} />
                   <label style={{ display: 'flex', gap: 4, alignItems: 'center', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={draft.ongoing} onChange={e => setDraft({...draft, ongoing: e.target.checked})} /> Ongoing
+                    <input type="checkbox" checked={draft.ongoing} onChange={e => setDraft({ ...draft, ongoing: e.target.checked })} /> Ongoing
                   </label>
                 </div>
               </div>
@@ -1506,7 +1505,7 @@ function StepMedications({ data, update }: { data: FormData; update: (d: Partial
                 className={styles.textarea}
                 rows={3}
                 value={draft.patientInstruction}
-                onChange={e => setDraft({...draft, patientInstruction: e.target.value})}
+                onChange={e => setDraft({ ...draft, patientInstruction: e.target.value })}
                 placeholder="Write short guidance for the patient dashboard..."
               />
             </div>
@@ -1960,18 +1959,18 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                   {data.medications
                     .filter(m => !m.end_date || new Date(m.end_date) > new Date())
                     .map((m, i) => (
-                    <div key={i} className={styles.reviewMedCard}>
-                      <div>
-                        <p className={styles.reviewMedName}>{m.drug_name || "Unnamed Drug"}</p>
-                        <p className={styles.reviewMedDetails}>
-                          {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · {m.frequency || "As prescribed"}
-                        </p>
+                      <div key={i} className={styles.reviewMedCard}>
+                        <div>
+                          <p className={styles.reviewMedName}>{m.drug_name || "Unnamed Drug"}</p>
+                          <p className={styles.reviewMedDetails}>
+                            {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · {m.frequency || "As prescribed"}
+                          </p>
+                        </div>
+                        <span className={styles.reviewBadge} style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}>
+                          {m.route || "Oral"} · Active
+                        </span>
                       </div>
-                      <span className={styles.reviewBadge} style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}>
-                        {m.route || "Oral"} · Active
-                      </span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
 
@@ -1985,18 +1984,18 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                     {data.medications
                       .filter(m => m.end_date && new Date(m.end_date) <= new Date())
                       .map((m, i) => (
-                      <div key={i} className={styles.reviewMedCard} style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
-                        <div>
-                          <p className={styles.reviewMedName} style={{ textDecoration: "line-through", color: "#991b1b" }}>{m.drug_name || "Unnamed Drug"}</p>
-                          <p className={styles.reviewMedDetails} style={{ color: "#b91c1c" }}>
-                            {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · Discontinued: {m.end_date}
-                          </p>
+                        <div key={i} className={styles.reviewMedCard} style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+                          <div>
+                            <p className={styles.reviewMedName} style={{ textDecoration: "line-through", color: "#991b1b" }}>{m.drug_name || "Unnamed Drug"}</p>
+                            <p className={styles.reviewMedDetails} style={{ color: "#b91c1c" }}>
+                              {m.dose ? `${m.dose} ${m.dose_unit || ""}` : ""} · Discontinued: {m.end_date}
+                            </p>
+                          </div>
+                          <span className={styles.reviewBadge} style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca" }}>
+                            Discontinued
+                          </span>
                         </div>
-                        <span className={styles.reviewBadge} style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca" }}>
-                          Discontinued
-                        </span>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               )}
@@ -2023,6 +2022,21 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    if (initialData) {
+      setData((prev) => ({
+        ...INIT_FORM_DATA,
+        ...prev,
+        ...initialData,
+        respiratory_support: {
+          ...INIT_FORM_DATA.respiratory_support,
+          ...(prev.respiratory_support || {}),
+          ...(initialData.respiratory_support || {}),
+        },
+      }));
+    }
+  }, [initialData]);
 
   const update = (updates: Partial<FormData>) => setData(prev => ({ ...prev, ...updates }));
 
@@ -2077,15 +2091,15 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
         diagnosis: {
           primary_diagnosis: (
             data.disease_category === "ILD" ? "ild" :
-            data.disease_category === "OAD" ? (() => {
-              const d = (data.oad_diagnosis ?? "").toLowerCase();
-              if (d.includes("bronchiolitis")) return "asthma";
-              if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
-              if (d.includes("asthma") && !d.includes("copd")) return "asthma";
-              return "copd";
-            })() :
-            data.disease_category === "Bronchiectasis" ? "bronchiectasis" :
-            data.disease_category === "Post ICU Recovery" ? "post_icu" : (data.primary_diagnosis || "")
+              data.disease_category === "OAD" ? (() => {
+                const d = (data.oad_diagnosis ?? "").toLowerCase();
+                if (d.includes("bronchiolitis")) return "asthma";
+                if (d.includes("overlap") || d.includes("aco") || (d.includes("asthma") && d.includes("copd"))) return "copd";
+                if (d.includes("asthma") && !d.includes("copd")) return "asthma";
+                return "copd";
+              })() :
+                data.disease_category === "Bronchiectasis" ? "bronchiectasis" :
+                  data.disease_category === "Post ICU Recovery" ? "post_icu" : (data.primary_diagnosis || "")
           ),
           disease_category: data.disease_category,
           ild_subtype: data.ild_subtype,

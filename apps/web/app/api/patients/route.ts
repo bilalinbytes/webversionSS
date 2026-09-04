@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/server/supabase-admin";
 import type { Json } from "@/lib/database.types";
+import { parseDiagnosisLabel, buildStructuredDiagnosis } from "@o2plus/core";
 
 // ── Effective dashboard logic ─────────────────────────────────────────────────
 function computeEffectiveDashboard(
@@ -56,111 +57,6 @@ function nationalPhone(phone: string | null): string {
   return (phone ?? "").replace(/\D/g, "").slice(-10);
 }
 
-function parseDiagnosisLabel(primary: string | null): {
-  disease_category: string;
-  primary_diagnosis: string;
-  ild_subtype: string;
-  ild_other_text: string;
-  is_fibrotic: boolean | null;
-  oad_diagnosis: string;
-  oad_other_text: string;
-  bronchiectasis_cause: string;
-  bronchiectasis_other_text: string;
-  posticu_cause: string;
-  posticu_other_text: string;
-} {
-  const label = primary ?? "";
-  const parts = label.split("/").map((part) => part.trim()).filter(Boolean);
-  const lower = label.toLowerCase();
-  if (lower.startsWith("ild")) {
-    const fibroticPart = parts.find((part) => /fibrotic/i.test(part));
-    return {
-      disease_category: "ILD",
-      primary_diagnosis: "ild",
-      ild_subtype: parts[1] ?? "",
-      ild_other_text: "",
-      is_fibrotic: fibroticPart ? !/^non/i.test(fibroticPart) : null,
-      oad_diagnosis: "",
-      oad_other_text: "",
-      bronchiectasis_cause: "",
-      bronchiectasis_other_text: "",
-      posticu_cause: "",
-      posticu_other_text: "",
-    };
-  }
-  if (lower.startsWith("oad") || lower.includes("copd") || lower.includes("asthma") || lower.includes("bronchiolitis")) {
-    const isBronchiolitis = lower.includes("bronchiolitis");
-    const isOverlap = lower.includes("overlap") || lower.includes("aco") || (lower.includes("asthma") && lower.includes("copd"));
-    const isAsthma = lower.includes("asthma") && !isOverlap;
-
-    const oadDiag = parts[1] ?? (
-      isBronchiolitis ? "Bronchiolitis Obliterans" :
-      isOverlap ? "Asthma-COPD Overlap (ACO)" :
-      isAsthma ? "Asthma" : "COPD"
-    );
-    const primDiag = isBronchiolitis ? "asthma" :
-      isOverlap ? "copd" :
-      isAsthma ? "asthma" : "copd";
-
-    return {
-      disease_category: "OAD",
-      primary_diagnosis: primDiag,
-      ild_subtype: "",
-      ild_other_text: "",
-      is_fibrotic: null,
-      oad_diagnosis: oadDiag,
-      oad_other_text: "",
-      bronchiectasis_cause: "",
-      bronchiectasis_other_text: "",
-      posticu_cause: "",
-      posticu_other_text: "",
-    };
-  }
-  if (lower.startsWith("bronchiectasis")) {
-    return {
-      disease_category: "Bronchiectasis",
-      primary_diagnosis: "bronchiectasis",
-      ild_subtype: "",
-      ild_other_text: "",
-      is_fibrotic: null,
-      oad_diagnosis: "",
-      oad_other_text: "",
-      bronchiectasis_cause: parts[1] ?? "",
-      bronchiectasis_other_text: "",
-      posticu_cause: "",
-      posticu_other_text: "",
-    };
-  }
-  if (lower.startsWith("post icu") || lower.startsWith("post_icu") || lower.startsWith("post-icu")) {
-    return {
-      disease_category: "Post ICU Recovery",
-      primary_diagnosis: "post_icu",
-      ild_subtype: "",
-      ild_other_text: "",
-      is_fibrotic: null,
-      oad_diagnosis: "",
-      oad_other_text: "",
-      bronchiectasis_cause: "",
-      bronchiectasis_other_text: "",
-      posticu_cause: parts[1] ?? "",
-      posticu_other_text: "",
-    };
-  }
-  return {
-    disease_category: "",
-    primary_diagnosis: "",
-    ild_subtype: "",
-    ild_other_text: "",
-    is_fibrotic: null,
-    oad_diagnosis: "",
-    oad_other_text: "",
-    bronchiectasis_cause: "",
-    bronchiectasis_other_text: "",
-    posticu_cause: "",
-    posticu_other_text: "",
-  };
-}
-
 async function canAccessPatient(admin: ReturnType<typeof createAdminClient>, doctorId: string, patientId: string) {
   const { data: patient } = await admin
     .from("patients")
@@ -190,6 +86,136 @@ function patientInstructionsFromMedications(medications?: Array<Record<string, u
   return (medications ?? [])
     .map((medication) => typeof medication.patient_instruction === "string" ? medication.patient_instruction.trim() : "")
     .filter(Boolean);
+}
+
+function extractAddressAndMetadata(rawAddress: string | null | undefined): {
+  cleanAddress: string | null;
+  occupation: string | null;
+  significantExposure: string | null;
+  smokingStatus: string | null;
+  smokingIndex: string | null;
+  alcoholStatus: string | null;
+  pastHistory: string | null;
+  pastHistoryYearsAgo: string | null;
+} {
+  const addr = rawAddress ?? "";
+  let cleanAddress: string | null = addr || null;
+  let occupation: string | null = null;
+  let significantExposure: string | null = null;
+  let smokingStatus: string | null = null;
+  let smokingIndex: string | null = null;
+  let alcoholStatus: string | null = null;
+  let pastHistory: string | null = null;
+  let pastHistoryYearsAgo: string | null = null;
+
+  if (addr) {
+    const occMatch = addr.match(/Occupation:\s*([^|\]]+)/i);
+    if (occMatch?.[1]) occupation = occMatch[1].trim();
+
+    const expMatch = addr.match(/(?:Exposure|Illness Exposure):\s*([^|\]]+)/i);
+    if (expMatch?.[1]) significantExposure = expMatch[1].trim();
+
+    const smokeMatch = addr.match(/Smoking:\s*([^|\]]+)/i);
+    if (smokeMatch?.[1]) smokingStatus = smokeMatch[1].trim();
+
+    const smokeIdxMatch = addr.match(/SmokingIndex:\s*([^|\]]+)/i);
+    if (smokeIdxMatch?.[1]) smokingIndex = smokeIdxMatch[1].trim();
+
+    const alcMatch = addr.match(/Alcohol:\s*([^|\]]+)/i);
+    if (alcMatch?.[1]) alcoholStatus = alcMatch[1].trim();
+
+    const histMatch = addr.match(/PastHistory:\s*([^|\]]+)/i);
+    if (histMatch?.[1]) pastHistory = histMatch[1].trim();
+
+    const histYrsMatch = addr.match(/PastHistoryYears:\s*([^|\]]+)/i);
+    if (histYrsMatch?.[1]) pastHistoryYearsAgo = histYrsMatch[1].trim();
+
+    const withoutBrackets = addr.replace(/\s*\[.*?\]\s*$/, "").trim();
+    cleanAddress = withoutBrackets || null;
+  }
+
+  return {
+    cleanAddress,
+    occupation,
+    significantExposure,
+    smokingStatus,
+    smokingIndex,
+    alcoholStatus,
+    pastHistory,
+    pastHistoryYearsAgo,
+  };
+}
+
+function buildAddressWithMetadata(
+  baseAddress: string | null | undefined,
+  meta: {
+    occupation?: string | null;
+    significantExposure?: string | null;
+    smokingStatus?: string | null;
+    smokingIndex?: string | null;
+    alcoholStatus?: string | null;
+    pastHistory?: string | null;
+    pastHistoryYearsAgo?: string | null;
+  }
+): string | null {
+  const cleanAddr = (baseAddress ?? "").replace(/\s*\[.*?\]\s*$/, "").trim();
+  const parts: string[] = [];
+  if (meta.occupation) parts.push(`Occupation: ${meta.occupation}`);
+  if (meta.significantExposure) parts.push(`Exposure: ${meta.significantExposure}`);
+  if (meta.smokingStatus) parts.push(`Smoking: ${meta.smokingStatus}`);
+  if (meta.smokingIndex) parts.push(`SmokingIndex: ${meta.smokingIndex}`);
+  if (meta.alcoholStatus) parts.push(`Alcohol: ${meta.alcoholStatus}`);
+  if (meta.pastHistory) parts.push(`PastHistory: ${meta.pastHistory}`);
+  if (meta.pastHistoryYearsAgo) parts.push(`PastHistoryYears: ${meta.pastHistoryYearsAgo}`);
+
+  const tag = parts.length > 0 ? `[${parts.join(" | ")}]` : "";
+  if (cleanAddr && tag) return `${cleanAddr} ${tag}`;
+  if (cleanAddr) return cleanAddr;
+  if (tag) return tag;
+  return null;
+}
+
+async function safeInsertPatient(
+  client: any,
+  fullPayload: Record<string, unknown>,
+  fallbackPayload: Record<string, unknown>
+) {
+  const res = await client.from("patients").insert(fullPayload).select("id").single();
+  if (
+    res.error &&
+    (res.error.message?.includes("column") ||
+      res.error.message?.includes("schema cache") ||
+      res.error.code === "PGRST204")
+  ) {
+    console.warn(
+      "Retrying patients insert with baseline columns due to schema cache mismatch:",
+      res.error.message
+    );
+    return await client.from("patients").insert(fallbackPayload).select("id").single();
+  }
+  return res;
+}
+
+async function safeUpdatePatient(
+  client: any,
+  patientId: string,
+  fullPayload: Record<string, unknown>,
+  fallbackPayload: Record<string, unknown>
+) {
+  const res = await client.from("patients").update(fullPayload).eq("id", patientId);
+  if (
+    res.error &&
+    (res.error.message?.includes("column") ||
+      res.error.message?.includes("schema cache") ||
+      res.error.code === "PGRST204")
+  ) {
+    console.warn(
+      "Retrying patients update with baseline columns due to schema cache mismatch:",
+      res.error.message
+    );
+    return await client.from("patients").update(fallbackPayload).eq("id", patientId);
+  }
+  return res;
 }
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -282,56 +308,63 @@ export async function GET(request: Request): Promise<NextResponse> {
     resolvedBaselineHeartRate = "78";
   }
 
-  // Resolve occupation and significant illness exposure
-  let resolvedOccupation = "";
-  let resolvedOtherOccupation = "";
-  let resolvedSignificantExposure = "";
+  const rawPatient = patientRes.data as Record<string, any>;
+  const addrMeta = extractAddressAndMetadata(rawPatient.address);
 
+  // Multi-source resolution for habits, past history, occupation, exposure:
+  let resolvedOccupation = rawPatient.occupation ?? "";
+  let resolvedOtherOccupation = "";
+  let resolvedSignificantExposure = rawPatient.significant_exposure ?? "";
+  let resolvedSmoking = rawPatient.smoking_status ?? "";
+  let resolvedSmokingIndex = rawPatient.smoking_index ?? "";
+  let resolvedAlcohol = rawPatient.alcohol_status ?? "";
+  let resolvedPastHistory = rawPatient.past_history ?? "";
+  let resolvedPastHistoryYears = rawPatient.past_history_years_ago ?? "";
+
+  // 1. Check pft_records.other_fields
   if (pftRes.data && pftRes.data.length > 0) {
     for (const rec of pftRes.data) {
       const other = (rec.other_fields as Record<string, string | null>) ?? {};
-      if (!resolvedOccupation && other.occupation) {
-        resolvedOccupation = String(other.occupation);
-      }
-      if (!resolvedOtherOccupation && other.other_occupation) {
-        resolvedOtherOccupation = String(other.other_occupation);
-      }
-      if (!resolvedSignificantExposure && other.significant_exposure) {
-        resolvedSignificantExposure = String(other.significant_exposure);
-      }
+      if (!resolvedOccupation && other.occupation) resolvedOccupation = String(other.occupation);
+      if (!resolvedOtherOccupation && other.other_occupation) resolvedOtherOccupation = String(other.other_occupation);
+      if (!resolvedSignificantExposure && other.significant_exposure) resolvedSignificantExposure = String(other.significant_exposure);
+      if (!resolvedSmoking && (other.smoking_status || other.smoking)) resolvedSmoking = String(other.smoking_status || other.smoking);
+      if (!resolvedSmokingIndex && other.smoking_index) resolvedSmokingIndex = String(other.smoking_index);
+      if (!resolvedAlcohol && (other.alcohol_status || other.alcohol)) resolvedAlcohol = String(other.alcohol_status || other.alcohol);
+      if (!resolvedPastHistory && other.past_history) resolvedPastHistory = String(other.past_history);
+      if (!resolvedPastHistoryYears && other.past_history_years_ago) resolvedPastHistoryYears = String(other.past_history_years_ago);
     }
   }
 
-  const addrStr = patientRes.data.address ?? "";
-  if (!resolvedOccupation && addrStr.includes("Occupation: ")) {
-    const occMatch = addrStr.match(/Occupation:\s*([^|\]]+)/);
-    if (occMatch?.[1]) resolvedOccupation = occMatch[1].trim();
-  }
-  if (!resolvedSignificantExposure && (addrStr.includes("Exposure: ") || addrStr.includes("Illness Exposure: "))) {
-    const expMatch = addrStr.match(/(?:Exposure|Illness Exposure):\s*([^|\]]+)/);
-    if (expMatch?.[1]) resolvedSignificantExposure = expMatch[1].trim();
-  }
+  // 2. Check address metadata
+  if (!resolvedOccupation && addrMeta.occupation) resolvedOccupation = addrMeta.occupation;
+  if (!resolvedSignificantExposure && addrMeta.significantExposure) resolvedSignificantExposure = addrMeta.significantExposure;
+  if (!resolvedSmoking && addrMeta.smokingStatus) resolvedSmoking = addrMeta.smokingStatus;
+  if (!resolvedSmokingIndex && addrMeta.smokingIndex) resolvedSmokingIndex = addrMeta.smokingIndex;
+  if (!resolvedAlcohol && addrMeta.alcoholStatus) resolvedAlcohol = addrMeta.alcoholStatus;
+  if (!resolvedPastHistory && addrMeta.pastHistory) resolvedPastHistory = addrMeta.pastHistory;
+  if (!resolvedPastHistoryYears && addrMeta.pastHistoryYearsAgo) resolvedPastHistoryYears = addrMeta.pastHistoryYearsAgo;
 
   const formData = {
-    name: patientRes.data.name ?? "",
-    age: ageFromDob(patientRes.data.date_of_birth),
-    gender: patientRes.data.gender ?? "",
-    mobile_number: nationalPhone(patientRes.data.mobile_number),
-    alternate_mobile: nationalPhone(patientRes.data.alternate_mobile_number),
-    emergency_contact_name: patientRes.data.emergency_contact_name ?? "",
-    emergency_contact_phone: patientRes.data.emergency_contact_phone ?? "",
-    occupation: (patientRes.data as any).occupation ?? resolvedOccupation,
+    name: rawPatient.name ?? "",
+    age: ageFromDob(rawPatient.date_of_birth),
+    gender: rawPatient.gender ?? "",
+    mobile_number: nationalPhone(rawPatient.mobile_number),
+    alternate_mobile: nationalPhone(rawPatient.alternate_mobile_number),
+    emergency_contact_name: rawPatient.emergency_contact_name ?? "",
+    emergency_contact_phone: rawPatient.emergency_contact_phone ?? "",
+    occupation: resolvedOccupation,
     other_occupation: resolvedOtherOccupation,
-    significant_exposure: (patientRes.data as any).significant_exposure ?? resolvedSignificantExposure,
-    smoking: (patientRes.data as any).smoking_status ?? "",
-    smoking_status: (patientRes.data as any).smoking_status ?? "",
-    smoking_index: (patientRes.data as any).smoking_index ?? "",
-    alcohol: (patientRes.data as any).alcohol_status ?? "",
-    alcohol_status: (patientRes.data as any).alcohol_status ?? "",
-    past_history_selected: Boolean((patientRes.data as any).past_history),
-    past_history: (patientRes.data as any).past_history ?? "",
-    past_history_text: (patientRes.data as any).past_history ?? "",
-    past_history_years_ago: (patientRes.data as any).past_history_years_ago ?? "",
+    significant_exposure: resolvedSignificantExposure,
+    smoking: resolvedSmoking,
+    smoking_status: resolvedSmoking,
+    smoking_index: resolvedSmokingIndex,
+    alcohol: resolvedAlcohol,
+    alcohol_status: resolvedAlcohol,
+    past_history_selected: Boolean(resolvedPastHistory),
+    past_history: resolvedPastHistory,
+    past_history_text: resolvedPastHistory,
+    past_history_years_ago: resolvedPastHistoryYears,
     ...parsedDiagnosis,
     post_icu_sub_diagnosis: diagnosisRes.data?.post_icu_sub_diagnosis ?? null,
     comorbidities: Array.isArray(diagnosisRes.data?.comorbidities) ? diagnosisRes.data.comorbidities : [],
@@ -455,8 +488,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   const normalizedMobile = rawMobile.startsWith("91") && rawMobile.length === 12
     ? `+${rawMobile}`
     : rawMobile.startsWith("+91")
-    ? rawMobile
-    : `+91${rawMobile}`;
+      ? rawMobile
+      : `+91${rawMobile}`;
 
   const rawAlternateMobile = basicInfo.alternate_mobile?.replace(/\D/g, "") ?? "";
   const normalizedAlternateMobile = rawAlternateMobile
@@ -488,20 +521,6 @@ export async function POST(request: Request): Promise<NextResponse> {
   const significantExposure = (basicInfo.significant_exposure as string) || null;
   const effectiveOccupation = occupation === "Other" && otherOccupation ? otherOccupation : occupation;
 
-  const addressParts = [
-    basicInfo.street_address,
-    basicInfo.city,
-    basicInfo.state,
-    basicInfo.pincode,
-  ].filter(Boolean);
-  let address = addressParts.length > 0 ? addressParts.join(", ") : null;
-  if (effectiveOccupation || significantExposure) {
-    const occTag = effectiveOccupation ? `Occupation: ${effectiveOccupation}` : "";
-    const expTag = significantExposure ? `Exposure: ${significantExposure}` : "";
-    const metaStr = [occTag, expTag].filter(Boolean).join(" | ");
-    address = address ? `${address} [${metaStr}]` : metaStr;
-  }
-
   // Habits and past medical history
   const smokingStatus = (basicInfo.smoking_status || basicInfo.smoking as string) || null;
   const smokingIndex = smokingStatus === "Yes" ? ((basicInfo.smoking_index as string) || null) : null;
@@ -509,29 +528,60 @@ export async function POST(request: Request): Promise<NextResponse> {
   const pastHistory = (basicInfo.past_history || basicInfo.past_history_text as string) || null;
   const pastHistoryYearsAgo = pastHistory ? ((basicInfo.past_history_years_ago as string) || null) : null;
 
-  // 1. Insert patient
-  const { data: patient, error: patientError } = await supabase
-    .from("patients")
-    .insert({
-      name: basicInfo.name,
-      date_of_birth: dobFromAge,
-      mobile_number: normalizedMobile,
-      alternate_mobile_number: normalizedAlternateMobile,
-      gender: basicInfo.gender || null,
-      address,
-      occupation: effectiveOccupation || null,
-      significant_exposure: significantExposure || null,
-      smoking_status: smokingStatus,
-      smoking_index: smokingIndex,
-      alcohol_status: alcoholStatus,
-      past_history: pastHistory,
-      past_history_years_ago: pastHistoryYearsAgo,
-      doctor_id: user.id,
-      emergency_contact_name: basicInfo.emergency_contact_name || null,
-      emergency_contact_phone: basicInfo.emergency_contact_phone || null,
-    })
-    .select("id")
-    .single();
+  const rawBaseAddress = [
+    basicInfo.street_address,
+    basicInfo.city,
+    basicInfo.state,
+    basicInfo.pincode,
+  ].filter(Boolean).join(", ") || null;
+
+  const address = buildAddressWithMetadata(rawBaseAddress, {
+    occupation: effectiveOccupation,
+    significantExposure,
+    smokingStatus,
+    smokingIndex,
+    alcoholStatus,
+    pastHistory,
+    pastHistoryYearsAgo,
+  });
+
+  const fullPatientPayload = {
+    name: basicInfo.name,
+    date_of_birth: dobFromAge,
+    mobile_number: normalizedMobile,
+    alternate_mobile_number: normalizedAlternateMobile,
+    gender: basicInfo.gender || null,
+    address,
+    occupation: effectiveOccupation || null,
+    significant_exposure: significantExposure || null,
+    smoking_status: smokingStatus,
+    smoking_index: smokingIndex,
+    alcohol_status: alcoholStatus,
+    past_history: pastHistory,
+    past_history_years_ago: pastHistoryYearsAgo,
+    doctor_id: user.id,
+    emergency_contact_name: basicInfo.emergency_contact_name || null,
+    emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+  };
+
+  const fallbackPatientPayload = {
+    name: basicInfo.name,
+    date_of_birth: dobFromAge,
+    mobile_number: normalizedMobile,
+    alternate_mobile_number: normalizedAlternateMobile,
+    gender: basicInfo.gender || null,
+    address,
+    doctor_id: user.id,
+    emergency_contact_name: basicInfo.emergency_contact_name || null,
+    emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+  };
+
+  // 1. Insert patient with safe fallback
+  const { data: patient, error: patientError } = await safeInsertPatient(
+    supabase,
+    fullPatientPayload,
+    fallbackPatientPayload
+  );
 
   if (patientError || !patient) {
     console.error("patients insert error:", JSON.stringify(patientError));
@@ -552,34 +602,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const comorbidities = (diagnosis.comorbidities as string[]) ?? [];
 
     // Build a structured diagnosis label from the new disease category fields
-    const diseaseCategory = (diagnosis.disease_category as string) ?? "";
-    const ildSubtype = (diagnosis.ild_subtype as string) ?? "";
-    const ildOtherText = (diagnosis.ild_other_text as string) ?? "";
-    const isFibrotic = diagnosis.is_fibrotic as boolean | null;
-    const oadDiagnosis = (diagnosis.oad_diagnosis as string) ?? "";
-    const oadOtherText = (diagnosis.oad_other_text as string) ?? "";
-    const bronchiectasisCause = (diagnosis.bronchiectasis_cause as string) ?? "";
-    const bronchiectasisOtherText = (diagnosis.bronchiectasis_other_text as string) ?? "";
-    const posticuCause = (diagnosis.posticu_cause as string) ?? "";
-    const posticuOtherText = (diagnosis.posticu_other_text as string) ?? "";
-
-    // Build structured primary_diagnosis string
-    let structuredDiagnosis = primaryDiagnosis;
-    if (diseaseCategory === "ILD" && ildSubtype) {
-      const subtype = ildSubtype === "Others" ? (ildOtherText || "Others") : ildSubtype;
-      const fibroticLabel = isFibrotic === true ? "Fibrotic" : isFibrotic === false ? "Non-Fibrotic" : "";
-      structuredDiagnosis = ["ILD", subtype, fibroticLabel].filter(Boolean).join(" / ");
-    } else if (diseaseCategory === "OAD" && oadDiagnosis) {
-      const specific = oadDiagnosis === "Other OAD" ? (oadOtherText || "Other OAD") : oadDiagnosis;
-      structuredDiagnosis = `OAD / ${specific}`;
-    } else if (diseaseCategory === "Bronchiectasis" && bronchiectasisCause) {
-      const cause = bronchiectasisCause === "Other" ? (bronchiectasisOtherText || "Other") : bronchiectasisCause;
-      structuredDiagnosis = `Bronchiectasis / ${cause}`;
-    } else if (diseaseCategory === "Post ICU Recovery" && posticuCause) {
-      const cause = posticuCause === "Other cause" ? (posticuOtherText || "Other") : posticuCause;
-      structuredDiagnosis = `Post ICU Recovery / ${cause}`;
-    }
-
+    const structuredDiagnosis = buildStructuredDiagnosis(diagnosis as any);
     const finalPrimaryDiagnosis = structuredDiagnosis || primaryDiagnosis;
     const effectiveDashboard = computeEffectiveDashboard(finalPrimaryDiagnosis, postIcuSub || undefined);
 
@@ -656,7 +679,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         fev1: r.fev1 ? parseFloat(r.fev1) : null,
         fev1_fvc_ratio: r.fev1_fvc_ratio ? parseFloat(r.fev1_fvc_ratio) : null,
         dlco: r.dlco ? parseFloat(r.dlco) : null,
-        // Store additional PFT fields in other_fields JSON
+        // Store additional PFT and baseline fields in other_fields JSON
         other_fields: {
           fev1_pct_pred: r.fev1_pct_pred || null,
           fvc_pct_pred: r.fvc_pct_pred || null,
@@ -668,6 +691,13 @@ export async function POST(request: Request): Promise<NextResponse> {
           occupation: effectiveOccupation || null,
           other_occupation: otherOccupation || null,
           significant_exposure: significantExposure || null,
+          smoking: smokingStatus || null,
+          smoking_status: smokingStatus || null,
+          smoking_index: smokingIndex || null,
+          alcohol: alcoholStatus || null,
+          alcohol_status: alcoholStatus || null,
+          past_history: pastHistory || null,
+          past_history_years_ago: pastHistoryYearsAgo || null,
         } as import("@/lib/database.types").Json,
         created_by_doctor_id: user.id,
       }));
@@ -680,7 +710,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
     }
   } else {
-    // If no PFT records entered, create a baseline record to persist occupation and exposures
+    // If no PFT records entered, create a baseline record to persist occupation, exposures, habits, and past history
     await supabase.from("pft_records").insert({
       patient_id: patientId,
       test_date: new Date().toISOString().split("T")[0]!,
@@ -690,6 +720,13 @@ export async function POST(request: Request): Promise<NextResponse> {
         occupation: effectiveOccupation || null,
         other_occupation: otherOccupation || null,
         significant_exposure: significantExposure || null,
+        smoking: smokingStatus || null,
+        smoking_status: smokingStatus || null,
+        smoking_index: smokingIndex || null,
+        alcohol: alcoholStatus || null,
+        alcohol_status: alcoholStatus || null,
+        past_history: pastHistory || null,
+        past_history_years_ago: pastHistoryYearsAgo || null,
       } as import("@/lib/database.types").Json,
       created_by_doctor_id: user.id,
     });
@@ -795,6 +832,25 @@ export async function PUT(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Patient instructions must be 50 words or fewer" }, { status: 400 });
   }
 
+  // Fetch existing patient to retain unedited values (such as habits or history if user only changed diagnosis)
+  const [existingPatientRes, existingPftRes] = await Promise.all([
+    admin
+      .from("patients")
+      .select("id,name,date_of_birth,mobile_number,alternate_mobile_number,gender,emergency_contact_name,emergency_contact_phone,address")
+      .eq("id", patientId)
+      .single(),
+    admin
+      .from("pft_records")
+      .select("other_fields")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const existingMeta = extractAddressAndMetadata(existingPatientRes.data?.address);
+  const existingOtherFields = (existingPftRes.data?.other_fields as Record<string, any>) ?? {};
+
   const age = basicInfo.age ? parseInt(basicInfo.age, 10) : null;
   const currentYear = new Date().getFullYear();
   const dobYear = age && age > 0 && age < 130 ? currentYear - age : currentYear - 40;
@@ -805,45 +861,78 @@ export async function PUT(request: Request): Promise<NextResponse> {
     ? rawAlternateMobile.startsWith("91") && rawAlternateMobile.length === 12
       ? `+${rawAlternateMobile}`
       : `+91${rawAlternateMobile}`
+    : (existingPatientRes.data?.alternate_mobile_number || null);
+
+  const incomingOcc = (basicInfo.occupation as string) || null;
+  const incomingOtherOcc = (basicInfo.other_occupation as string) || null;
+  const incomingExp = (basicInfo.significant_exposure as string) || null;
+  const effectiveOccupation = incomingOcc
+    ? (incomingOcc === "Other" && incomingOtherOcc ? incomingOtherOcc : incomingOcc)
+    : (existingMeta.occupation || existingOtherFields.occupation || null);
+
+  const otherOccupation = incomingOtherOcc || existingOtherFields.other_occupation || null;
+  const significantExposure = incomingExp || existingMeta.significantExposure || existingOtherFields.significant_exposure || null;
+
+  const smokingStatus = (basicInfo.smoking_status || basicInfo.smoking as string) ||
+    existingMeta.smokingStatus || existingOtherFields.smoking_status || existingOtherFields.smoking || null;
+
+  const smokingIndex = smokingStatus === "Yes"
+    ? (((basicInfo.smoking_index as string) || existingMeta.smokingIndex || existingOtherFields.smoking_index) || null)
     : null;
 
-  const occupation = (basicInfo.occupation as string) || null;
-  const otherOccupation = (basicInfo.other_occupation as string) || null;
-  const significantExposure = (basicInfo.significant_exposure as string) || null;
-  const effectiveOccupation = occupation === "Other" && otherOccupation ? otherOccupation : occupation;
+  const alcoholStatus = (basicInfo.alcohol_status || basicInfo.alcohol as string) ||
+    existingMeta.alcoholStatus || existingOtherFields.alcohol_status || existingOtherFields.alcohol || null;
 
-  let updateAddress: string | null | undefined = undefined;
-  if (effectiveOccupation || significantExposure) {
-    const occTag = effectiveOccupation ? `Occupation: ${effectiveOccupation}` : "";
-    const expTag = significantExposure ? `Exposure: ${significantExposure}` : "";
-    updateAddress = [occTag, expTag].filter(Boolean).join(" | ");
-  }
+  const pastHistory = (basicInfo.past_history || basicInfo.past_history_text as string) ||
+    existingMeta.pastHistory || existingOtherFields.past_history || null;
 
-  const smokingStatus = (basicInfo.smoking_status || basicInfo.smoking as string) || null;
-  const smokingIndex = smokingStatus === "Yes" ? ((basicInfo.smoking_index as string) || null) : null;
-  const alcoholStatus = (basicInfo.alcohol_status || basicInfo.alcohol as string) || null;
-  const pastHistory = (basicInfo.past_history || basicInfo.past_history_text as string) || null;
-  const pastHistoryYearsAgo = pastHistory ? ((basicInfo.past_history_years_ago as string) || null) : null;
+  const pastHistoryYearsAgo = pastHistory
+    ? (((basicInfo.past_history_years_ago as string) || existingMeta.pastHistoryYearsAgo || existingOtherFields.past_history_years_ago) || null)
+    : null;
 
-  const { error: patientError } = await admin
-    .from("patients")
-    .update({
-      name: basicInfo.name,
-      date_of_birth: dobFromAge,
-      alternate_mobile_number: normalizedAlternateMobile,
-      gender: basicInfo.gender || null,
-      emergency_contact_name: basicInfo.emergency_contact_name || null,
-      emergency_contact_phone: basicInfo.emergency_contact_phone || null,
-      occupation: effectiveOccupation || null,
-      significant_exposure: significantExposure || null,
-      smoking_status: smokingStatus,
-      smoking_index: smokingIndex,
-      alcohol_status: alcoholStatus,
-      past_history: pastHistory,
-      past_history_years_ago: pastHistoryYearsAgo,
-      ...(updateAddress ? { address: updateAddress } : {}),
-    })
-    .eq("id", patientId);
+  const updateAddress = buildAddressWithMetadata(existingMeta.cleanAddress, {
+    occupation: effectiveOccupation,
+    significantExposure,
+    smokingStatus,
+    smokingIndex,
+    alcoholStatus,
+    pastHistory,
+    pastHistoryYearsAgo,
+  });
+
+  const fullUpdatePayload = {
+    name: basicInfo.name,
+    date_of_birth: dobFromAge,
+    alternate_mobile_number: normalizedAlternateMobile,
+    gender: basicInfo.gender || null,
+    emergency_contact_name: basicInfo.emergency_contact_name || null,
+    emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+    occupation: effectiveOccupation || null,
+    significant_exposure: significantExposure || null,
+    smoking_status: smokingStatus,
+    smoking_index: smokingIndex,
+    alcohol_status: alcoholStatus,
+    past_history: pastHistory,
+    past_history_years_ago: pastHistoryYearsAgo,
+    ...(updateAddress ? { address: updateAddress } : {}),
+  };
+
+  const fallbackUpdatePayload = {
+    name: basicInfo.name,
+    date_of_birth: dobFromAge,
+    alternate_mobile_number: normalizedAlternateMobile,
+    gender: basicInfo.gender || null,
+    emergency_contact_name: basicInfo.emergency_contact_name || null,
+    emergency_contact_phone: basicInfo.emergency_contact_phone || null,
+    ...(updateAddress ? { address: updateAddress } : {}),
+  };
+
+  const { error: patientError } = await safeUpdatePatient(
+    admin,
+    patientId,
+    fullUpdatePayload,
+    fallbackUpdatePayload
+  );
 
   if (patientError) {
     return NextResponse.json({ error: patientError.message }, { status: 500 });
@@ -852,33 +941,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
   if (diagnosis) {
     const primaryDiagnosis = (diagnosis.primary_diagnosis as string) ?? "";
     const postIcuSub = (diagnosis.post_icu_sub_diagnosis as string) ?? "";
-    const diseaseCategory = (diagnosis.disease_category as string) ?? "";
-    const ildSubtype = (diagnosis.ild_subtype as string) ?? "";
-    const ildOtherText = (diagnosis.ild_other_text as string) ?? "";
-    const isFibrotic = diagnosis.is_fibrotic as boolean | null;
-    const oadDiagnosis = (diagnosis.oad_diagnosis as string) ?? "";
-    const oadOtherText = (diagnosis.oad_other_text as string) ?? "";
-    const bronchiectasisCause = (diagnosis.bronchiectasis_cause as string) ?? "";
-    const bronchiectasisOtherText = (diagnosis.bronchiectasis_other_text as string) ?? "";
-    const posticuCause = (diagnosis.posticu_cause as string) ?? "";
-    const posticuOtherText = (diagnosis.posticu_other_text as string) ?? "";
-
-    let structuredDiagnosis = primaryDiagnosis;
-    if (diseaseCategory === "ILD" && ildSubtype) {
-      const subtype = ildSubtype === "Others" ? (ildOtherText || "Others") : ildSubtype;
-      const fibroticLabel = isFibrotic === true ? "Fibrotic" : isFibrotic === false ? "Non-Fibrotic" : "";
-      structuredDiagnosis = ["ILD", subtype, fibroticLabel].filter(Boolean).join(" / ");
-    } else if (diseaseCategory === "OAD" && oadDiagnosis) {
-      const specific = oadDiagnosis === "Other OAD" ? (oadOtherText || "Other OAD") : oadDiagnosis;
-      structuredDiagnosis = `OAD / ${specific}`;
-    } else if (diseaseCategory === "Bronchiectasis" && bronchiectasisCause) {
-      const cause = bronchiectasisCause === "Other" ? (bronchiectasisOtherText || "Other") : bronchiectasisCause;
-      structuredDiagnosis = `Bronchiectasis / ${cause}`;
-    } else if (diseaseCategory === "Post ICU Recovery" && posticuCause) {
-      const cause = posticuCause === "Other cause" ? (posticuOtherText || "Other") : posticuCause;
-      structuredDiagnosis = `Post ICU Recovery / ${cause}`;
-    }
-
+    const structuredDiagnosis = buildStructuredDiagnosis(diagnosis as any);
     const finalPrimaryDiagnosis = structuredDiagnosis || primaryDiagnosis;
     const effectiveDashboard = computeEffectiveDashboard(finalPrimaryDiagnosis, postIcuSub || undefined);
 
@@ -959,6 +1022,13 @@ export async function PUT(request: Request): Promise<NextResponse> {
           occupation: effectiveOccupation || null,
           other_occupation: otherOccupation || null,
           significant_exposure: significantExposure || null,
+          smoking: smokingStatus || null,
+          smoking_status: smokingStatus || null,
+          smoking_index: smokingIndex || null,
+          alcohol: alcoholStatus || null,
+          alcohol_status: alcoholStatus || null,
+          past_history: pastHistory || null,
+          past_history_years_ago: pastHistoryYearsAgo || null,
         } as Json,
         created_by_doctor_id: user.id,
       }));
@@ -966,7 +1036,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
       const { error: pftError } = await admin.from("pft_records").insert(pftInserts);
       if (pftError) return NextResponse.json({ error: pftError.message }, { status: 500 });
     }
-  } else if (effectiveOccupation || significantExposure) {
+  } else {
     await admin.from("pft_records").insert({
       patient_id: patientId,
       test_date: new Date().toISOString().split("T")[0]!,
@@ -976,6 +1046,13 @@ export async function PUT(request: Request): Promise<NextResponse> {
         occupation: effectiveOccupation || null,
         other_occupation: otherOccupation || null,
         significant_exposure: significantExposure || null,
+        smoking: smokingStatus || null,
+        smoking_status: smokingStatus || null,
+        smoking_index: smokingIndex || null,
+        alcohol: alcoholStatus || null,
+        alcohol_status: alcoholStatus || null,
+        past_history: pastHistory || null,
+        past_history_years_ago: pastHistoryYearsAgo || null,
       } as Json,
       created_by_doctor_id: user.id,
     });
@@ -1058,7 +1135,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
   }
 
   await admin.from("medications").delete().eq("patient_id", patientId);
-  
+
   const allMedInserts: Array<{
     patient_id: string;
     prescribed_by_doctor_id: string;
