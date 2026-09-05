@@ -1,7 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Activity, ArrowLeft, CheckCircle, CloudSun, FileText, Wind, X } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Activity,
+  ArrowLeft,
+  CheckCircle,
+  CloudSun,
+  FileText,
+  Wind,
+  X,
+  Mic,
+  MicOff,
+  Volume2,
+  Zap,
+  BookmarkPlus,
+  Sparkles,
+  ShieldAlert,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -17,6 +32,17 @@ import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { useToast } from "@/components/ui/Toast";
 import { MedicationAutocompleteInput } from "@/components/clinical/MedicationAutocompleteInput";
 import { formatDiagnosisDisplay } from "@o2plus/core";
+import { voiceAssistant } from "@/lib/client/voice-assistant";
+import {
+  BUILT_IN_PROTOCOLS,
+  loadCustomProtocols,
+  saveCustomProtocol,
+  deleteCustomProtocol,
+  type PrescriptionProtocol,
+} from "@/lib/client/prescription-protocols";
+import { PftProgressionView } from "@/components/dashboard/PftProgressionView";
+import { ExacerbationRiskBanner, evaluateExacerbationRisk } from "@/components/dashboard/ExacerbationRiskBanner";
+import { ActionPlanModal } from "@/components/patient/ActionPlanModal";
 import styles from "./PatientDetail.module.css";
 
 // Legacy Patient type (used as optional fallback prop)
@@ -129,7 +155,7 @@ interface HistoryEvent {
   meta?: string;
 }
 
-const TABS = ["Overview", "Analytics", "Treatment Folder", "History"];
+const TABS = ["Overview", "Analytics", "Treatment Folder", "Spirometry / PFT", "History"];
 
 // -- Helper: compute age -------------------------------------------------------
 function computeAge(dob: string): number {
@@ -209,6 +235,9 @@ export function PatientDetail({
   const [overviewPrescriptions, setOverviewPrescriptions] = useState<PrescriptionGroup[]>([]);
   const [trendData, setTrendData] = useState<TrendPoint[]>([]);
   const [historyEvents, setHistoryEvents] = useState<HistoryEvent[]>([]);
+  const [pftRecords, setPftRecords] = useState<any[]>([]);
+  const [rawLogs, setRawLogs] = useState<any[]>([]);
+  const [actionPlanOpen, setActionPlanOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newInstruction, setNewInstruction] = useState("");
   const [savingInstruction, setSavingInstruction] = useState(false);
@@ -231,17 +260,25 @@ export function PatientDetail({
       historyMedRes,
       trendRes,
       historyLogRes,
+      pftRes,
     ] = await Promise.all([
       supabase.from("patients").select("id,name,mobile_number,address,emergency_contact_name,emergency_contact_phone,date_of_birth,gender").eq("id", resolvedId).single(),
-
       supabase.from("patient_diagnoses").select("primary_diagnosis,diagnosed_at,comorbidities,comorbidities_other_text,effective_dashboard").eq("patient_id", resolvedId).order("created_at", { ascending: false }).limit(1).single(),
       supabase.from("respiratory_support").select("ltot_enabled,ltot_litres,bipap_enabled,bipap_ipap,bipap_epap").eq("patient_id", resolvedId).single(),
       supabase.from("daily_logs").select("spo2_rest,mmrc_today,aqi_value,medication_compliance,logged_at").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(1).single(),
       supabase.from("doctor_instructions").select("id,instruction_text,created_at").eq("patient_id", resolvedId).order("created_at", { ascending: false }),
       supabase.from("medications").select("id,drug_name,route,dose,dose_unit,frequency,start_date,end_date,serial_number").eq("patient_id", resolvedId).order("start_date", { ascending: false }).order("serial_number", { ascending: true }),
       supabase.from("daily_logs").select("logged_at,spo2_rest,mmrc_today,vas_symptoms").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
-      supabase.from("daily_logs").select("id,logged_at,spo2_rest,mmrc_today,aqi_value").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
+      supabase.from("daily_logs").select("id,logged_at,spo2_rest,spo2_exertion,mmrc_today,aqi_value,vas_symptoms,medication_compliance,disease_specific_data").eq("patient_id", resolvedId).order("logged_at", { ascending: false }).limit(30),
+      supabase.from("pft_records").select("*").eq("patient_id", resolvedId).order("test_date", { ascending: false }),
     ]);
+
+    if (pftRes.data) {
+      setPftRecords(pftRes.data);
+    }
+    if (historyLogRes.data) {
+      setRawLogs(historyLogRes.data);
+    }
 
     // Fetch comprehensive patient form data including occupation, exposure, habits & past history
     let fetchedOccupation = "";
@@ -529,6 +566,16 @@ export function PatientDetail({
             <button
               type="button"
               className={styles.backBtn}
+              onClick={() => setActionPlanOpen(true)}
+              style={{ background: "#059669", color: "#ffffff", borderColor: "#059669" }}
+              title="View / Print Visual Action Plan"
+            >
+              <ShieldAlert size={14} />
+              <span>Action Plan</span>
+            </button>
+            <button
+              type="button"
+              className={styles.backBtn}
               onClick={() => setReportModalOpen(true)}
               style={{ background: "#1e6091", color: "#ffffff", borderColor: "#1e6091" }}
               title="Download Date-Filtered Single Patient Clinical PDF Report"
@@ -552,6 +599,13 @@ export function PatientDetail({
           patientId={resolvedId}
           patientName={displayName}
           isDoctorView={true}
+        />
+
+        <ActionPlanModal
+          isOpen={actionPlanOpen}
+          onClose={() => setActionPlanOpen(false)}
+          patientName={displayName}
+          diagnosis={diagnosis?.primary_diagnosis ?? undefined}
         />
 
         {/* Body */}
@@ -596,6 +650,8 @@ export function PatientDetail({
               onClose={onClose}
               onEdit={onEdit}
               onExport={onExport}
+              rawLogs={rawLogs}
+              patientDiagnosis={diagnosis?.primary_diagnosis ?? undefined}
             />
           )}
 
@@ -605,6 +661,10 @@ export function PatientDetail({
 
           {!loading && activeTab === "Treatment Folder" && (
             <TreatmentTab patientId={resolvedId ?? ""} />
+          )}
+
+          {!loading && activeTab === "Spirometry / PFT" && (
+            <PftProgressionView records={pftRecords} />
           )}
 
           {!loading && activeTab === "History" && (
@@ -631,6 +691,8 @@ function OverviewTab({
   onClose,
   onEdit,
   onExport,
+  rawLogs = [],
+  patientDiagnosis,
 }: {
   displaySpo2: number | null;
   displayMmrc: number | null;
@@ -645,9 +707,12 @@ function OverviewTab({
   onClose: () => void;
   onEdit?: () => void;
   onExport?: () => void;
+  rawLogs?: any[];
+  patientDiagnosis?: string;
 }) {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [sentVisible, setSentVisible] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
   const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(() => new Set(prescriptions[0]?.date ? [prescriptions[0].date] : []));
   const latestInstruction = instructions[0];
   const today = new Date().toISOString().split("T")[0]!;
@@ -674,6 +739,23 @@ function OverviewTab({
           </div>
         </div>
       )}
+
+      {/* Real-time Automated Exacerbation Risk Assessment */}
+      <div style={{ marginBottom: 16 }}>
+        <ExacerbationRiskBanner
+          vitals={{
+            spo2: displaySpo2,
+            mmrc: displayMmrc,
+            aqi: typeof displayAqi === "number" ? displayAqi : undefined,
+          }}
+          recentLogs={rawLogs}
+          onNotifyPatient={() => {
+            onInstructionChange(
+              "Notice of Clinical Alert: Your latest telemetry indicates increased respiratory effort or desaturation. Please check your reliever inhaler, rest in an upright position, and contact our clinic immediately if symptoms do not improve."
+            );
+          }}
+        />
+      </div>
 
       {/* Trend boxes */}
       <div className={styles.trendRow}>
@@ -847,15 +929,73 @@ function OverviewTab({
         </div>
 
         <div className={styles.instructionComposer}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--med-blue-600, #1e6091)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Clinical Advice
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (isDictating) {
+                  voiceAssistant.stopListening();
+                  setIsDictating(false);
+                } else {
+                  setIsDictating(true);
+                  voiceAssistant.startListening({
+                    onResult: (text) => {
+                      onInstructionChange(newInstruction ? `${newInstruction} ${text}` : text);
+                    },
+                    onError: (err) => {
+                      setIsDictating(false);
+                    },
+                    onEnd: () => {
+                      setIsDictating(false);
+                    },
+                  });
+                }
+              }}
+              style={{
+                padding: "3px 8px",
+                borderRadius: 6,
+                border: isDictating ? "1.5px solid #ef4444" : "1px solid #cbd5e1",
+                background: isDictating ? "#fee2e2" : "#f8fafc",
+                color: isDictating ? "#dc2626" : "#475569",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              {isDictating ? <MicOff size={12} color="#dc2626" /> : <Mic size={12} color="#475569" />}
+              <span>{isDictating ? "Stop Dictation" : "Dictate (Voice)"}</span>
+            </button>
+          </div>
           <textarea
             className={styles.instructionTextarea}
-            placeholder="Write a clear instruction for the patient..."
+            placeholder="Write a clear instruction for the patient or dictate using voice..."
             value={newInstruction}
             onChange={(e) => onInstructionChange(e.target.value)}
           />
-          <p style={{ margin: 0, fontSize: 11, color: countWords(newInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT ? "#c94d49" : "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-            {countWords(newInstruction)}/{PATIENT_INSTRUCTION_WORD_LIMIT} words
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+            <p style={{ margin: 0, fontSize: 11, color: countWords(newInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT ? "#c94d49" : "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+              {countWords(newInstruction)}/{PATIENT_INSTRUCTION_WORD_LIMIT} words
+            </p>
+            {newInstruction && (
+              <button
+                type="button"
+                onClick={() => voiceAssistant.speak(newInstruction)}
+                style={{
+                  background: "none", border: "none", color: "var(--med-blue-600)",
+                  fontSize: 11, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3
+                }}
+              >
+                <Volume2 size={12} />
+                <span>Audio Preview</span>
+              </button>
+            )}
+          </div>
           <button
             type="button"
             className={styles.instructionSubmit}
@@ -868,8 +1008,21 @@ function OverviewTab({
 
         {latestInstruction && !instructionsOpen && (
           <div className={styles.latestInstruction}>
-            <span className={styles.latestInstructionLabel}>Latest</span>
-            {sentInstructionId === latestInstruction.id && <span className={styles.latestInstructionLabel}>Sent</span>}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <span className={styles.latestInstructionLabel}>Latest</span>
+                {sentInstructionId === latestInstruction.id && <span className={styles.latestInstructionLabel}>Sent</span>}
+              </div>
+              <button
+                type="button"
+                onClick={() => voiceAssistant.speak(latestInstruction.instruction_text)}
+                style={{ background: "none", border: "none", color: "var(--med-blue-600)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600 }}
+                title="Read instruction aloud"
+              >
+                <Volume2 size={13} />
+                <span>Listen</span>
+              </button>
+            </div>
             <p>{latestInstruction.instruction_text}</p>
             <time>{fmtDateTime(latestInstruction.created_at)}</time>
           </div>
@@ -879,7 +1032,18 @@ function OverviewTab({
           <div className={styles.instructionHistory}>
             {instructions.map((instr) => (
               <article key={instr.id} className={styles.instructionItem}>
-                {sentInstructionId === instr.id && <span className={styles.latestInstructionLabel}>Sent</span>}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  {sentInstructionId === instr.id ? <span className={styles.latestInstructionLabel}>Sent</span> : <span />}
+                  <button
+                    type="button"
+                    onClick={() => voiceAssistant.speak(instr.instruction_text)}
+                    style={{ background: "none", border: "none", color: "var(--med-blue-600)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600 }}
+                    title="Read instruction aloud"
+                  >
+                    <Volume2 size={13} />
+                    <span>Listen</span>
+                  </button>
+                </div>
                 <p>{instr.instruction_text}</p>
                 <time>{fmtDateTime(instr.created_at)}</time>
               </article>
@@ -1160,10 +1324,40 @@ function TreatmentTab({ patientId }: { patientId: string }) {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [openPrescriptionDates, setOpenPrescriptionDates] = useState<Set<string>>(new Set());
+  const [customProtocols, setCustomProtocols] = useState<PrescriptionProtocol[]>([]);
+  const [isDictatingInstruction, setIsDictatingInstruction] = useState(false);
   // Inline edits for the history table: medId - field - value
   const [inlineEdits, setInlineEdits] = useState<Record<string, { route?: string; frequency?: string; discontinued?: boolean }>>({});
   const [inlineSaving, setInlineSaving] = useState<Record<string, boolean>>({});
   const toast = useToast();
+
+  useEffect(() => {
+    setCustomProtocols(loadCustomProtocols());
+  }, []);
+
+  const applyProtocol = (proto: PrescriptionProtocol) => {
+    const today = new Date().toISOString().split("T")[0]!;
+    setPrescriptionDate(today);
+    setDraftMeds(
+      proto.medications.map((m, i) => ({
+        _key: Date.now() + i,
+        drug_name: m.drug_name,
+        route: m.route,
+        dose: m.dose,
+        dose_unit: m.dose_unit,
+        frequency: m.frequency,
+        end_date: m.durationDays ? calculateEndDate(today, m.durationDays) : "",
+        ongoing: !m.durationDays,
+        status: "new" as const,
+        durationDays: m.durationDays ?? "",
+      }))
+    );
+    if (proto.instruction) {
+      setPatientInstruction(proto.instruction);
+    }
+    setShowEditor(true);
+    toast.success(`Applied protocol: ${proto.title}`);
+  };
 
   // Save an inline field change for a medication in the history table
   const saveInlineEdit = async (medId: string, field: "route" | "frequency" | "discontinued", value: string | boolean, today: string) => {
@@ -1494,6 +1688,55 @@ function TreatmentTab({ patientId }: { patientId: string }) {
 
   return (
     <div style={{ paddingTop: 8 }}>
+      {/* ⚡ Quick Clinical Protocols & Custom Templates Bar */}
+      <div style={{
+        marginBottom: 16,
+        padding: "12px 16px",
+        background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+        border: "1px solid #bbf7d0",
+        borderRadius: 12,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        boxShadow: "0 2px 8px rgba(22,163,74,0.06)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Zap size={16} color="#16a34a" />
+            <strong style={{ fontSize: 13, color: "#166534" }}>⚡ 1-Click Clinical Protocols &amp; Presets</strong>
+          </div>
+          <span style={{ fontSize: 11, color: "#15803d", fontWeight: 600 }}>Click to auto-populate medications &amp; clinical advice</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {[...BUILT_IN_PROTOCOLS, ...customProtocols].map((proto) => (
+            <button
+              key={proto.id}
+              type="button"
+              onClick={() => applyProtocol(proto)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                border: "1px solid #86efac",
+                background: "#ffffff",
+                color: "#166534",
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                transition: "all 0.15s ease",
+              }}
+              title={`${proto.title}: ${proto.description}`}
+            >
+              <Sparkles size={12} color="#16a34a" />
+              <span>{proto.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
@@ -1705,7 +1948,7 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             </div>
           </div>
 
-          {/* Mobile Stacked Medication Cards (Shown on mobile screens <= 760px) */}
+          {/* Mobile Stacked Medication Cards */}
           <div className={styles.rxMobileCards}>
             {draftMeds.map((med, index) => {
               const isStopped = med.status === "stopped";
@@ -1859,11 +2102,55 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             })}
           </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: 12 }}>
             <button type="button" onClick={addDrug}
               style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px dashed var(--med-blue-600, #1e6091)", background: "none", color: "var(--med-blue-600, #1e6091)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
             >
               + Add Medication
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const title = window.prompt("Enter custom protocol template name (e.g., Severe Asthma Maintenance):");
+                if (!title || !title.trim()) return;
+                const newProto: PrescriptionProtocol = {
+                  id: `custom-${Date.now()}`,
+                  title: title.trim(),
+                  category: "Custom",
+                  description: "Custom doctor-saved prescription template",
+                  medications: draftMeds.filter(m => m.drug_name.trim() && m.status !== "stopped").map(m => ({
+                    drug_name: m.drug_name,
+                    route: m.route,
+                    dose: m.dose,
+                    dose_unit: m.dose_unit,
+                    frequency: m.frequency,
+                    durationDays: m.durationDays,
+                    ongoing: m.ongoing,
+                  })),
+                  instruction: patientInstruction,
+                };
+                saveCustomProtocol(newProto);
+                setCustomProtocols(loadCustomProtocols());
+                toast.success("Protocol template saved!");
+              }}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                border: "1px solid #93c5fd",
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+              title="Save current medications as a reusable protocol template"
+            >
+              <BookmarkPlus size={13} />
+              <span>Save as Template</span>
             </button>
           </div>
 
@@ -1874,16 +2161,78 @@ function TreatmentTab({ patientId }: { patientId: string }) {
             border: "1px solid rgba(30,96,145,0.16)",
             borderRadius: 8,
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 6 }}>
               <label
                 htmlFor="patient-instruction"
                 style={{ fontSize: 11, fontWeight: 700, color: "var(--med-blue-600, #1e6091)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}
               >
                 Patient Instructions
               </label>
-              <span style={{ fontSize: 11, color: countWords(patientInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT ? "#c94d49" : "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                {countWords(patientInstruction)}/{PATIENT_INSTRUCTION_WORD_LIMIT} words
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isDictatingInstruction) {
+                      voiceAssistant.stopListening();
+                      setIsDictatingInstruction(false);
+                    } else {
+                      setIsDictatingInstruction(true);
+                      voiceAssistant.startListening({
+                        onResult: (transcript) => {
+                          setPatientInstruction((prev) => (prev ? prev + " " : "") + transcript);
+                        },
+                        onError: (err) => {
+                          setIsDictatingInstruction(false);
+                        },
+                        onEnd: () => {
+                          setIsDictatingInstruction(false);
+                        },
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    border: isDictatingInstruction ? "1.5px solid #ef4444" : "1px solid #cbd5e1",
+                    background: isDictatingInstruction ? "#fee2e2" : "#f8fafc",
+                    color: isDictatingInstruction ? "#dc2626" : "#475569",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {isDictatingInstruction ? <MicOff size={12} color="#dc2626" /> : <Mic size={12} color="#475569" />}
+                  <span>{isDictatingInstruction ? "Stop Dictation" : "Dictate (Voice)"}</span>
+                </button>
+                {patientInstruction && (
+                  <button
+                    type="button"
+                    onClick={() => voiceAssistant.speak(patientInstruction)}
+                    style={{
+                      padding: "3px 8px",
+                      borderRadius: 6,
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      color: "#475569",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <Volume2 size={12} color="#475569" />
+                    <span>Listen</span>
+                  </button>
+                )}
+                <span style={{ fontSize: 11, color: countWords(patientInstruction) > PATIENT_INSTRUCTION_WORD_LIMIT ? "#c94d49" : "#6d8794", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                  {countWords(patientInstruction)}/{PATIENT_INSTRUCTION_WORD_LIMIT} words
+                </span>
+              </div>
             </div>
             <textarea
               id="patient-instruction"

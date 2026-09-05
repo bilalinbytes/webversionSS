@@ -1,0 +1,134 @@
+.aqiCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(14, 116, 144, 0.08);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.aqiCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: var(--aqi-bar-color, #0284c7);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.locationTag {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.aqiBadgeBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--aqi-badge-bg, #ecfdf5);
+  border: 1px solid var(--aqi-badge-border, #a7f3d0);
+}
+
+.aqiVal {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--aqi-text-color, #047857);
+  line-height: 1;
+}
+
+.aqiCategory {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--aqi-text-color, #047857);
+}
+
+.weatherStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.statItem strong {
+  color: #0f172a;
+}
+
+.advisoryBox {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+.advisoryIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
