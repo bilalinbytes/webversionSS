@@ -23,6 +23,7 @@ import { usePatientLog } from "@/hooks/usePatientLog";
 import { usePreviousDayLog } from "@/hooks/usePreviousDayLog";
 import { DiseaseSpecificDailyLog } from "@/components/patient/DiseaseSpecificDailyLog";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import dStyles from "@/components/patient/disease.module.css";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
@@ -120,6 +121,7 @@ export function CommonDailyLogView({
   onSuccess,
   diagnosisLabel,
 }: CommonDailyLogViewProps) {
+  const { t, language } = useLanguage();
   const { submitState, submitLog, errorMessage, limitReached, reset } = usePatientLog();
   const aqi = useAqi();
   const prevDay = usePreviousDayLog(patientId);
@@ -439,8 +441,8 @@ export function CommonDailyLogView({
               <CheckCircle size={56} className={dStyles.successIconSvg} />
             </div>
 
-            <h2 className={dStyles.successTitle}>Daily Log Submitted Successfully!</h2>
-            <p className={dStyles.successTitleHi}>दैनिक स्वास्थ्य लॉग सफलतापूर्वक सेव हो गया है</p>
+            <h2 className={dStyles.successTitle}>{t("log_success", "Daily Log Submitted Successfully!")}</h2>
+            <p className={dStyles.successTitleHi}>{t("log_already_submitted", "Recorded successfully for today")}</p>
 
             <p className={dStyles.successSub}>
               Recorded for <strong>{displayDate}</strong> at <strong>{displayTime}</strong>. Your clinical team has received your health metrics.
@@ -449,7 +451,7 @@ export function CommonDailyLogView({
             {/* Vitals Summary Strip */}
             <div className={dStyles.successGrid}>
               <div className={dStyles.successMetricCard}>
-                <span className={dStyles.successMetricLabel}>SpO₂ at Rest</span>
+                <span className={dStyles.successMetricLabel}>{t("resting_spo2", "SpO₂ at Rest")}</span>
                 <strong className={dStyles.successMetricValue} style={{ color: dispSpo2 && dispSpo2 < 90 ? "#dc2626" : "#0f172a" }}>
                   {dispSpo2 ? `${dispSpo2}%` : "--"}
                 </strong>
@@ -457,7 +459,7 @@ export function CommonDailyLogView({
               </div>
 
               <div className={dStyles.successMetricCard}>
-                <span className={dStyles.successMetricLabel}>Heart Rate</span>
+                <span className={dStyles.successMetricLabel}>{t("heart_rate", "Heart Rate")}</span>
                 <strong className={dStyles.successMetricValue}>
                   {dispHr ? `${dispHr} bpm` : "--"}
                 </strong>
@@ -465,7 +467,7 @@ export function CommonDailyLogView({
               </div>
 
               <div className={dStyles.successMetricCard}>
-                <span className={dStyles.successMetricLabel}>Breathlessness</span>
+                <span className={dStyles.successMetricLabel}>{t("breathlessness", "Breathlessness")}</span>
                 <strong className={dStyles.successMetricValue} style={{ color: dispMmrc !== null && dispMmrc >= 3 ? "#dc2626" : "#0f172a" }}>
                   {dispMmrc !== null ? `Grade ${dispMmrc}` : "--"}
                 </strong>
@@ -490,7 +492,7 @@ export function CommonDailyLogView({
                   else window.location.href = "/patientdashboard";
                 }}
               >
-                Return to Health Dashboard
+                {t("home", "Return to Health Dashboard")}
               </button>
 
               <button
@@ -498,7 +500,7 @@ export function CommonDailyLogView({
                 className={dStyles.btnOutline}
                 onClick={handleStartEditTodayLog}
               >
-                Update / Edit Today&apos;s Entry
+                {t("save", "Update / Edit Today's Entry")}
               </button>
             </div>
           </div>
@@ -522,11 +524,10 @@ export function CommonDailyLogView({
       <div className={dStyles.pageHeader}>
         <div>
           <h1 className={dStyles.pageTitle}>
-            Log Today - {diagnosisLabel || dashboardLabel(dashboard)}
-            <span className={dStyles.pageTitleHi}> · दैनिक लॉग - {dashboardHindi(dashboard)}</span>
+            {t("log_today_title", "Log Today")} - {diagnosisLabel || dashboardLabel(dashboard)}
           </h1>
           <p className={dStyles.pageSub}>
-            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} · Takes about 4 minutes · लगभग 4 मिनट
+            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} · Takes about 4 minutes
           </p>
         </div>
       </div>
@@ -578,8 +579,8 @@ export function CommonDailyLogView({
                 <Activity size={18} />
               </div>
               <div>
-                <h2 className={dStyles.sectionTitle}>Common Vitals</h2>
-                <p className={dStyles.sectionSub}>सामान्य स्वास्थ्य जांच</p>
+                <h2 className={dStyles.sectionTitle}>{t("daily_vitals", "Common Vitals")}</h2>
+                <p className={dStyles.sectionSub}>Oxygen &amp; Pulse</p>
               </div>
             </div>
             <span className={dStyles.sectionBadge} style={{ background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd" }}>
@@ -595,12 +596,11 @@ export function CommonDailyLogView({
               onChange={setSpo2}
               prevValue={prevDay.spo2Rest}
               isCOPD={dashboard === "copd"}
-              label="SpO₂ at Rest · आराम के समय ऑक्सीजन"
+              label={t("resting_spo2", "SpO₂ at Rest")}
             />
             <div>
               <label className={dStyles.fieldLabel}>
-                SpO₂ After Walking (Optional)
-                <span className={dStyles.fieldLabelHi}>चलने के बाद ऑक्सीजन (वैकल्पिक)</span>
+                {t("exertion_spo2", "SpO₂ After Walking (Optional)")}
               </label>
               <input
                 type="number"
@@ -621,7 +621,7 @@ export function CommonDailyLogView({
               value={heartRate}
               onChange={setHeartRate}
               prevValue={prevDay.heartRate}
-              label="Heart Rate (Optional) · नाड़ी / मिनट (वैकल्पिक)"
+              label={t("heart_rate", "Heart Rate (Optional)")}
             />
           </div>
           <div style={{ marginTop: 16 }}>
@@ -640,9 +640,9 @@ export function CommonDailyLogView({
                 <Wind size={18} />
               </div>
               <div>
-                <h2 className={dStyles.sectionTitle}>Breathlessness (mMRC Grade)</h2>
+                <h2 className={dStyles.sectionTitle}>{t("mmrc_dyspnea", "Breathlessness (mMRC Grade)")}</h2>
                 <p className={dStyles.sectionSub}>
-                  सांस फूलना {previousMmrcLabel ? `· Previous day कल: ${previousMmrcLabel}` : ""}
+                  {previousMmrcLabel ? `Previous day: ${previousMmrcLabel}` : ""}
                 </p>
               </div>
             </div>
@@ -660,8 +660,8 @@ export function CommonDailyLogView({
                 <Pill size={18} />
               </div>
               <div>
-                <h2 className={dStyles.sectionTitle}>Medicines & Side Effects</h2>
-                <p className={dStyles.sectionSub}>दवाएं और दुष्प्रभाव</p>
+                <h2 className={dStyles.sectionTitle}>{t("prescribed_meds", "Medicines & Side Effects")}</h2>
+                <p className={dStyles.sectionSub}>Prescriptions</p>
               </div>
             </div>
             <span className={dStyles.sectionBadge} style={{ background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
@@ -672,7 +672,7 @@ export function CommonDailyLogView({
           {meds.length > 0 ? (
             <MedChecklist meds={meds} taken={medsTaken} onSelect={handleMedSelect} />
           ) : (
-            <p className={dStyles.cardSub}>No active meds for this date. · इस तारीख के लिए कोई सक्रिय दवा नहीं है।</p>
+            <p className={dStyles.cardSub}>{t("no_active_prescriptions", "No active meds for this date.")}</p>
           )}
           <div style={{ marginTop: 16 }}>
             <SideEffectsPicker
@@ -691,8 +691,8 @@ export function CommonDailyLogView({
                 <Flame size={18} />
               </div>
               <div>
-                <h2 className={dStyles.sectionTitle}>Symptoms Severity (0-10)</h2>
-                <p className={dStyles.sectionSub}>लक्षणों की तीव्रता</p>
+                <h2 className={dStyles.sectionTitle}>{t("symptom_questions", "Symptoms Severity (0-10)")}</h2>
+                <p className={dStyles.sectionSub}>VAS Severity</p>
               </div>
             </div>
             <span className={dStyles.sectionBadge} style={{ background: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}>
@@ -770,9 +770,9 @@ export function CommonDailyLogView({
             onClick={handleSubmit}
           >
             {isSubmitting ? (
-              <><Loader2 size={15} className={dStyles.spinner} /> {isEditingExistingLog ? "Saving updates... · अपडेट हो रहा है..." : "Submitting... · जमा हो रहा है..."}</>
+              <><Loader2 size={15} className={dStyles.spinner} /> {isEditingExistingLog ? `${t("save", "Saving updates...")}` : `${t("submitting", "Submitting...")}`}</>
             ) : (
-              <>{isEditingExistingLog ? "Save Updated Log · अपडेटेड लॉग सेव करें" : "Submit Daily Log · दैनिक लॉग जमा करें"}</>
+              <>{isEditingExistingLog ? t("save", "Save Updated Log") : t("submit_daily_log", "Submit Daily Log")}</>
             )}
           </button>
         </div>

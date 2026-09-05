@@ -5,6 +5,8 @@ import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, Alert
 import dStyles from "@/components/patient/disease.module.css";
 import { DiseaseHero3DVisual } from "./DiseaseHero3DVisual";
 import { PatientReportModal } from "./PatientReportModal";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Translations } from "@/lib/i18n/translations";
 
 export interface CommonDashboardProps {
   name: string;
@@ -135,6 +137,7 @@ export function CommonPatientDashboard({
   todayMedications,
   onMedicationToggle,
 }: CommonDashboardProps) {
+  const { t, currentLanguage, language } = useLanguage();
   const firstName = name ? (name.split(" ")[0] ?? "Patient") : "Patient";
   const risk = riskLabel(riskScore);
   const aqi = aqiLabel(aqiToday);
@@ -188,7 +191,7 @@ export function CommonPatientDashboard({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "var(--med-navy-900, #0f2b48)", fontFamily: "var(--font-lora), Georgia, serif" }}>
-                Namaste, {firstName} · नमस्ते
+                {t("hello", "Namaste")}, {firstName}
               </h1>
               {diseaseLabel && (
                 <span style={{
@@ -201,7 +204,7 @@ export function CommonPatientDashboard({
               )}
             </div>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--med-text-muted, #64748b)", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-              {hasTodayLog ? "Today's telemetry recorded · आज का डेटा दर्ज किया गया" : "Daily telemetry log pending · आज का डेटा दर्ज करें"}
+              {hasTodayLog ? t("log_already_submitted", "Today's telemetry recorded") : t("log_today_desc", "Daily telemetry log pending")}
             </p>
           </div>
         </div>
@@ -218,7 +221,7 @@ export function CommonPatientDashboard({
                 boxShadow: "0 1px 3px rgba(22, 101, 52, 0.08)"
               }}>
                 <CheckCircle2 size={15} strokeWidth={2.5} />
-                Logged Today · दर्ज हुआ
+                {t("confirm", "Logged Today")}
               </span>
               <button
                 type="button"
@@ -236,7 +239,7 @@ export function CommonPatientDashboard({
                   transition: "all 0.15s ease",
                 }}
               >
-                Update Entry · बदलें
+                {t("save", "Update Entry")}
               </button>
               {onViewHistory && (
                 <button
@@ -255,7 +258,7 @@ export function CommonPatientDashboard({
                     transition: "all 0.15s ease",
                   }}
                 >
-                  Logs History → · इतिहास
+                  {t("history", "Logs History")} →
                 </button>
               )}
             </>
@@ -267,7 +270,7 @@ export function CommonPatientDashboard({
                 className={dStyles.submitBtn}
                 style={{ padding: "10px 22px", fontSize: 13, borderRadius: 10, minHeight: 44, fontWeight: 700, width: "auto" }}
               >
-                Log Today&apos;s Health · आज का स्वास्थ्य दर्ज करें
+                {t("log_today_title", "Log Today's Health")}
               </button>
               {onViewHistory && (
                 <button
@@ -285,7 +288,7 @@ export function CommonPatientDashboard({
                     boxShadow: "0 1px 3px rgba(15, 43, 72, 0.04)",
                   }}
                 >
-                  Logs History · इतिहास
+                  {t("history", "Logs History")}
                 </button>
               )}
             </>
@@ -535,14 +538,14 @@ export function CommonPatientDashboard({
               <Heart size={15} color="#0284c7" strokeWidth={2.2} />
             </div>
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0369a1", fontSize: 12 }}>
-              SpO₂ · ऑक्सीजन
+              {t("resting_spo2", "SpO₂ (Resting)")}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: spo2.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {spo2Today > 0 ? `${spo2Today}%` : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: spo2.color, fontWeight: 600 }}>
-            {spo2Today > 0 ? `${spo2.label} · ${spo2.labelHi} ${hasTodayLog ? "(Today)" : "(Last)"}` : "No entry · कोई प्रविष्टि नहीं"}
+            {spo2Today > 0 ? `${spo2.label} ${hasTodayLog ? "(Today)" : "(Last)"}` : "No entry"}
           </span>
           {spo2Trend && spo2Trend.length > 1 && <SparkLine values={spo2Trend} color={spo2.color} />}
         </div>
@@ -558,14 +561,14 @@ export function CommonPatientDashboard({
               <Activity size={15} color="#dc2626" strokeWidth={2.2} />
             </div>
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#991b1b", fontSize: 12 }}>
-              Heart Rate · नाड़ी (BPM)
+              {t("heart_rate", "Heart Rate")}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: hr.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {heartRateToday && heartRateToday > 0 ? heartRateToday : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: hr.color, fontWeight: 600 }}>
-            {heartRateToday && heartRateToday > 0 ? `${hr.label} · ${hr.labelHi} ${hasTodayLog ? "(Today)" : "(Last)"}` : "Pulse not recorded · दर्ज नहीं"}
+            {heartRateToday && heartRateToday > 0 ? `${hr.label} ${hasTodayLog ? "(Today)" : "(Last)"}` : "Pulse not recorded"}
           </span>
           {heartRateTrend && heartRateTrend.length > 1 && <SparkLine values={heartRateTrend} color={hr.color} />}
         </div>
@@ -581,14 +584,14 @@ export function CommonPatientDashboard({
               <Wind size={15} color="#d97706" strokeWidth={2.2} />
             </div>
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#b45309", fontSize: 12 }}>
-              Breathlessness · सांस फूलना
+              {t("mmrc_dyspnea", "mMRC Dyspnea")}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: "var(--med-navy-800)", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {mmrcToday}
           </p>
           <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 600 }}>
-            Grade {mmrcToday} · {mmrcItem.hi}
+            Grade {mmrcToday} · {t(`mmrc_grade_${Math.min(Math.max(mmrcToday, 0), 4)}` as keyof Translations, mmrcItem.en)}
           </span>
           {mmrcTrend && mmrcTrend.length > 1 && <SparkLine values={mmrcTrend} color="#d97706" />}
         </div>
@@ -605,14 +608,14 @@ export function CommonPatientDashboard({
               <Activity size={15} color={aqiToday > 0 ? "#0d9488" : "#64748b"} strokeWidth={2.2} />
             </div>
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#0f766e", fontSize: 12 }}>
-              Air Quality · वायु गुणवत्ता (AQI)
+              {t("aqi_label", "Air Quality Index (AQI)")}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: aqiToday > 0 ? aqi.color : "#64748b", fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
             {aqiToday > 0 ? aqiToday : "--"}
           </p>
           <span style={{ fontSize: 11.5, color: aqiToday > 0 ? aqi.color : "#64748b", fontWeight: 600 }}>
-            {aqiToday > 0 ? `${aqi.label} · ${aqi.labelHi} ${hasTodayLog ? "(Logged)" : "(Live)"}` : "AQI unavailable"}
+            {aqiToday > 0 ? `${aqi.label} ${hasTodayLog ? "(Logged)" : "(Live)"}` : "AQI unavailable"}
           </span>
         </div>
 
@@ -627,7 +630,7 @@ export function CommonPatientDashboard({
               <AlertCircle size={15} color={risk.color} strokeWidth={2.2} />
             </div>
             <span className={dStyles.fieldLabel} style={{ margin: 0, fontWeight: 700, color: "#4338ca", fontSize: 12 }}>
-              Health Status · स्वास्थ्य स्थिति
+              {t("care_plan", "Health Status")}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 36, fontWeight: 800, color: risk.color, fontFamily: "var(--font-lora), Georgia, serif", lineHeight: 1, textShadow: "0 1px 2px rgba(15,43,72,0.06)" }}>
@@ -638,7 +641,7 @@ export function CommonPatientDashboard({
             borderRadius: 999, background: risk.bg, color: risk.color, fontWeight: 700, width: "fit-content",
             boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
           }}>
-            {risk.label} · {risk.labelHi}
+            {risk.label}
           </span>
         </div>
       </div>
@@ -803,10 +806,10 @@ export function CommonPatientDashboard({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
             <p className={dStyles.cardTitle} style={{ margin: 0 }}>
-              Today&apos;s Prescribed Medications · आज की दवाएं
+              {t("prescribed_meds", "Today's Prescribed Medications")}
             </p>
             <span style={{ fontSize: 11.5, color: "var(--med-text-muted)" }}>
-              Select Taken or Not Taken for each medicine · हर दवा के लिए ली गई या नहीं ली गई चुनें
+              {t("choose_language_sub", "Select Taken or Not Taken for each medicine")}
             </span>
           </div>
           {todayMedications && todayMedications.length > 0 && (() => {
@@ -831,7 +834,7 @@ export function CommonPatientDashboard({
 
         {(!todayMedications || todayMedications.length === 0) ? (
           <p style={{ margin: 0, fontSize: 13, color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-            No medications assigned. Log today to record adherence. · कोई दवा असाइन नहीं है।
+            {t("no_active_prescriptions", "No medications assigned.")}
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
@@ -865,7 +868,7 @@ export function CommonPatientDashboard({
                     {med.name}{med.dose ? ` - ${med.dose}` : ""}
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 11.5, color: med.taken === true ? "#059669" : med.taken === false ? "#dc2626" : "#888680", fontWeight: 500 }}>
-                    {med.taken === true ? "✓ Taken · दवा ली गई" : med.taken === false ? "✕ Not taken · दवा नहीं ली गई" : "Compulsory Selection Required · चयन अनिवार्य है"}
+                    {med.taken === true ? `✓ ${t("yes", "Taken")}` : med.taken === false ? `✕ ${t("no", "Not taken")}` : "Compulsory Selection Required"}
                   </p>
                 </div>
                 {onMedicationToggle && (
@@ -882,7 +885,7 @@ export function CommonPatientDashboard({
                         transition: "all 0.14s ease",
                       }}
                     >
-                      ✓ Taken · ली गई
+                      ✓ {t("yes", "Taken")}
                     </button>
                     <button
                       type="button"
@@ -896,7 +899,7 @@ export function CommonPatientDashboard({
                         transition: "all 0.14s ease",
                       }}
                     >
-                      ✕ Not Taken · नहीं ली
+                      ✕ {t("no", "Not Taken")}
                     </button>
                   </div>
                 )}

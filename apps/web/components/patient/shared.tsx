@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, AlertCircle, CloudSun, ShieldAlert, Check, X, Edit3 } from "lucide-react";
 import styles from "./shared.module.css";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Translations } from "@/lib/i18n/translations";
 
 // ── Animated number ───────────────────────────────────────────────────────────
 export function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
@@ -73,6 +75,7 @@ export function VASPicker({ value, onChange, label = "Discomfort (0–10)", labe
 
 // ── mMRC Picker ───────────────────────────────────────────────────────────────
 export function MMRCPicker({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
+  const { t, language } = useLanguage();
   const grades = [
     { g: 0, label: "No breathlessness", labelHi: "सांस नहीं फूलना", sub: "Only with strenuous exercise", subHi: "केवल कठिन व्यायाम के साथ" },
     { g: 1, label: "Mild",              labelHi: "हल्का", sub: "Hurrying or walking uphill", subHi: "जल्दी में या चढ़ाई पर चलते समय" },
@@ -82,22 +85,25 @@ export function MMRCPicker({ value, onChange }: { value: number | null; onChange
   ];
   return (
     <div className={styles.mmrcWrap}>
-      {grades.map(({ g, label, labelHi, sub, subHi }) => (
-        <button key={g} type="button"
-          className={`${styles.mmrcBtn} ${value === g ? styles.mmrcBtnActive : ""} ${g >= 3 ? styles.mmrcWarnBtn : ""}`}
-          onClick={() => onChange(g)}
-        >
-          <span className={`${styles.mmrcNum} ${value === g ? styles.mmrcNumActive : ""} ${value === g && g >= 3 ? styles.mmrcNumWarn : ""}`}>{g}</span>
-          <div className={styles.mmrcText}>
-            <div className={styles.mmrcTitleRow}>
-              <span className={styles.mmrcLabel}>{label}</span>
-              <span className={styles.mmrcLabelHi}>{labelHi}</span>
+      {grades.map(({ g, label, labelHi, sub, subHi }) => {
+        const translatedGrade = t(`mmrc_grade_${g}` as keyof Translations, `${label} - ${sub}`);
+        return (
+          <button key={g} type="button"
+            className={`${styles.mmrcBtn} ${value === g ? styles.mmrcBtnActive : ""} ${g >= 3 ? styles.mmrcWarnBtn : ""}`}
+            onClick={() => onChange(g)}
+          >
+            <span className={`${styles.mmrcNum} ${value === g ? styles.mmrcNumActive : ""} ${value === g && g >= 3 ? styles.mmrcNumWarn : ""}`}>{g}</span>
+            <div className={styles.mmrcText}>
+              <div className={styles.mmrcTitleRow}>
+                <span className={styles.mmrcLabel}>{label}</span>
+                {language !== "en" && <span className={styles.mmrcLabelHi}>{translatedGrade}</span>}
+                {language === "en" && <span className={styles.mmrcLabelHi}>{labelHi}</span>}
+              </div>
+              <span className={styles.mmrcSub}>{sub}</span>
             </div>
-            <span className={styles.mmrcSub}>{sub}</span>
-            <span className={styles.mmrcSubHi}>{subHi}</span>
-          </div>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -487,6 +493,7 @@ export function MedChecklist({
   taken: Record<string, boolean | null>;
   onSelect: (id: string, isTaken: boolean) => void;
 }) {
+  const { t, language } = useLanguage();
   const answeredCount = meds.filter((m) => taken[m.id] === true || taken[m.id] === false).length;
   const takenCount = meds.filter((m) => taken[m.id] === true).length;
   const allAnswered = meds.length > 0 && answeredCount === meds.length;
@@ -494,7 +501,7 @@ export function MedChecklist({
   return (
     <div className={styles.medWrap}>
       <div className={styles.medHeader}>
-        <p className={styles.medTitle}>Medications Today · आज की दवाएं (चयन अनिवार्य है)</p>
+        <p className={styles.medTitle}>{t("prescribed_meds", "Medications Today")}</p>
         <span className={`${styles.medBadge} ${allAnswered ? styles.medBadgeDone : ""}`}>
           {answeredCount}/{meds.length} answered · {takenCount} taken
         </span>
@@ -522,17 +529,17 @@ export function MedChecklist({
 
                 {isTaken && (
                   <span className={`${styles.medSelectionStatus} ${styles.medStatusTaken}`}>
-                    <Check size={12} strokeWidth={2.5} /> Taken · ली गई
+                    <Check size={12} strokeWidth={2.5} /> {t("yes", "Taken")}
                   </span>
                 )}
                 {isNotTaken && (
                   <span className={`${styles.medSelectionStatus} ${styles.medStatusNotTaken}`}>
-                    <X size={12} strokeWidth={2.5} /> Not Taken · नहीं ली गई
+                    <X size={12} strokeWidth={2.5} /> {t("no", "Not Taken")}
                   </span>
                 )}
                 {isUnselected && (
                   <span className={`${styles.medSelectionStatus} ${styles.medStatusPending}`}>
-                    Required · चयन करें
+                    Required
                   </span>
                 )}
               </div>
@@ -547,7 +554,7 @@ export function MedChecklist({
                 >
                   <Check size={16} strokeWidth={isTaken ? 3 : 2} />
                   <span className={styles.medChoiceText}>
-                    Taken <span className={styles.medChoiceHi}>· ली गई</span>
+                    {t("yes", "Taken")}
                   </span>
                 </button>
 
@@ -559,7 +566,7 @@ export function MedChecklist({
                 >
                   <X size={16} strokeWidth={isNotTaken ? 3 : 2} />
                   <span className={styles.medChoiceText}>
-                    Not Taken <span className={styles.medChoiceHi}>· नहीं ली गई</span>
+                    {t("no", "Not Taken")}
                   </span>
                 </button>
               </div>
@@ -858,6 +865,7 @@ export function SymptomsTracker({
   onChange: (d: SymptomsData) => void;
   prevData?: SymptomsData;
 }) {
+  const { t, language } = useLanguage();
   const toggleSymptom = (id: string) => {
     const next = { ...data };
     if (next[id]) {
@@ -877,14 +885,15 @@ export function SymptomsTracker({
   return (
     <div>
       <p className={styles.fieldLabel} style={{ marginBottom: 4 }}>
-        Symptoms Severity (0-10) · लक्षणों की तीव्रता
+        {t("symptom_questions", "Symptoms Severity (0-10)")}
       </p>
       <p style={{ margin: "0 0 12px", fontSize: 11, color: "#7b756d", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-        Symptoms today · आज के लक्षण (select symptom and rate 0-10 · लक्षण चुनें और 0-10 रेट करें; 0 = none/नहीं, 10 = severe/गंभीर)
+        Symptoms today (select symptom and rate 0-10; 0 = none, 10 = severe)
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         {SYMPTOM_LIST.map(sym => {
           const isActive = !!data[sym.id];
+          const localLabel = t(sym.id as keyof Translations, sym.label);
           return (
             <button
               key={sym.id}
@@ -904,7 +913,7 @@ export function SymptomsTracker({
               }}
               onClick={() => toggleSymptom(sym.id)}
             >
-              <span>{sym.label} · {sym.labelHi}</span>
+              <span>{sym.label} {language !== "en" && localLabel !== sym.label ? `· ${localLabel}` : `· ${sym.labelHi}`}</span>
             </button>
           );
         })}
@@ -916,11 +925,12 @@ export function SymptomsTracker({
           {SYMPTOM_LIST.filter(sym => data[sym.id]).map(sym => {
             const entry = data[sym.id]!;
             const prev = prevData?.[sym.id];
+            const localLabel = t(sym.id as keyof Translations, sym.label);
             return (
               <div key={sym.id} style={{ padding: 12, background: "#fff", borderRadius: 10, border: "1px solid #f1d8bc", boxShadow: "0 1px 5px rgba(90, 56, 24, 0.08)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1a1a18" }}>
-                    {sym.label} · {sym.labelHi}
+                    {sym.label} {language !== "en" && localLabel !== sym.label ? `· ${localLabel}` : `· ${sym.labelHi}`}
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ minWidth: 18, textAlign: "right", fontSize: 14, fontWeight: 800, color: (entry.vas ?? 0) >= 8 ? "#e24b4a" : (entry.vas ?? 0) >= 5 ? "#ef9f27" : "var(--med-blue-600, #1e6091)" }}>
@@ -944,15 +954,15 @@ export function SymptomsTracker({
                     }}
                   />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2, fontSize: 10, fontWeight: 700, color: "#807a72" }}>
-                    <span>0 = None · नहीं</span>
-                    <span>10 = Severe · गंभीर</span>
+                    <span>0 = None</span>
+                    <span>10 = Severe</span>
                   </div>
                 </div>
                 {/* Fever: show temperature field */}
                 {sym.id === "fever" && entry.vas !== null && entry.vas > 0 && (
                   <div style={{ marginTop: 10 }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "#3d3a35", display: "block", marginBottom: 4 }}>
-                      Temperature · तापमान
+                      {t("temperature", "Temperature (°F)")}
                     </label>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <input

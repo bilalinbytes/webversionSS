@@ -21,11 +21,13 @@ import {
   Stethoscope,
   Building2,
   X,
+  Globe,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDiagnosisDisplay } from "@o2plus/core";
 import { checkAndPlayNotificationAlert } from "@/lib/client/notification-sound";
 import styles from "./PatientTopNav.module.css";
@@ -169,9 +171,20 @@ function getAppointmentNotificationKey(appointment: AppointmentNotification | nu
   return `${appointment.id}:${status}:${appointment.updated_at ?? appointment.created_at ?? appointment.scheduled_at}`;
 }
 
+function getLocalizedTabLabel(id: View, t: (k: any, fallback?: string) => string): string {
+  switch (id) {
+    case "home": return t("home", "My Health");
+    case "log": return t("log_today", "Log Today");
+    case "history": return t("history", "Daily Logs");
+    case "analytics": return t("analytics", "Analytics");
+    case "appointments": return t("appointments", "Appointments");
+  }
+}
+
 export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) {
   const router = useRouter();
   const { patient } = usePatient();
+  const { t, currentLanguage, setShowLanguageModal } = useLanguage();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [latestPrescription, setLatestPrescription] = useState<PrescriptionNotification | null>(null);
@@ -524,8 +537,10 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             >
               <Icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
               <div className={styles.tabText}>
-                <span className={styles.tabEn}>{tab.label}</span>
-                <span className={styles.tabHi}>{tab.labelHi}</span>
+                <span className={styles.tabEn}>{getLocalizedTabLabel(tab.id, t)}</span>
+                {currentLanguage.code !== "en" && (
+                  <span className={styles.tabHi}>{currentLanguage.nativeName}</span>
+                )}
               </div>
             </button>
           );
@@ -534,6 +549,19 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
 
       {/* ── Right Utility Strip ── */}
       <div className={styles.right}>
+        {/* Language Switcher */}
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={() => setShowLanguageModal(true)}
+          title={`Language: ${currentLanguage.name} (${currentLanguage.nativeName})`}
+          aria-label="Change Language"
+          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "0 10px", width: "auto" }}
+        >
+          <Globe size={15} strokeWidth={1.8} />
+          <span style={{ fontSize: 12, fontWeight: 700 }}>{currentLanguage.nativeName}</span>
+        </button>
+
         {/* Notifications Center */}
         <div className={styles.notificationWrap} ref={notifRef}>
           <button

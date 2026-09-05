@@ -13,6 +13,8 @@ import { CommonPatientDashboard } from "@/components/patient/CommonPatientDashbo
 import { AppointmentPreferenceModal } from "@/components/patient/AppointmentPreferenceModal";
 import { usePatientHomeData } from "@/hooks/usePatientHomeData";
 import { formatDiagnosisDisplay } from "@o2plus/core";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { PatientLanguageModal } from "@/components/patient/PatientLanguageModal";
 import styles from "./page.module.css";
 
 type View = "home" | "log" | "history" | "analytics" | "appointments";
@@ -99,6 +101,8 @@ function PatientDashboardPageInner() {
           onComplete={handleAppointmentModalComplete}
         />
       )}
+
+      <PatientLanguageModal />
     </div>
   );
 }
@@ -106,7 +110,9 @@ function PatientDashboardPageInner() {
 export default function PatientDashboardClient() {
   return (
     <PatientProvider>
-      <PatientDashboardPageInner />
+      <LanguageProvider>
+        <PatientDashboardPageInner />
+      </LanguageProvider>
     </PatientProvider>
   );
 }

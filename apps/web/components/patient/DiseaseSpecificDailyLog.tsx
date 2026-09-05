@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AlertCircle, Activity, Wind, Sparkles, HeartPulse } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import dStyles from "@/components/patient/disease.module.css";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
@@ -236,6 +237,7 @@ function YesNoToggle({
   value: YesNoValue;
   onChange: (value: boolean) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className={dStyles.yesNoRow} style={{ marginTop: 10 }}>
       <button
@@ -254,8 +256,7 @@ function YesNoToggle({
         }
         onClick={() => onChange(true)}
       >
-        <span>Yes</span>
-        <span style={hindiStyle}>हाँ</span>
+        <span>{t("yes", "Yes")}</span>
       </button>
       <button
         type="button"
@@ -273,8 +274,7 @@ function YesNoToggle({
         }
         onClick={() => onChange(false)}
       >
-        <span>No</span>
-        <span style={hindiStyle}>नहीं</span>
+        <span>{t("no", "No")}</span>
       </button>
     </div>
   );
