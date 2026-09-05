@@ -26,7 +26,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   // Confirm caller is a doctor
   const { data: doctorRow } = await supabase
     .from("doctors")
-    .select("id")
+    .select("id, name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -68,7 +68,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   // Verify the patient record belongs to this doctor
   const { data: patientRow } = await supabase
     .from("patients")
-    .select("id, doctor_id, mobile_number")
+    .select("id, name, doctor_id, mobile_number")
     .eq("id", patientId)
     .maybeSingle();
 
@@ -89,37 +89,87 @@ export async function POST(request: Request): Promise<NextResponse> {
     (u) => u.phone === normalizedPhone
   );
 
-  if (alreadyExists) {
-    // Auth user already exists — patient can already log in. This is fine.
-    return NextResponse.json({ ok: true, created: false });
-  }
+  let isCreated = false;
+  if (!alreadyExists) {
+    // Create the Supabase Auth user with the patient's UUID as their auth ID.
+    // This ensures auth.uid() === patients.id, which is what the middleware
+    // and PatientContext rely on.
+    const { error: createError } = await admin.auth.admin.createUser({
+      id: patientId,          // Force the auth UUID to match the patients table PK
+      phone: normalizedPhone,
+      phone_confirm: true,    // Mark phone as confirmed — no OTP needed at creation
+      user_metadata: {
+        name: patientRow.name || patientRow.mobile_number, // store for reference
+        role: "patient",
+      },
+    });
 
-  // Create the Supabase Auth user with the patient's UUID as their auth ID.
-  // This ensures auth.uid() === patients.id, which is what the middleware
-  // and PatientContext rely on.
-  const { error: createError } = await admin.auth.admin.createUser({
-    id: patientId,          // Force the auth UUID to match the patients table PK
-    phone: normalizedPhone,
-    phone_confirm: true,    // Mark phone as confirmed — no OTP needed at creation
-    user_metadata: {
-      name: patientRow.mobile_number, // store for reference
-      role: "patient",
-    },
-  });
-
-  if (createError) {
-    // If the user already exists with this ID, that's fine
-    if (
-      createError.message.includes("already exists") ||
-      createError.message.includes("duplicate")
-    ) {
-      return NextResponse.json({ ok: true, created: false });
+    if (createError) {
+      if (
+        !createError.message.includes("already exists") &&
+        !createError.message.includes("duplicate")
+      ) {
+        return NextResponse.json(
+          { error: `Auth provisioning failed: ${createError.message}` },
+          { status: 500 }
+        );
+      }
+    } else {
+      isCreated = true;
     }
-    return NextResponse.json(
-      { error: `Auth provisioning failed: ${createError.message}` },
-      { status: 500 }
-    );
   }
 
-  return NextResponse.json({ ok: true, created: true });
+  // Dispatch Welcome Onboarding SMS (Twilio Gateway with graceful mock fallback)
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+  const hasTwilioCredentials =
+    accountSid &&
+    authToken &&
+    fromNumber &&
+    !accountSid.includes("your-twilio") &&
+    !authToken.includes("your-twilio") &&
+    !fromNumber.includes("your-twilio");
+
+  const doctorName = doctorRow?.name || "Dr. Irfan";
+  const patientDisplayName = patientRow.name || "Patient";
+  const welcomeMessage = `Welcome to O2Plus Respiratory Care, ${patientDisplayName}! You have been registered by ${doctorName}. Log in to view your prescriptions & lung care plan: https://o2plus.app/login`;
+
+  if (hasTwilioCredentials) {
+    try {
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`;
+
+      const smsRes = await fetch(twilioUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: authHeader,
+        },
+        body: new URLSearchParams({
+          To: normalizedPhone,
+          From: fromNumber,
+          Body: welcomeMessage,
+        }),
+      });
+
+      if (!smsRes.ok) {
+        const errorText = await smsRes.text();
+        console.error("[Twilio Onboarding SMS Gateway Error]:", errorText);
+      } else {
+        console.log(`[Twilio Onboarding SMS] Successfully dispatched to ${normalizedPhone}`);
+      }
+    } catch (smsErr) {
+      console.error("[Twilio Onboarding SMS Gateway Exception]:", smsErr);
+    }
+  } else {
+    console.log("\n==================================================");
+    console.log(`[SMS ONBOARDING MOCK] Dispatching welcome SMS to patient...`);
+    console.log(`[SMS ONBOARDING MOCK] Destination: ${normalizedPhone}`);
+    console.log(`[SMS ONBOARDING MOCK] Message: ${welcomeMessage}`);
+    console.log("==================================================\n");
+  }
+
+  return NextResponse.json({ ok: true, created: isCreated, sms_dispatched: true });
 }

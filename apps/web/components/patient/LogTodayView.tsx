@@ -49,23 +49,23 @@ export function LogTodayView({ onLogSubmitted }: { onLogSubmitted?: () => void }
         });
         const data = await res.json();
         if (data?.medications?.length > 0) {
-          setMedicationMap(
-            data.medications.map((med: {
-              id: string;
-              drug_name?: string;
-              name?: string;
-              dose?: number | string | null;
-              dose_unit?: string | null;
-              route?: string | null;
-              frequency?: string | null;
-            }) => ({
-              id: med.id,
-              name: med.drug_name ?? med.name ?? "Medication",
-              dose: [med.dose, med.dose_unit].filter(Boolean).join(" "),
-              route: med.route ?? "",
-              frequency: med.frequency ?? "As prescribed",
-            }))
-          );
+          const seen = new Set<string>();
+          const uniqueList: { id: string; name: string; dose: string; route: string; frequency: string }[] = [];
+          for (const med of data.medications) {
+            const medName = med.drug_name ?? med.name ?? "Medication";
+            const key = medName.toLowerCase().trim();
+            if (!seen.has(key)) {
+              seen.add(key);
+              uniqueList.push({
+                id: med.id,
+                name: medName,
+                dose: [med.dose, med.dose_unit].filter(Boolean).join(" "),
+                route: med.route ?? "",
+                frequency: med.frequency ?? "As prescribed",
+              });
+            }
+          }
+          setMedicationMap(uniqueList);
         }
       } catch {
         // Fallback gracefully if network error

@@ -45,9 +45,20 @@ export async function GET(
     .lte("start_date", today)
     .order("drug_name", { ascending: true });
 
-  const activeMeds = (medications ?? []).filter(
+  const rawActiveMeds = (medications ?? []).filter(
     (med) => !med.end_date || med.end_date > today,
   );
+
+  const activeMeds: typeof rawActiveMeds = [];
+  const seenActive = new Set<string>();
+  const sorted = [...rawActiveMeds].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""));
+  for (const m of sorted) {
+    const key = (m.drug_name ?? "").toLowerCase().trim();
+    if (!seenActive.has(key)) {
+      seenActive.add(key);
+      activeMeds.push(m);
+    }
+  }
 
   return NextResponse.json({ medications: activeMeds });
 }

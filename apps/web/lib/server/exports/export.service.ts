@@ -30,6 +30,7 @@ import {
   safeValue,
   aggregateClinicalLogs,
 } from "./aggregation/clinical-metrics";
+import { extractAddressAndMetadata } from "@/lib/server/patient-meta";
 import { calculateRiskCategory } from "./aggregation/risk-level";
 import { calculateAdherencePercentage, formatActiveMedications } from "./aggregation/medication-adherence";
 import { resolveCompleteDiagnosis, formatRespiratorySupport } from "./aggregation/diagnosis-resolver";
@@ -281,6 +282,7 @@ export async function executeExport(
     const resp = respMap.get(patient.id);
 
     const patExt = patient as PatientRow & Record<string, unknown>;
+    const addrMeta = extractAddressAndMetadata(patient.address);
     const pftOther = (pft?.other_fields ?? {}) as Record<string, unknown>;
 
     const diagDetails = resolveCompleteDiagnosis(diag);
@@ -580,9 +582,9 @@ export async function executeExport(
       name: toTitleCase(patient.name),
       age: computeAgeFromDob(patient.date_of_birth),
       sex: normalizeSex(patient.gender),
-      occupation: safeValue(patExt["occupation"]),
+      occupation: safeValue(patExt["occupation"] ?? addrMeta.occupation),
       otherOccupation: safeValue(patExt["other_occupation"]),
-      significantExposure: safeValue(patExt["significant_exposure"]),
+      significantExposure: safeValue(patExt["significant_exposure"] ?? addrMeta.significantExposure),
       mobile: formatCleanMobile(patient.mobile_number),
       alternateMobile: safeValue(patExt["alternate_mobile"] ?? patExt["alternate_phone"]),
       dateOfEnroll: formatDateDDMMYYYY(patient.created_at),
@@ -596,12 +598,12 @@ export async function executeExport(
       effectiveDashboard: (diag?.effective_dashboard || "ild").toLowerCase() as any,
       typeOfConnective: diagDetails.connective,
       comorbidities: diagDetails.comorbidities,
-      smoker: safeValue(patient.smoking_status ?? patExt["smoker"] ?? patExt["smoking_status"]),
-      smokingStatus: safeValue(patient.smoking_status ?? patExt["smoking_status"] ?? patExt["smoking"]),
-      smokingIndex: safeValue(patient.smoking_index ?? patExt["smoking_index"]),
-      alcoholStatus: safeValue(patient.alcohol_status ?? patExt["alcohol_status"] ?? patExt["alcohol"]),
-      pastHistory: safeValue(patient.past_history ?? patExt["past_history"]),
-      pastHistoryYearsAgo: safeValue(patient.past_history_years_ago ?? patExt["past_history_years_ago"]),
+      smoker: safeValue(patient.smoking_status ?? patExt["smoker"] ?? patExt["smoking_status"] ?? addrMeta.smokingStatus),
+      smokingStatus: safeValue(patient.smoking_status ?? patExt["smoking_status"] ?? patExt["smoking"] ?? addrMeta.smokingStatus),
+      smokingIndex: safeValue(patient.smoking_index ?? patExt["smoking_index"] ?? addrMeta.smokingIndex),
+      alcoholStatus: safeValue(patient.alcohol_status ?? patExt["alcohol_status"] ?? patExt["alcohol"] ?? addrMeta.alcoholStatus),
+      pastHistory: safeValue(patient.past_history ?? patExt["past_history"] ?? addrMeta.pastHistory),
+      pastHistoryYearsAgo: safeValue(patient.past_history_years_ago ?? patExt["past_history_years_ago"] ?? addrMeta.pastHistoryYearsAgo),
       symptomatic: logStats.symptomatic,
 
 

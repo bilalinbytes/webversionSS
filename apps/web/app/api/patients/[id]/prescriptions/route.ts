@@ -202,7 +202,7 @@ function PrescriptionPdfDocument({
               return React.createElement(
                 View,
                 { key: index, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
-                React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
+                React.createElement(Text, { style: pdfStyles.cellNo }, String(index + 1)),
                 React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
                 React.createElement(
                   Text,
@@ -382,7 +382,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const existingMap = new Map((existingMeds || []).map((m) => [m.id, m]));
 
-    // Handle stopped medications
+    const norm = (str?: string | null) => (str || "").trim().toLowerCase();
+
+    // 1. Handle explicitly stopped medication IDs
     if (stoppedMedicationIds.length > 0) {
       await admin
         .from("medications")
@@ -391,24 +393,138 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         .eq("patient_id", patientId);
     }
 
-    // Process new & modified medications
-    const activeDrafts = medicationsList.filter((m: any) => m.drug_name && m.drug_name.trim() && m.status !== "stopped");
+    // 2. Process draft medications without duplicating active ones
+    const rowsToInsert: any[] = [];
+    let nextSerial = 1;
 
-    if (activeDrafts.length > 0) {
-      const insertRows = activeDrafts.map((m: any, idx: number) => ({
-        patient_id: patientId,
-        prescribed_by_doctor_id: user.id,
-        route: m.route || "Tablet",
-        drug_name: m.drug_name.trim(),
-        dose: m.dose !== null && m.dose !== undefined && m.dose !== "" ? Number(m.dose) : null,
-        dose_unit: m.dose_unit || null,
-        frequency: m.frequency || "OD",
-        start_date: prescriptionDate,
-        end_date: m.end_date || null,
-        serial_number: idx + 1,
-      }));
+    for (const m of medicationsList) {
+      if (!m.drug_name || !m.drug_name.trim()) continue;
+      const drugName = m.drug_name.trim();
 
-      await admin.from("medications").insert(insertRows);
+      if (m.status === "stopped") {
+        if (m.source_id) {
+          await admin
+            .from("medications")
+            .update({ end_date: prescriptionDate })
+            .eq("id", m.source_id)
+            .eq("patient_id", patientId);
+        }
+        continue;
+      }
+
+      if (m.status === "modified") {
+        // If updating an existing medication, end the old record
+        if (m.source_id) {
+          await admin
+            .from("medications")
+            .update({ end_date: prescriptionDate })
+            .eq("id", m.source_id)
+            .eq("patient_id", patientId);
+        } else {
+          // Find any active record for this drug and end it
+          const matchingOld = (existingMeds || []).filter(
+            (em) => norm(em.drug_name) === norm(drugName) && (!em.end_date || em.end_date > prescriptionDate)
+          );
+          if (matchingOld.length > 0) {
+            await admin
+              .from("medications")
+              .update({ end_date: prescriptionDate })
+              .in("id", matchingOld.map(o => o.id))
+              .eq("patient_id", patientId);
+          }
+        }
+
+        // Insert new modified record
+        rowsToInsert.push({
+          patient_id: patientId,
+          prescribed_by_doctor_id: user.id,
+          route: m.route || "Tablet",
+          drug_name: drugName,
+          dose: m.dose !== null && m.dose !== undefined && m.dose !== "" && !isNaN(Number(m.dose)) ? Number(m.dose) : null,
+          dose_unit: m.dose_unit || null,
+          frequency: m.frequency || "OD",
+          start_date: prescriptionDate,
+          end_date: m.end_date || null,
+          serial_number: nextSerial++,
+        });
+      } else if (m.status === "new") {
+        // Ensure no duplicate active record with same drug_name remains active
+        const matchingOld = (existingMeds || []).filter(
+          (em) => norm(em.drug_name) === norm(drugName) && (!em.end_date || em.end_date > prescriptionDate)
+        );
+        if (matchingOld.length > 0) {
+          await admin
+            .from("medications")
+            .update({ end_date: prescriptionDate })
+            .in("id", matchingOld.map(o => o.id))
+            .eq("patient_id", patientId);
+        }
+
+        rowsToInsert.push({
+          patient_id: patientId,
+          prescribed_by_doctor_id: user.id,
+          route: m.route || "Tablet",
+          drug_name: drugName,
+          dose: m.dose !== null && m.dose !== undefined && m.dose !== "" && !isNaN(Number(m.dose)) ? Number(m.dose) : null,
+          dose_unit: m.dose_unit || null,
+          frequency: m.frequency || "OD",
+          start_date: prescriptionDate,
+          end_date: m.end_date || null,
+          serial_number: nextSerial++,
+        });
+      } else if (m.status === "continue") {
+        // Unchanged existing active medication - DO NOT insert a duplicate row!
+        // If end_date changed or duration was updated on the existing record, update it
+        if (m.source_id && m.end_date !== undefined) {
+          await admin
+            .from("medications")
+            .update({ end_date: m.end_date || null })
+            .eq("id", m.source_id)
+            .eq("patient_id", patientId);
+        }
+      } else {
+        // Fallback for untyped draft item: check if existing active record exists
+        const existing = m.source_id ? existingMap.get(m.source_id) : (existingMeds || []).find(em => norm(em.drug_name) === norm(drugName) && (!em.end_date || em.end_date > prescriptionDate));
+        if (existing) {
+          const isSame = 
+            norm(existing.route) === norm(m.route) &&
+            String(existing.dose ?? "") === String(m.dose ?? "") &&
+            norm(existing.dose_unit) === norm(m.dose_unit) &&
+            norm(existing.frequency) === norm(m.frequency);
+          if (!isSame) {
+            await admin.from("medications").update({ end_date: prescriptionDate }).eq("id", existing.id).eq("patient_id", patientId);
+            rowsToInsert.push({
+              patient_id: patientId,
+              prescribed_by_doctor_id: user.id,
+              route: m.route || "Tablet",
+              drug_name: drugName,
+              dose: m.dose !== null && m.dose !== undefined && m.dose !== "" && !isNaN(Number(m.dose)) ? Number(m.dose) : null,
+              dose_unit: m.dose_unit || null,
+              frequency: m.frequency || "OD",
+              start_date: prescriptionDate,
+              end_date: m.end_date || null,
+              serial_number: nextSerial++,
+            });
+          }
+        } else {
+          rowsToInsert.push({
+            patient_id: patientId,
+            prescribed_by_doctor_id: user.id,
+            route: m.route || "Tablet",
+            drug_name: drugName,
+            dose: m.dose !== null && m.dose !== undefined && m.dose !== "" && !isNaN(Number(m.dose)) ? Number(m.dose) : null,
+            dose_unit: m.dose_unit || null,
+            frequency: m.frequency || "OD",
+            start_date: prescriptionDate,
+            end_date: m.end_date || null,
+            serial_number: nextSerial++,
+          });
+        }
+      }
+    }
+
+    if (rowsToInsert.length > 0) {
+      await admin.from("medications").insert(rowsToInsert);
     }
 
     // Compute diff: Stopped, Started, Modified
@@ -575,9 +691,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       }
 
       const today = new Date().toISOString().split("T")[0]!;
-      const activeMeds = (medsRes.data || []).filter(
+      const rawActiveMeds = (medsRes.data || []).filter(
         (m) => (!m.end_date || m.end_date > today) && (!m.start_date || m.start_date <= today || m.start_date === prescriptionDate)
       );
+      const activeMeds: typeof rawActiveMeds = [];
+      const seenActive = new Set<string>();
+      const sortedActive = [...rawActiveMeds].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""));
+      for (const m of sortedActive) {
+        const key = (m.drug_name ?? "").toLowerCase().trim();
+        if (!seenActive.has(key)) {
+          seenActive.add(key);
+          activeMeds.push(m);
+        }
+      }
       const allDiscontinuedMap = new Map<string, {
         drug_name: string;
         route: string;

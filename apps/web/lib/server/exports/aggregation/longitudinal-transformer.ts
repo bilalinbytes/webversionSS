@@ -9,6 +9,7 @@ import {
 import { resolveCompleteDiagnosis, formatRespiratorySupport } from "./diagnosis-resolver";
 import { calculateRiskCategory } from "./risk-level";
 import { formatActiveMedications } from "./medication-adherence";
+import { extractAddressAndMetadata } from "@/lib/server/patient-meta";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 type DiagnosisRow = Database["public"]["Tables"]["patient_diagnoses"]["Row"];
@@ -412,6 +413,8 @@ export function transformPatientToLongitudinal(
   const latestPft = pfts.length > 0 ? pfts[pfts.length - 1] : null;
   const pftOther = (latestPft?.other_fields ?? {}) as Record<string, unknown>;
 
+  const addrMeta = extractAddressAndMetadata((patient as any).address);
+
   const commonRow: Record<string, unknown> = {
     "S No.": sno,
     "File No.": fileNo,
@@ -419,14 +422,14 @@ export function transformPatientToLongitudinal(
     "Patient Name": toTitleCase(patient.name),
     "Age": computeAgeFromDob(patient.date_of_birth),
     "Sex": normalizeSex(patient.gender),
-    "Occupation": patExt["occupation"] || (pftOther["occupation"] as string) || null,
-    "Significant Exposure": patExt["significant_exposure"] || (pftOther["significant_exposure"] as string) || (pftOther["significant_illness_exposure"] as string) || null,
-    "Smoking Status": (patient as any).smoking_status || patExt["smoking_status"] || patExt["smoking"] || null,
-    "Smoking Index": (patient as any).smoking_index || patExt["smoking_index"] || null,
-    "Alcohol Status": (patient as any).alcohol_status || patExt["alcohol_status"] || patExt["alcohol"] || null,
+    "Occupation": patExt["occupation"] || (pftOther["occupation"] as string) || addrMeta.occupation || null,
+    "Significant Exposure": patExt["significant_exposure"] || (pftOther["significant_exposure"] as string) || (pftOther["significant_illness_exposure"] as string) || addrMeta.significantExposure || null,
+    "Smoking Status": (patient as any).smoking_status || patExt["smoking_status"] || patExt["smoking"] || addrMeta.smokingStatus || null,
+    "Smoking Index": (patient as any).smoking_index || patExt["smoking_index"] || addrMeta.smokingIndex || null,
+    "Alcohol Status": (patient as any).alcohol_status || patExt["alcohol_status"] || patExt["alcohol"] || addrMeta.alcoholStatus || null,
     "Past Medical History": (() => {
-      const hist = (patient as any).past_history || patExt["past_history"] || null;
-      const yrs = (patient as any).past_history_years_ago || patExt["past_history_years_ago"] || null;
+      const hist = (patient as any).past_history || patExt["past_history"] || addrMeta.pastHistory || null;
+      const yrs = (patient as any).past_history_years_ago || patExt["past_history_years_ago"] || addrMeta.pastHistoryYearsAgo || null;
       if (!hist) return null;
       return yrs ? `${hist} (${yrs} yrs ago)` : hist;
     })(),

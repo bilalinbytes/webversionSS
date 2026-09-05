@@ -193,7 +193,7 @@ function PrescriptionPdfDocument({
               return React.createElement(
                 View,
                 { key: `${medication.drug_name}-${index}`, style: [pdfStyles.row, index % 2 === 1 ? pdfStyles.rowEven : {}] },
-                React.createElement(Text, { style: pdfStyles.cellNo }, String(medication.serial_number ?? index + 1)),
+                React.createElement(Text, { style: pdfStyles.cellNo }, String(index + 1)),
                 React.createElement(Text, { style: pdfStyles.cellRoute }, medication.route),
                 React.createElement(
                   Text,
@@ -359,9 +359,19 @@ export async function GET(request: Request) {
     }
 
     const today = new Date().toISOString().split("T")[0]!;
-    const activeMeds = (medsRes.data ?? []).filter(
+    const rawActiveMeds = (medsRes.data ?? []).filter(
       (m) => (!m.end_date || m.end_date > today) && (!m.start_date || m.start_date <= today || m.start_date === prescriptionDate)
     );
+    const activeMeds: typeof rawActiveMeds = [];
+    const seenActive = new Set<string>();
+    const sortedActive = [...rawActiveMeds].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""));
+    for (const m of sortedActive) {
+      const key = (m.drug_name ?? "").toLowerCase().trim();
+      if (!seenActive.has(key)) {
+        seenActive.add(key);
+        activeMeds.push(m);
+      }
+    }
 
     const allDiscontinuedMap = new Map<string, {
       drug_name: string;
