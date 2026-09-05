@@ -232,14 +232,14 @@ const WELL_CONTROLLED = ASTHMA_CONTROL_LEVELS.well_controlled!;
 
 const PFT_METRICS = [
   { key: "ratio",       label: "FEV1/FVC (%)",       color: "#2563eb" },
-  { key: "fev1PctPred", label: "FEV1 (% Predicted)", color: "#0d9488" },
   { key: "fev1",        label: "FEV1 (Liters)",       color: "#0d9488" },
-  { key: "fvcPctPred",  label: "FVC (% Predicted)",   color: "#7c3aed" },
+  { key: "fev1PctPred", label: "FEV1 (% Predicted)", color: "#14b8a6" },
   { key: "fvc",         label: "FVC (Liters)",         color: "#7c3aed" },
+  { key: "fvcPctPred",  label: "FVC (% Predicted)",   color: "#a855f7" },
   { key: "dlco",        label: "DLCO (% Predicted)",   color: "#4f46e5" },
   { key: "sixMwd",      label: "6MWD (m)",             color: "#059669" },
-  { key: "minSpo2",     label: "Min SpO2",             color: "#dc2626" },
-  { key: "maxSpo2",     label: "Max SpO2",             color: "#2563eb" },
+  { key: "maxSpo2",     label: "Baseline SpO2 (%)",   color: "#2563eb" },
+  { key: "minSpo2",     label: "Minimum SpO2 (%)",    color: "#dc2626" },
 ] as const;
 
 type PftMetricKey = typeof PFT_METRICS[number]["key"];

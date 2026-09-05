@@ -1006,6 +1006,17 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                   onChange={(e) => setDraft({ ...draft, date: e.target.value })}
                 />
               </Field>
+              <Field label="FEV1/FVC (%)">
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="e.g. 75.0"
+                  value={draft.ratio}
+                  onChange={(e) => setDraft({ ...draft, ratio: e.target.value })}
+                />
+              </Field>
               <Field label="FEV1 (Liters)">
                 <input
                   type="number"
@@ -1026,15 +1037,15 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                   }}
                 />
               </Field>
-              <Field label="FVC (% Predicted)">
+              <Field label="FEV1 (% Predicted)">
                 <input
                   type="number"
                   step="0.1"
                   inputMode="decimal"
                   className={styles.input}
                   placeholder="-"
-                  value={draft.fvc_pct_pred}
-                  onChange={(e) => setDraft({ ...draft, fvc_pct_pred: e.target.value })}
+                  value={draft.fev1_pct_pred}
+                  onChange={(e) => setDraft({ ...draft, fev1_pct_pred: e.target.value })}
                 />
               </Field>
               <Field label="FVC (Liters)">
@@ -1057,26 +1068,15 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                   }}
                 />
               </Field>
-              <Field label="FEV1/FVC (%)">
-                <input
-                  type="number"
-                  step="0.01"
-                  inputMode="decimal"
-                  className={styles.input}
-                  placeholder="e.g. 75.0"
-                  value={draft.ratio}
-                  onChange={(e) => setDraft({ ...draft, ratio: e.target.value })}
-                />
-              </Field>
-              <Field label="FEV1 (% Predicted)">
+              <Field label="FVC (% Predicted)">
                 <input
                   type="number"
                   step="0.1"
                   inputMode="decimal"
                   className={styles.input}
                   placeholder="-"
-                  value={draft.fev1_pct_pred}
-                  onChange={(e) => setDraft({ ...draft, fev1_pct_pred: e.target.value })}
+                  value={draft.fvc_pct_pred}
+                  onChange={(e) => setDraft({ ...draft, fvc_pct_pred: e.target.value })}
                 />
               </Field>
               <Field label="DLCO (% Predicted)">
@@ -1101,18 +1101,7 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                   onChange={(e) => setDraft({ ...draft, six_mwd: e.target.value })}
                 />
               </Field>
-              <Field label="Min SpO2 (%)">
-                <input
-                  type="number"
-                  step="0.1"
-                  inputMode="decimal"
-                  className={styles.input}
-                  placeholder="-"
-                  value={draft.min_spo2}
-                  onChange={(e) => setDraft({ ...draft, min_spo2: e.target.value })}
-                />
-              </Field>
-              <Field label="Max SpO2 (%)">
+              <Field label="Baseline SpO2 (%)">
                 <input
                   type="number"
                   step="0.1"
@@ -1121,6 +1110,17 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                   placeholder="-"
                   value={draft.max_spo2}
                   onChange={(e) => setDraft({ ...draft, max_spo2: e.target.value })}
+                />
+              </Field>
+              <Field label="Minimum SpO2 (%)">
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  className={styles.input}
+                  placeholder="-"
+                  value={draft.min_spo2}
+                  onChange={(e) => setDraft({ ...draft, min_spo2: e.target.value })}
                 />
               </Field>
             </div>
@@ -1159,13 +1159,14 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                 <tr>
                   <th>Test Date</th>
                   <th>FEV1/FVC %</th>
-                  <th>FEV1 %pred</th>
                   <th>FEV1 (L)</th>
-                  <th>FVC %pred</th>
+                  <th>FEV1 %pred</th>
                   <th>FVC (L)</th>
+                  <th>FVC %pred</th>
                   <th>DLCO %</th>
                   <th>6MWD</th>
-                  <th>SpO2 min/max</th>
+                  <th>Baseline SpO2</th>
+                  <th>Min SpO2</th>
                   <th style={{ width: 44, textAlign: "center" }}></th>
                 </tr>
               </thead>
@@ -1177,30 +1178,28 @@ function StepPFT({ data, update, errors, isEdit }: { data: FormData; update: (d:
                     six_mwd?: string | null;
                     min_spo2?: string | null;
                     max_spo2?: string | null;
+                    baseline_spo2?: string | null;
                   };
                   return (
                     <tr key={r._clientId}>
                       <td className={styles.medDateText}>{r.test_date}</td>
-                      <td className={flag(r.fev1_fvc_ratio, 0.7) ? styles.abnormal : ""}>
+                      <td className={flag(r.fev1_fvc_ratio, 70) ? styles.abnormal : ""}>
                         {r.fev1_fvc_ratio !== null ? `${r.fev1_fvc_ratio}%` : "—"}
                       </td>
-                      <td>{ext.fev1_pct_pred ? `${ext.fev1_pct_pred}%` : "—"}</td>
                       <td className={flag(r.fev1, 0.8) ? styles.abnormal : ""}>
                         {r.fev1 !== null ? `${r.fev1} L` : "—"}
                       </td>
-                      <td>{ext.fvc_pct_pred ? `${ext.fvc_pct_pred}%` : "—"}</td>
+                      <td>{ext.fev1_pct_pred ? `${ext.fev1_pct_pred}%` : "—"}</td>
                       <td className={flag(r.fvc, 0.8) ? styles.abnormal : ""}>
                         {r.fvc !== null ? `${r.fvc} L` : "—"}
                       </td>
+                      <td>{ext.fvc_pct_pred ? `${ext.fvc_pct_pred}%` : "—"}</td>
                       <td className={flag(r.dlco, 60) ? styles.abnormal : ""}>
                         {r.dlco !== null ? `${r.dlco}%` : "—"}
                       </td>
                       <td>{ext.six_mwd ? `${ext.six_mwd} m` : "—"}</td>
-                      <td>
-                        {ext.min_spo2 || ext.max_spo2
-                          ? `${ext.min_spo2 || "—"} / ${ext.max_spo2 || "—"}%`
-                          : "—"}
-                      </td>
+                      <td>{ext.max_spo2 || ext.baseline_spo2 ? `${ext.max_spo2 || ext.baseline_spo2}%` : "—"}</td>
+                      <td>{ext.min_spo2 ? `${ext.min_spo2}%` : "—"}</td>
                       <td style={{ textAlign: "center" }}>
                         <button
                           type="button"
@@ -1901,22 +1900,42 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
                   <thead>
                     <tr>
                       <th>Date</th>
+                      <th>FEV1/FVC</th>
                       <th>FEV1 (L)</th>
+                      <th>FEV1 %pred</th>
                       <th>FVC (L)</th>
-                      <th>Ratio</th>
+                      <th>FVC %pred</th>
                       <th>DLCO</th>
+                      <th>6MWD</th>
+                      <th>Baseline SpO2</th>
+                      <th>Min SpO2</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.pft_records.map((r, i) => (
-                      <tr key={i}>
-                        <td>{r.test_date || "—"}</td>
-                        <td>{r.fev1 ?? "—"}</td>
-                        <td>{r.fvc ?? "—"}</td>
-                        <td>{r.fev1_fvc_ratio ?? "—"}</td>
-                        <td>{r.dlco ?? "—"}</td>
-                      </tr>
-                    ))}
+                    {data.pft_records.map((r, i) => {
+                      const ext = r as typeof r & {
+                        fev1_pct_pred?: string | null;
+                        fvc_pct_pred?: string | null;
+                        six_mwd?: string | null;
+                        min_spo2?: string | null;
+                        max_spo2?: string | null;
+                        baseline_spo2?: string | null;
+                      };
+                      return (
+                        <tr key={i}>
+                          <td>{r.test_date || "—"}</td>
+                          <td>{r.fev1_fvc_ratio !== null ? `${r.fev1_fvc_ratio}%` : "—"}</td>
+                          <td>{r.fev1 !== null ? `${r.fev1} L` : "—"}</td>
+                          <td>{ext.fev1_pct_pred ? `${ext.fev1_pct_pred}%` : "—"}</td>
+                          <td>{r.fvc !== null ? `${r.fvc} L` : "—"}</td>
+                          <td>{ext.fvc_pct_pred ? `${ext.fvc_pct_pred}%` : "—"}</td>
+                          <td>{r.dlco !== null ? `${r.dlco}%` : "—"}</td>
+                          <td>{ext.six_mwd ? `${ext.six_mwd} m` : "—"}</td>
+                          <td>{ext.max_spo2 || ext.baseline_spo2 ? `${ext.max_spo2 || ext.baseline_spo2}%` : "—"}</td>
+                          <td>{ext.min_spo2 ? `${ext.min_spo2}%` : "—"}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
@@ -2007,7 +2026,7 @@ function StepReview({ data, isEdit, onJumpToStep }: { data: FormData; isEdit?: b
         <div className={styles.reviewNoticeBox}>
           <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <span>
-            Saving will update the patient record in Supabase. Onboarding credentials &amp; login links will be automatically provisioned.
+            Saving will register the patient account. A welcome onboarding SMS with login link will be automatically dispatched to the patient&apos;s mobile number if the SMS service is configured.
           </span>
         </div>
       </div>
@@ -2184,7 +2203,12 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
                 `Patient registered, but login activation encountered an issue: ${authBody.error ?? "Failed to provision login credentials"}`
               );
             } else {
-              toast.success("Patient registered & login access activated");
+              const authData = await authRes.json().catch(() => ({})) as { sms_dispatched?: boolean };
+              if (authData.sms_dispatched) {
+                toast.success("Patient registered & welcome onboarding SMS sent");
+              } else {
+                toast.success("Patient registered & login access activated");
+              }
             }
           } catch {
             toast.error("Patient registered, but login provisioning network request failed.");

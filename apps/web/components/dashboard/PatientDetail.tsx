@@ -2069,7 +2069,7 @@ export function PftTab({ records }: { records: PftInfo[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ background: "#fafafa", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-              {["Date", "FEV1/FVC%", "FEV1%pred", "FEV1 L", "FVC%pred", "FVC L", "DLCO%", "6MWD", "SpO2 min/max"].map((h) => (
+              {["Date", "FEV1/FVC%", "FEV1 (L)", "FEV1 %pred", "FVC (L)", "FVC %pred", "DLCO%", "6MWD", "Baseline SpO2", "Min SpO2"].map((h) => (
                 <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#888680", textTransform: "uppercase", letterSpacing: "0.04em", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
@@ -2080,15 +2080,18 @@ export function PftTab({ records }: { records: PftInfo[] }) {
               return (
                 <tr key={r.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
                   <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif", whiteSpace: "nowrap" }}>{fmtDate(r.test_date)}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1_fvc_ratio ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fev1_pct_pred as string) ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1 ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fvc_pct_pred as string) ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fvc ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.dlco ?? "-"}</td>
-                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.six_mwd as string) ?? "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1_fvc_ratio !== null ? `${r.fev1_fvc_ratio}%` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fev1 !== null ? `${r.fev1} L` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fev1_pct_pred as string) ? `${other.fev1_pct_pred}%` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.fvc !== null ? `${r.fvc} L` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.fvc_pct_pred as string) ? `${other.fvc_pct_pred}%` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{r.dlco !== null ? `${r.dlco}%` : "-"}</td>
+                  <td style={{ padding: "8px 10px", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>{(other.six_mwd as string) ? `${other.six_mwd} m` : "-"}</td>
                   <td style={{ padding: "8px 10px", color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                    {(other.min_spo2 as string) ?? "-"} / {(other.max_spo2 as string) ?? "-"}
+                    {((other.max_spo2 as string) || (other.baseline_spo2 as string)) ? `${(other.max_spo2 as string) || (other.baseline_spo2 as string)}%` : "-"}
+                  </td>
+                  <td style={{ padding: "8px 10px", color: "#888680", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
+                    {(other.min_spo2 as string) ? `${other.min_spo2}%` : "-"}
                   </td>
                 </tr>
               );

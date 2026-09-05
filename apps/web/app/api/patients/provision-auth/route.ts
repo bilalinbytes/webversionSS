@@ -171,5 +171,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.log("==================================================\n");
   }
 
-  return NextResponse.json({ ok: true, created: isCreated, sms_dispatched: true });
+  return NextResponse.json({ ok: true, created: isCreated, sms_dispatched: Boolean(hasTwilioCredentials), mock_mode: !hasTwilioCredentials });
 }
