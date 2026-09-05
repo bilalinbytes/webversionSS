@@ -1,28 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Activity,
-  CalendarClock,
-  CheckCircle2,
-  CircleDashed,
-  Heart,
-  Wind,
-  AlertCircle,
-  FileText,
-  Download,
-  Eye,
-  Pill,
-  Volume2,
-  ShieldAlert,
-  Sparkles,
-} from "lucide-react";
+import { Activity, CalendarClock, CheckCircle2, CircleDashed, Heart, Wind, AlertCircle, FileText, Download, Eye, Pill } from "lucide-react";
 import dStyles from "@/components/patient/disease.module.css";
 import { DiseaseHero3DVisual } from "./DiseaseHero3DVisual";
 import { PatientReportModal } from "./PatientReportModal";
-import { LiveAqiWidget } from "./LiveAqiWidget";
-import { ActionPlanModal } from "./ActionPlanModal";
-import { voiceAssistant } from "@/lib/client/voice-assistant";
 
 export interface CommonDashboardProps {
   name: string;
@@ -162,7 +144,6 @@ export function CommonPatientDashboard({
 
   const [prescriptionChanges, setPrescriptionChanges] = useState<PrescriptionChanges | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [actionPlanOpen, setActionPlanOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -348,34 +329,7 @@ export function CommonPatientDashboard({
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  let summary = "Your prescription has been updated by your doctor. ";
-                  if (prescriptionChanges.started && prescriptionChanges.started.length > 0) {
-                    summary += `New medicines added: ${prescriptionChanges.started.map((m) => m.name).join(", ")}. `;
-                  }
-                  if (prescriptionChanges.stopped && prescriptionChanges.stopped.length > 0) {
-                    summary += `Medicines stopped: ${prescriptionChanges.stopped.map((m) => m.name).join(", ")}. `;
-                  }
-                  if (prescriptionChanges.modified && prescriptionChanges.modified.length > 0) {
-                    summary += `Medicines modified: ${prescriptionChanges.modified.map((m) => m.name).join(", ")}. `;
-                  }
-                  voiceAssistant.speak(summary);
-                }}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "7px 14px", borderRadius: 8,
-                  background: "#eff6ff", border: "1.5px solid #93c5fd",
-                  color: "#1d4ed8", fontSize: 12, fontWeight: 700,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <Volume2 size={14} strokeWidth={2.2} />
-                <span>Listen · सुनें</span>
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <a
                 href="/api/patient/prescriptions?format=pdf&disposition=inline"
                 target="_blank"
@@ -689,9 +643,6 @@ export function CommonPatientDashboard({
         </div>
       </div>
 
-      {/* -- Live AQI & Respiratory Environmental Advisory -- */}
-      <LiveAqiWidget initialAqi={aqiToday} />
-
       {/* -- Symptoms Analytics & mMRC -- */}
       <div className={`${dStyles.card} ${dStyles.symptomsCard}`} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
@@ -786,70 +737,6 @@ export function CommonPatientDashboard({
           </div>
         </div>
       </div>
-
-      {/* -- Visual Green / Yellow / Red Action Plan & Emergency Card -- */}
-      <div className={dStyles.card} style={{
-        background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
-        border: "1.5px solid #86efac",
-        borderRadius: 14,
-        padding: "16px 20px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 14,
-        flexWrap: "wrap",
-        boxShadow: "0 4px 16px rgba(22, 163, 74, 0.08)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 42, height: 42, borderRadius: 10,
-            background: "linear-gradient(135deg, #16a34a, #15803d)",
-            display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff",
-            boxShadow: "0 2px 8px rgba(22, 163, 74, 0.25)",
-            flexShrink: 0,
-          }}>
-            <ShieldAlert size={22} strokeWidth={2.2} />
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: "#0f2b48", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-                My Asthma &amp; COPD Action Plan · कार्य योजना
-              </p>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0" }}>
-                Green · Yellow · Red Zones
-              </span>
-            </div>
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b", fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-              Interactive step-by-step guidance for flare-ups, warning signs, and 1-click printable emergency card
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setActionPlanOpen(true)}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "10px 18px", borderRadius: 10, border: "none",
-            background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-            color: "#ffffff", fontSize: 13, fontWeight: 700,
-            cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(22, 163, 74, 0.25)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
-            transition: "all 0.15s ease",
-          }}
-        >
-          <ShieldAlert size={16} strokeWidth={2.2} />
-          <span>View Action Plan</span>
-        </button>
-      </div>
-
-      <ActionPlanModal
-        isOpen={actionPlanOpen}
-        onClose={() => setActionPlanOpen(false)}
-        patientName={name}
-        diagnosis={diagnosis ?? undefined}
-      />
 
       {/* -- Download PDF Report (Positioned directly below Analytics) -- */}
       <div className={dStyles.card} style={{
