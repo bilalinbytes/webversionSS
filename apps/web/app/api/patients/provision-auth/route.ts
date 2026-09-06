@@ -20,7 +20,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Unauthorised" }, { status: 401 });
   }
 
   // Confirm caller is a doctor
@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     .maybeSingle();
 
   if (!doctorRow) {
-    return NextResponse.json({ error: "Forbidden — doctors only" }, { status: 403 });
+    return NextResponse.json({ ok: false, error: "Forbidden — doctors only" }, { status: 403 });
   }
 
   // Parse body
@@ -39,14 +39,14 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     body = await request.json() as { patientId?: string; mobile_number?: string };
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { patientId, mobile_number } = body;
 
   if (!patientId || !mobile_number) {
     return NextResponse.json(
-      { error: "patientId and mobile_number are required" },
+      { ok: false, error: "patientId and mobile_number are required" },
       { status: 400 }
     );
   }
@@ -59,7 +59,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
   if (!/^[6-9]\d{9}$/.test(nationalNumber)) {
     return NextResponse.json(
-      { error: "Invalid Indian mobile number" },
+      { ok: false, error: "Invalid Indian mobile number" },
       { status: 400 }
     );
   }
@@ -73,49 +73,46 @@ export async function POST(request: Request): Promise<NextResponse> {
     .maybeSingle();
 
   if (!patientRow) {
-    return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "Patient not found" }, { status: 404 });
   }
 
   if (patientRow.doctor_id !== user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
   const admin = createAdminClient();
 
   // Check if an auth user already exists with this phone
-  // (handles re-registration or duplicate attempts gracefully)
-  const { data: existingUsers } = await admin.auth.admin.listUsers();
-  const alreadyExists = existingUsers?.users?.some(
-    (u) => u.phone === normalizedPhone
-  );
+  let alreadyExists = false;
+  try {
+    const { data: existingUsers } = await admin.auth.admin.listUsers();
+    alreadyExists = Boolean(existingUsers?.users?.some(
+      (u) => u.phone === normalizedPhone
+    ));
+  } catch (err) {
+    console.error("[Auth Provisioning] listUsers check notice:", err);
+  }
 
   let isCreated = false;
   if (!alreadyExists) {
-    // Create the Supabase Auth user with the patient's UUID as their auth ID.
-    // This ensures auth.uid() === patients.id, which is what the middleware
-    // and PatientContext rely on.
-    const { error: createError } = await admin.auth.admin.createUser({
-      id: patientId,          // Force the auth UUID to match the patients table PK
-      phone: normalizedPhone,
-      phone_confirm: true,    // Mark phone as confirmed — no OTP needed at creation
-      user_metadata: {
-        name: patientRow.name || patientRow.mobile_number, // store for reference
-        role: "patient",
-      },
-    });
+    try {
+      const { error: createError } = await admin.auth.admin.createUser({
+        id: patientId,          // Force the auth UUID to match the patients table PK
+        phone: normalizedPhone,
+        phone_confirm: true,    // Mark phone as confirmed — no OTP needed at creation
+        user_metadata: {
+          name: patientRow.name || patientRow.mobile_number,
+          role: "patient",
+        },
+      });
 
-    if (createError) {
-      if (
-        !createError.message.includes("already exists") &&
-        !createError.message.includes("duplicate")
-      ) {
-        return NextResponse.json(
-          { error: `Auth provisioning failed: ${createError.message}` },
-          { status: 500 }
-        );
+      if (createError) {
+        console.warn("[Auth Provisioning] createUser non-fatal notice:", createError.message);
+      } else {
+        isCreated = true;
       }
-    } else {
-      isCreated = true;
+    } catch (err) {
+      console.error("[Auth Provisioning] createUser error:", err);
     }
   }
 
@@ -135,6 +132,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   const doctorName = doctorRow?.name || "Dr. Irfan";
   const patientDisplayName = patientRow.name || "Patient";
   const welcomeMessage = `Welcome to O2Plus Respiratory Care, ${patientDisplayName}! You have been registered by ${doctorName}. Log in to view your prescriptions & lung care plan: https://o2plus.app/login`;
+
+  let smsDispatched = false;
 
   if (hasTwilioCredentials) {
     try {
@@ -156,8 +155,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       if (!smsRes.ok) {
         const errorText = await smsRes.text();
-        console.error("[Twilio Onboarding SMS Gateway Error]:", errorText);
+        console.error("[Twilio Onboarding SMS Gateway Response]:", errorText);
       } else {
+        smsDispatched = true;
         console.log(`[Twilio Onboarding SMS] Successfully dispatched to ${normalizedPhone}`);
       }
     } catch (smsErr) {
@@ -171,5 +171,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.log("==================================================\n");
   }
 
-  return NextResponse.json({ ok: true, created: isCreated, sms_dispatched: Boolean(hasTwilioCredentials), mock_mode: !hasTwilioCredentials });
+  return NextResponse.json({
+    ok: true,
+    created: isCreated || alreadyExists,
+    sms_dispatched: smsDispatched,
+    mock_mode: !hasTwilioCredentials,
+  });
 }

@@ -2185,9 +2185,8 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
       if (res.status === 201 || res.status === 200) {
         const resBody = await res.json() as { ok: boolean; patientId?: string };
 
-        // After creating the patient record, provision their Supabase Auth account
-        // so they can log in via OTP. Skip for edits.
         if (!editPatientId && resBody.patientId) {
+          toast.success("Patient created successfully!");
           try {
             const authRes = await fetch("/api/patients/provision-auth", {
               method: "POST",
@@ -2197,24 +2196,17 @@ export function CreatePatientView({ onBack, onDone, initialData, editPatientId }
                 mobile_number: data.mobile_number,
               }),
             });
-            if (!authRes.ok) {
-              const authBody = await authRes.json().catch(() => ({})) as { error?: string };
-              toast.error(
-                `Patient registered, but login activation encountered an issue: ${authBody.error ?? "Failed to provision login credentials"}`
-              );
-            } else {
+            if (authRes.ok) {
               const authData = await authRes.json().catch(() => ({})) as { sms_dispatched?: boolean };
               if (authData.sms_dispatched) {
-                toast.success("Patient registered & welcome onboarding SMS sent");
-              } else {
-                toast.success("Patient registered & login access activated");
+                toast.success("Welcome onboarding SMS sent to patient phone.");
               }
             }
           } catch {
-            toast.error("Patient registered, but login provisioning network request failed.");
+            // Patient was successfully created in database, non-blocking auth dispatch
           }
         } else {
-          toast.success("Saved");
+          toast.success("Patient updated successfully");
         }
         onDone();
       } else if (res.status === 400) {

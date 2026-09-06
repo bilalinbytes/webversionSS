@@ -7,11 +7,12 @@ import {
   History,
   Activity,
   CalendarClock,
-  ShieldAlert,
   HeartHandshake,
   LogOut,
 } from "lucide-react";
 import { usePatient } from "@/contexts/PatientContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Translations } from "@/lib/i18n/translations";
 import styles from "./PatientSidebar.module.css";
 
 type View = "home" | "log" | "history" | "analytics" | "appointments";
@@ -21,16 +22,17 @@ interface PatientSidebarProps {
   onViewChange: (v: View) => void;
 }
 
-const NAV: { id: View; icon: React.ElementType; label: string; labelHi: string; shortLabel: string }[] = [
-  { id: "home", icon: HeartPulse, label: "My Health", labelHi: "मेरा स्वास्थ्य", shortLabel: "Health" },
-  { id: "log", icon: ClipboardList, label: "Log Today", labelHi: "आज लॉग करें", shortLabel: "Log" },
-  { id: "history", icon: History, label: "Daily Logs", labelHi: "दैनिक लॉग", shortLabel: "History" },
-  { id: "analytics", icon: Activity, label: "Analytics", labelHi: "विश्लेषण", shortLabel: "Trends" },
-  { id: "appointments", icon: CalendarClock, label: "Appointments", labelHi: "अपॉइंटमेंट", shortLabel: "Appts" },
+const NAV: { id: View; icon: React.ElementType; label: string; tKey: keyof Translations; shortLabel: string }[] = [
+  { id: "home", icon: HeartPulse, label: "My Health", tKey: "nav_health", shortLabel: "Health" },
+  { id: "log", icon: ClipboardList, label: "Log Today", tKey: "nav_log", shortLabel: "Log" },
+  { id: "history", icon: History, label: "Daily Logs", tKey: "nav_history", shortLabel: "History" },
+  { id: "analytics", icon: Activity, label: "Analytics", tKey: "nav_trends", shortLabel: "Trends" },
+  { id: "appointments", icon: CalendarClock, label: "Appointments", tKey: "nav_appts", shortLabel: "Appts" },
 ];
 
 export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps) {
   const { patient, logout } = usePatient();
+  const { t, language } = useLanguage();
   const [hasLoggedToday, setHasLoggedToday] = useState(false);
 
   useEffect(() => {
@@ -57,13 +59,14 @@ export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps
           const Icon = item.icon;
           const isActive = activeView === item.id;
           const showLogPending = item.id === "log" && !hasLoggedToday;
+          const translatedLabel = t(item.tKey);
 
           return (
             <button
               key={item.id}
               type="button"
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-              title={`${item.label} (${item.labelHi})`}
+              title={`${item.label}${language !== "en" ? ` (${translatedLabel})` : ""}`}
               onClick={() => onViewChange(item.id)}
             >
               <div className={styles.iconWrap}>
@@ -72,7 +75,9 @@ export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps
               </div>
               <div className={styles.navLabels}>
                 <span className={styles.navLabel}>{item.shortLabel}</span>
-                <span className={styles.navLabelHi}>{item.labelHi}</span>
+                {language !== "en" && (
+                  <span className={styles.navLabelHi}>{translatedLabel}</span>
+                )}
               </div>
             </button>
           );
@@ -85,11 +90,11 @@ export function PatientSidebar({ activeView, onViewChange }: PatientSidebarProps
           type="button"
           className={styles.sidebarSignOutBtn}
           onClick={logout}
-          title="Sign Out · साइन आउट"
+          title="Sign Out"
           aria-label="Sign Out of Patient Portal"
         >
           <LogOut size={16} />
-          <span className={styles.sidebarSignOutLabel}>Sign Out</span>
+          <span className={styles.sidebarSignOutLabel}>{t("logout", "Sign Out")}</span>
         </button>
         <div className={styles.companionBadge} title="O2Plus Respiratory Care Companion">
           <HeartHandshake size={15} />

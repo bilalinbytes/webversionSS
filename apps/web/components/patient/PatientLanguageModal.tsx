@@ -58,7 +58,7 @@ export function PatientLanguageModal({ isOpen, onClose }: PatientLanguageModalPr
           <div className={styles.headerIconRow}>
             <div className={styles.globeBadge}>
               <Globe size={14} />
-              <span>Languages / भाषाएं</span>
+              <span>Regional Languages</span>
             </div>
             {!isFirstVisit && (
               <button
@@ -71,11 +71,11 @@ export function PatientLanguageModal({ isOpen, onClose }: PatientLanguageModalPr
               </button>
             )}
           </div>
-          <h2 className={styles.title}>{t("choose_language", "Choose Your Preferred Language")}</h2>
+          <h2 className={styles.title}>{t("choose_language", "Select Your Preferred Regional Language")}</h2>
           <p className={styles.subtitle}>
             {t(
               "choose_language_sub",
-              "Select your language for daily health logging and care instructions. You can change this anytime."
+              "English is enabled by default. Choose your regional language to display bilingual guidance (English + Regional) throughout the app."
             )}
           </p>
         </div>

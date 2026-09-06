@@ -68,39 +68,31 @@ function SparkLine({ values, color = "var(--med-blue-600)" }: { values: number[]
   );
 }
 
-function riskLabel(score: number): { label: string; labelHi: string; color: string; bg: string } {
-  if (score <= 3) return { label: "Stable", labelHi: "स्थिर", color: "var(--med-blue-600)", bg: "var(--med-blue-50)" };
-  if (score <= 6) return { label: "Moderate", labelHi: "मध्यम", color: "#b7791f", bg: "rgba(183,121,31,0.1)" };
-  return { label: "High Risk", labelHi: "उच्च जोखिम", color: "#c94d49", bg: "rgba(201,77,73,0.1)" };
+function riskLabel(score: number): { label: string; color: string; bg: string } {
+  if (score <= 3) return { label: "Stable", color: "var(--med-blue-600)", bg: "var(--med-blue-50)" };
+  if (score <= 6) return { label: "Moderate", color: "#b7791f", bg: "rgba(183,121,31,0.1)" };
+  return { label: "High Risk", color: "#c94d49", bg: "rgba(201,77,73,0.1)" };
 }
 
-function aqiLabel(aqi: number): { label: string; labelHi: string; color: string } {
-  if (aqi <= 50) return { label: "Good", labelHi: "अच्छी", color: "#059669" };
-  if (aqi <= 100) return { label: "Moderate", labelHi: "मध्यम", color: "#b7791f" };
-  if (aqi <= 150) return { label: "Unhealthy for Sensitive", labelHi: "संवेदनशील के लिए अस्वस्थ", color: "#d85a30" };
-  return { label: "Unhealthy", labelHi: "अस्वस्थ", color: "#c94d49" };
+function aqiLabel(aqi: number): { label: string; color: string } {
+  if (aqi <= 50) return { label: "Good", color: "#059669" };
+  if (aqi <= 100) return { label: "Moderate", color: "#b7791f" };
+  if (aqi <= 150) return { label: "Unhealthy for Sensitive", color: "#d85a30" };
+  return { label: "Unhealthy", color: "#c94d49" };
 }
 
-function spo2Label(spo2: number): { label: string; labelHi: string; color: string } {
-  if (spo2 >= 95) return { label: "Normal (≥95%)", labelHi: "सामान्य", color: "#059669" };
-  if (spo2 >= 90) return { label: "Borderline (90-94%)", labelHi: "सीमा रेखा", color: "#b7791f" };
-  return { label: "Low Alert (<90%)", labelHi: "कम - ध्यान दें", color: "#c94d49" };
+function spo2Label(spo2: number): { label: string; color: string } {
+  if (spo2 >= 95) return { label: "Normal (≥95%)", color: "#059669" };
+  if (spo2 >= 90) return { label: "Borderline (90-94%)", color: "#b7791f" };
+  return { label: "Low Alert (<90%)", color: "#c94d49" };
 }
 
-function heartRateLabel(hr: number | null | undefined): { label: string; labelHi: string; color: string } {
-  if (!hr || hr <= 0) return { label: "Pulse not recorded", labelHi: "नाड़ी दर्ज नहीं", color: "#64748b" };
-  if (hr < 60) return { label: "Bradycardia (<60)", labelHi: "धीमी नाड़ी", color: "#d97706" };
-  if (hr <= 100) return { label: "Normal (60-100)", labelHi: "सामान्य", color: "#059669" };
-  return { label: "Tachycardia (>100)", labelHi: "तेज नाड़ी", color: "#c94d49" };
+function heartRateLabel(hr: number | null | undefined): { label: string; color: string } {
+  if (!hr || hr <= 0) return { label: "Pulse not recorded", color: "#64748b" };
+  if (hr < 60) return { label: "Bradycardia (<60)", color: "#d97706" };
+  if (hr <= 100) return { label: "Normal (60-100)", color: "#059669" };
+  return { label: "Tachycardia (>100)", color: "#c94d49" };
 }
-
-const MMRC_BILINGUAL = [
-  { en: "No breathlessness", hi: "सांस नहीं फूलती" },
-  { en: "On hills / hurrying", hi: "चढ़ाई या दौड़ने पर" },
-  { en: "Slower than peers", hi: "दूसरों से धीरे चलना" },
-  { en: "Stops after ~100m", hi: "100 मी. बाद रुकना" },
-  { en: "Too breathless to leave home", hi: "घर से निकलने में असमर्थ" },
-];
 
 interface PrescriptionChanges {
   updated_at?: string;
@@ -143,7 +135,6 @@ export function CommonPatientDashboard({
   const aqi = aqiLabel(aqiToday);
   const spo2 = spo2Label(spo2Today);
   const hr = heartRateLabel(heartRateToday);
-  const mmrcItem = MMRC_BILINGUAL[Math.min(Math.max(mmrcToday, 0), 4)] ?? MMRC_BILINGUAL[0]!;
 
   const [prescriptionChanges, setPrescriptionChanges] = useState<PrescriptionChanges | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -591,7 +582,7 @@ export function CommonPatientDashboard({
             {mmrcToday}
           </p>
           <span style={{ fontSize: 11.5, color: "var(--med-text-muted)", fontWeight: 600 }}>
-            Grade {mmrcToday} · {t(`mmrc_grade_${Math.min(Math.max(mmrcToday, 0), 4)}` as keyof Translations, mmrcItem.en)}
+            Grade {mmrcToday} · {t(`mmrc_grade_${Math.min(Math.max(mmrcToday, 0), 4)}` as keyof Translations, "Dyspnea")}
           </span>
           {mmrcTrend && mmrcTrend.length > 1 && <SparkLine values={mmrcTrend} color="#d97706" />}
         </div>
@@ -698,7 +689,7 @@ export function CommonPatientDashboard({
                 Grade {mmrcToday}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: mmrcToday >= 3 ? "#dc2626" : "#0284c7" }}>
-                {mmrcItem.en} · {mmrcItem.hi}
+                {t(`mmrc_grade_${Math.min(Math.max(mmrcToday, 0), 4)}` as keyof Translations, "Grade " + mmrcToday)}
               </span>
             </div>
             <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "var(--med-text-muted)", lineHeight: 1.45 }}>

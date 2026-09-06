@@ -28,6 +28,7 @@ import { SaansBrandIcon } from "@/components/auth/SaansBrandIcon";
 import { PatientReportModal } from "@/components/patient/PatientReportModal";
 import { usePatient } from "@/contexts/PatientContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Translations } from "@/lib/i18n/translations";
 import { formatDiagnosisDisplay } from "@o2plus/core";
 import { checkAndPlayNotificationAlert } from "@/lib/client/notification-sound";
 import styles from "./PatientTopNav.module.css";
@@ -39,12 +40,12 @@ interface PatientTopNavProps {
   onViewChange: (v: View) => void;
 }
 
-const TABS: { id: View; label: string; labelHi: string; icon: React.ElementType }[] = [
-  { id: "home", label: "My Health", labelHi: "मेरा स्वास्थ्य", icon: HeartPulse },
-  { id: "log", label: "Log Today", labelHi: "आज लॉग करें", icon: ClipboardList },
-  { id: "history", label: "Daily Logs", labelHi: "दैनिक लॉग", icon: History },
-  { id: "analytics", label: "Analytics", labelHi: "विश्लेषण", icon: Activity },
-  { id: "appointments", label: "Appointments", labelHi: "अपॉइंटमेंट", icon: CalendarClock },
+const TABS: { id: View; label: string; tKey: keyof Translations; icon: React.ElementType }[] = [
+  { id: "home", label: "My Health", tKey: "nav_health", icon: HeartPulse },
+  { id: "log", label: "Log Today", tKey: "nav_log", icon: ClipboardList },
+  { id: "history", label: "Daily Logs", tKey: "nav_history", icon: History },
+  { id: "analytics", label: "Analytics", tKey: "nav_trends", icon: Activity },
+  { id: "appointments", label: "Appointments", tKey: "nav_appts", icon: CalendarClock },
 ];
 
 interface PrescriptionNotificationMed {
@@ -169,16 +170,6 @@ function getAppointmentNotificationKey(appointment: AppointmentNotification | nu
   if (!appointment) return null;
   const status = appointment.meta?.workflow_status ?? appointment.status;
   return `${appointment.id}:${status}:${appointment.updated_at ?? appointment.created_at ?? appointment.scheduled_at}`;
-}
-
-function getLocalizedTabLabel(id: View, t: (k: any, fallback?: string) => string): string {
-  switch (id) {
-    case "home": return t("home", "My Health");
-    case "log": return t("log_today", "Log Today");
-    case "history": return t("history", "Daily Logs");
-    case "analytics": return t("analytics", "Analytics");
-    case "appointments": return t("appointments", "Appointments");
-  }
 }
 
 export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) {
@@ -537,9 +528,9 @@ export function PatientTopNav({ activeView, onViewChange }: PatientTopNavProps) 
             >
               <Icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
               <div className={styles.tabText}>
-                <span className={styles.tabEn}>{getLocalizedTabLabel(tab.id, t)}</span>
+                <span className={styles.tabEn}>{tab.label}</span>
                 {currentLanguage.code !== "en" && (
-                  <span className={styles.tabHi}>{currentLanguage.nativeName}</span>
+                  <span className={styles.tabHi}>{t(tab.tKey)}</span>
                 )}
               </div>
             </button>

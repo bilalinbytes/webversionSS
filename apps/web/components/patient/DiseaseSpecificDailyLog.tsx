@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AlertCircle, Activity, Wind, Sparkles, HeartPulse } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Translations } from "@/lib/i18n/translations";
 import dStyles from "@/components/patient/disease.module.css";
 import type { DailyLogPayload } from "@/lib/server/log-schema";
 
@@ -30,7 +31,7 @@ const questionTitleStyle: CSSProperties = {
   lineHeight: 1.35,
 };
 
-const hindiStyle: CSSProperties = {
+const subStyle: CSSProperties = {
   display: "block",
   marginTop: 3,
   fontSize: 12,
@@ -55,180 +56,156 @@ const pillGridStyle: CSSProperties = {
 const ASTHMA_CONTROL_QUESTIONS = [
   {
     title: "Daytime Symptoms",
-    titleHi: "दिन में लक्षण",
+    titleKey: "ac_q1_title" as keyof Translations,
     prompt: "Asthma symptoms more than twice a week?",
-    promptHi: "क्या अस्थमा के लक्षण सप्ताह में दो बार से अधिक हुए?",
+    promptKey: "ac_q1_prompt" as keyof Translations,
   },
   {
     title: "Night Waking",
-    titleHi: "रात में नींद खुलना",
+    titleKey: "ac_q2_title" as keyof Translations,
     prompt: "Any night waking due to asthma?",
-    promptHi: "क्या अस्थमा के कारण रात में नींद खुली?",
+    promptKey: "ac_q2_prompt" as keyof Translations,
   },
   {
     title: "Reliever Use",
-    titleHi: "रिलीवर / रेस्क्यू इनहेलर का उपयोग",
+    titleKey: "ac_q3_title" as keyof Translations,
     prompt: "Need for reliever/rescue inhaler more than twice a week?",
-    promptHi: "क्या रिलीवर या रेस्क्यू इनहेलर की जरूरत सप्ताह में दो बार से अधिक पड़ी?",
+    promptKey: "ac_q3_prompt" as keyof Translations,
   },
   {
     title: "Activity Limitation",
-    titleHi: "गतिविधि में कमी",
+    titleKey: "ac_q4_title" as keyof Translations,
     prompt: "Any limitation in activities, exercise, or work due to asthma?",
-    promptHi: "क्या अस्थमा के कारण व्यायाम, काम या सामान्य गतिविधि में रुकावट हुई?",
+    promptKey: "ac_q4_prompt" as keyof Translations,
   },
 ];
 
 const SPUTUM_VOLUME_OPTIONS = [
-  { value: "none", label: "None", hi: "नहीं" },
-  { value: "less_than_usual", label: "Small, teaspoon", hi: "कम, चम्मच जितना" },
-  { value: "usual", label: "Moderate, tablespoon", hi: "मध्यम, बड़ा चम्मच जितना" },
-  { value: "large_amount", label: "Large, cup or more", hi: "ज्यादा, कप या अधिक" },
+  { value: "none", label: "None", tKey: "vol_none" as keyof Translations },
+  { value: "less_than_usual", label: "Small Amount (< 1 tsp)", tKey: "vol_small" as keyof Translations },
+  { value: "usual", label: "Moderate Amount (1–2 tbsp)", tKey: "vol_moderate" as keyof Translations },
+  { value: "large_amount", label: "Large Amount (> 2 tbsp)", tKey: "vol_large" as keyof Translations },
 ] as const;
 
 const BRONCH_VOLUME_OPTIONS = [
-  { value: "none", label: "None", hi: "नहीं" },
-  { value: "less_than_usual", label: "Small, teaspoon", hi: "कम, चम्मच जितना" },
-  { value: "more_than_usual", label: "Moderate, tablespoon", hi: "मध्यम, बड़ा चम्मच जितना" },
-  { value: "much_more_than_usual", label: "Large, cup or more", hi: "ज्यादा, कप या अधिक" },
+  { value: "none", label: "None", tKey: "vol_none" as keyof Translations },
+  { value: "less_than_usual", label: "Small Amount (< 1 tsp)", tKey: "vol_small" as keyof Translations },
+  { value: "more_than_usual", label: "Moderate Amount (1–2 tbsp)", tKey: "vol_moderate" as keyof Translations },
+  { value: "much_more_than_usual", label: "Large Amount (> 2 tbsp)", tKey: "vol_large" as keyof Translations },
 ] as const;
 
 const COPD_SPUTUM_COLOUR_OPTIONS = [
-  { value: "clear", label: "White/Clear", hi: "सफेद या साफ", note: "Mucoid", color: "#f8fafc" },
-  { value: "yellow", label: "Pale Yellow", hi: "हल्का पीला", note: "Mucopurulent", color: "#facc15" },
-  { value: "green", label: "Dark Green", hi: "गहरा हरा", note: "Purulent, potential infection", color: "#166534" },
-  { value: "blood_streaked", label: "Red/Rusty", hi: "लाल या जंग जैसा", note: "Blood-streaked, emergency alert", color: "#991b1b" },
+  { value: "clear", label: "White/Clear", tKey: "color_clear" as keyof Translations, note: "Mucoid", color: "#f8fafc" },
+  { value: "yellow", label: "Pale Yellow", tKey: "color_yellow" as keyof Translations, note: "Mucopurulent", color: "#facc15" },
+  { value: "green", label: "Dark Green", tKey: "color_dark_green" as keyof Translations, note: "Purulent, potential infection", color: "#166534" },
+  { value: "blood_streaked", label: "Red/Rusty", tKey: "color_blood_tinged" as keyof Translations, note: "Blood-streaked, emergency alert", color: "#991b1b" },
 ] as const;
 
 const COPD_HEMOPTYSIS_VOLUME_OPTIONS = [
-  { value: "streaks", label: "Blood streaks only", hi: "Streaks" },
-  { value: "cup", label: "One cup or more", hi: "Cup or more" },
-  { value: "massive", label: "Massive bleeding", hi: "Massive" },
+  { value: "streaks", label: "Blood streaks only" },
+  { value: "cup", label: "One cup or more" },
+  { value: "massive", label: "Massive bleeding" },
 ] as const;
 
 const BRONCH_SPUTUM_COLOUR_OPTIONS = [
-  { value: "clear", label: "White/Clear", hi: "सफेद या साफ", note: "Mucoid", color: "#f8fafc" },
-  { value: "pale_yellow", label: "Pale Yellow", hi: "हल्का पीला", note: "Mucopurulent", color: "#facc15" },
-  { value: "dark_green", label: "Dark Green", hi: "गहरा हरा", note: "Purulent, potential infection", color: "#166534" },
-  { value: "blood_streaked", label: "Red/Rusty", hi: "लाल या जंग जैसा", note: "Blood-streaked, emergency alert", color: "#991b1b" },
+  { value: "clear", label: "White/Clear", tKey: "color_clear" as keyof Translations, note: "Mucoid", color: "#f8fafc" },
+  { value: "pale_yellow", label: "Pale Yellow", tKey: "color_yellow" as keyof Translations, note: "Mucopurulent", color: "#facc15" },
+  { value: "dark_green", label: "Dark Green", tKey: "color_dark_green" as keyof Translations, note: "Purulent, potential infection", color: "#166534" },
+  { value: "blood_streaked", label: "Red/Rusty", tKey: "color_blood_tinged" as keyof Translations, note: "Blood-streaked, emergency alert", color: "#991b1b" },
 ] as const;
 
 const KBILD_QUESTIONS = [
   {
     text: "In the last 2 weeks, I have been breathless climbing stairs or walking up an incline or hill.",
-    hi: "पिछले 2 सप्ताह में सीढ़ियां चढ़ते या चढ़ाई पर चलते समय मेरी सांस फूली है।",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, because of my lung condition, my chest has felt tight.",
-    hi: "पिछले 2 सप्ताह में फेफड़ों की बीमारी के कारण मेरी छाती में जकड़न महसूस हुई है।",
     optionSet: "time",
   },
   {
     text: "In the last 2 weeks, have you worried about the seriousness of your lung complaint?",
-    hi: "पिछले 2 सप्ताह में क्या आप अपनी फेफड़ों की बीमारी की गंभीरता को लेकर चिंतित रहे हैं?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, have you avoided doing things that make you breathless?",
-    hi: "पिछले 2 सप्ताह में क्या आपने ऐसे कामों से बचा है जिनसे सांस फूलती है?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, have you felt in control of your lung condition?",
-    hi: "पिछले 2 सप्ताह में क्या आपको लगा कि आपकी फेफड़ों की बीमारी नियंत्रण में है?",
     optionSet: "time",
   },
   {
     text: "In the last 2 weeks, has your lung complaint made you feel fed up or down in the dumps?",
-    hi: "पिछले 2 सप्ताह में क्या फेफड़ों की बीमारी के कारण आप उदास या परेशान महसूस हुए हैं?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, have you felt the urge to breathe, also known as air hunger?",
-    hi: "पिछले 2 सप्ताह में क्या आपको हवा की कमी या सांस लेने की तीव्र जरूरत महसूस हुई है?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, has your lung condition made you feel anxious?",
-    hi: "पिछले 2 सप्ताह में क्या फेफड़ों की बीमारी के कारण आपको चिंता हुई है?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, how often have you experienced wheeze or whistling sounds from your chest?",
-    hi: "पिछले 2 सप्ताह में आपकी छाती से घरघराहट या सीटी जैसी आवाज कितनी बार आई?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, how much of the time have you felt your lung disease is getting worse?",
-    hi: "पिछले 2 सप्ताह में आपको कितनी बार लगा कि आपकी फेफड़ों की बीमारी बिगड़ रही है?",
     optionSet: "time",
   },
   {
     text: "In the last 2 weeks, has your lung condition interfered with your job or other daily tasks?",
-    hi: "पिछले 2 सप्ताह में क्या फेफड़ों की बीमारी ने आपके काम या दैनिक कार्यों में बाधा डाली?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, have you expected your lung complaint to get worse?",
-    hi: "पिछले 2 सप्ताह में क्या आपको लगा कि आपकी फेफड़ों की समस्या और खराब हो सकती है?",
     optionSet: "frequency",
   },
   {
     text: "In the last 2 weeks, how much has your lung condition limited you carrying things, for example groceries?",
-    hi: "पिछले 2 सप्ताह में फेफड़ों की बीमारी ने सामान उठाने, जैसे किराना, में आपको कितना सीमित किया?",
     optionSet: "time",
   },
   {
     text: "In the last 2 weeks, has your lung condition made you think more about the end of your life?",
-    hi: "पिछले 2 सप्ताह में क्या फेफड़ों की बीमारी ने आपको जीवन के अंत के बारे में अधिक सोचने पर मजबूर किया?",
     optionSet: "frequency",
   },
   {
     text: "Are you financially worse off because of your lung condition?",
-    hi: "क्या फेफड़ों की बीमारी के कारण आपकी आर्थिक स्थिति खराब हुई है?",
     optionSet: "financial",
   },
 ] as const;
 
 const KBILD_OPTIONS = {
   frequency: [
-    "Every time / हर बार",
-    "Most times / अधिकतर बार",
-    "Several times / कई बार",
-    "Sometimes / कभी-कभी",
-    "Occasionally / कभी-कभार",
-    "Rarely / शायद ही कभी",
-    "Never / कभी नहीं",
+    "Every time",
+    "Most times",
+    "Several times",
+    "Sometimes",
+    "Occasionally",
+    "Rarely",
+    "Never",
   ],
   time: [
-    "All of the time / हर समय",
-    "Most of the time / अधिकतर समय",
-    "A good bit of the time / काफी समय",
-    "Some of the time / कुछ समय",
-    "A little of the time / थोड़ा समय",
-    "Hardly any of the time / बहुत कम समय",
-    "None of the time / बिल्कुल नहीं",
+    "All of the time",
+    "Most of the time",
+    "A good bit of the time",
+    "Some of the time",
+    "A little of the time",
+    "Hardly any of the time",
+    "None of the time",
   ],
   financial: [
-    "A significant amount / बहुत अधिक",
-    "A large amount / अधिक",
-    "A considerable amount / काफी",
-    "A reasonable amount / मध्यम",
-    "A small amount / थोड़ा",
-    "Hardly at all / बहुत कम",
-    "Not at all / बिल्कुल नहीं",
+    "A significant amount",
+    "A large amount",
+    "A considerable amount",
+    "A reasonable amount",
+    "A small amount",
+    "Hardly at all",
+    "Not at all",
   ],
 } as const;
-
-function BilingualTitle({ en, hi }: { en: string; hi: string }) {
-  return (
-    <>
-      {en}
-      <span className={dStyles.cardTitleHi}>{hi}</span>
-    </>
-  );
-}
 
 function YesNoToggle({
   value,
@@ -237,7 +214,7 @@ function YesNoToggle({
   value: YesNoValue;
   onChange: (value: boolean) => void;
 }) {
-  const { t } = useLanguage();
+  const { bilingual } = useLanguage();
   return (
     <div className={dStyles.yesNoRow} style={{ marginTop: 10 }}>
       <button
@@ -256,7 +233,7 @@ function YesNoToggle({
         }
         onClick={() => onChange(true)}
       >
-        <span>{t("yes", "Yes")}</span>
+        <span>{bilingual("Yes", "yes")}</span>
       </button>
       <button
         type="button"
@@ -274,7 +251,7 @@ function YesNoToggle({
         }
         onClick={() => onChange(false)}
       >
-        <span>{t("no", "No")}</span>
+        <span>{bilingual("No", "no")}</span>
       </button>
     </div>
   );
@@ -291,7 +268,7 @@ function NumberField({
   step = 1,
 }: {
   label: string;
-  labelHi: string;
+  labelHi?: string;
   unit?: string;
   value: string;
   onChange: (value: string) => void;
@@ -303,7 +280,7 @@ function NumberField({
     <div>
       <label className={dStyles.fieldLabel}>
         {label}
-        <span className={dStyles.fieldLabelHi}>{labelHi}</span>
+        {labelHi && <span className={dStyles.fieldLabelHi}>{labelHi}</span>}
       </label>
       <input
         type="number"
@@ -324,14 +301,16 @@ function OptionPills<TValue extends string>({
   value,
   onChange,
 }: {
-  options: readonly { value: TValue; label: string; hi: string; note?: string; color?: string }[];
+  options: readonly { value: TValue; label: string; tKey?: keyof Translations; note?: string; color?: string }[];
   value: TValue | null;
   onChange: (value: TValue) => void;
 }) {
+  const { bilingual } = useLanguage();
   return (
     <div style={pillGridStyle}>
       {options.map((option) => {
         const active = value === option.value;
+        const displayLabel = option.tKey ? bilingual(option.label, option.tKey) : option.label;
         return (
           <button
             key={option.value}
@@ -360,8 +339,7 @@ function OptionPills<TValue extends string>({
                 }}
               />
             )}
-            <span>{option.label}</span>
-            <span style={hindiStyle}>{option.hi}</span>
+            <span>{displayLabel}</span>
             {option.note && <span style={{ display: "block", marginTop: 5, fontSize: 11, color: "#6d8794" }}>{option.note}</span>}
           </button>
         );
@@ -376,14 +354,12 @@ function ScaleButtons({
   min,
   max,
   labels,
-  labelsHi,
 }: {
   value: number | null;
   onChange: (value: number) => void;
   min: number;
   max: number;
   labels?: Record<number, string>;
-  labelsHi?: Record<number, string>;
 }) {
   return (
     <div className={dStyles.scaleRow} style={{ flexWrap: "wrap", marginTop: 10 }}>
@@ -392,12 +368,11 @@ function ScaleButtons({
           key={score}
           type="button"
           className={`${dStyles.scaleBtn} ${value === score ? dStyles.scaleBtnActive : ""}`}
-          style={{ minWidth: 44, height: labelsHi ? 68 : labels ? 54 : 40 }}
+          style={{ minWidth: 44, height: labels ? 54 : 40 }}
           onClick={() => onChange(score)}
         >
           <span>{score}</span>
           {labels?.[score] && <span style={{ display: "block", fontSize: 10, marginTop: 2 }}>{labels[score]}</span>}
-          {labelsHi?.[score] && <span style={{ display: "block", fontSize: 10, marginTop: 2, color: "inherit", opacity: 0.78 }}>{labelsHi[score]}</span>}
         </button>
       ))}
     </div>
@@ -406,12 +381,10 @@ function ScaleButtons({
 
 function RangeSlider({
   label,
-  labelHi,
   value,
   onChange,
 }: {
   label: string;
-  labelHi: string;
   value: number;
   onChange: (value: number) => void;
 }) {
@@ -419,7 +392,6 @@ function RangeSlider({
     <div>
       <label className={dStyles.fieldLabel}>
         {label}
-        <span className={dStyles.fieldLabelHi}>{labelHi}</span>
       </label>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <input
@@ -437,6 +409,7 @@ function RangeSlider({
 }
 
 function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void }) {
+  const { t, bilingual } = useLanguage();
   const [responses, setResponses] = useState<YesNoValue[]>([null, null, null, null]);
   const [puffs, setPuffs] = useState("");
   const [pefr, setPefr] = useState("");
@@ -445,12 +418,13 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
   const yesCount = responses.filter(Boolean).length;
   const allControlAnswered = responses.every((value) => value !== null);
   const status = yesCount === 0 ? "well_controlled" : yesCount <= 2 ? "partly_controlled" : "poorly_controlled";
+  
   const statusLabel =
     status === "well_controlled"
-      ? { en: "Well Controlled", hi: "अच्छा नियंत्रण", color: "var(--med-blue-600, #1e6091)" }
+      ? { en: "Well Controlled", tKey: "ac_well_controlled" as keyof Translations, color: "var(--med-blue-600, #1e6091)" }
       : status === "partly_controlled"
-        ? { en: "Partly Controlled", hi: "आंशिक नियंत्रण", color: "#b7791f" }
-        : { en: "Poorly Controlled", hi: "खराब नियंत्रण", color: "#c2410c" };
+        ? { en: "Partly Controlled", tKey: "ac_partly_controlled" as keyof Translations, color: "#b7791f" }
+        : { en: "Poorly Controlled", tKey: "ac_poorly_controlled" as keyof Translations, color: "#c2410c" };
 
   useEffect(() => {
     onChange({
@@ -504,10 +478,10 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
             }}
           >
             <p style={{ margin: 0, fontSize: 13, color: "#6d8794", fontWeight: 700 }}>
-              Asthma control today
+              {bilingual("Asthma control today", "asthma_control_title")}
             </p>
             <h2 style={{ margin: "6px 0 8px", fontSize: 24, color: statusLabel.color, letterSpacing: 0 }}>
-              {statusLabel.en}
+              {bilingual(statusLabel.en, statusLabel.tKey)}
             </h2>
             <p style={{ margin: "0 0 16px", fontSize: 14, color: "#496977", lineHeight: 1.5 }}>
               Based on {yesCount} positive answer{yesCount === 1 ? "" : "s"} out of 4.
@@ -524,7 +498,7 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
               }}
               onClick={() => setShowControlPopup(false)}
             >
-              Continue
+              {bilingual("Continue", "continue")}
             </button>
           </div>
         </div>
@@ -537,8 +511,8 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
               <Activity size={18} />
             </div>
             <div>
-              <h2 className={dStyles.sectionTitle}>Asthma Control</h2>
-              <p className={dStyles.sectionSub}>मेरा अस्थमा नियंत्रण (पिछले 4 सप्ताह)</p>
+              <h2 className={dStyles.sectionTitle}>{bilingual("Asthma Control", "asthma_control_title")}</h2>
+              <p className={dStyles.sectionSub}>{t("asthma_control_sub", "My Asthma Control (Last 4 Weeks)")}</p>
             </div>
           </div>
           <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
@@ -547,19 +521,16 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
         </div>
 
         <p className={dStyles.cardSub}>
-          Over the last 4 weeks, have you had:
-          <span className={dStyles.fieldLabelHi}>पिछले 4 सप्ताह में क्या आपको हुआ है:</span>
+          {bilingual("Over the last 4 weeks, have you had:", "asthma_control_4w_prompt")}
         </p>
         <div style={{ display: "grid", gap: 12 }}>
           {ASTHMA_CONTROL_QUESTIONS.map((question, index) => (
             <div key={question.title} style={boxStyle}>
               <p style={questionTitleStyle}>
-                {index + 1}. {question.title}
-                <span style={hindiStyle}>{question.titleHi}</span>
+                {bilingual(`${index + 1}. ${question.title}`, question.titleKey)}
               </p>
               <p style={helpStyle}>
-                {question.prompt}
-                <span style={hindiStyle}>{question.promptHi}</span>
+                {bilingual(question.prompt, question.promptKey)}
               </p>
               <YesNoToggle
                 value={responses[index] ?? null}
@@ -571,8 +542,7 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
         <div className={dStyles.warningBanner} style={{ marginTop: 14, borderColor: statusLabel.color, background: yesCount >= 3 ? "#fff7ed" : "#f0faf5" }}>
           <AlertCircle size={16} color={statusLabel.color} />
           <div>
-            <strong style={{ color: statusLabel.color }}>{statusLabel.en}</strong>
-            <span style={hindiStyle}>{statusLabel.hi}</span>
+            <strong style={{ color: statusLabel.color }}>{bilingual(statusLabel.en, statusLabel.tKey)}</strong>
             {yesCount >= 3 && <p style={helpStyle}>Doctor alert will be triggered because 3 or more answers are Yes.</p>}
           </div>
         </div>
@@ -585,8 +555,8 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
               <Wind size={18} />
             </div>
             <div>
-              <h2 className={dStyles.sectionTitle}>Daily Asthma Tracking</h2>
-              <p className={dStyles.sectionSub}>दैनिक पीक फ्लो एवं रेस्क्यू पफ</p>
+              <h2 className={dStyles.sectionTitle}>{bilingual("Daily Asthma Tracking", "log_today_title")}</h2>
+              <p className={dStyles.sectionSub}>PEFR & Rescue Puffs</p>
             </div>
           </div>
           <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
@@ -595,14 +565,12 @@ function AsthmaSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => v
         </div>
         <div className={dStyles.grid2}>
           <NumberField
-            label="Rescue Puffs"
-            labelHi="रेस्क्यू पफ"
+            label={bilingual("Rescue Inhaler Puffs", "ac_rescue_puffs")}
             value={puffs}
             onChange={setPuffs}
           />
           <NumberField
-            label="Peak Flow / PEFR"
-            labelHi="पीक फ्लो / PEFR"
+            label={bilingual("Peak Flow (PEFR)", "ac_pefr_reading")}
             unit="L/min"
             value={pefr}
             onChange={setPefr}
@@ -631,7 +599,6 @@ function SputumWarning({ colour }: { colour: string | null }) {
         <AlertCircle size={16} />
         <p style={helpStyle}>
           Potential infection warning. Doctor will be alerted for review.
-          <span style={hindiStyle}>संक्रमण की संभावना। डॉक्टर को समीक्षा के लिए सूचना भेजी जाएगी।</span>
         </p>
       </div>
     );
@@ -641,6 +608,7 @@ function SputumWarning({ colour }: { colour: string | null }) {
 }
 
 function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void }) {
+  const { bilingual } = useLanguage();
   const [cough, setCough] = useState<number | null>(null);
   const [volume, setVolume] = useState<(typeof SPUTUM_VOLUME_OPTIONS)[number]["value"] | null>(null);
   const [colour, setColour] = useState<(typeof COPD_SPUTUM_COLOUR_OPTIONS)[number]["value"] | null>(null);
@@ -680,7 +648,7 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
           </div>
           <div>
             <h2 className={dStyles.sectionTitle}>COPD Impact & Sputum</h2>
-            <p className={dStyles.sectionSub}>COPD प्रभाव एवं बलगम मॉनिटरिंग</p>
+            <p className={dStyles.sectionSub}>Symptom Impact & Sputum Monitoring</p>
           </div>
         </div>
         <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
@@ -688,18 +656,18 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
         </span>
       </div>
 
-      <p className={dStyles.cardSub}>Symptom Impact Weekly<span className={dStyles.fieldLabelHi}>साप्ताहिक लक्षण प्रभाव</span></p>
+      <p className={dStyles.cardSub}>Symptom Impact Weekly</p>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>1. Cough Frequency<span style={hindiStyle}>खांसी की आवृत्ति</span></p>
+          <p style={questionTitleStyle}>1. {bilingual("Cough Severity", "cough")}</p>
           <ScaleButtons value={cough} onChange={setCough} min={0} max={4} labels={{ 0: "None", 1: "Rare", 2: "Some", 3: "Most", 4: "Constant" }} />
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>2. Sputum Volume<span style={hindiStyle}>बलगम की मात्रा</span></p>
+          <p style={questionTitleStyle}>2. {bilingual("Sputum (Mucus) Volume", "sputum_volume")}</p>
           <OptionPills options={SPUTUM_VOLUME_OPTIONS} value={volume} onChange={setVolume} />
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>3. Sputum Color<span style={hindiStyle}>बलगम का रंग</span></p>
+          <p style={questionTitleStyle}>3. {bilingual("Sputum (Mucus) Color", "sputum_color")}</p>
           <OptionPills options={COPD_SPUTUM_COLOUR_OPTIONS} value={colour} onChange={setColour} />
           <SputumWarning colour={colour} />
           {colour === "blood_streaked" && (
@@ -714,27 +682,28 @@ function COPDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => voi
           )}
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>4. Exercise Tolerance<span style={hindiStyle}>व्यायाम सहनशीलता</span></p>
-          <p style={helpStyle}>Can you keep up with others your age when walking?<span style={hindiStyle}>क्या चलते समय आप अपनी उम्र के लोगों के साथ चल पाते हैं?</span></p>
+          <p style={questionTitleStyle}>4. Exercise Tolerance</p>
+          <p style={helpStyle}>Can you keep up with others your age when walking?</p>
           <YesNoToggle value={exercise} onChange={setExercise} />
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>5. Sleep Quality<span style={hindiStyle}>नींद की गुणवत्ता</span></p>
-          <p style={helpStyle}>Did your COPD symptoms disturb your sleep last night?<span style={hindiStyle}>क्या COPD लक्षणों के कारण पिछली रात आपकी नींद खराब हुई?</span></p>
+          <p style={questionTitleStyle}>5. Sleep Quality</p>
+          <p style={helpStyle}>Did your COPD symptoms disturb your sleep last night?</p>
           <YesNoToggle value={sleep} onChange={setSleep} />
         </div>
       </div>
 
-      <p className={dStyles.cardSub} style={{ marginTop: 18 }}>Exacerbation Risk Daily<span className={dStyles.fieldLabelHi}>दैनिक बिगड़ने का जोखिम</span></p>
+      <p className={dStyles.cardSub} style={{ marginTop: 18 }}>Exacerbation Risk Daily</p>
       <div className={dStyles.grid2}>
-        <RangeSlider label="Energy Levels" labelHi="ऊर्जा स्तर" value={energy} onChange={setEnergy} />
-        <RangeSlider label="Chest Heaviness" labelHi="छाती में भारीपन" value={chest} onChange={setChest} />
+        <RangeSlider label={bilingual("Tiredness / Fatigue", "fatigue")} value={energy} onChange={setEnergy} />
+        <RangeSlider label={bilingual("Chest Pain / Tightness", "chest_pain")} value={chest} onChange={setChest} />
       </div>
     </div>
   );
 }
 
 function BronchLikeSecondHalf({ dashboard, onChange }: { dashboard: DashboardType; onChange: (data: DiseaseLogPatch) => void }) {
+  const { bilingual } = useLanguage();
   const [volume, setVolume] = useState<(typeof BRONCH_VOLUME_OPTIONS)[number]["value"] | null>(null);
   const [colour, setColour] = useState<(typeof BRONCH_SPUTUM_COLOUR_OPTIONS)[number]["value"] | null>(null);
   const [clearance, setClearance] = useState<number | null>(null);
@@ -769,9 +738,7 @@ function BronchLikeSecondHalf({ dashboard, onChange }: { dashboard: DashboardTyp
             <h2 className={dStyles.sectionTitle}>
               {isPostIcu ? "Post ICU Sputum & Flare Log" : "Bronchiectasis Sputum Log"}
             </h2>
-            <p className={dStyles.sectionSub}>
-              {isPostIcu ? "पोस्ट ICU बलगम और फ्लेयर लॉग" : "ब्रोंकिइक्टेसिस बलगम लॉग"}
-            </p>
+            <p className={dStyles.sectionSub}>Sputum & Flare Monitoring</p>
           </div>
         </div>
         <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
@@ -779,46 +746,45 @@ function BronchLikeSecondHalf({ dashboard, onChange }: { dashboard: DashboardTyp
         </span>
       </div>
 
-      <p className={dStyles.cardSub}>Sputum and Flare Tracker Daily<span className={dStyles.fieldLabelHi}>दैनिक बलगम और फ्लेयर ट्रैकर</span></p>
+      <p className={dStyles.cardSub}>Sputum and Flare Tracker Daily</p>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>1. Sputum Volume<span style={hindiStyle}>बलगम की मात्रा</span></p>
+          <p style={questionTitleStyle}>1. {bilingual("Sputum (Mucus) Volume", "sputum_volume")}</p>
           <OptionPills options={BRONCH_VOLUME_OPTIONS} value={volume} onChange={setVolume} />
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>2. Sputum Color<span style={hindiStyle}>बलगम का रंग</span></p>
+          <p style={questionTitleStyle}>2. {bilingual("Sputum (Mucus) Color", "sputum_color")}</p>
           <OptionPills options={BRONCH_SPUTUM_COLOUR_OPTIONS} value={colour} onChange={setColour} />
           <SputumWarning colour={colour} />
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>3. Ease of Clearance<span style={hindiStyle}>बलगम निकालने में आसानी</span></p>
-          <p style={helpStyle}>How hard was it to clear your chest today?<span style={hindiStyle}>आज छाती साफ करने या बलगम निकालने में कितनी कठिनाई हुई?</span></p>
+          <p style={questionTitleStyle}>3. {bilingual("Ease of Sputum Clearance", "ease_of_clearance")}</p>
+          <p style={helpStyle}>How hard was it to clear your chest today?</p>
           <ScaleButtons
             value={clearance}
             onChange={setClearance}
             min={1}
             max={5}
             labels={{ 1: "Easy", 2: "Mild", 3: "Moderate", 4: "Very hard", 5: "Extreme" }}
-            labelsHi={{ 1: "आसान", 2: "हल्का", 3: "मध्यम", 4: "बहुत कठिन", 5: "अत्यधिक" }}
           />
         </div>
       </div>
 
-      <p className={dStyles.cardSub} style={{ marginTop: 18 }}>Infection Screen Daily<span className={dStyles.fieldLabelHi}>दैनिक संक्रमण स्क्रीन</span></p>
+      <p className={dStyles.cardSub} style={{ marginTop: 18 }}>Infection Screen Daily</p>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>4. Temperature / Fever<span style={hindiStyle}>तापमान / बुखार</span></p>
-          <p style={helpStyle}>Do you feel feverish or have a recorded temperature above 102°F?<span style={hindiStyle}>क्या आपको बुखार जैसा लग रहा है या तापमान 102°F से अधिक है?</span></p>
+          <p style={questionTitleStyle}>4. {bilingual("Fever / High Temperature", "fever")}</p>
+          <p style={helpStyle}>Do you feel feverish or have a recorded temperature above 102°F?</p>
           <YesNoToggle value={feverish} onChange={setFeverish} />
           {feverish === true && (
             <div style={{ marginTop: 12 }}>
-              <NumberField label="Recorded Temperature" labelHi="दर्ज तापमान" unit="°F" value={temperature} onChange={setTemperature} min={90} max={115} step="0.1" />
+              <NumberField label={bilingual("Body Temperature (°F)", "temperature")} unit="°F" value={temperature} onChange={setTemperature} min={90} max={115} step="0.1" />
             </div>
           )}
         </div>
         <div style={boxStyle}>
-          <p style={questionTitleStyle}>5. Malaise<span style={hindiStyle}>कमजोरी / फ्लू जैसा महसूस होना</span></p>
-          <p style={helpStyle}>Do you feel flu-like or unusually exhausted today?<span style={hindiStyle}>क्या आपको फ्लू जैसा या असामान्य थकान महसूस हो रही है?</span></p>
+          <p style={questionTitleStyle}>5. {bilingual("Flu-like Malaise or Exhaustion", "malaise")}</p>
+          <p style={helpStyle}>Do you feel flu-like or unusually exhausted today?</p>
           <YesNoToggle value={malaise} onChange={setMalaise} />
         </div>
       </div>
@@ -851,7 +817,7 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
           </div>
           <div>
             <h2 className={dStyles.sectionTitle}>K-BILD Quality of Life</h2>
-            <p className={dStyles.sectionSub}>K-BILD प्रश्नावली (जीवन की गुणवत्ता)</p>
+            <p className={dStyles.sectionSub}>Quality of Life Questionnaire</p>
           </div>
         </div>
         <span className={dStyles.sectionBadge} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
@@ -861,9 +827,8 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
 
       <p className={dStyles.cardSub}>
         The King&apos;s Brief Interstitial Lung Disease Questionnaire for quality of life assessment in ILD patients.
-        <span className={dStyles.fieldLabelHi}>ILD मरीजों में जीवन की गुणवत्ता के आकलन के लिए K-BILD प्रश्नावली।</span>
       </p>
-      <p className={dStyles.cardSub}>Answer based on the last 2 weeks.<span className={dStyles.fieldLabelHi}>पिछले 2 सप्ताह के आधार पर उत्तर दें।</span></p>
+      <p className={dStyles.cardSub}>Answer based on the last 2 weeks.</p>
 
       <div style={{ display: "grid", gap: 14 }}>
         {KBILD_QUESTIONS.map((question, index) => {
@@ -873,7 +838,6 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
             <div key={questionNumber} style={boxStyle}>
               <p style={questionTitleStyle}>
                 {questionNumber}. {question.text}
-                <span style={hindiStyle}>{question.hi}</span>
               </p>
               <div className={dStyles.scaleRow} style={{ flexWrap: "wrap", marginTop: 12 }}>
                 {options.map((label, optionIndex) => {
@@ -900,7 +864,6 @@ function ILDSecondHalf({ onChange }: { onChange: (data: DiseaseLogPatch) => void
       <div className={dStyles.warningBanner} style={{ marginTop: 16, background: "#f0faf5", borderColor: "var(--med-blue-600, #1e6091)" }}>
         <div>
           <strong>Final score</strong>
-          <span style={hindiStyle}>अंतिम स्कोर</span>
           <p style={helpStyle}>{progressText} · Total score: {totalScore} · Percentage score: {percentage}/100</p>
         </div>
       </div>
