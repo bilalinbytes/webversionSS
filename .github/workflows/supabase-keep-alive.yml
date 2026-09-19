@@ -1,0 +1,102 @@
+name: Supabase Keep-Alive & Health Check
+
+on:
+  schedule:
+    # Runs daily at 04:00 UTC (every 24 hours)
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      custom_url:
+        description: 'Optional custom health-check URL override to ping'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  keep-alive:
+    name: Ping Health Check & Keep-Alive
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Resolve Target URL
+        id: resolve-url
+        env:
+          INPUT_CUSTOM_URL: ${{ inputs.custom_url }}
+          HEALTH_CHECK_URL: ${{ secrets.HEALTH_CHECK_URL }}
+          APP_URL: ${{ secrets.APP_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+        run: |
+          TARGET_URL=""
+
+          if [ -n "$INPUT_CUSTOM_URL" ]; then
+            TARGET_URL="$INPUT_CUSTOM_URL"
+          elif [ -n "$HEALTH_CHECK_URL" ]; then
+            TARGET_URL="$HEALTH_CHECK_URL"
+          elif [ -n "$APP_URL" ]; then
+            CLEAN_URL="${APP_URL%/}"
+            TARGET_URL="${CLEAN_URL}/api/health"
+          elif [ -n "$NEXT_PUBLIC_APP_URL" ]; then
+            CLEAN_URL="${NEXT_PUBLIC_APP_URL%/}"
+            TARGET_URL="${CLEAN_URL}/api/health"
+          fi
+
+          if [ -z "$TARGET_URL" ]; then
+            echo "::error::No target URL configured! Please configure the HEALTH_CHECK_URL, APP_URL, or NEXT_PUBLIC_APP_URL secret in your GitHub repository secrets (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+
+          echo "target_url=$TARGET_URL" >> "$GITHUB_OUTPUT"
+          echo "Target URL resolved (sanitized): $(echo "$TARGET_URL" | sed 's/\([^\/]*\/\/[^\/]*\).*/\1\/api\/health/')"
+
+      - name: Send Keep-Alive Request
+        id: ping
+        env:
+          TARGET_URL: ${{ steps.resolve-url.outputs.target_url }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Calling health-check endpoint to ping Supabase..."
+
+          HEADERS=()
+          HEADERS+=(-H "User-Agent: GitHubActions-SupabaseKeepAlive/1.0")
+          HEADERS+=(-H "Accept: application/json")
+
+          if [ -n "$CRON_SECRET" ]; then
+            HEADERS+=(-H "Authorization: Bearer $CRON_SECRET")
+            HEADERS+=(-H "x-cron-secret: $CRON_SECRET")
+          fi
+
+          HTTP_RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
+            -X GET \
+            "${HEADERS[@]}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-connrefused \
+            "$TARGET_URL")
+
+          TOTAL_TIME=$(echo "$HTTP_RESPONSE" | tail -n 1)
+          HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n 2 | head -n 1)
+          BODY=$(echo "$HTTP_RESPONSE" | sed '$d' | sed '$d')
+
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Total Request Time: ${TOTAL_TIME}s"
+          echo "Response Body: $BODY"
+
+          # Write to Step Summary
+          echo "### 🏥 Supabase Keep-Alive Health Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Execution Time (UTC):** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **HTTP Status Code:** \`$HTTP_STATUS\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Total Response Time:** \`${TOTAL_TIME}s\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "#### Response Payload" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`json" >> "$GITHUB_STEP_SUMMARY"
+          echo "$BODY" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::error::Health check failed with status $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "✓ Supabase keep-alive query completed successfully."
